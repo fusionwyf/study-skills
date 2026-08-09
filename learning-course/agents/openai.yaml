@@ -1,0 +1,6 @@
+interface:
+  display_name: "通用教学课程"
+  short_description: "构建可交互、可反馈、可续学、可导出的通用多课课程包"
+  default_prompt: "使用 $learning-course 为我设计并运行一门可持续学习的自适应课程。"
+policy:
+  allow_implicit_invocation: true

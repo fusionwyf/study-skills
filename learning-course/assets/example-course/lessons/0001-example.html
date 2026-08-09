@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>第 0001 课｜什么是变量</title>
+  <link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+  <div class="course-shell">
+    <header class="course-header">
+      <p class="course-kicker">第 0001 课 · Python 入门</p>
+      <h1 class="course-title">变量：给数据一个可以重复使用的名字</h1>
+      <p class="course-subtitle">用 5 分钟读懂赋值，并预测变量更新后的程序输出。</p>
+      <div class="course-meta"><span>预计 5 分钟</span><span data-role="prerequisite">前置：无需编程经验</span></div>
+      <nav class="course-nav" aria-label="课程导航"><a href="../index.html">课程首页</a></nav>
+    </header>
+
+    <div class="course-main">
+      <main class="lesson" id="lesson-content" data-course-id="example-course" data-lesson-id="0001" data-objective="variables-and-assignment" data-evidence="practice" data-cognitive-level="apply" data-retrieval="required" data-feedback="required" data-source-status="verified" data-answer-status="provided">
+        <section data-role="objective" aria-labelledby="goal-title">
+          <h2 id="goal-title">本课要解决的问题</h2>
+          <div class="callout" data-kind="success">
+            <p class="callout-title">学完后你能……</p>
+            <p>区分变量名和它当前指向的值，并预测一次重新赋值后的输出。</p>
+          </div>
+        </section>
+
+        <section aria-labelledby="intuition-title">
+          <h2 id="intuition-title">先看一个记分牌</h2>
+          <p>比赛开始时，名字 <code>score</code> 指向数值 <code>10</code>。得到 2 分后，名字不变，它指向的新值变成 <code>12</code>。</p>
+          <figure class="diagram">
+            <svg viewBox="0 0 640 210" role="img" aria-labelledby="diagram-title diagram-desc">
+              <title id="diagram-title">变量 score 重新赋值</title>
+              <desc id="diagram-desc">第一行显示 score 指向 10，第二行显示 score 更新后指向 12。</desc>
+              <text x="42" y="55" fill="#1d2433" font-size="22">score</text>
+              <path d="M130 48 H330" stroke="#3157d5" stroke-width="4" marker-end="url(#arrow)"/>
+              <rect x="355" y="20" width="120" height="60" rx="10" fill="#e9eefc" stroke="#3157d5"/>
+              <text x="415" y="58" text-anchor="middle" fill="#1d2433" font-size="24">10</text>
+              <text x="42" y="155" fill="#1d2433" font-size="22">score</text>
+              <path d="M130 148 H330" stroke="#157347" stroke-width="4" marker-end="url(#arrow2)"/>
+              <rect x="355" y="120" width="120" height="60" rx="10" fill="#e8f4ee" stroke="#157347"/>
+              <text x="415" y="158" text-anchor="middle" fill="#1d2433" font-size="24">12</text>
+              <text x="505" y="154" fill="#5c6678" font-size="17">更新后</text>
+              <defs>
+                <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#3157d5"/></marker>
+                <marker id="arrow2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#157347"/></marker>
+              </defs>
+            </svg>
+            <figcaption>变量名可以保持不变，而它当前指向的值可以更新。</figcaption>
+          </figure>
+        </section>
+
+        <section aria-labelledby="core-title">
+          <h2 id="core-title">变量和赋值</h2>
+          <p>在下面这行 Python 代码中，<code>score</code> 是变量名，<code>10</code> 是值，<code>=</code> 表示把右侧的值赋给左侧名字。</p>
+          <div class="code-block"><span class="code-language">python</span><pre><code>score = 10</code></pre></div>
+          <div class="callout" data-kind="warning"><p class="callout-title"><code>=</code> 在这里表示赋值</p><p>它让变量名指向一个值。它不是数学题里的“左右永远相等”。</p></div>
+        </section>
+
+        <section aria-labelledby="example-title">
+          <h2 id="example-title">运行顺序决定结果</h2>
+          <p>先别看解释，预测下面程序会打印什么：</p>
+          <div class="code-block"><span class="code-language">python</span><pre><code>score = 10
+score = score + 2
+print(score)</code></pre></div>
+          <ol class="steps">
+            <li class="step"><code>score = 10</code>：名字 <code>score</code> 先指向 10。</li>
+            <li class="step is-hidden">计算右侧 <code>score + 2</code>：读取当前值 10，得到 12。</li>
+            <li class="step is-hidden">把 12 重新赋给 <code>score</code>，因此打印结果是 12。</li>
+          </ol>
+          <div class="steps-controls"><button class="button" type="button" data-step-next>展开下一步</button></div>
+        </section>
+
+        <section aria-labelledby="quiz-title">
+          <h2 id="quiz-title">即时检查</h2>
+          <div class="quiz" data-role="evidence" data-question-id="q1" data-answer-kind="standard" data-correct-text="正确。程序按顺序执行，8 加 3 后 price 的新值是 11。" data-incorrect-text="再按顺序读一次：先让 price 指向 8，再计算当前值加 3。">
+            <p class="quiz-title">这段代码最后打印什么？<br><code>price = 8</code><br><code>price = price + 3</code><br><code>print(price)</code></p>
+            <label class="quiz-option"><input type="radio" name="q1" data-correct="false"> <span>3</span></label>
+            <label class="quiz-option"><input type="radio" name="q1" data-correct="false"> <span>8</span></label>
+            <label class="quiz-option"><input type="radio" name="q1" data-correct="true"> <span>11</span></label>
+            <button class="button" type="button" data-hint aria-controls="q1-hint">查看提示</button>
+            <p id="q1-hint" hidden>按程序执行顺序逐行写出 price 当前指向的值。</p>
+            <div class="quiz-actions"><button class="button" type="button" data-quiz-submit>检查答案</button></div>
+            <p class="quiz-feedback" data-role="answer-feedback" aria-live="polite"></p>
+          </div>
+        </section>
+
+        <section aria-labelledby="mistakes-title">
+          <h2 id="mistakes-title">两个容易混淆的地方</h2>
+          <ul>
+            <li>变量名是 <code>price</code>，它的当前值才是 <code>11</code>。</li>
+            <li>程序从上到下执行，后一次赋值会更新变量当前指向的值。</li>
+          </ul>
+        </section>
+
+        <section data-role="retrieval" aria-labelledby="retrieval-title">
+          <h2 id="retrieval-title">合卷检索</h2>
+          <p>不看上文回答：在 <code>age = 18</code> 中，变量名和值分别是什么？如果下一行是 <code>age = 19</code>，此后打印 <code>age</code> 会得到什么？</p>
+        </section>
+
+        <section aria-labelledby="summary-title">
+          <h2 id="summary-title">小结与速查</h2>
+          <ul>
+            <li>变量名让程序可以再次使用某个值。</li>
+            <li><code>=</code> 把右侧计算结果赋给左侧变量名。</li>
+            <li>重新赋值会更新变量当前指向的值。</li>
+          </ul>
+          <dl class="glossary"><dt>变量</dt><dd>程序中用来引用当前值的名字。</dd><dt>赋值</dt><dd>计算右侧表达式，再让左侧变量名指向结果。</dd></dl>
+        </section>
+
+        <section class="reflection" data-role="learner-feedback" aria-labelledby="reflection-title">
+          <h2 id="reflection-title" class="reflection-title">学习反馈</h2>
+          <label for="understood">用自己的话说说什么是变量。</label><textarea id="understood" placeholder="例如：变量是……"></textarea>
+          <label for="unclear">哪一步还不清楚？</label><textarea id="unclear" placeholder="变量名、赋值、执行顺序，或其他问题"></textarea>
+          <label for="application">把示例改成你关心的数据。</label><textarea id="application" placeholder="例如：temperature = 26"></textarea>
+          <div class="feedback-actions"><button class="button" type="button" data-copy-feedback>复制学习记录</button><span data-copy-feedback-status role="status"></span></div>
+          <p><strong>提交方式：</strong>复制后发给老师或 Agent；浏览器不会自动写回课程状态文件。</p>
+        </section>
+
+        <section class="sources" data-role="sources" aria-labelledby="sources-title">
+          <h2 id="sources-title">来源</h2>
+          <p>Python 3 Language Reference，Simple statements，Assignment statements。</p>
+        </section>
+      </main>
+
+      <nav class="toc" data-auto-toc aria-label="本课目录"><p class="toc-title">本课目录</p></nav>
+    </div>
+  </div>
+  <script src="../assets/course.js"></script>
+  <script src="../assets/math.js"></script>
+</body>
+</html>

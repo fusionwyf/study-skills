@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>第 0001 课｜课程标题</title>
+  <link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+  <div class="course-shell">
+    <header class="course-header">
+      <p class="course-kicker">第 0001 课 · 课程主题</p>
+      <h1 class="course-title">本课可验证的学习成果</h1>
+      <p class="course-subtitle">视觉层可以按主题重设计；保留下面的语义结构和交互行为。</p>
+      <div class="course-meta"><span>预计 25–35 分钟</span><span data-role="prerequisite">前置：填写前置知识</span></div>
+      <nav class="course-nav" aria-label="课程导航"><a href="../index.html">课程首页</a></nav>
+    </header>
+
+    <div class="course-main">
+      <main class="lesson" id="lesson-content" data-course-id="example-course" data-lesson-id="0001" data-objective="example-objective" data-evidence="practice" data-cognitive-level="apply" data-retrieval="required" data-feedback="required" data-source-status="not-needed" data-answer-status="provided">
+        <section data-role="objective" aria-labelledby="goal-title">
+          <h2 id="goal-title">本课要解决的问题</h2>
+          <div class="callout" data-kind="success">
+            <p class="callout-title">学完后你能……</p>
+            <p>写出一个可观察、可检查的动作结果，并说明它的适用条件。</p>
+          </div>
+        </section>
+
+        <section aria-labelledby="intuition-title">
+          <h2 id="intuition-title">先看一个具体情境</h2>
+          <p>从一个熟悉例子开始。让学习者先预测，再给出解释。</p>
+          <figure class="diagram">
+            <svg viewBox="0 0 640 180" role="img" aria-labelledby="diagram-title diagram-desc">
+              <title id="diagram-title">示意图标题</title>
+              <desc id="diagram-desc">用文字描述图中关系，不能只依靠颜色传达信息。</desc>
+              <rect x="20" y="45" width="180" height="80" rx="12" fill="#e9eefc" stroke="#3157d5"/>
+              <text x="110" y="90" text-anchor="middle" fill="#1d2433">起点</text>
+              <path d="M220 85 H410" stroke="#3157d5" stroke-width="3" marker-end="url(#arrow)"/>
+              <rect x="430" y="45" width="180" height="80" rx="12" fill="#e8f4ee" stroke="#157347"/>
+              <text x="520" y="90" text-anchor="middle" fill="#1d2433">结果</text>
+              <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#3157d5"/></marker></defs>
+            </svg>
+            <figcaption>图注：替换成与本课成果直接相关的图解。</figcaption>
+          </figure>
+        </section>
+
+        <section aria-labelledby="core-title">
+          <h2 id="core-title">核心解释</h2>
+          <p>先用自然语言说明机制，再给出正式定义、规则或判断框架。</p>
+          <div class="formula" aria-label="a 的平方加 b 的平方等于 c 的平方"><span class="math-expression" data-tex="a^2 + b^2 = c^2">a² + b² = c²</span><small>公式说明：写明符号含义、成立条件和使用边界。</small></div>
+        </section>
+
+        <section aria-labelledby="code-title">
+          <h2 id="code-title">代码或操作示例（适用时）</h2>
+          <div class="code-block"><span class="code-language">python</span><pre><code>def check_result(value):
+    return value &gt;= 0
+
+print(check_result(3))</code></pre></div>
+          <p>说明输入、输出、运行环境和一个常见失败方式。</p>
+        </section>
+
+        <section aria-labelledby="steps-title">
+          <h2 id="steps-title">分步推导或操作</h2>
+          <ol class="steps">
+            <li class="step">第一步：明确问题中的已知条件。</li>
+            <li class="step is-hidden">第二步：选择与条件匹配的规则。</li>
+            <li class="step is-hidden">第三步：执行规则并检查结果。</li>
+          </ol>
+          <div class="steps-controls"><button class="button" type="button" data-step-next>展开下一步</button></div>
+        </section>
+
+        <section aria-labelledby="quiz-title">
+          <h2 id="quiz-title">即时检查</h2>
+          <div class="quiz" data-role="evidence" data-question-id="q1" data-answer-kind="standard" data-correct-text="正确。请补充判断依据。" data-incorrect-text="再检查题干条件和规则的适用范围。">
+            <p class="quiz-title">哪一个选项最符合本课的判断规则？</p>
+            <label class="quiz-option"><input type="radio" name="q1" data-correct="false"> <span>选项 A：只看表面现象。</span></label>
+            <label class="quiz-option"><input type="radio" name="q1" data-correct="true"> <span>选项 B：先确认条件，再选择规则。</span></label>
+            <label class="quiz-option"><input type="radio" name="q1" data-correct="false"> <span>选项 C：记住结论即可。</span></label>
+            <button class="button" type="button" data-hint aria-controls="q1-hint">查看提示</button>
+            <p id="q1-hint" hidden>先找出题目中的条件，再判断规则是否适用。</p>
+            <div class="quiz-actions"><button class="button" type="button" data-quiz-submit>检查答案</button></div>
+            <p class="quiz-feedback" data-role="answer-feedback" aria-live="polite"></p>
+          </div>
+        </section>
+
+        <section aria-labelledby="mistakes-title">
+          <h2 id="mistakes-title">常见误区</h2>
+          <div class="callout" data-kind="warning"><p class="callout-title">误区：把结论当成无条件规则。</p><p>说明误区为什么产生、什么条件会使它失效，以及如何自检。</p></div>
+        </section>
+
+        <section data-role="retrieval" aria-labelledby="retrieval-title">
+          <h2 id="retrieval-title">合卷检索</h2>
+          <p>合上上文，凭记忆回答：本课规则适用于什么条件？遇到变式时你会先检查哪一步？</p>
+        </section>
+
+        <section aria-labelledby="summary-title">
+          <h2 id="summary-title">小结与速查</h2>
+          <ul><li>关键概念或动作一。</li><li>关键概念或动作二。</li><li>一个需要记住的边界条件。</li></ul>
+          <dl class="glossary"><dt>术语</dt><dd>用一句可操作的话解释，并保持全课一致。</dd></dl>
+        </section>
+
+        <section class="reflection" data-role="learner-feedback" aria-labelledby="reflection-title">
+          <h2 id="reflection-title" class="reflection-title">学习反馈</h2>
+          <label for="understood">哪里看懂了？</label><textarea id="understood" placeholder="用自己的话或一个例子回答"></textarea>
+          <label for="unclear">哪里没看懂？</label><textarea id="unclear" placeholder="指出具体段落、步骤或题目"></textarea>
+          <label for="application">它和你的真实问题有什么关系？</label><textarea id="application" placeholder="描述一个想应用的场景"></textarea>
+          <div class="feedback-actions"><button class="button" type="button" data-copy-feedback>复制学习记录</button><span data-copy-feedback-status role="status"></span></div>
+          <p><strong>提交方式：</strong>把回答发给老师或 Agent；浏览器不会自动写回课程状态文件。</p>
+        </section>
+
+        <!-- data-source-status="not-needed" 时不要求来源区块；需要来源时加入 data-role="sources"。 -->
+      </main>
+
+      <nav class="toc" data-auto-toc aria-label="本课目录"><p class="toc-title">本课目录</p></nav>
+    </div>
+  </div>
+  <script src="../assets/course.js"></script>
+  <script src="../assets/math.js"></script>
+</body>
+</html>

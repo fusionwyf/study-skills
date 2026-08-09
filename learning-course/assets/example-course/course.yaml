@@ -1,0 +1,30 @@
+schema_version: 3
+course_id: example-course
+title: 5 分钟编程入门：什么是变量
+language: zh-CN
+created_at: 2026-01-01T00:00:00Z
+updated_at: 2026-01-01T00:00:00Z
+status: active
+phase: awaiting_evidence
+learner:
+  goal: 能读懂并修改一个使用变量的 Python 片段
+  motivation: 通过真实微课展示课程包的教学闭环
+  prior_knowledge: []
+  constraints:
+    minutes_per_lesson: 5
+diagnostic:
+  status: skipped
+  record: null
+  skipped_reason: 示例课程不代表真实学习者
+success_criteria:
+  - 能区分变量名和变量当前指向的值
+  - 能预测一次重新赋值后的程序输出
+current_lesson: 1
+objectives:
+  - id: variables-and-assignment
+    statement: 能解释变量赋值并预测一次重新赋值后的输出
+    cognitive_level: apply
+    mastery: unseen
+    evidence: []
+review_queue: []
+last_feedback: null

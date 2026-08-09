@@ -1,0 +1,6 @@
+__pycache__/
+*.py[cod]
+exports/.rendering/
+exports/*.tmp
+*.egg-info/
+.venv/

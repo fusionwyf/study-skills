@@ -1,0 +1,23 @@
+schema_version: 1
+title: "Example Statistics Midterm"
+status: confirmed
+mode: review
+created_at: "2026-08-08"
+updated_at: "2026-08-08"
+exam_date: "2026-08-20"
+target_score: 85
+time_budget:
+  total_hours: 12
+  sessions_per_week: 5
+materials:
+  source_count: 1
+  question_count: 3
+  synthetic_count: 1
+readiness:
+  accuracy: 67
+  speed: 55
+  coverage: 40
+  stability: 45
+  confidence: medium
+notes:
+  - "Minimal example for format inspection and validator smoke tests."
