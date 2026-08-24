@@ -4,3 +4,4 @@ exports/.rendering/
 exports/*.tmp
 *.egg-info/
 .venv/
+.openchamber/
