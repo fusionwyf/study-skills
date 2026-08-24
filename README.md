@@ -56,6 +56,16 @@ Read-only progress reports over an existing course or exam package. Features:
 - Due-review surfacing and deterministic, citation-backed next-step suggestions
 - Python scripts: `build_report.py`
 
+### learning-handoff
+
+Bounded mini-course handoffs between exam and course packages. Features:
+
+- Turn a finalized exam-gap record into a bounded mini-course handoff (`H####`) with explicit include/exclude boundary
+- Artifact coupling only: the handoff file is the sole link — packages never mutate each other's state
+- Verifiable return conditions; completion requires a finalized record inside the target package
+- Traceable gap origin: every handoff cites its source record and validates against the shared contract
+- Python scripts: `create_handoff.py`, `complete_handoff.py`, `validate_handoffs.py`, backed by the shared `handoff.schema.yaml`
+
 All leaf skills share the same infrastructure: unified record schemas in `shared/schemas/`, the human-readable record contract in `shared/references/record-contract.md`, and the generic validator `shared/scripts/validate_record.py` used by every skill's package validator.
 
 ## Requirements
@@ -75,6 +85,7 @@ Activate a skill explicitly by name:
 - `$spaced-review` — due review sessions over course or exam packages.
 - `$source-grounded-study` — register materials, excerpt verbatim, and keep facts traceable to sources.
 - `$study-report` — a read-only progress report: what is confirmed, what is shaky, what to do next.
+- `$learning-handoff` — turn an exam gap into a bounded mini-course, then return with verifiable evidence.
 
 ## Validation
 

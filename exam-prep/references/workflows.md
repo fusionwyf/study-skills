@@ -36,6 +36,8 @@ Completion criterion: every attempted question has a record, feedback, and next 
 
 Completion criterion: observed issue and confirmed cause remain separate, resolved items have later-attempt evidence, and the next check is scheduled.
 
+漏洞需要系统补课时，通过 `$learning-handoff` 建立交接，保持两个包独立。
+
 ## Mock
 
 1. Freeze scope, duration, allowed aids, scoring rules, and delivery format before starting.

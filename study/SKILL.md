@@ -17,6 +17,7 @@ disable-model-invocation: true
 | 复习到期知识点（间隔复习、交错练习、遗忘曲线） | `$spaced-review` |
 | 从资料建立课程或抽题（PDF、教材、讲义、来源追踪） | `$source-grounded-study` |
 | 查看学习进展（掌握情况、薄弱点、证据覆盖、下一步） | `$study-report` |
+| 把错题转成补课 / 补完回到备考（跨包交接） | `$learning-handoff` |
 
 ## 使用方式
 
