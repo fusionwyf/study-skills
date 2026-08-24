@@ -93,6 +93,8 @@ Activate a skill explicitly by name:
 python -m unittest discover -s tests -v
 python learning-course/scripts/validate_course.py learning-course/assets/example-course --strict-schema --pedagogical
 python exam-prep/scripts/validate_exam.py exam-prep/assets/example-exam --strict-schema
+python source-grounded-study/scripts/validate_sources.py exam-prep/assets/example-exam
+python shared/scripts/validate_record.py exam-prep/assets/example-exam/records/R0001.md
 ```
 
 ## License
