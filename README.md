@@ -46,6 +46,16 @@ Register study materials and keep every extracted fact traceable to its source. 
 - Works on exam packages (root `SOURCES.md` + `source-materials/`) and course or standalone workspaces (`sources/SOURCES.md` + `sources/<source_id>/`) under the same field contract
 - Python scripts: `register_source.py`, `validate_sources.py`, backed by the shared `source.schema.yaml`
 
+### study-report
+
+Read-only progress reports over an existing course or exam package. Features:
+
+- Strictly read-only: derives everything from state files, record frontmatter, lessons, question bank, and error log — never modifies the package
+- Four-way labeling of every finding: confirmed (strong finalized evidence) / inferred / unknown / self-reported
+- Evidence coverage vs activity: objectives-with-records or source-backed readiness next to raw activity counts
+- Due-review surfacing and deterministic, citation-backed next-step suggestions
+- Python scripts: `build_report.py`
+
 All leaf skills share the same infrastructure: unified record schemas in `shared/schemas/`, the human-readable record contract in `shared/references/record-contract.md`, and the generic validator `shared/scripts/validate_record.py` used by every skill's package validator.
 
 ## Requirements
@@ -64,6 +74,7 @@ Activate a skill explicitly by name:
 - `$exam-prep` — exam outcome preparation.
 - `$spaced-review` — due review sessions over course or exam packages.
 - `$source-grounded-study` — register materials, excerpt verbatim, and keep facts traceable to sources.
+- `$study-report` — a read-only progress report: what is confirmed, what is shaky, what to do next.
 
 ## Validation
 
