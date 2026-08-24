@@ -35,6 +35,17 @@ Run due spaced-repetition review sessions against an existing course or exam pac
 - Record-linked interval updates: every interval change traces to a finalized review record (`records/RV####-*.md`) under the shared record contract
 - Python scripts: `build_review_session.py`, `complete_review.py`, plus the shared `spaced_repetition.py` interval algorithm
 
+### source-grounded-study
+
+Register study materials and keep every extracted fact traceable to its source. Features:
+
+- Material registration with reliability tiers (official > course > user > synthetic; unknown when unsure)
+- Verbatim excerpts with location tracking plus claim tracking (sourced / unverified / contested)
+- Synthetic marking: Agent-generated content never poses as source fact (`synthetic-from-*`)
+- Downstream traceability: exam questions and course lessons reference the `S###` they came from
+- Works on exam packages (root `SOURCES.md` + `source-materials/`) and course or standalone workspaces (`sources/SOURCES.md` + `sources/<source_id>/`) under the same field contract
+- Python scripts: `register_source.py`, `validate_sources.py`, backed by the shared `source.schema.yaml`
+
 All leaf skills share the same infrastructure: unified record schemas in `shared/schemas/`, the human-readable record contract in `shared/references/record-contract.md`, and the generic validator `shared/scripts/validate_record.py` used by every skill's package validator.
 
 ## Requirements
@@ -52,6 +63,7 @@ Activate a skill explicitly by name:
 - `$learning-course` — durable mastery courses.
 - `$exam-prep` — exam outcome preparation.
 - `$spaced-review` — due review sessions over course or exam packages.
+- `$source-grounded-study` — register materials, excerpt verbatim, and keep facts traceable to sources.
 
 ## Validation
 

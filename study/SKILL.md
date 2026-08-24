@@ -15,6 +15,7 @@ disable-model-invocation: true
 | 长期系统学会一个主题（多课课程、持续掌握、课程包续学） | `$learning-course` |
 | 准备一场考试（日期、分数、真题、刷题、模考、readiness） | `$exam-prep` |
 | 复习到期知识点（间隔复习、交错练习、遗忘曲线） | `$spaced-review` |
+| 从资料建立课程或抽题（PDF、教材、讲义、来源追踪） | `$source-grounded-study` |
 
 ## 使用方式
 

@@ -8,6 +8,7 @@
 - `PLAN.md` 是可人工维护的学习者课程契约；课程路线和边界以它为准。
 - `INDEX.md` 与 `index.html` 是可重新生成的展示文件。
 - `records/` 是学习者原始反馈、可观察行为和 Agent 判断的唯一内容来源。
+- `sources/` 保存来源注册与摘录（由 source-grounded-study 维护）。
 - `last_feedback` 只保存最新 record 的相对路径，不复制反馈内容。
 
 ## 推荐结构
