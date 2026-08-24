@@ -33,7 +33,13 @@ Targeted exam preparation from diagnosis to cram day. Features:
 
 ## Usage
 
-Copy either skill directory into your WorkBuddy skills folder and activate via the Skill tool.
+Clone or copy the whole `study-skills` folder into your WorkBuddy skills folder — leaf skills read shared protocols from `shared/`, so single-skill copies are not self-contained.
+
+Activate a skill explicitly by name:
+
+- `$study` — not sure which one? The router recommends the right skill for your goal.
+- `$learning-course` — durable mastery courses.
+- `$exam-prep` — exam outcome preparation.
 
 ## Validation
 

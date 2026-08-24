@@ -3,4 +3,4 @@ interface:
   short_description: "构建以证据追踪长期掌握、可续学和可导出的课程包"
   default_prompt: "使用 $learning-course 为我设计并运行一门以长期掌握为目标的自适应课程。"
 policy:
-  allow_implicit_invocation: true
+  allow_implicit_invocation: false

@@ -1,6 +1,7 @@
 ---
 name: exam-prep
-description: "Exam outcome preparation: diagnose, plan, drill, review, mock, and cram against an exam date, score, syllabus, or question format, even when materials are initially incomplete. Use for 备考, 刷题, 真题, 模考, 错题复盘, and 考前冲刺. Prefer learning-course when durable multi-session mastery is the primary outcome; handle one-off tutoring directly."
+description: "Prepare for an exam through source-backed drills, reviews, mocks, and cram planning."
+disable-model-invocation: true
 ---
 
 # Exam Prep
@@ -9,7 +10,7 @@ description: "Exam outcome preparation: diagnose, plan, drill, review, mock, and
 
 以 exam outcome 为目标，把考试范围和资料转成可持续的备考循环：抽题、刷题、限时训练、错题反馈、模考复盘、readiness 跟踪和考前速记。
 
-保持 exam-prep 与 learning-course 状态隔离，只读写独立考试包。知识漏洞在当前题目和知识点范围内讲解、示范和出变式题。
+保持 exam-prep 与 learning-course 状态隔离，只读写独立考试包。长期多课掌握为主时选 learning-course；一次性辅导直接处理，不建考试包。知识漏洞在当前题目和知识点范围内讲解、示范和出变式题。
 
 ## 工作模式
 

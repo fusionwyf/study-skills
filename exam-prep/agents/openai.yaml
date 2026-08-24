@@ -3,4 +3,4 @@ interface:
   short_description: "Evidence-linked exam drills, mocks, error review, and cram plans."
   default_prompt: "Use $exam-prep to prepare toward my exam outcome with drills, mocks, error review, and a cram plan."
 policy:
-  allow_implicit_invocation: true
+  allow_implicit_invocation: false

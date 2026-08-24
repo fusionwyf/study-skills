@@ -1,6 +1,7 @@
 ---
 name: learning-course
-description: "Durable mastery courses: build, continue, and export adaptive multi-session learning as portable HTML packages with evidence, retrieval practice, and retained progress. Use for an explicitly systematic course, an existing learning-course package, or its PDF export. Prefer exam-prep when an exam date, score, syllabus, past papers, timed drills, or readiness is the primary outcome; handle one-off tutoring directly."
+description: "Build and continue evidence-backed multi-lesson courses for durable mastery."
+disable-model-invocation: true
 ---
 
 # 通用教学课程
@@ -8,6 +9,8 @@ description: "Durable mastery courses: build, continue, and export adaptive mult
 ## 核心约束
 
 以 durable mastery 为目标，把主题组织成可持续的自适应课程。HTML 是课程内容源产物；PDF 是按需生成的静态发布物。
+
+考试日期、目标分数、真题和 readiness 是主要目标时，选择 exam-prep；一次性辅导直接处理，不建课程包。
 
 课程必须能够跨 Agent、跨会话继续维护：
 
