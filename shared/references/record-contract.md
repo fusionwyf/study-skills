@@ -65,6 +65,7 @@ metrics:                     # 本次记录实际测量了哪些 readiness 维�
 review_kind: variation       # retrieval|explanation|variation|transfer|error_discrimination
 performance: good            # good | medium | poor
 hint_used: false
+evidence_strength: strong    # strong | medium | weak
 next_action: delayed-transfer
 objective_id: process-lifecycle   # 课程复习用 objective_id，考试复习用 topic，二选一
 ```

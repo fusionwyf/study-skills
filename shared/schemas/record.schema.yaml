@@ -62,6 +62,7 @@ types:
       review_kind: {vocabulary: review_kind}
       performance: {vocabulary: performance}
       hint_used: {type: bool}
+      evidence_strength: {vocabulary: evidence_strength}
       next_action: {type: str}
     one_of:
       objective_id: {type: str}

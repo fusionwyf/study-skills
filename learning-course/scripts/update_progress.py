@@ -6,10 +6,18 @@ from __future__ import annotations
 import argparse
 import os
 import re
+import sys
 import tempfile
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+SHARED_SCRIPTS = REPO_ROOT / "shared" / "scripts"
+if str(SHARED_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SHARED_SCRIPTS))
+
+from spaced_repetition import next_interval  # noqa: E402
 
 
 MASTERY_VALUES = {"unseen", "recognition", "application", "transfer", "uncertain"}
@@ -54,15 +62,6 @@ def parse_objective(value: str) -> tuple[str, str]:
     if mastery not in MASTERY_VALUES:
         raise SystemExit(f"unknown mastery {mastery!r}; use one of {sorted(MASTERY_VALUES)}")
     return objective_id, mastery
-
-
-def adjusted_interval(base: int, performance: str | None) -> int:
-    base = max(1, base)
-    if performance == "good":
-        return min(60, base * 2)
-    if performance == "poor":
-        return max(1, base // 2)
-    return base
 
 
 def record_relative(root: Path, value: str) -> tuple[Path, str]:
@@ -294,7 +293,7 @@ def main() -> int:
                 existing = {"objective_id": objective_id}
                 queue.append(existing)
             current_interval = int(existing.get("interval_days", 3) or 3)
-            interval = adjusted_interval(args.review_days if args.review_days is not None else current_interval, args.performance)
+            interval = next_interval(args.review_days if args.review_days is not None else current_interval, args.performance)
             existing.update({
                 "due_at": (date.today() + timedelta(days=interval)).isoformat(),
                 "interval_days": interval,

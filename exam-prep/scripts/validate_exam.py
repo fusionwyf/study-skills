@@ -2,6 +2,7 @@
 import argparse
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -26,6 +27,7 @@ ALLOWED_QUESTION_STATUS = {"draft", "ready", "attempted", "reviewed", "retired"}
 ALLOWED_QUESTION_TYPES = {"choice", "fill", "short", "essay", "calculation", "proof", "code", "other"}
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RECORD_SCHEMA_PATH = REPO_ROOT / "shared" / "schemas" / "record.schema.yaml"
+SHARED_RECORD_VALIDATOR = REPO_ROOT / "shared" / "scripts" / "validate_record.py"
 FINALIZED_STATUS = "finalized"  # member of the record contract's assessment_status vocabulary
 # Only used when shared/schemas/record.schema.yaml cannot be read; the schema file stays
 # the source of truth and failed loads are reported as errors in --strict-schema
@@ -125,6 +127,85 @@ def record_frontmatter(path, yaml, label, errors):
         errors.append(label + " frontmatter must be a mapping")
         return None
     return metadata
+
+
+def shared_record_validator_errors(target, label):
+    """Run the generic record validator on one record; returns error strings.
+
+    Mirrors learning-course/scripts/validate_course.py's delegation: non-zero
+    exit means invalid, its ERROR/FAIL lines are surfaced, WARN stays fatal-free.
+    """
+    if not SHARED_RECORD_VALIDATOR.is_file():
+        return [label + ": shared record validator is missing: " + str(SHARED_RECORD_VALIDATOR)]
+    try:
+        completed = subprocess.run(
+            [sys.executable, str(SHARED_RECORD_VALIDATOR), str(target)],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=False,
+        )
+    except OSError as exc:
+        return [label + ": record validator could not run: " + str(exc)]
+    if completed.returncode == 0:
+        return []
+    lines = [line.strip() for line in (completed.stdout + completed.stderr).splitlines() if line.strip()]
+    reported = [
+        label + ": " + line
+        for line in lines
+        if line.startswith(("ERROR:", "FAIL"))
+    ]
+    return reported or [label + ": shared record validator exited with " + str(completed.returncode)]
+
+
+def validate_review_queue(data, exam_dir, yaml, errors):
+    """Validate the optional top-level review_queue per shared/schemas/review.schema.yaml.
+
+    Entries are keyed by topic; last_record must point at an existing finalized
+    review record that passes the shared record validator. An absent key is valid.
+    """
+    queue = data.get("review_queue")
+    if queue is None:
+        return
+    if not isinstance(queue, list):
+        errors.append("exam.yaml review_queue must be a list")
+        return
+    for index, item in enumerate(queue):
+        label = "review_queue[" + str(index) + "]"
+        if not isinstance(item, dict):
+            errors.append(label + " must be a mapping")
+            continue
+        topic = item.get("topic")
+        if not isinstance(topic, str) or not topic.strip():
+            errors.append(label + " requires a non-empty topic")
+        for key in ("due_at", "interval_days", "review_count"):
+            if item.get(key) is None:
+                errors.append(label + " missing " + key)
+        interval = item.get("interval_days")
+        if interval is not None and (
+            not isinstance(interval, (int, float)) or isinstance(interval, bool) or interval < 0
+        ):
+            errors.append(label + ".interval_days must be a non-negative number")
+        count = item.get("review_count")
+        if count is not None and (
+            not isinstance(count, int) or isinstance(count, bool) or count < 0
+        ):
+            errors.append(label + ".review_count must be a non-negative integer")
+        last_record = item.get("last_record")
+        if last_record:
+            record_label = label + ".last_record"
+            target = record_path(exam_dir, last_record, record_label, errors)
+            if target is not None:
+                metadata = record_frontmatter(target, yaml, record_label, errors)
+                if metadata is not None:
+                    if metadata.get("assessment_status") != FINALIZED_STATUS:
+                        errors.append(record_label + " must reference a finalized review record")
+                    else:
+                        errors.extend(shared_record_validator_errors(target, record_label))
+                    record_topic = metadata.get("topic")
+                    if record_topic is not None and topic and record_topic != topic:
+                        errors.append(record_label + " references a different topic")
 
 
 def registered_source_count(exam_dir):
@@ -267,6 +348,8 @@ def strict_validate_exam_yaml(path, exam_dir, question_counts, errors, warnings)
     notes = data.get("notes")
     if not isinstance(notes, list) or any(not isinstance(note, str) for note in notes):
         errors.append("exam.yaml notes must be a list of strings")
+
+    validate_review_queue(data, exam_dir, yaml, errors)
 
     total, synthetic, source_backed = question_counts
     sources = registered_source_count(exam_dir)

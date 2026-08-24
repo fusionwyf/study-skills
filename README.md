@@ -1,6 +1,6 @@
 # WorkBuddy Study Skills
 
-Two complementary WorkBuddy skills for structured learning and exam preparation.
+WorkBuddy skills for structured learning, exam preparation, and spaced review.
 
 ## Skills
 
@@ -26,6 +26,17 @@ Targeted exam preparation from diagnosis to cram day. Features:
 - Interactive drill template with timer, keyboard nav, dark mode, KaTeX support
 - Python scripts: `init_exam.py`, `validate_exam.py`, `update_exam.py`, `build_question_bank.py`
 
+### spaced-review
+
+Run due spaced-repetition review sessions against an existing course or exam package. Features:
+
+- Due-session execution: collects due `review_queue` entries from `course.yaml` or `exam.yaml` and plans one time-boxed session
+- Five review task types: retrieval, explanation, variation, transfer, and error discrimination (first review retrieves; poor performance triggers error discrimination)
+- Record-linked interval updates: every interval change traces to a finalized review record (`records/RV####-*.md`) under the shared record contract
+- Python scripts: `build_review_session.py`, `complete_review.py`, plus the shared `spaced_repetition.py` interval algorithm
+
+All leaf skills share the same infrastructure: unified record schemas in `shared/schemas/`, the human-readable record contract in `shared/references/record-contract.md`, and the generic validator `shared/scripts/validate_record.py` used by every skill's package validator.
+
 ## Requirements
 
 - Python 3.10+ with PyYAML (for state updates and strict-schema validation)
@@ -40,6 +51,7 @@ Activate a skill explicitly by name:
 - `$study` — not sure which one? The router recommends the right skill for your goal.
 - `$learning-course` — durable mastery courses.
 - `$exam-prep` — exam outcome preparation.
+- `$spaced-review` — due review sessions over course or exam packages.
 
 ## Validation
 

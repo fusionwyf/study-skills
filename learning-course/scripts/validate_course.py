@@ -317,6 +317,21 @@ def validate_yaml_schema(
                     warnings.append(f"review_queue[{index}] missing {key}")
             if item.get("objective_id") not in objective_ids:
                 errors.append(f"review_queue[{index}] references unknown objective")
+            last_record = item.get("last_record")
+            if last_record:
+                label = f"review_queue[{index}].last_record"
+                target = validate_record(root, last_record, label, errors)
+                if target is not None:
+                    metadata = record_metadata(target, yaml, label, errors)
+                    if metadata is not None:
+                        status = metadata.get("assessment_status")
+                        if status != "finalized":
+                            errors.append(f"{label} must reference a finalized review record")
+                        elif not is_legacy_record(metadata):
+                            run_shared_record_validator(target, errors)
+                        record_objective = metadata.get("objective_id")
+                        if record_objective is not None and record_objective != item.get("objective_id"):
+                            errors.append(f"{label} references a different objective")
 
 
 def validate_pedagogy(lesson: Path, body: str, errors: list[str], warnings: list[str]) -> None:
