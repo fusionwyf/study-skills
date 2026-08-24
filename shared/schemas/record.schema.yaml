@@ -1,0 +1,83 @@
+# 统一 record 契约（machine-readable）
+#
+# 本文件是全仓库唯一的 record 字段定义源。
+# 各 skill 的 validator 必须读取本文件做公共字段校验，不得复制字段定义。
+# 人类可读版：shared/references/record-contract.md
+#
+# 兼容规则：不自动迁移旧记录。缺少"推荐"字段的已定稿旧记录只产生警告，
+# 缺少"必需"字段或枚举非法才判失败。
+
+schema: record-contract
+version: 1
+
+vocabularies:
+  assessment_status: [pending, finalized]
+  record_type: [attempt, review]
+  evidence_strength: [strong, medium, weak]
+  mastery: [unseen, recognition, application, transfer, uncertain]
+  exam_mode: [diagnose, plan, drill, review, mock, cram, postmortem]
+  metric: [accuracy, speed, coverage, stability]
+  review_kind: [retrieval, explanation, variation, transfer, error_discrimination]
+  performance: [good, medium, poor]
+
+common:
+  required:
+    record_schema: {type: int, const: 1}
+    assessment_status: {vocabulary: assessment_status}
+  on_finalize_required:
+    attempted_at: {type: date}
+    source_backed: {type: bool}
+    synthetic: {type: bool}
+  on_finalize_recommended:
+    record_id: {type: str, pattern: "^[A-Z]{1,2}[0-9]{4}$"}
+  optional:
+    record_type: {vocabulary: record_type, default: attempt}
+
+types:
+  course_lesson:
+    label: learning-course 教学证据记录
+    detect_field: lesson
+    required:
+      lesson: {type: int, min: 1}
+      evidence_type: {type: str}
+      evidence_strength: {vocabulary: evidence_strength}
+      supported_objectives:
+        type: objective_list
+        item_id_field: id
+        item_mastery_vocabulary: mastery
+    notes: pending 记录允许这些字段为空；finalized 时必须完整。
+
+  exam_attempt:
+    label: exam-prep 尝试与复盘记录
+    detect_field: mode
+    required:
+      mode: {vocabulary: exam_mode}
+    optional:
+      metrics: {type: list, item_vocabulary: metric}
+
+  review:
+    label: spaced-review 复习记录
+    detect_field: review_kind
+    required:
+      review_kind: {vocabulary: review_kind}
+      performance: {vocabulary: performance}
+      hint_used: {type: bool}
+      next_action: {type: str}
+    one_of:
+      objective_id: {type: str}
+      topic: {type: str}
+
+body_sections:
+  canonical:
+    - 原始回答（学习者原话，逐字保留，禁止改写）
+    - 可观察行为（答案里实际能看到什么）
+    - Agent 判断（observed issue、suggested_causes 等，标注为推断）
+    - 下一步（next_action，具体到下一次动作）
+  rule: suggested_causes 未经用户确认不得写成 user_confirmed_cause。
+
+immutability:
+  finalized_is_append_only: "一旦 assessment_status 为 finalized，frontmatter 与原始回答不得修改；更正通过新建记录并引用旧记录完成。"
+
+legacy:
+  course_records_without_record_id: 从文件名推导（NNNN-*），仅警告。
+  missing_source_flags_default: false

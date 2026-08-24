@@ -101,7 +101,12 @@ Preserve the user's answer verbatim.
 - next_action:
 ~~~
 
-Do not convert suggested_causes into user_confirmed_cause without the user's confirmation.
+Field types, enums, and required rules for these frontmatter fields are defined once in the shared contract: see [../../shared/references/record-contract.md](../../shared/references/record-contract.md). This file only keeps exam-specific semantics:
+
+- `mode` uses the exam workflow modes; readiness evidence accepts only the assessment modes diagnose, drill, review, and mock.
+- `metrics` lists exactly which readiness dimensions this record actually measured; a readiness update may only change metrics the record lists.
+- Do not convert suggested_causes into user_confirmed_cause without the user's confirmation.
+- Keep raw user answers verbatim in the record body; agent judgments are appended, never substituted for them.
 
 ## State updates
 

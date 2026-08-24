@@ -21,10 +21,45 @@ REQUIRED_QUESTION_FIELDS = [
     "synthetic",
 ]
 ALLOWED_STATUS = {"provisional", "confirmed", "archived"}
-ALLOWED_MODES = {"diagnose", "plan", "drill", "review", "mock", "cram", "postmortem"}
 ALLOWED_CONFIDENCE = {"low", "medium", "high"}
 ALLOWED_QUESTION_STATUS = {"draft", "ready", "attempted", "reviewed", "retired"}
 ALLOWED_QUESTION_TYPES = {"choice", "fill", "short", "essay", "calculation", "proof", "code", "other"}
+REPO_ROOT = Path(__file__).resolve().parents[2]
+RECORD_SCHEMA_PATH = REPO_ROOT / "shared" / "schemas" / "record.schema.yaml"
+FINALIZED_STATUS = "finalized"  # member of the record contract's assessment_status vocabulary
+# Only used when shared/schemas/record.schema.yaml cannot be read; the schema file stays
+# the source of truth and failed loads are reported as errors in --strict-schema
+# mode. Non-strict validation never imports PyYAML, so it always uses these values.
+FALLBACK_VOCABULARIES = {
+    "assessment_status": ["pending", "finalized"],
+    "exam_mode": ["diagnose", "plan", "drill", "review", "mock", "cram", "postmortem"],
+    "metric": ["accuracy", "speed", "coverage", "stability"],
+}
+ALLOWED_MODES = set(FALLBACK_VOCABULARIES["exam_mode"])
+
+
+def load_record_vocabularies(errors):
+    """Load enum vocabularies from the unified record schema (source of truth).
+
+    Returns (vocabularies, yaml_module). vocabularies falls back to
+    FALLBACK_VOCABULARIES when the schema cannot be read; the failure itself is
+    reported as an error so the schema stays the source of truth.
+    """
+    try:
+        import yaml
+    except ImportError:
+        errors.append("--strict-schema requires PyYAML; install pyyaml or run without --strict-schema")
+        return dict(FALLBACK_VOCABULARIES), None
+    try:
+        schema = yaml.safe_load(RECORD_SCHEMA_PATH.read_text(encoding="utf-8"))
+    except Exception as exc:
+        errors.append(f"record schema cannot be loaded from {RECORD_SCHEMA_PATH}: {exc}")
+        return dict(FALLBACK_VOCABULARIES), yaml
+    vocabularies = schema.get("vocabularies") if isinstance(schema, dict) else None
+    if not isinstance(vocabularies, dict):
+        errors.append("record schema does not define vocabularies")
+        return dict(FALLBACK_VOCABULARIES), yaml
+    return vocabularies, yaml
 
 
 def read_text(path):
@@ -107,11 +142,14 @@ def registered_source_count(exam_dir):
 
 
 def strict_validate_exam_yaml(path, exam_dir, question_counts, errors, warnings):
-    try:
-        import yaml
-    except ModuleNotFoundError:
-        errors.append("--strict-schema requires PyYAML; install pyyaml or run without --strict-schema")
+    vocabularies, yaml = load_record_vocabularies(errors)
+    if yaml is None:
         return
+    assessment_statuses = set(vocabularies.get("assessment_status") or FALLBACK_VOCABULARIES["assessment_status"])
+    exam_modes = set(vocabularies.get("exam_mode") or FALLBACK_VOCABULARIES["exam_mode"])
+    evidence_metrics = set(vocabularies.get("metric") or FALLBACK_VOCABULARIES["metric"])
+    if FINALIZED_STATUS not in assessment_statuses:
+        errors.append(f"record schema does not define assessment_status value: {FINALIZED_STATUS}")
 
     try:
         data = yaml.safe_load(read_text(path))
@@ -148,8 +186,8 @@ def strict_validate_exam_yaml(path, exam_dir, question_counts, errors, warnings)
         errors.append("exam.yaml title must be a non-empty string")
     if data.get("status") not in ALLOWED_STATUS:
         errors.append("exam.yaml status must be one of: " + ", ".join(sorted(ALLOWED_STATUS)))
-    if data.get("mode") not in ALLOWED_MODES:
-        errors.append("exam.yaml mode must be one of: " + ", ".join(sorted(ALLOWED_MODES)))
+    if data.get("mode") not in exam_modes:
+        errors.append("exam.yaml mode must be one of: " + ", ".join(sorted(exam_modes)))
     for key in ["created_at", "updated_at"]:
         if not isinstance(data.get(key), str) or not data.get(key, "").strip():
             errors.append("exam.yaml " + key + " must be a non-empty quoted string")
@@ -207,7 +245,7 @@ def strict_validate_exam_yaml(path, exam_dir, question_counts, errors, warnings)
                 continue
             target = record_path(exam_dir, item.get("record"), label + ".record", errors)
             metrics = item.get("metrics")
-            if not isinstance(metrics, list) or any(metric not in {"accuracy", "speed", "coverage", "stability"} for metric in metrics):
+            if not isinstance(metrics, list) or any(metric not in evidence_metrics for metric in metrics):
                 errors.append(label + " has invalid metrics")
             else:
                 evidenced_metrics.update(metrics)
@@ -218,7 +256,7 @@ def strict_validate_exam_yaml(path, exam_dir, question_counts, errors, warnings)
             if target is not None:
                 metadata = record_frontmatter(target, yaml, label, errors)
                 if metadata is not None:
-                    if metadata.get("record_schema") != 1 or metadata.get("assessment_status") != "finalized":
+                    if metadata.get("record_schema") != 1 or metadata.get("assessment_status") != FINALIZED_STATUS:
                         errors.append(label + " must reference a finalized record_schema 1 record")
                     if sorted(metadata.get("metrics", [])) != sorted(metrics or []):
                         errors.append(label + " metrics disagree with record frontmatter")

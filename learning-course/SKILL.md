@@ -89,6 +89,7 @@ HTML 的“复制学习记录”按钮只汇总原始答案、检查次数、提
 ## 参考路由
 
 - 创建、更新、续学或恢复状态：读取 `references/course-state.md`。
+- 记录字段契约、record 校验报错：读取 `../../shared/references/record-contract.md`。
 - 设计诊断、证据、难度调整或 mastery 判断：读取 `references/assessment.md`。
 - 需要显式设计认知层级时：读取 `references/bloom-taxonomy.md`；`cognitive_level` 始终可选。
 - 选择学科教学模式时：读取 `references/lesson-patterns.md`。

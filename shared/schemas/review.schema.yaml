@@ -1,0 +1,25 @@
+# 复习队列条目契约（machine-readable）
+#
+# review_queue 位于包状态文件内（course.yaml / exam.yaml），
+# 本文件定义每个条目的字段。间隔算法本身不属于本契约；
+# 复习执行流程见 spaced-review skill（Phase 1）。
+
+schema: review-queue
+version: 1
+
+entry:
+  required_one_of:
+    objective_id: {type: str}
+    topic: {type: str}
+  required:
+    due_at: {type: datetime}
+    interval_days: {type: number, min: 0}
+    review_count: {type: int, min: 0}
+  optional:
+    last_record: {type: str}
+    last_reviewed_at: {type: date}
+
+consistency:
+  - "last_record 必须指向包内存在且 finalized 的复习记录。"
+  - "每次间隔调整必须能追溯到一条复习记录；没有记录就没有间隔变化。"
+  - "复习完成后 queue 与 records 必须一致。"

@@ -109,10 +109,16 @@ objectives:
 
 ## Record 格式
 
+记录文件保存在 `records/` 下，文件名使用 `NNNN-slug.md`（四位序号 + dash-case slug）。frontmatter 模板：
+
 ```markdown
 ---
 record_schema: 1
 assessment_status: finalized
+record_id: L0003
+attempted_at: 2026-01-15
+source_backed: false
+synthetic: false
 lesson: 3
 evidence_type: application
 evidence_strength: strong
@@ -141,7 +147,11 @@ supported_objectives:
 - 仍不确定：
 ```
 
-新反馈先以 `assessment_status: pending` 保存，frontmatter 中的 evidence 字段保持 `null` 或空列表。Agent 完成可观察行为和判断后再设为 `finalized`。finalized record 中不得保留“待判断”“待补充”等占位内容；原始反馈正文保持不变。
+各字段的类型、枚举和必填规则统一见 [`../../shared/references/record-contract.md`](../../shared/references/record-contract.md)；本文件只保留课程专属语义：
+
+- 新反馈先以 `assessment_status: pending` 保存，frontmatter 中的 evidence 字段保持 `null` 或空列表。Agent 完成可观察行为和判断后再设为 `finalized`。finalized record 中不得保留“待判断”“待补充”等占位内容；原始反馈正文保持不变。
+- `supported_objectives` 是 mastery 更新的唯一依据：除设为 `uncertain` 外，更新 objective 的 mastery 必须引用一条 finalized record，且该 record 必须在 `supported_objectives` 中明确列出对应 objective 和 mastery。
+- 旧记录兼容：缺少新增公共字段（如 `record_id`、`attempted_at`）的已定稿旧记录仍然有效，validator 只产生警告，不做自动迁移。
 
 ## Phase 转换
 

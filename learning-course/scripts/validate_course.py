@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import argparse
 import re
+import subprocess
+import sys
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -15,9 +17,17 @@ LINK_RE = re.compile(r"(?:href|src)\s*=\s*[\"']([^\"']+)[\"']", re.I)
 LESSON_RE = re.compile(r"^(\d{4})-[a-z0-9\u4e00-\u9fff-]+\.html$", re.I)
 PHASES = {"diagnostic", "designing", "teaching", "awaiting_evidence", "review_due", "recovery"}
 STATUSES = {"draft", "active", "paused", "complete"}
-MASTERY_VALUES = {"unseen", "recognition", "application", "transfer", "uncertain"}
 COGNITIVE_LEVELS = {"remember", "understand", "apply", "analyze", "evaluate", "create"}
 EVIDENCE_STRENGTHS = {"weak", "medium", "strong"}
+REPO_ROOT = Path(__file__).resolve().parents[2]
+RECORD_SCHEMA_PATH = REPO_ROOT / "shared" / "schemas" / "record.schema.yaml"
+SHARED_RECORD_VALIDATOR = REPO_ROOT / "shared" / "scripts" / "validate_record.py"
+# Only used when shared/schemas/record.schema.yaml cannot be read; the load failure
+# itself is reported as an error, so the schema stays the source of truth.
+FALLBACK_VOCABULARIES = {
+    "mastery": ["unseen", "recognition", "application", "transfer", "uncertain"],
+    "assessment_status": ["pending", "finalized"],
+}
 CONDITIONAL_VALUES = {
     "retrieval": {"required", "not-applicable"},
     "feedback": {"required", "not-applicable"},
@@ -33,6 +43,74 @@ def data_value(body: str, name: str) -> str | None:
 
 def has_data_role(body: str, role: str) -> bool:
     return re.search(rf"data-role\s*=\s*[\"'][^\"']*\b{re.escape(role)}\b[^\"']*[\"']", body, re.I) is not None
+
+
+def load_record_vocabularies(errors: list[str]) -> dict[str, object]:
+    """Load enum vocabularies from the unified record schema (source of truth)."""
+    try:
+        import yaml  # type: ignore
+    except ImportError:
+        errors.append("--strict-schema requires PyYAML")
+        return dict(FALLBACK_VOCABULARIES)
+    try:
+        schema = yaml.safe_load(RECORD_SCHEMA_PATH.read_text(encoding="utf-8"))
+    except Exception as exc:
+        errors.append(f"record schema cannot be loaded from {RECORD_SCHEMA_PATH}: {exc}")
+        return dict(FALLBACK_VOCABULARIES)
+    if not isinstance(schema, dict):
+        errors.append("record schema root must be a mapping")
+        return dict(FALLBACK_VOCABULARIES)
+    vocabularies = schema.get("vocabularies")
+    if not isinstance(vocabularies, dict) or not vocabularies:
+        errors.append("record schema does not define vocabularies")
+        return dict(FALLBACK_VOCABULARIES)
+    return vocabularies
+
+
+def run_shared_record_validator(record_path: Path, errors: list[str]) -> None:
+    """Delegate per-record frontmatter validation to the shared validator.
+
+    Non-zero exit means invalid; its ERROR lines are surfaced as errors while
+    WARN lines stay non-fatal (legacy records without new common fields).
+    """
+    if not SHARED_RECORD_VALIDATOR.is_file():
+        errors.append(f"shared record validator is missing: {SHARED_RECORD_VALIDATOR}")
+        return
+    try:
+        completed = subprocess.run(
+            [sys.executable, str(SHARED_RECORD_VALIDATOR), str(record_path)],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=False,
+        )
+    except OSError as exc:
+        errors.append(f"record validator could not run for {record_path.name}: {exc}")
+        return
+    lines = [line.strip() for line in (completed.stdout + completed.stderr).splitlines() if line.strip()]
+    for line in lines:
+        if line.startswith("WARN:"):
+            print(f"RECORD WARNING ({record_path.name}): {line[len('WARN:'):].strip()}")
+    if completed.returncode == 0:
+        return
+    reported = False
+    for line in lines:
+        if line.startswith(("ERROR:", "FAIL")):
+            errors.append(f"{record_path.name}: {line}")
+            reported = True
+    if not reported:
+        errors.append(f"{record_path.name}: shared record validator exited with {completed.returncode}")
+
+
+def is_legacy_record(metadata: dict[str, object]) -> bool:
+    """True when a finalized record predates the additive common fields.
+
+    The contract is additive: old records lacking attempted_at/source_backed/
+    synthetic keep validating through the local checks only, with no auto
+    migration; records carrying the new fields get full contract validation.
+    """
+    return all(metadata.get(field) is None for field in ("attempted_at", "source_backed", "synthetic"))
 
 
 def validate_record(root: Path, value: object, label: str, errors: list[str]) -> Path | None:
@@ -88,6 +166,13 @@ def validate_yaml_schema(
     except ImportError:
         errors.append("--strict-schema requires PyYAML")
         return
+    vocabularies = load_record_vocabularies(errors)
+    mastery_vocab = vocabularies.get("mastery")
+    mastery_values = set(mastery_vocab) if isinstance(mastery_vocab, list) else set(FALLBACK_VOCABULARIES["mastery"])
+    status_vocab = vocabularies.get("assessment_status")
+    assessment_statuses = (
+        set(status_vocab) if isinstance(status_vocab, list) else set(FALLBACK_VOCABULARIES["assessment_status"])
+    )
     try:
         state = yaml.safe_load(path.read_text(encoding="utf-8"))
     except Exception as exc:
@@ -145,7 +230,7 @@ def validate_yaml_schema(
             else:
                 objective_ids.add(objective_id)
             mastery = objective.get("mastery")
-            if mastery not in MASTERY_VALUES:
+            if mastery not in mastery_values:
                 errors.append(f"objectives[{index}] has invalid mastery")
             cognitive = objective.get("cognitive_level")
             if cognitive is not None and cognitive not in COGNITIVE_LEVELS:
@@ -168,14 +253,25 @@ def validate_yaml_schema(
                 if item.get("strength") not in EVIDENCE_STRENGTHS:
                     errors.append(f"{label} invalid strength")
                 evidence_mastery = item.get("mastery")
-                if evidence_mastery not in MASTERY_VALUES - {"unseen", "uncertain"}:
+                if evidence_mastery not in mastery_values - {"unseen", "uncertain"}:
                     errors.append(f"{label} invalid or missing mastery")
                 if evidence_mastery == mastery:
                     supports_current_mastery = True
                 if target is not None:
                     metadata = record_metadata(target, yaml, label, errors)
                     if metadata is not None:
-                        if metadata.get("record_schema") != 1 or metadata.get("assessment_status") != "finalized":
+                        if metadata.get("assessment_status") == "finalized":
+                            if is_legacy_record(metadata):
+                                print(
+                                    f"RECORD NOTE ({target.name}): legacy record without new common "
+                                    "fields; shared contract validation skipped"
+                                )
+                            else:
+                                run_shared_record_validator(target, errors)
+                        status = metadata.get("assessment_status")
+                        if status not in assessment_statuses:
+                            errors.append(f"{label} invalid assessment_status: {status!r}")
+                        if metadata.get("record_schema") != 1 or status != "finalized":
                             errors.append(f"{label} must reference a finalized record_schema 1 record")
                         if metadata.get("evidence_type") != item.get("type"):
                             errors.append(f"{label} type disagrees with record frontmatter")
@@ -255,6 +351,15 @@ def validate_pedagogy(lesson: Path, body: str, errors: list[str], warnings: list
 
 
 def main() -> int:
+    # Shared-validator output may contain non-ASCII record text; keep our own
+    # streams UTF-8 so piped output stays decodable regardless of platform.
+    try:
+        for stream in (sys.stdout, sys.stderr):
+            reconfigure = getattr(stream, "reconfigure", None)
+            if callable(reconfigure):
+                reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("course_dir")
     parser.add_argument("--strict", action="store_true", help="Treat warnings as errors")

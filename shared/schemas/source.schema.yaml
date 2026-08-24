@@ -1,0 +1,31 @@
+# 来源注册契约（machine-readable）
+#
+# SOURCES.md 中每一行登记、以及 source-materials/ 内每个来源的元数据，
+# 都遵循本契约。字段定义全仓库唯一，validator 从本文件读取。
+#
+# 消费方：exam-prep（SOURCES.md）、learning-course（课程来源区块）、
+# source-grounded-study（Phase 2 的注册与追踪流程）。
+
+schema: source-registry
+version: 1
+
+vocabularies:
+  source_type: [textbook, paper, webpage, lecture_notes, past_paper, syllabus, user_notes, other]
+  reliability: [official, course, user, synthetic, unknown]
+  source_status: [active, superseded]
+
+entry:
+  required:
+    source_id: {type: str, pattern: "^S[0-9]{3}$"}
+    title: {type: str}
+    source_type: {vocabulary: source_type}
+    reliability: {vocabulary: reliability}
+    registered_at: {type: date}
+  optional:
+    coverage: {type: str}
+    status: {vocabulary: source_status, default: active}
+
+rules:
+  - "优先级：official > course > user > synthetic；不确定时 reliability 记 unknown，不得猜成 official。"
+  - "合成内容永远标记 synthetic，不得伪装为来源事实。"
+  - "弱来源（user_notes）不得被静默当作官方考试范围。"

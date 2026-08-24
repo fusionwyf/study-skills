@@ -13,10 +13,49 @@ from typing import Any
 
 
 SCHEMA_VERSION = 2
+REPO_ROOT = Path(__file__).resolve().parents[2]
+RECORD_SCHEMA_PATH = REPO_ROOT / "shared" / "schemas" / "record.schema.yaml"
 ALLOWED_STATUS = {"provisional", "confirmed", "archived"}
-ALLOWED_MODES = {"diagnose", "plan", "drill", "review", "mock", "cram", "postmortem"}
 ALLOWED_CONFIDENCE = {"low", "medium", "high"}
 READINESS_KEYS = {"accuracy", "speed", "coverage", "stability", "confidence"}
+
+
+def load_record_vocabularies() -> dict[str, Any]:
+    """Load enum vocabularies from the unified record schema (source of truth)."""
+    try:
+        import yaml  # type: ignore
+    except ImportError as exc:
+        raise SystemExit("update_exam.py requires PyYAML") from exc
+    try:
+        schema = yaml.safe_load(RECORD_SCHEMA_PATH.read_text(encoding="utf-8"))
+    except Exception as exc:
+        raise SystemExit(f"cannot load record schema from {RECORD_SCHEMA_PATH}: {exc}") from exc
+    vocabularies = schema.get("vocabularies") if isinstance(schema, dict) else None
+    if not isinstance(vocabularies, dict):
+        raise SystemExit(f"record schema at {RECORD_SCHEMA_PATH} does not define vocabularies")
+    return vocabularies
+
+
+_VOCABULARIES = load_record_vocabularies()
+
+
+def _vocabulary(name: str) -> set[str]:
+    values = _VOCABULARIES.get(name)
+    if not values:
+        raise SystemExit(f"record schema at {RECORD_SCHEMA_PATH} does not define vocabulary: {name}")
+    return set(values)
+
+
+ASSESSMENT_STATUSES = _vocabulary("assessment_status")
+EXAM_METRICS = _vocabulary("metric")
+ALLOWED_MODES = _vocabulary("exam_mode")
+FINALIZED_STATUS = "finalized"  # must remain a member of the assessment_status vocabulary
+if FINALIZED_STATUS not in ASSESSMENT_STATUSES:
+    raise SystemExit(
+        f"record schema at {RECORD_SCHEMA_PATH} does not define assessment_status value: {FINALIZED_STATUS}"
+    )
+# Exam policy subset of exam_mode: modes whose records may back readiness updates.
+ASSESSMENT_MODES = {"diagnose", "drill", "review", "mock"}
 
 
 def load_state(path: Path) -> tuple[dict[str, Any], Any]:
@@ -97,14 +136,14 @@ def record_metadata(path: Path, yaml: Any) -> dict[str, Any]:
     metadata = yaml.safe_load(parts[1]) or {}
     if not isinstance(metadata, dict):
         raise ValueError("readiness evidence frontmatter must be a mapping: " + str(path))
-    if metadata.get("record_schema") != 1 or metadata.get("assessment_status") != "finalized":
+    if metadata.get("record_schema") != 1 or metadata.get("assessment_status") != FINALIZED_STATUS:
         raise ValueError("readiness evidence must use record_schema 1 and assessment_status finalized")
-    if not metadata.get("record_id") or metadata.get("mode") not in {"diagnose", "drill", "review", "mock"}:
+    if not metadata.get("record_id") or metadata.get("mode") not in ASSESSMENT_MODES:
         raise ValueError("readiness evidence requires record_id and an assessment mode")
     metrics = metadata.get("metrics")
     if not isinstance(metrics, list) or not metrics:
         raise ValueError("readiness evidence must list measured metrics")
-    if any(metric not in READINESS_KEYS - {"confidence"} for metric in metrics):
+    if any(metric not in EXAM_METRICS for metric in metrics):
         raise ValueError("readiness evidence contains an invalid metric")
     if not isinstance(metadata.get("source_backed"), bool) or not isinstance(metadata.get("synthetic"), bool):
         raise ValueError("readiness evidence requires boolean source_backed and synthetic fields")

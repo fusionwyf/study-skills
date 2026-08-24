@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import tempfile
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
@@ -13,6 +14,7 @@ from typing import Any
 
 MASTERY_VALUES = {"unseen", "recognition", "application", "transfer", "uncertain"}
 PHASE_VALUES = {"diagnostic", "designing", "teaching", "awaiting_evidence", "review_due", "recovery"}
+RECORD_FILENAME_RE = re.compile(r"^(\d{4})-")
 
 
 def now_iso() -> str:
@@ -127,6 +129,16 @@ def lesson_exists(root: Path, lesson: int) -> bool:
     return any((root / "lessons").glob(f"{lesson:04d}-*.html"))
 
 
+def next_record_sequence(records_dir: Path) -> int:
+    highest = 0
+    if records_dir.is_dir():
+        for entry in records_dir.iterdir():
+            match = RECORD_FILENAME_RE.match(entry.name)
+            if match:
+                highest = max(highest, int(match.group(1)))
+    return highest + 1
+
+
 def make_record(args: argparse.Namespace, record_path: Path) -> str | None:
     if args.feedback_file:
         source = Path(args.feedback_file).expanduser().resolve()
@@ -140,9 +152,15 @@ def make_record(args: argparse.Namespace, record_path: Path) -> str | None:
 
     if record_path.exists():
         raise SystemExit(f"feedback record already exists and records are append-only: {record_path}")
+    record_id = "L%04d" % next_record_sequence(record_path.parent)
+    attempted_at = date.today().isoformat()
     content = f"""---
 record_schema: 1
 assessment_status: pending
+record_id: {record_id}
+attempted_at: {attempted_at}
+source_backed: false
+synthetic: false
 lesson: {args.lesson}
 evidence_type: null
 evidence_strength: null

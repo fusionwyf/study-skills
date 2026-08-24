@@ -3,7 +3,7 @@ course_id: example-course
 title: 5 分钟编程入门：什么是变量
 language: zh-CN
 created_at: 2026-01-01T00:00:00Z
-updated_at: 2026-01-01T00:00:00Z
+updated_at: 2026-01-02T00:00:00Z
 status: active
 phase: awaiting_evidence
 learner:
@@ -27,4 +27,4 @@ objectives:
     mastery: unseen
     evidence: []
 review_queue: []
-last_feedback: null
+last_feedback: records/0001-example-feedback.md

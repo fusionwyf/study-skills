@@ -1,0 +1,43 @@
+# 学习交接记录契约（machine-readable）
+#
+# learning-handoff 在两个独立的学习包之间建立显式交接。
+# 交接是 artifact coupling：只通过交接文件传递，不直接修改对方包的内部状态。
+# 交接记录保存在发起包的 handoffs/ 目录；两个包始终保持独立，不合并状态。
+
+schema: handoff
+version: 1
+
+vocabularies:
+  handoff_status: [open, returned, closed]
+
+frontmatter:
+  required:
+    handoff_schema: {type: int, const: 1}
+    handoff_id: {type: str, pattern: "^H[0-9]{4}$"}
+    status: {vocabulary: handoff_status}
+    created_at: {type: date}
+    return_condition: {type: list}
+
+from:
+  required:
+    skill: {type: str}
+    package: {type: str}
+    record: {type: str}
+
+to:
+  required:
+    skill: {type: str}
+    goal: {type: str}
+    boundary:
+      include: {type: list}
+      exclude: {type: list}
+
+optional:
+  returned_record: {type: str}
+  returned_at: {type: date}
+
+rules:
+  - "boundary.include/exclude 划定补课边界，防止补课无限扩张。"
+  - "return_condition 至少包含一项可验证条件（如一条 finalized application 记录、一个 transfer 任务）。"
+  - "status 为 returned 或 closed 时必须携带 returned_record。"
+  - "交接不复制包状态：目标包只新增自己的 objective 和记录；原包在用户确认后依据 return_record 更新自己的计划。"
