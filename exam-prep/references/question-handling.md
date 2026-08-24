@@ -16,16 +16,11 @@ Agent-generated variants
 
 Mark uncertain source claims in SOURCES.md; do not silently treat weak notes as official scope.
 
+General reliability hierarchy and conflict rules: see `../../shared/references/source-provenance.md`.
+
 ## Source registration
 
-For each material, record:
-
-- source_id
-- title or filename
-- source type
-- date received
-- coverage notes
-- reliability: official, course, user, synthetic, or unknown
+Required fields and reliability values follow `../../shared/references/source-provenance.md` and `../../shared/schemas/source.schema.yaml`.
 
 When files are large, extract only the sections needed for the current task and keep the original in source-materials/.
 
@@ -60,6 +55,8 @@ Every generated variant must include:
 ~~~
 
 Tell the user when a question is a generated variant rather than source material.
+
+General synthetic-marking rules: see `../../shared/references/source-provenance.md`.
 
 ## Delivery by question type
 

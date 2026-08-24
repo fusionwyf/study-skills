@@ -8,6 +8,8 @@ Read only the branch matching the active mode. Every branch ends when its listed
 2. Select a minimal source-backed sample that can change the training plan, then capture attempts as finalized records.
 3. Summarize observable gaps, timing risk, and evidence limits; update only measured readiness metrics.
 
+Diagnosis principles (when to diagnose, stop conditions, failure typing): see `../../shared/references/diagnostic-protocol.md`.
+
 Completion criterion: `PLAN.md` names the starting priorities, diagnostic records support the readiness baseline, and unknown scope remains `provisional`.
 
 ## Plan

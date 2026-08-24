@@ -91,6 +91,8 @@
 
 `verified` 和 `unverified` 必须有 `data-role="sources"` 区块；`unverified` 由 validator 报 warning。
 
+来源可靠性与合成标记的通用规则见 `../../shared/references/source-provenance.md`。
+
 ## 通用行为
 
 所有组件支持键盘、窄屏、打印和减少动画偏好。重要正文在 JavaScript 失败时仍可读取；交互状态不能只依靠颜色或悬停。
