@@ -56,7 +56,57 @@ def validate_count(name, value, errors):
         errors.append("materials." + name + " must be a non-negative integer")
 
 
-def strict_validate_exam_yaml(path, errors, warnings):
+def record_path(exam_dir, value, label, errors):
+    if not isinstance(value, str) or not value:
+        errors.append(label + " must be a records/ path")
+        return None
+    target = (exam_dir / value).resolve()
+    try:
+        target.relative_to((exam_dir / "records").resolve())
+    except ValueError:
+        errors.append(label + " escapes records/")
+        return None
+    if not target.is_file():
+        errors.append(label + " does not exist: " + value)
+        return None
+    return target
+
+
+def record_frontmatter(path, yaml, label, errors):
+    text = read_text(path)
+    if not text.startswith("---\n"):
+        errors.append(label + " is missing YAML frontmatter")
+        return None
+    parts = text.split("---", 2)
+    if len(parts) != 3:
+        errors.append(label + " has invalid YAML frontmatter")
+        return None
+    try:
+        metadata = yaml.safe_load(parts[1]) or {}
+    except Exception as exc:
+        errors.append(label + " frontmatter cannot be parsed: " + str(exc))
+        return None
+    if not isinstance(metadata, dict):
+        errors.append(label + " frontmatter must be a mapping")
+        return None
+    return metadata
+
+
+def registered_source_count(exam_dir):
+    path = exam_dir / "SOURCES.md"
+    if not path.is_file():
+        return 0
+    count = 0
+    for line in read_text(path).splitlines():
+        stripped = line.strip()
+        if stripped.startswith("|") and stripped.endswith("|"):
+            cells = [cell.strip() for cell in stripped.strip("|").split("|")]
+            if cells and cells[0] not in {"source_id", "---"} and not set(cells[0]) <= {"-", ":"}:
+                count += 1
+    return count
+
+
+def strict_validate_exam_yaml(path, exam_dir, question_counts, errors, warnings):
     try:
         import yaml
     except ModuleNotFoundError:
@@ -85,14 +135,15 @@ def strict_validate_exam_yaml(path, errors, warnings):
         "time_budget",
         "materials",
         "readiness",
+        "readiness_evidence",
         "notes",
     ]
     for key in required_top:
         if key not in data:
             errors.append("exam.yaml missing top-level key: " + key)
 
-    if data.get("schema_version") != 1:
-        errors.append("exam.yaml schema_version must be 1")
+    if data.get("schema_version") != 2:
+        errors.append("exam.yaml schema_version must be 2")
     if not isinstance(data.get("title"), str) or not data.get("title", "").strip():
         errors.append("exam.yaml title must be a non-empty string")
     if data.get("status") not in ALLOWED_STATUS:
@@ -143,22 +194,71 @@ def strict_validate_exam_yaml(path, errors, warnings):
         if readiness.get("confidence") not in ALLOWED_CONFIDENCE:
             errors.append("readiness.confidence must be low, medium, or high")
 
+    evidence = data.get("readiness_evidence")
+    source_backed_evidence = False
+    evidenced_metrics = set()
+    if not isinstance(evidence, list):
+        errors.append("readiness_evidence must be a list")
+    else:
+        for index, item in enumerate(evidence):
+            label = f"readiness_evidence[{index}]"
+            if not isinstance(item, dict):
+                errors.append(label + " must be a mapping")
+                continue
+            target = record_path(exam_dir, item.get("record"), label + ".record", errors)
+            metrics = item.get("metrics")
+            if not isinstance(metrics, list) or any(metric not in {"accuracy", "speed", "coverage", "stability"} for metric in metrics):
+                errors.append(label + " has invalid metrics")
+            else:
+                evidenced_metrics.update(metrics)
+            if not isinstance(item.get("source_backed"), bool) or not isinstance(item.get("synthetic"), bool):
+                errors.append(label + " requires boolean source_backed and synthetic")
+            if item.get("source_backed"):
+                source_backed_evidence = True
+            if target is not None:
+                metadata = record_frontmatter(target, yaml, label, errors)
+                if metadata is not None:
+                    if metadata.get("record_schema") != 1 or metadata.get("assessment_status") != "finalized":
+                        errors.append(label + " must reference a finalized record_schema 1 record")
+                    if sorted(metadata.get("metrics", [])) != sorted(metrics or []):
+                        errors.append(label + " metrics disagree with record frontmatter")
+                    for key in ("source_backed", "synthetic"):
+                        if metadata.get(key) != item.get(key):
+                            errors.append(label + " " + key + " disagrees with record frontmatter")
+
     notes = data.get("notes")
     if not isinstance(notes, list) or any(not isinstance(note, str) for note in notes):
         errors.append("exam.yaml notes must be a list of strings")
 
-    if (
-        data.get("status") == "confirmed"
-        and isinstance(data.get("materials"), dict)
-        and data["materials"].get("question_count") == 0
+    total, synthetic, source_backed = question_counts
+    sources = registered_source_count(exam_dir)
+    if isinstance(materials, dict):
+        expected = {"source_count": sources, "question_count": total, "synthetic_count": synthetic}
+        for key, value in expected.items():
+            if materials.get(key) != value:
+                errors.append(f"materials.{key} is {materials.get(key)!r}; package contains {value}")
+    if data.get("status") == "confirmed" and (sources == 0 or total == 0 or source_backed == 0):
+        errors.append("confirmed status requires registered sources and source-backed questions")
+    if isinstance(readiness, dict):
+        missing_metrics = sorted(
+            key
+            for key in ("accuracy", "speed", "coverage", "stability")
+            if readiness.get(key, 0) > 0 and key not in evidenced_metrics
+        )
+        if missing_metrics:
+            errors.append("positive readiness values lack evidence for: " + ", ".join(missing_metrics))
+        if readiness.get("confidence") != "low" and not evidence:
+            errors.append("medium or high confidence requires readiness evidence")
+    if isinstance(readiness, dict) and readiness.get("confidence") == "high" and (
+        source_backed == 0 or not source_backed_evidence
     ):
-        warnings.append("exam.yaml is confirmed while question_count is 0")
+        errors.append("high confidence requires source-backed questions and readiness evidence")
 
 
 def fallback_validate_exam_yaml(path, errors, warnings):
     text = read_text(path)
-    if yaml_scalar(text, "schema_version") != "1":
-        errors.append("exam.yaml must contain schema_version: 1")
+    if yaml_scalar(text, "schema_version") != "2":
+        errors.append("exam.yaml must contain schema_version: 2")
 
     status = yaml_scalar(text, "status")
     if status not in ALLOWED_STATUS:
@@ -190,7 +290,7 @@ def validate_question_banks(exam_dir, errors, warnings):
     files = sorted(bank_dir.glob("*.jsonl"))
     if not files:
         warnings.append("no question-bank/*.jsonl files found")
-        return
+        return 0, 0, 0
 
     ids = set()
     source_backed = 0
@@ -231,6 +331,7 @@ def validate_question_banks(exam_dir, errors, warnings):
 
     if source_backed == 0 and synthetic > 0:
         warnings.append("question bank contains only synthetic questions")
+    return source_backed + synthetic, synthetic, source_backed
 
 
 def validate_error_log(path, errors):
@@ -268,15 +369,15 @@ def main():
         if not (exam_dir / rel_path).is_dir():
             errors.append("missing directory: " + rel_path)
 
+    question_counts = validate_question_banks(exam_dir, errors, warnings)
+
     if (exam_dir / "exam.yaml").exists():
         if args.strict_schema:
-            strict_validate_exam_yaml(exam_dir / "exam.yaml", errors, warnings)
+            strict_validate_exam_yaml(exam_dir / "exam.yaml", exam_dir, question_counts, errors, warnings)
         else:
             fallback_validate_exam_yaml(exam_dir / "exam.yaml", errors, warnings)
     if (exam_dir / "error-log.md").exists():
         validate_error_log(exam_dir / "error-log.md", errors)
-
-    validate_question_banks(exam_dir, errors, warnings)
 
     for warning in warnings:
         print("WARN: " + warning)

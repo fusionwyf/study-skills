@@ -1,4 +1,4 @@
-schema_version: 1
+schema_version: 2
 title: "Example Statistics Midterm"
 status: confirmed
 mode: review
@@ -19,5 +19,14 @@ readiness:
   coverage: 40
   stability: 45
   confidence: medium
+readiness_evidence:
+  - record: records/R0001.md
+    metrics:
+      - accuracy
+      - coverage
+      - speed
+      - stability
+    source_backed: true
+    synthetic: false
 notes:
   - "Minimal example for format inspection and validator smoke tests."

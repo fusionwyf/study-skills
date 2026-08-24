@@ -1,4 +1,6 @@
 interface:
   display_name: "Exam Prep"
-  short_description: "Exam drills, mocks, error logs, and cram sheets."
-  default_prompt: "Use $exam-prep to turn my exam materials into drills, mock exams, error review, and a cram plan."
+  short_description: "Evidence-linked exam drills, mocks, error review, and cram plans."
+  default_prompt: "Use $exam-prep to prepare toward my exam outcome with drills, mocks, error review, and a cram plan."
+policy:
+  allow_implicit_invocation: true

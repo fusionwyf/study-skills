@@ -1,13 +1,13 @@
 ---
 name: learning-course
-description: Build, continue, and export adaptive multi-lesson courses as portable offline-capable HTML packages with learner evidence, retained progress, retrieval practice, and optional PDF export. Use when the learner explicitly requests a systematic, serial, multi-lesson, or multi-session course; asks to continue an existing learning-course package; or requests PDF export from one. Do not use for one-off explanations, ordinary tutoring questions, or standalone study plans.
+description: "Durable mastery courses: build, continue, and export adaptive multi-session learning as portable HTML packages with evidence, retrieval practice, and retained progress. Use for an explicitly systematic course, an existing learning-course package, or its PDF export. Prefer exam-prep when an exam date, score, syllabus, past papers, timed drills, or readiness is the primary outcome; handle one-off tutoring directly."
 ---
 
 # 通用教学课程
 
 ## 核心约束
 
-把主题组织成可持续的自适应课程，而不是一组静态网页。HTML 是课程内容源产物；PDF 只是在需要时生成的静态发布物。
+以 durable mastery 为目标，把主题组织成可持续的自适应课程。HTML 是课程内容源产物；PDF 是按需生成的静态发布物。
 
 课程必须能够跨 Agent、跨会话继续维护：
 
@@ -52,6 +52,8 @@ description: Build, continue, and export adaptive multi-lesson courses as portab
 5. 选择适合本主题的教学模式，生成一个具有可验证学习成果和 evidence opportunity 的 HTML 课件。
 6. 将 phase 设为 `awaiting_evidence`，重新生成索引并验证课程包。
 
+完成条件：成功标准和 objective 已写入状态，第一课文件存在且引用已定义 objective，phase 为 `awaiting_evidence`，两条验证命令均通过。
+
 ## Continue
 
 1. 读取 `course.yaml`、`PLAN.md`、最近相关 lesson 和最新 `records/`。
@@ -60,20 +62,21 @@ description: Build, continue, and export adaptive multi-lesson courses as portab
 4. 根据 evidence 强度决定保持难度、补前置、增加变式、推进或设为 `uncertain`。
 5. 生成下一课后进入 `awaiting_evidence`。不要提前创建不存在的反馈。
 
+完成条件：所有新 mastery 都可追溯到 finalized record；下一项动作是到期复习、针对性补救或一节引用已定义 objective 的新课；状态与索引已经验证。
+
 单独回答课程问题时使用 `teaching`：要求学习者作答后进入 `awaiting_evidence`；纯澄清后恢复先前 phase。生成课件不使用 `teaching`。
 
 ## Evidence 与反馈
 
 每课必须包含一个获取掌握证据的机会。证据可以是练习答案、解释、作品、操作结果、反思或普通聊天回复。
 
-HTML 的“复制学习记录”按钮只汇总原始答案、检查次数、提示使用、即时题目判定和学习者反思，不推断 mastery。学习者把结构化 Markdown 粘贴给 Agent 后：
+HTML 的“复制学习记录”按钮只汇总原始答案、检查次数、提示使用、即时题目判定和学习者反思，不推断 mastery。学习者把结构化 Markdown 粘贴给 Agent 后使用两阶段记录：
 
-1. 原样保存到 `records/`。
-2. 区分可观察行为和自我报告。
-3. 判断 evidence type、strength 和可支持的 mastery。
-4. 使用 `scripts/update_progress.py` 更新状态。
+1. 使用 `scripts/update_progress.py <course-dir> --lesson <N> --feedback-file <file>` 捕获原始反馈；生成的 record 保持 `assessment_status: pending`。
+2. 在 record 中区分可观察行为和自我报告，填写 evidence type、strength、supported objectives，并设为 `assessment_status: finalized`。
+3. 使用 `--evidence-record <record> --objective <ID=MASTERY>` 更新状态。objective 必须已经存在，record 必须明确支持该更新。
 
-除 `uncertain` 外，修改 mastery 必须引用已有 record。复习间隔只由 `update_progress.py` 的当前算法管理，主文件不复制算法。
+完成条件：原始反馈未被改写，finalized record 不含待判断占位符，状态中的 evidence type、strength 和 mastery 与 record frontmatter 一致。除 `uncertain` 外，修改 mastery 必须引用 finalized record。复习间隔只由 `update_progress.py` 的当前算法管理，主文件不复制算法。
 
 ## Recovery
 
@@ -89,9 +92,8 @@ HTML 的“复制学习记录”按钮只汇总原始答案、检查次数、提
 - 设计诊断、证据、难度调整或 mastery 判断：读取 `references/assessment.md`。
 - 需要显式设计认知层级时：读取 `references/bloom-taxonomy.md`；`cognitive_level` 始终可选。
 - 选择学科教学模式时：读取 `references/lesson-patterns.md`。
-- 创建或修改任何 HTML 组件时：读取 `references/components.md` 并复用 `assets/course-template/`。
+- 创建或修改代码、图表、步骤、提示、参数探索、术语、反馈、问答、来源或其他 HTML 组件时：读取 `references/components.md` 并复用 `assets/course-template/`。
 - 使用公式组件时：同时读取 `references/math-rendering.md`。
-- 使用代码、图表、步骤展开、提示、参数探索、术语卡、学习反馈、问答或来源组件时：读取 `references/components.md` 对应契约。
 - 导出或审查 PDF 时：读取 `references/pdf-export.md`。
 
 `assets/example-course/` 只用于模板调试或 validator 烟雾测试，日常 create/continue 不读取。
@@ -103,6 +105,7 @@ HTML 的“复制学习记录”按钮只汇总原始答案、检查次数、提
 ```text
 python scripts/build_index.py <course-dir>
 python scripts/validate_course.py <course-dir> --strict-schema --pedagogical
+python -X utf8 <skill-creator>/scripts/quick_validate.py <skill-dir>
 ```
 
 validator 只认显式 schema 和 `data-*` 契约，不使用关键词猜测。只有需要打印且模型具备视觉能力，或学习者明确报告视觉问题时才进行视觉检查。

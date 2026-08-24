@@ -12,10 +12,10 @@ Use this reference when creating, continuing, recovering, or validating an exam-
 
 ## exam.yaml
 
-Use schema version 1:
+Use schema version 2:
 
 ~~~yaml
-schema_version: 1
+schema_version: 2
 title: "Exam name"
 status: provisional
 mode: diagnose
@@ -36,6 +36,7 @@ readiness:
   coverage: 0
   stability: 0
   confidence: low
+readiness_evidence: []
 notes:
   - "Add constraints, risks, and open questions here."
 ~~~
@@ -43,7 +44,7 @@ notes:
 status values:
 
 - provisional: started with incomplete materials or unverified scope.
-- confirmed: enough exam facts are known to drive a plan.
+- confirmed: registered sources and source-backed questions are sufficient to drive a plan.
 - archived: exam is over or no longer active.
 
 ## Question object
@@ -71,25 +72,50 @@ Draft extraction is allowed, but draft questions should not drive high-confidenc
 
 Save user attempts and review outcomes in records/ as Markdown or JSON. Keep raw user answers intact.
 
-Recommended fields:
+Use YAML frontmatter so readiness updates can verify the record:
 
-~~~yaml
-record_id: "R0001"
-question_id: "Q0001"
+~~~markdown
+---
+record_schema: 1
+assessment_status: finalized
+record_id: R0001
 mode: drill
-attempted_at: "YYYY-MM-DD"
-time_spent_minutes: null
-user_answer: |
-  Preserve the user's answer verbatim.
-score_estimate: null
-agent_observed_issue: []
-suggested_causes: []
-user_confirmed_cause: null
-next_action: null
+attempted_at: YYYY-MM-DD
+metrics:
+  - accuracy
+source_backed: true
+synthetic: false
+---
+# Attempt
+
+## User Answer
+
+Preserve the user's answer verbatim.
+
+## Review
+
+- score_estimate:
+- agent_observed_issue:
+- suggested_causes:
+- user_confirmed_cause:
+- next_action:
 ~~~
 
 Do not convert suggested_causes into user_confirmed_cause without the user's confirmation.
 
 ## State updates
 
-Use scripts/update_exam.py for mode, readiness, materials, and updated_at changes. Keep readiness conservative and evidence-backed; keep confidence low when evidence is sparse, source material is weak, or most questions are synthetic.
+Use `scripts/update_exam.py --sync-materials` to derive counts from `SOURCES.md` and `question-bank/*.jsonl`. Use `--readiness ... --evidence-record records/<record>` for evidence-backed readiness changes. The referenced finalized record must list every numeric metric being changed. Keep confidence low when evidence is sparse, source material is weak, or most questions are synthetic.
+
+`readiness_evidence` stores only record paths, measured metrics, and source/synthetic flags. The record remains the content source of truth.
+
+## Recovery
+
+When `exam.yaml` is missing, unparseable, or not schema v2:
+
+1. Preserve the original file and inspect `PLAN.md`, `SOURCES.md`, question banks, records, mocks, and error log.
+2. Generate `exam.recovered.yaml` using schema v2; annotate uncertain values in `notes` as `confirmed`, `inferred`, or `unknown`.
+3. Validate a temporary package copy in which `exam.recovered.yaml` is named `exam.yaml`; keep the original package untouched.
+4. Replace `exam.yaml` only after the user confirms the recovered state.
+
+Completion criterion: the recovered file validates, every readiness value has a recoverable evidence record or is reset conservatively, and the original state remains available.

@@ -1,25 +1,27 @@
 ---
 name: exam-prep
-description: Prepare for exams from user-provided materials. Use when the user is actively preparing for an exam, drilling questions, reviewing mistakes, running mock exams, or cramming, including requests like 备考, 刷题, 真题, 模考, 错题复盘, and 考前冲刺. Do not use for systematic multi-lesson courses, ordinary tutoring, one-off explanations, or generic study advice.
+description: "Exam outcome preparation: diagnose, plan, drill, review, mock, and cram against an exam date, score, syllabus, or question format, even when materials are initially incomplete. Use for 备考, 刷题, 真题, 模考, 错题复盘, and 考前冲刺. Prefer learning-course when durable multi-session mastery is the primary outcome; handle one-off tutoring directly."
 ---
 
 # Exam Prep
 
 ## 核心定位
 
-把考试资料转成可持续的备考循环：抽题、刷题、限时训练、错题反馈、模考复盘、readiness 跟踪和考前速记。
+以 exam outcome 为目标，把考试范围和资料转成可持续的备考循环：抽题、刷题、限时训练、错题反馈、模考复盘、readiness 跟踪和考前速记。
 
-保持 exam-prep 与 learning-course 隔离。不要读取、修改或触发课程包；知识漏洞在当前题目和知识点范围内讲解、示范和出变式题。
+保持 exam-prep 与 learning-course 状态隔离，只读写独立考试包。知识漏洞在当前题目和知识点范围内讲解、示范和出变式题。
 
 ## 工作模式
 
-- diagnose：根据考试资料、剩余时间和少量题目判断备考起点。
-- plan：建立或更新备考计划、资料清单、题库和 readiness 基线。
-- drill：围绕题型、知识点、速度或错题模式生成练习。
-- review：复盘用户答案，记录可观察问题和用户确认错因。
-- mock：组织限时模拟、估分、时间复盘和下一轮训练。
-- cram：考前速记；只保留高频、易错、公式、模板、陷阱和 checklist。
-- postmortem：考后复盘，不再更新考前 readiness，除非用户要复用到下一次考试。
+- diagnose：起点证据和主要风险。
+- plan：范围、资料、时间与训练路线。
+- drill：题型、知识点、速度或错题模式训练。
+- review：答案、可观察问题和用户确认错因。
+- mock：限时模拟、估分和时间复盘。
+- cram：高频、易错、公式、模板、陷阱和 checklist。
+- postmortem：考后结果与下一次可复用经验。
+
+进入任一 mode 时读取 `references/workflows.md` 的对应分支，执行到该分支的完成条件。一次只保持一个 active mode。
 
 ## 考试包
 
@@ -39,9 +41,9 @@ description: Prepare for exams from user-provided materials. Use when the user i
 └── exports/
 ~~~
 
-使用 scripts/init_exam.py <exam-dir> --title "<exam name>" 初始化。资料不足也允许开始，但 exam.yaml 必须保持 status: provisional，直到 syllabus、真题、评分标准或用户确认的范围足够支撑计划。
+使用 `scripts/init_exam.py <exam-dir> --title "<exam name>"` 初始化 schema v2。新包始终为 `provisional`；登记来源并生成题库后运行 `scripts/update_exam.py <exam-dir> --sync-materials`。只有来源和 source-backed questions 足以支撑计划时才设为 `confirmed`。
 
-使用 scripts/update_exam.py 更新 mode、readiness 和 materials 计数；不要手写这些状态字段，除非是在恢复损坏文件。
+使用 `scripts/update_exam.py` 更新 mode、readiness 和 materials。readiness 更新必须同时传入 `--evidence-record`，且 record 明确列出本次测得的 metrics。恢复损坏文件时写入 `exam.recovered.yaml`，不直接修补原状态。
 
 ## 资料优先级
 
@@ -61,9 +63,11 @@ description: Prepare for exams from user-provided materials. Use when the user i
 6. 保存 record，更新 error-log.md 和 readiness。
 7. 安排重做、变式题或同题型限时训练。
 
+完成条件：raw answer 保留在 finalized record 中，observed issue 与 cause 分离，readiness 更新引用该 record，下一项训练已经落入计划。
+
 ## Readiness
 
-使用 readiness，不使用 mastery。字段固定为 accuracy、speed、coverage、stability 和 confidence；它是备考工作指标，不是真实预测分。评分规则读取 references/review-and-cram.md。
+使用 readiness，不使用 mastery。字段固定为 accuracy、speed、coverage、stability 和 confidence；它是备考工作指标，不是真实预测分。评分规则读取 `references/review-and-cram.md`。每次更新只修改 record 的 `metrics` 实际测得的字段；high confidence 需要 source-backed questions 和 source-backed evidence。
 
 ## 错题复盘
 
@@ -80,6 +84,7 @@ description: Prepare for exams from user-provided materials. Use when the user i
 ## 参考路由
 
 - 创建、恢复或验证考试包：读取 references/exam-state.md。
+- 进入 diagnose、plan、drill、review、mock、cram 或 postmortem：读取 references/workflows.md 的对应分支。
 - 导入资料、抽题、生成变式题或处理题型：读取 references/question-handling.md。
 - 复盘错题、估算 readiness、模考或冲刺：读取 references/review-and-cram.md。
 - 生成交互选择、填空、短答或计时练习：复制并改造 assets/drill-template/index.html。
@@ -97,5 +102,5 @@ python scripts/validate_exam.py <exam-dir> --strict-schema
 修改 skill 本身后运行 skill validator：
 
 ~~~text
-python <skill-creator>/scripts/quick_validate.py <skill-dir>
+python -X utf8 <skill-creator>/scripts/quick_validate.py <skill-dir>
 ~~~

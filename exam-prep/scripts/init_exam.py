@@ -42,11 +42,6 @@ def main():
     parser.add_argument("--title", help="Human-readable exam title.")
     parser.add_argument("--exam-date", default=None, help="Exam date, if known.")
     parser.add_argument("--target-score", default=None, help="Target score, if known.")
-    parser.add_argument(
-        "--confirmed",
-        action="store_true",
-        help="Mark package confirmed instead of provisional.",
-    )
     args = parser.parse_args()
 
     target = Path(args.exam_dir).expanduser().resolve()
@@ -60,9 +55,9 @@ def main():
 
     today = dt.date.today().isoformat()
     title = args.title or safe_title_from_path(target)
-    status = "confirmed" if args.confirmed else "provisional"
+    status = "provisional"
 
-    exam_yaml = f"""schema_version: 1
+    exam_yaml = f"""schema_version: 2
 title: {yaml_quote(title)}
 status: {status}
 mode: diagnose
@@ -83,6 +78,7 @@ readiness:
   coverage: 0
   stability: 0
   confidence: low
+readiness_evidence: []
 notes:
   - "Initial package created by exam-prep."
 """

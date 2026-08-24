@@ -35,21 +35,54 @@ def has_data_role(body: str, role: str) -> bool:
     return re.search(rf"data-role\s*=\s*[\"'][^\"']*\b{re.escape(role)}\b[^\"']*[\"']", body, re.I) is not None
 
 
-def validate_record(root: Path, value: object, label: str, errors: list[str]) -> None:
+def validate_record(root: Path, value: object, label: str, errors: list[str]) -> Path | None:
     if not isinstance(value, str) or not value:
         errors.append(f"{label} must be a records/ path")
-        return
+        return None
     target = (root / value).resolve()
     try:
         target.relative_to((root / "records").resolve())
     except ValueError:
         errors.append(f"{label} escapes records/: {value}")
-        return
+        return None
     if not target.is_file():
         errors.append(f"{label} does not exist: {value}")
+        return None
+    return target
 
 
-def validate_yaml_schema(path: Path, root: Path, errors: list[str], warnings: list[str]) -> None:
+def record_metadata(path: Path, yaml: object, label: str, errors: list[str]) -> dict[str, object] | None:
+    text = path.read_text(encoding="utf-8", errors="replace")
+    if not text.startswith("---\n"):
+        errors.append(f"{label} is missing YAML frontmatter")
+        return None
+    parts = text.split("---", 2)
+    if len(parts) != 3:
+        errors.append(f"{label} has invalid YAML frontmatter")
+        return None
+    try:
+        metadata = yaml.safe_load(parts[1]) or {}  # type: ignore[attr-defined]
+    except Exception as exc:
+        errors.append(f"{label} frontmatter cannot be parsed: {exc}")
+        return None
+    if not isinstance(metadata, dict):
+        errors.append(f"{label} frontmatter must be a mapping")
+        return None
+    if metadata.get("assessment_status") == "finalized" and any(
+        marker in text for marker in ("待 Agent", "待判断", "待补充")
+    ):
+        errors.append(f"{label} finalized record still contains assessment placeholders")
+    return metadata
+
+
+def validate_yaml_schema(
+    path: Path,
+    root: Path,
+    lesson_numbers: list[int],
+    lesson_objectives: set[str],
+    errors: list[str],
+    warnings: list[str],
+) -> None:
     try:
         import yaml  # type: ignore
     except ImportError:
@@ -69,8 +102,13 @@ def validate_yaml_schema(path: Path, root: Path, errors: list[str], warnings: li
         errors.append(f"invalid status: {state.get('status')!r}")
     if state.get("phase") not in PHASES:
         errors.append(f"invalid phase: {state.get('phase')!r}")
-    if not isinstance(state.get("current_lesson"), int):
+    current_lesson = state.get("current_lesson")
+    if not isinstance(current_lesson, int):
         errors.append("current_lesson must be an integer")
+    elif current_lesson < 0:
+        errors.append("current_lesson must be >= 0")
+    elif current_lesson > 0 and current_lesson not in lesson_numbers:
+        errors.append(f"current_lesson {current_lesson:04d} has no matching lesson file")
     if not isinstance(state.get("learner"), dict):
         errors.append("schema v3 requires learner mapping")
     for removed in ("feedback_status", "mode", "roadmap", "next_lesson", "checkpoint", "mastery"):
@@ -91,6 +129,7 @@ def validate_yaml_schema(path: Path, root: Path, errors: list[str], warnings: li
         validate_record(root, last_feedback, "last_feedback", errors)
 
     objectives = state.get("objectives", [])
+    objective_ids: set[str] = set()
     if not isinstance(objectives, list):
         errors.append("objectives must be a list")
     else:
@@ -98,6 +137,13 @@ def validate_yaml_schema(path: Path, root: Path, errors: list[str], warnings: li
             if not isinstance(objective, dict):
                 errors.append(f"objectives[{index}] must be a mapping")
                 continue
+            objective_id = objective.get("id")
+            if not isinstance(objective_id, str) or not objective_id:
+                errors.append(f"objectives[{index}] missing id")
+            elif objective_id in objective_ids:
+                errors.append(f"duplicate objective id: {objective_id}")
+            else:
+                objective_ids.add(objective_id)
             mastery = objective.get("mastery")
             if mastery not in MASTERY_VALUES:
                 errors.append(f"objectives[{index}] has invalid mastery")
@@ -110,15 +156,57 @@ def validate_yaml_schema(path: Path, root: Path, errors: list[str], warnings: li
                 continue
             if mastery in {"recognition", "application", "transfer"} and not evidence:
                 errors.append(f"objectives[{index}] mastery {mastery!r} requires evidence")
+            supports_current_mastery = False
             for evidence_index, item in enumerate(evidence):
                 if not isinstance(item, dict):
                     errors.append(f"objectives[{index}].evidence[{evidence_index}] must be a mapping")
                     continue
-                validate_record(root, item.get("record"), f"objectives[{index}].evidence[{evidence_index}].record", errors)
+                label = f"objectives[{index}].evidence[{evidence_index}]"
+                target = validate_record(root, item.get("record"), f"{label}.record", errors)
                 if not isinstance(item.get("type"), str) or not item.get("type"):
-                    errors.append(f"objectives[{index}].evidence[{evidence_index}] missing type")
+                    errors.append(f"{label} missing type")
                 if item.get("strength") not in EVIDENCE_STRENGTHS:
-                    errors.append(f"objectives[{index}].evidence[{evidence_index}] invalid strength")
+                    errors.append(f"{label} invalid strength")
+                evidence_mastery = item.get("mastery")
+                if evidence_mastery not in MASTERY_VALUES - {"unseen", "uncertain"}:
+                    errors.append(f"{label} invalid or missing mastery")
+                if evidence_mastery == mastery:
+                    supports_current_mastery = True
+                if target is not None:
+                    metadata = record_metadata(target, yaml, label, errors)
+                    if metadata is not None:
+                        if metadata.get("record_schema") != 1 or metadata.get("assessment_status") != "finalized":
+                            errors.append(f"{label} must reference a finalized record_schema 1 record")
+                        if metadata.get("evidence_type") != item.get("type"):
+                            errors.append(f"{label} type disagrees with record frontmatter")
+                        if metadata.get("evidence_strength") != item.get("strength"):
+                            errors.append(f"{label} strength disagrees with record frontmatter")
+                        supported = metadata.get("supported_objectives")
+                        supported_pairs = {
+                            (entry.get("id"), entry.get("mastery"))
+                            for entry in supported
+                            if isinstance(entry, dict)
+                        } if isinstance(supported, list) else set()
+                        if (objective_id, evidence_mastery) not in supported_pairs:
+                            errors.append(f"{label} record does not support {objective_id}={evidence_mastery}")
+            if mastery in {"recognition", "application", "transfer"} and evidence and not supports_current_mastery:
+                errors.append(f"objectives[{index}] current mastery {mastery!r} lacks matching evidence")
+
+    missing_objectives = sorted(lesson_objectives - objective_ids)
+    for objective_id in missing_objectives:
+        errors.append(f"lesson references unknown objective: {objective_id}")
+
+    if state.get("status") == "complete" and (
+        not isinstance(objectives, list)
+        or not objectives
+        or any(
+            not isinstance(item, dict)
+            or item.get("mastery") in {"unseen", "uncertain", None}
+            or not item.get("evidence")
+            for item in objectives
+        )
+    ):
+        errors.append("status complete requires evidence-backed mastery for every objective")
 
     queue = state.get("review_queue", [])
     if not isinstance(queue, list):
@@ -131,6 +219,8 @@ def validate_yaml_schema(path: Path, root: Path, errors: list[str], warnings: li
             for key in ("objective_id", "due_at", "interval_days", "review_count"):
                 if key not in item:
                     warnings.append(f"review_queue[{index}] missing {key}")
+            if item.get("objective_id") not in objective_ids:
+                errors.append(f"review_queue[{index}] references unknown objective")
 
 
 def validate_pedagogy(lesson: Path, body: str, errors: list[str], warnings: list[str]) -> None:
@@ -191,12 +281,10 @@ def main() -> int:
         for key in ("schema_version", "course_id", "title", "status", "phase", "current_lesson", "learner", "diagnostic", "objectives", "review_queue", "last_feedback"):
             if not re.search(rf"^{re.escape(key)}\s*:", text, re.M):
                 errors.append(f"course.yaml missing top-level key: {key}")
-        if args.strict_schema:
-            validate_yaml_schema(yaml_path, root, errors, warnings)
-
     lesson_dir = root / "lessons"
     lessons = sorted(lesson_dir.glob("*.html")) if lesson_dir.is_dir() else []
     numbers: list[int] = []
+    lesson_objectives: set[str] = set()
     for lesson in lessons:
         match = LESSON_RE.match(lesson.name)
         if not match:
@@ -204,6 +292,9 @@ def main() -> int:
         else:
             numbers.append(int(match.group(1)))
         body = lesson.read_text(encoding="utf-8", errors="replace")
+        objective = data_value(body, "objective")
+        if objective:
+            lesson_objectives.add(objective)
         if args.pedagogical:
             validate_pedagogy(lesson, body, errors, warnings)
         for link in LINK_RE.findall(body):
@@ -223,6 +314,8 @@ def main() -> int:
 
     if numbers and numbers != list(range(1, len(numbers) + 1)):
         errors.append(f"lesson numbers are not continuous from 0001: {numbers}")
+    if yaml_path.is_file() and args.strict_schema:
+        validate_yaml_schema(yaml_path, root, numbers, lesson_objectives, errors, warnings)
     for warning in warnings:
         print(f"WARNING: {warning}")
     if errors:

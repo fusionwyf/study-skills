@@ -76,7 +76,58 @@ def record_relative(root: Path, value: str) -> tuple[Path, str]:
     return path, (Path("records") / relative).as_posix()
 
 
-def make_record(args: argparse.Namespace, record_path: Path, objectives: list[tuple[str, str]]) -> str | None:
+def load_record_metadata(path: Path, yaml: Any) -> dict[str, Any]:
+    text = path.read_text(encoding="utf-8")
+    if not text.startswith("---\n"):
+        raise SystemExit(f"evidence record is missing YAML frontmatter: {path}")
+    parts = text.split("---", 2)
+    if len(parts) != 3:
+        raise SystemExit(f"evidence record has invalid YAML frontmatter: {path}")
+    try:
+        metadata = yaml.safe_load(parts[1]) or {}
+    except Exception as exc:
+        raise SystemExit(f"evidence record frontmatter cannot be parsed: {path}: {exc}") from exc
+    if not isinstance(metadata, dict):
+        raise SystemExit(f"evidence record frontmatter must be a mapping: {path}")
+    return metadata
+
+
+def require_finalized_evidence(
+    path: Path,
+    yaml: Any,
+    requested: list[tuple[str, str]],
+) -> tuple[str, str]:
+    metadata = load_record_metadata(path, yaml)
+    if metadata.get("record_schema") != 1 or metadata.get("assessment_status") != "finalized":
+        raise SystemExit(f"evidence record must use record_schema 1 and assessment_status finalized: {path}")
+    body = path.read_text(encoding="utf-8")
+    if any(marker in body for marker in ("待 Agent", "待判断", "待补充")):
+        raise SystemExit(f"finalized evidence record still contains assessment placeholders: {path}")
+    evidence_type = metadata.get("evidence_type")
+    evidence_strength = metadata.get("evidence_strength")
+    if not isinstance(evidence_type, str) or not evidence_type:
+        raise SystemExit(f"finalized evidence record is missing evidence_type: {path}")
+    if evidence_strength not in {"weak", "medium", "strong"}:
+        raise SystemExit(f"finalized evidence record has invalid evidence_strength: {path}")
+    supported = metadata.get("supported_objectives")
+    if not isinstance(supported, list):
+        raise SystemExit(f"finalized evidence record must list supported_objectives: {path}")
+    supported_pairs = {
+        (item.get("id"), item.get("mastery"))
+        for item in supported
+        if isinstance(item, dict)
+    }
+    missing = [f"{objective_id}={mastery}" for objective_id, mastery in requested if (objective_id, mastery) not in supported_pairs]
+    if missing:
+        raise SystemExit(f"evidence record does not support requested mastery updates: {', '.join(missing)}")
+    return evidence_type, evidence_strength
+
+
+def lesson_exists(root: Path, lesson: int) -> bool:
+    return any((root / "lessons").glob(f"{lesson:04d}-*.html"))
+
+
+def make_record(args: argparse.Namespace, record_path: Path) -> str | None:
     if args.feedback_file:
         source = Path(args.feedback_file).expanduser().resolve()
         if not source.is_file():
@@ -87,10 +138,17 @@ def make_record(args: argparse.Namespace, record_path: Path, objectives: list[tu
     else:
         return None
 
-    if record_path.exists() and not args.force:
-        raise SystemExit(f"feedback record already exists: {record_path}; pass --force to replace")
-    judgments = [f"  - {objective_id}: {mastery}" for objective_id, mastery in objectives] or ["  - 尚未判断 mastery。"]
-    content = f"""# 第 {args.lesson:04d} 课学习记录
+    if record_path.exists():
+        raise SystemExit(f"feedback record already exists and records are append-only: {record_path}")
+    content = f"""---
+record_schema: 1
+assessment_status: pending
+lesson: {args.lesson}
+evidence_type: null
+evidence_strength: null
+supported_objectives: []
+---
+# 第 {args.lesson:04d} 课学习记录
 
 ## 学习者原始反馈
 
@@ -105,11 +163,7 @@ def make_record(args: argparse.Namespace, record_path: Path, objectives: list[tu
 
 ## Agent 判断
 
-- evidence_type: {args.evidence_type}
-- evidence_strength: {args.evidence_strength}
-- 支持的 mastery:
-{chr(10).join(judgments)}
-- 仍不确定：待 Agent 补充。
+- 仍不确定：待 Agent 补充。完成判断后同步填写 frontmatter，并将 `assessment_status` 设为 `finalized`。
 """
     record_path.parent.mkdir(parents=True, exist_ok=True)
     record_path.write_text(content, encoding="utf-8", newline="\n")
@@ -126,13 +180,10 @@ def main() -> int:
     parser.add_argument("--feedback-text")
     parser.add_argument("--evidence-record", help="Existing path inside records/")
     parser.add_argument("--objective", action="append", help="OBJECTIVE_ID=MASTERY; may be repeated")
-    parser.add_argument("--evidence-type", default="learner-feedback")
-    parser.add_argument("--evidence-strength", choices=("weak", "medium", "strong"), default="medium")
     parser.add_argument("--review", action="append", help="Objective ID to schedule for review")
     parser.add_argument("--review-days", type=int)
     parser.add_argument("--performance", choices=("good", "ok", "poor"))
     parser.add_argument("--due-lesson", type=int)
-    parser.add_argument("--force", action="store_true")
     args = parser.parse_args()
 
     root = Path(args.course_dir).expanduser().resolve()
@@ -150,24 +201,35 @@ def main() -> int:
         raise SystemExit("use only one of --feedback-file or --feedback-text")
     if args.evidence_record and (args.feedback_file or args.feedback_text):
         raise SystemExit("use either a new feedback record or --evidence-record, not both")
+    if (args.feedback_file or args.feedback_text) and args.objective:
+        raise SystemExit("capture feedback first, finalize its record, then update mastery with --evidence-record")
+    if (args.feedback_file or args.feedback_text) and (args.status or args.review):
+        raise SystemExit("capture feedback separately from status and review updates")
+
+    objectives = state.get("objectives")
+    if not isinstance(objectives, list):
+        raise SystemExit("objectives must be a list; enter recovery")
 
     lesson = args.lesson if args.lesson is not None else int(state.get("current_lesson") or 0)
     parsed_objectives = [parse_objective(raw) for raw in (args.objective or [])]
     if (args.feedback_file or args.feedback_text) and lesson <= 0:
         raise SystemExit("feedback updates require a positive lesson number")
+    if lesson > 0 and (args.lesson is not None or args.feedback_file or args.feedback_text) and not lesson_exists(root, lesson):
+        raise SystemExit(f"lesson {lesson:04d} does not exist in lessons/")
     args.lesson = lesson
 
     record_path = root / "records" / f"{lesson:04d}-feedback.md"
-    generated = make_record(args, record_path, parsed_objectives)
+    generated = make_record(args, record_path)
     evidence_relative: str | None = None
-    if generated:
-        _, evidence_relative = record_relative(root, generated)
-    elif args.evidence_record:
-        _, evidence_relative = record_relative(root, args.evidence_record)
+    evidence_type: str | None = None
+    evidence_strength: str | None = None
+    if args.evidence_record:
+        evidence_path, evidence_relative = record_relative(root, args.evidence_record)
+        evidence_type, evidence_strength = require_finalized_evidence(evidence_path, yaml, parsed_objectives)
 
     for _, mastery in parsed_objectives:
         if mastery != "uncertain" and not evidence_relative:
-            raise SystemExit("mastery updates other than uncertain require an existing evidence record")
+            raise SystemExit("mastery updates other than uncertain require a finalized evidence record")
 
     changed = False
     if args.lesson is not None and args.lesson != state.get("current_lesson"):
@@ -176,24 +238,39 @@ def main() -> int:
     if args.phase:
         state["phase"] = args.phase
         changed = True
-    if args.status:
-        state["status"] = args.status
-        changed = True
-
-    objectives = state.setdefault("objectives", [])
     for objective_id, mastery in parsed_objectives:
         target = next((item for item in objectives if isinstance(item, dict) and item.get("id") == objective_id), None)
         if target is None:
-            target = {"id": objective_id, "statement": "unknown", "mastery": "uncertain", "evidence": []}
-            objectives.append(target)
+            raise SystemExit(f"unknown objective {objective_id!r}; define it in course.yaml and PLAN.md before recording mastery")
         target["mastery"] = mastery
         if evidence_relative:
-            target.setdefault("evidence", []).append({"record": evidence_relative, "type": args.evidence_type, "strength": args.evidence_strength})
+            item = {
+                "record": evidence_relative,
+                "type": evidence_type,
+                "strength": evidence_strength,
+                "mastery": mastery,
+            }
+            if item not in target.setdefault("evidence", []):
+                target["evidence"].append(item)
+        changed = True
+
+    if args.status == "complete":
+        if not objectives or any(
+            not isinstance(item, dict)
+            or item.get("mastery") in {"unseen", "uncertain", None}
+            or not item.get("evidence")
+            for item in objectives
+        ):
+            raise SystemExit("status complete requires evidence-backed mastery for every objective")
+    if args.status:
+        state["status"] = args.status
         changed = True
 
     if args.review:
         queue = state.setdefault("review_queue", [])
         for objective_id in args.review:
+            if not any(isinstance(item, dict) and item.get("id") == objective_id for item in objectives):
+                raise SystemExit(f"cannot schedule review for unknown objective {objective_id!r}")
             existing = next((item for item in queue if isinstance(item, dict) and item.get("objective_id") == objective_id), None)
             if existing is None:
                 existing = {"objective_id": objective_id}
@@ -209,9 +286,10 @@ def main() -> int:
                 existing["due_lesson"] = args.due_lesson
             changed = True
 
-    if evidence_relative:
-        state["last_feedback"] = evidence_relative
-        if state.get("phase") == "awaiting_evidence":
+    feedback_relative = record_relative(root, generated)[1] if generated else evidence_relative
+    if feedback_relative:
+        state["last_feedback"] = feedback_relative
+        if evidence_relative and state.get("phase") == "awaiting_evidence":
             state["phase"] = "designing"
         changed = True
 

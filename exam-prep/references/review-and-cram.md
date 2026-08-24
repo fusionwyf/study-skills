@@ -52,7 +52,7 @@ Scores are working indicators, not predicted exam scores.
 - stability: performance when topics are mixed, delayed, or timed.
 - confidence: evidence quality, low, medium, or high.
 
-Prefer ranges or conservative updates when data is limited. Do not raise confidence above medium from synthetic questions alone.
+Prefer ranges or conservative updates when data is limited. A readiness update changes only metrics listed in a finalized record and cites that record through `readiness_evidence`. High confidence requires source-backed questions and source-backed readiness evidence.
 
 ## Mock review
 

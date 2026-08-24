@@ -76,7 +76,7 @@ last_feedback: null
 - `transfer`
 - `uncertain`
 
-不要要求学习者机械经过每一级。除设为 `uncertain` 外，更新 mastery 必须引用一个已存在的 record。
+不要要求学习者机械经过每一级。除设为 `uncertain` 外，更新 mastery 必须引用一个 finalized record，且该 record 必须明确列出对应 objective 和 mastery。
 
 ## 诊断
 
@@ -102,6 +102,7 @@ objectives:
       - record: records/0003-feedback.md
         type: application
         strength: strong
+        mastery: application
 ```
 
 任何学习反馈都可以记录为 evidence，但证据强度决定它能支持什么判断。单纯自评属于弱证据，不能独立升级 mastery。
@@ -109,6 +110,16 @@ objectives:
 ## Record 格式
 
 ```markdown
+---
+record_schema: 1
+assessment_status: finalized
+lesson: 3
+evidence_type: application
+evidence_strength: strong
+supported_objectives:
+  - id: process-lifecycle
+    mastery: application
+---
 # 第 0003 课学习记录
 
 ## 学习者原始反馈
@@ -129,6 +140,8 @@ objectives:
 - 支持的 mastery:
 - 仍不确定：
 ```
+
+新反馈先以 `assessment_status: pending` 保存，frontmatter 中的 evidence 字段保持 `null` 或空列表。Agent 完成可观察行为和判断后再设为 `finalized`。finalized record 中不得保留“待判断”“待补充”等占位内容；原始反馈正文保持不变。
 
 ## Phase 转换
 
@@ -154,5 +167,8 @@ objectives:
 
 - 每次状态更新修改 `updated_at`。
 - 写入新课前检查目标课号不存在。
+- `current_lesson > 0` 时必须存在对应的 `lessons/NNNN-*.html`。
+- lesson 的 `data-objective`、review queue 和 evidence 只能引用已定义 objective。
+- 只有每个 objective 都有 evidence-backed mastery，课程才能设为 `complete`。
 - 不删除或重写历史证据；需要纠正时追加说明。
 - 不把 HTML、长篇反馈或课程路线复制进 `course.yaml`。
