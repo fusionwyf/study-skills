@@ -9,10 +9,10 @@ checked for: required frontmatter fields, nested from/to blocks with all
 required keys (to.package is required), boundary include/exclude present as
 lists, non-empty return_condition, id pattern ^H[0-9]{4}$ and cross-file
 uniqueness, status vocabulary, returned/closed implying returned_record that
-resolves to a finalized record inside the to.package directory, and
-from.record resolving to an existing file inside THIS package
-(traceability). created_at / returned_at accept both quoted strings and
-unquoted YAML date objects.
+resolves to a finalized record inside the to.package directory and passes the
+shared record contract, and from.record resolving to an existing file inside
+THIS package (traceability). created_at / returned_at accept both quoted
+strings and unquoted YAML date objects.
 
 Output: ERROR lines plus one SUMMARY line; exit 0 = valid, 1 = errors,
 2 = usage/IO error.
@@ -29,6 +29,9 @@ from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 HANDOFF_SCHEMA_PATH = REPO_ROOT / "shared" / "schemas" / "handoff.schema.yaml"
+SHARED_SCRIPTS = REPO_ROOT / "shared" / "scripts"
+if str(SHARED_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SHARED_SCRIPTS))
 
 HANDOFF_ID_RE = re.compile(r"^H[0-9]{4}$")
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
@@ -88,13 +91,33 @@ def is_iso_date(value: Any) -> bool:
     return type(value) is dt.date or (isinstance(value, str) and bool(DATE_RE.match(value)))
 
 
-def resolve_target_package(metadata: dict) -> Path | None:
-    """Resolve to.package to an absolute path, or None when it is unusable."""
+def resolve_target_package(metadata: dict, source_root: Path) -> Path | None:
+    """Resolve to.package: absolute paths as-is; relative paths first against
+    the current directory, then against the source package, keeping
+    workspace-relative handoffs usable after the workspace moves.
+    """
     to_block = metadata.get("to")
     package = to_block.get("package") if isinstance(to_block, dict) else None
     if not isinstance(package, str) or not package.strip():
         return None
-    return Path(package).expanduser().resolve()
+    ref = Path(package).expanduser()
+    if ref.is_absolute():
+        return ref.resolve()
+    for base in (Path.cwd(), source_root):
+        candidate = (base / ref).resolve()
+        if candidate.is_dir():
+            return candidate
+    return (Path.cwd() / ref).resolve()
+
+
+def record_contract_errors(metadata: dict) -> list[str]:
+    """Validate a record against the shared record contract (schema/type/
+    required fields/finalized constraints), not just assessment_status."""
+    try:
+        import validate_record as vr  # type: ignore
+    except ImportError:
+        return ["shared validate_record.py is not importable"]
+    return vr.contract_errors(metadata)
 
 
 def validate_handoff(path: Path, root: Path, yaml: Any, statuses: list[str], seen_ids: set[str], errors: list[str]) -> str | None:
@@ -178,7 +201,7 @@ def validate_handoff(path: Path, root: Path, yaml: Any, statuses: list[str], see
         if not isinstance(returned_record, str) or not returned_record.strip():
             errors.append(f"{label} status {status!r} requires returned_record")
         else:
-            target_pkg = resolve_target_package(metadata)
+            target_pkg = resolve_target_package(metadata, root)
             if target_pkg is None:
                 errors.append(f"{label} cannot verify returned_record without a usable to.package")
             else:
@@ -202,6 +225,12 @@ def validate_handoff(path: Path, root: Path, yaml: Any, statuses: list[str], see
                             record_meta = None
                         if not isinstance(record_meta, dict) or record_meta.get("assessment_status") != "finalized":
                             errors.append(f"{label} returned_record is not a finalized record: {returned_record}")
+                        else:
+                            contract_errors = record_contract_errors(record_meta)
+                            if contract_errors:
+                                errors.append(
+                                    f"{label} returned_record fails the shared record contract: {returned_record}: {'; '.join(contract_errors)}"
+                                )
 
     return handoff_id if isinstance(handoff_id, str) else None
 

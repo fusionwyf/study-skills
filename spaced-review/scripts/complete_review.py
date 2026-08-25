@@ -1,9 +1,17 @@
 #!/usr/bin/env python3
 """Record one completed review and update the package's review queue.
 
-Usage (see spaced-review/SKILL.md step 4):
-    python scripts/complete_review.py <package-dir> \
-      --objective-id <id> | --topic <t> \
+Usage (see spaced-review/SKILL.md step 4; --objective-id and --topic are
+mutually exclusive — one per run):
+    # course package
+    python scripts/complete_review.py <course-dir> --objective-id <id> \
+      --review-kind <retrieval|explanation|variation|transfer|error_discrimination> \
+      --performance <good|medium|poor> --hint-used <true|false> \
+      --evidence-strength <strong|medium|weak> \
+      --raw-answer "<学习者原话>" [--next-action "<下一步>"] \
+      [--source-backed] [--synthetic]
+    # exam package
+    python scripts/complete_review.py <exam-dir> --topic <t> \
       --review-kind <retrieval|explanation|variation|transfer|error_discrimination> \
       --performance <good|medium|poor> --hint-used <true|false> \
       --evidence-strength <strong|medium|weak> \
@@ -64,6 +72,22 @@ def fail(message: str) -> int:
 def slugify(value: str) -> str:
     slug = SLUG_CLEAN_RE.sub("-", value.lower()).strip("-")
     return slug[:48] or "review"
+
+
+def atomic_write_text(path: Path, text: str) -> None:
+    """Write text atomically via a same-directory temp file + os.replace.
+
+    A partial RV#### record must never survive a crash or a write error:
+    it would block the next attempt that computes the same sequence number.
+    """
+    fd, temp_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write(text)
+        os.replace(temp_name, path)
+    finally:
+        if os.path.exists(temp_name):
+            os.unlink(temp_name)
 
 
 def next_rv_sequence(records_dir: Path) -> int:
@@ -236,7 +260,8 @@ def main() -> int:
     # Write both artifacts transactionally so the "every interval change
     # traces to a finalized record" invariant survives failures:
     #   1. stage the new state text in a temp file (no visible change yet);
-    #   2. write the new record file;
+    #   2. write the new record atomically (no partial RV#### file can
+    #      survive a mid-write failure or block the next attempt);
     #   3. atomically replace the state file.
     # If step 3 fails, roll the record back: a finalized record must never
     # outlive the queue update it belongs to.
@@ -248,11 +273,11 @@ def main() -> int:
         with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as handle:
             handle.write(dumped)
         record_path.parent.mkdir(parents=True, exist_ok=True)
-        record_path.write_text(
-            build_record_text(args, record_id, target_key, target, yaml),
-            encoding="utf-8",
-            newline="\n",
-        )
+        try:
+            atomic_write_text(record_path, build_record_text(args, record_id, target_key, target, yaml))
+        except OSError as exc:
+            record_path.unlink(missing_ok=True)  # remove any partial record
+            return fail(f"review record could not be written: {exc}")
         try:
             os.replace(temp_name, root / state_file)
         except OSError as exc:

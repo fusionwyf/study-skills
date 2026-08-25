@@ -16,9 +16,11 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import os
 import re
 import shutil
 import sys
+import tempfile
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -101,6 +103,23 @@ def parse_rows(text: str) -> list[list[str]]:
 
 def unescape_pipe(value: str) -> str:
     return value.replace("\\|", "|")
+
+
+def atomic_write_text(path: Path, text: str) -> None:
+    """Write text atomically via a same-directory temp file + os.replace.
+
+    A direct write_text on an existing registry can truncate it mid-write on
+    failure; replace() either fully swaps the file or leaves the old one
+    untouched.
+    """
+    fd, temp_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write(text)
+        os.replace(temp_name, path)
+    finally:
+        if os.path.exists(temp_name):
+            os.unlink(temp_name)
 
 
 def cell(value: str) -> str:
@@ -217,7 +236,7 @@ def main() -> int:
             shutil.copy2(raw_source, raw_target)  # copy, never move/delete the original
             created.append(raw_target)
         registry_path.parent.mkdir(parents=True, exist_ok=True)
-        registry_path.write_text(new_registry_text, encoding="utf-8", newline="\n")
+        atomic_write_text(registry_path, new_registry_text)
     except OSError as exc:
         failures: list[str] = []
         for path in reversed(created):

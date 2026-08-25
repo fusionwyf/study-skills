@@ -16,10 +16,17 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import os
 import re
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+SHARED_SCRIPTS = REPO_ROOT / "shared" / "scripts"
+if str(SHARED_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SHARED_SCRIPTS))
 
 HANDOFF_ID_RE = re.compile(r"^H(\d{4})$")
 SLUG_CLEAN_RE = re.compile(r"[^a-z0-9]+")
@@ -51,6 +58,29 @@ def load_yaml_module():
     except ImportError as exc:
         raise RuntimeError("create_handoff.py requires PyYAML") from exc
     return yaml
+
+
+def record_contract_errors(metadata: dict) -> list[str]:
+    """Validate a record against the shared record contract (schema/type/
+    required fields/finalized constraints), not just assessment_status."""
+    try:
+        import validate_record as vr  # type: ignore
+    except ImportError:
+        return ["shared validate_record.py is not importable"]
+    return vr.contract_errors(metadata)
+
+
+def atomic_write_text(path: Path, text: str) -> None:
+    """Write the handoff atomically so a failed write never leaves a
+    half-written H#### file that later validation would choke on."""
+    fd, temp_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write(text)
+        os.replace(temp_name, path)
+    finally:
+        if os.path.exists(temp_name):
+            os.unlink(temp_name)
 
 
 def detect_source_skill(root: Path) -> str | None:
@@ -131,6 +161,11 @@ def main() -> int:
             metadata = None
     if metadata is None or metadata.get("assessment_status") != "finalized":
         return fail(f"--record must be a finalized record: {args.record}")
+    contract_errors = record_contract_errors(metadata)
+    if contract_errors:
+        return fail(
+            f"--record fails the shared record contract: {args.record}: {'; '.join(contract_errors)}"
+        )
 
     target_pkg = Path(args.target_pkg).expanduser().resolve()
     handoffs_dir = root / "handoffs"
@@ -141,6 +176,14 @@ def main() -> int:
     handoff_path = handoffs_dir / f"{handoff_id}-{slugify(args.goal)}.md"
     if handoff_path.exists():
         return fail(f"handoff file already exists: {handoff_path}")
+
+    # Store to.package relative to the SOURCE package when both live on the
+    # same drive, so moving/syncing the whole workspace keeps the handoff
+    # usable. Cross-drive paths have no relative form and stay absolute.
+    try:
+        package_ref = os.path.relpath(target_pkg, root)
+    except ValueError:
+        package_ref = str(target_pkg)
 
     frontmatter = {
         "handoff_schema": 1,
@@ -155,7 +198,7 @@ def main() -> int:
         },
         "to": {
             "skill": args.to_skill,
-            "package": str(target_pkg),
+            "package": package_ref,
             "goal": args.goal.strip(),
             "boundary": {
                 "include": list(args.include),
@@ -169,7 +212,7 @@ def main() -> int:
     # Refusal paths are all above this point.
     try:
         handoffs_dir.mkdir(parents=True, exist_ok=True)
-        handoff_path.write_text(content, encoding="utf-8", newline="\n")
+        atomic_write_text(handoff_path, content)
     except OSError as exc:
         return fail(f"handoff could not be written: {exc}")
 

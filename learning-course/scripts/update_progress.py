@@ -313,7 +313,24 @@ def main() -> int:
     if not changed:
         raise SystemExit("no update requested")
     state["updated_at"] = now_iso()
-    atomic_dump(state_path, state, yaml)
+    # The pending record (if any) is written before the state file, so a
+    # failed state replace must roll the new record back: a course package
+    # must never end up with an orphan record that no last_feedback points to.
+    try:
+        atomic_dump(state_path, state, yaml)
+    except OSError as exc:
+        if generated:
+            try:
+                record_path.unlink(missing_ok=True)
+            except OSError as rollback_exc:
+                print(
+                    f"RECOVERY: course.yaml update failed ({exc}); rollback of {record_path} also failed: {rollback_exc}",
+                    file=sys.stderr,
+                )
+                raise SystemExit(
+                    f"course.yaml could not be updated: {exc}; delete {record_path} manually before re-running"
+                ) from exc
+        raise SystemExit(f"course.yaml could not be updated: {exc}") from exc
     print(state_path)
     if generated:
         print(record_path)

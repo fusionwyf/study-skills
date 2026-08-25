@@ -189,6 +189,23 @@ class Checker:
         return tname
 
 
+def contract_errors(metadata: dict) -> list[str]:
+    """Validate a frontmatter mapping against the shared record contract.
+
+    Convenience wrapper for other scripts (handoff create/complete/validate)
+    that need full schema/type/required-field checks on a record, not just an
+    `assessment_status` lookup. Returns a list of error strings; empty means
+    the record satisfies the contract.
+    """
+    try:
+        schema = yaml.safe_load(SCHEMA_PATH.read_text(encoding="utf-8"))
+    except Exception as exc:
+        return [f"record schema cannot be loaded: {exc}"]
+    checker = Checker(schema)
+    checker.run(metadata, "auto")
+    return list(checker.errors)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Validate a study-skills record file.")
     parser.add_argument("record", help="path to the record .md file")
