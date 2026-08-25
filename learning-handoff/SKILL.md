@@ -13,7 +13,8 @@ disable-model-invocation: true
 - 只通过交接文件传递（artifact coupling）：不直接修改对方包的内部状态。
 - 补课有边界：boundary 的 include/exclude 划定范围，防止补课无限扩张。
 - 返回条件可验证：至少一条"看到什么记录才算完成"的条件。
-- 漏洞来源可追溯：交接记录引用源包的具体 record。
+- 漏洞来源可追溯：交接记录引用源包的具体 record，且来源与返回证据都通过共享 record contract 校验（不只检查 `assessment_status`）。
+- `to.package` 在源包与目标包同盘时保存为**相对源包的路径**：整个工作区（源包+目标包）一起移动或同步后仍可用；跨盘符时退回绝对路径，移动工作区后需手动更新该字段。
 
 ## 工作流程
 

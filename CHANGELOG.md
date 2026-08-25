@@ -2,6 +2,21 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.2.2] - 2026-08-25
+
+Recovery and evidence-contract hardening: atomic registry/report writes, rollback coverage, and shared record-contract enforcement for handoffs.
+
+### Fixed
+
+- **Registry atomic replace (P1).** `register_source.py` writes `SOURCES.md` through a same-directory temp file + `os.replace()`; a mid-write disk error can no longer truncate an existing registry, and the rollback path leaves the old registry byte-for-byte intact.
+- **Review record write atomicity (P1).** `complete_review.py` writes the `RV####` record atomically too; a failed record write leaves no partial file that would block the next attempt, and the state replace still rolls the record back on failure.
+- **Course feedback rollback (P2).** `update_progress.py` rolls back the newly written pending record when the atomic `course.yaml` replace fails, so the package never keeps an orphan record without a `last_feedback` association.
+- **Handoff atomic update (P2).** `complete_handoff.py` updates the handoff via temp file + `os.replace()`, so a disk error cannot corrupt a previously valid `open` handoff.
+- **Shared record contract for handoffs (P2).** `create_handoff.py`, `complete_handoff.py` and `validate_handoffs.py` now validate source/returned records through the shared `validate_record.py` (schema, type detection, required fields, finalized constraints) instead of only checking `assessment_status`; `validate_record.py` exposes `contract_errors()` for reuse.
+- **Workspace-relative to.package (P2).** `create_handoff.py` stores `to.package` relative to the source package when both share a drive (absolute as a cross-drive fallback); `complete_handoff.py` / `validate_handoffs.py` resolve relative paths against the current directory first, then the source package, and the SKILL.md documents the semantics.
+- **Shell-pipe examples (P2).** `spaced-review` SKILL.md and `complete_review.py` docstring split the mutually exclusive `--objective-id` / `--topic` into two separate command examples so `|` is never copied into a shell as a pipe.
+- 6 regression tests added (59 → 65).
+
 ## [0.2.1] - 2026-08-25
 
 Review fixes: explicit-invocation policy completed, shared-path corrections, and transactional state writes.

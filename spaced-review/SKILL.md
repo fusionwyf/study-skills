@@ -29,10 +29,18 @@ disable-model-invocation: true
 
 3. **执行复习 session**：按建议任务类型逐项出题，限时作答，逐字保留原始回答。一次 session 覆盖全部到期项，或到达时间盒即停并把剩余项明确延期。
 
-4. **落记录并更新队列**（每项一次调用）：
+4. **落记录并更新队列**（每项一次调用；课程包按 objective 记，考试包按 topic 记，二选一）：
 
    ```text
-   python scripts/complete_review.py <package-dir> --objective-id <id> | --topic <t> \
+   # 课程包
+   python scripts/complete_review.py <course-dir> --objective-id <id> \
+     --review-kind <retrieval|explanation|variation|transfer|error_discrimination> \
+     --performance <good|medium|poor> --hint-used <true|false> \
+     --evidence-strength <strong|medium|weak> \
+     --raw-answer "<学习者原话>" [--next-action "<下一步>"]
+
+   # 考试包
+   python scripts/complete_review.py <exam-dir> --topic <t> \
      --review-kind <retrieval|explanation|variation|transfer|error_discrimination> \
      --performance <good|medium|poor> --hint-used <true|false> \
      --evidence-strength <strong|medium|weak> \
