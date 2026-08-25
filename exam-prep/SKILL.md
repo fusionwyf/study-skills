@@ -85,7 +85,7 @@ disable-model-invocation: true
 ## 参考路由
 
 - 创建、恢复或验证考试包：读取 references/exam-state.md。
-- 记录字段契约、record 校验报错：读取 ../../shared/references/record-contract.md。
+- 记录字段契约、record 校验报错：读取 ../shared/references/record-contract.md。
 - 进入 diagnose、plan、drill、review、mock、cram 或 postmortem：读取 references/workflows.md 的对应分支。
 - 导入资料、抽题、生成变式题或处理题型：读取 references/question-handling.md。
 - 复盘错题、估算 readiness、模考或冲刺：读取 references/review-and-cram.md。
@@ -104,5 +104,5 @@ python scripts/validate_exam.py <exam-dir> --strict-schema
 修改 skill 本身后运行 skill validator：
 
 ~~~text
-python -X utf8 <skill-creator>/scripts/quick_validate.py <skill-dir>
+python -X utf8 ../shared/scripts/quick_validate.py <skill-dir>
 ~~~

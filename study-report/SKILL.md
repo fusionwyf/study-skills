@@ -22,10 +22,10 @@ disable-model-invocation: true
 2. **生成报告**：
 
    ```text
-   python study-report/scripts/build_report.py <package-dir> [--out REPORT.md]
+   python scripts/build_report.py <package-dir> [--out REPORT.md]
    ```
 
-   完成标准：得到结构化报告；不带 `--out` 时输出到 stdout。`--out` 只写指定的报告文件，其余文件保持字节不变。
+   完成标准：得到结构化报告；不带 `--out` 时输出到 stdout。`--out` 只能写包内 `exports/` 下的报告文件（默认 `exports/REPORT.md`），其余文件保持字节不变。
 
 3. **解读与建议**：基于报告数据向用户呈现关键发现，逐条标注依据（record 路径或来源 id）；下一步建议具体到一次可执行的学习动作。
 
@@ -46,6 +46,6 @@ disable-model-invocation: true
 
 | 需要什么 | 读取 |
 |---|---|
-| 证据等级语义（什么算 confirmed） | `../../shared/references/transfer-rubric.md` |
-| 记录字段契约 | `../../shared/references/record-contract.md` |
-| 复习队列一致性 | `../../shared/schemas/review.schema.yaml` |
+| 证据等级语义（什么算 confirmed） | `../shared/references/transfer-rubric.md` |
+| 记录字段契约 | `../shared/references/record-contract.md` |
+| 复习队列一致性 | `../shared/schemas/review.schema.yaml` |

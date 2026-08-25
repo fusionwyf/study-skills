@@ -2,6 +2,24 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.2.1] - 2026-08-25
+
+Review fixes: explicit-invocation policy completed, shared-path corrections, and transactional state writes.
+
+### Fixed
+
+- **Explicit-only invocation completed (P1).** `spaced-review`, `source-grounded-study`, `study-report` and `learning-handoff` now ship `agents/openai.yaml` with `policy.allow_implicit_invocation: false`, matching their `disable-model-invocation: true` frontmatter so the runtime never auto-injects them.
+- **Shared-reference paths (P1).** SKILL.md files referenced `../../shared/...`, which resolves outside the repository from a leaf skill directory; corrected to `../shared/...`. Command examples in the four leaf skills now use `python scripts/...` (skill-directory cwd) consistently with `learning-course`/`exam-prep`; cross-skill validation commands are explicitly marked as running from the repository root.
+- **Review frontmatter serialization (P1).** `complete_review.py` no longer interpolates user text into YAML via f-strings; it builds the frontmatter mapping and serializes with `yaml.safe_dump`, so `--next-action` values containing `:`, `#` or newlines can no longer produce unparsable records.
+- **Review record/state atomicity (P1).** `complete_review.py` stages the new state text first, then writes the record, then atomically replaces the state file; if the state replace fails, the new record is rolled back (with a recovery marker when rollback itself fails), preserving "no interval change without a finalized record".
+- **Source registry pipe escaping (P2).** `register_source.py` now splits table rows on unescaped pipes only and unescapes `\|`, so titles or coverage containing `|` survive a write → read round trip instead of being misread by later validation.
+- **Source registration rollback (P2).** `register_source.py` tracks every path it creates and rolls back partial registrations on mid-write failure, so retries are not blocked by orphaned detail folders.
+- **Report output confinement (P2).** `build_report.py --out` is restricted to relative paths inside the package's `exports/` directory (`--out REPORT.md` → `exports/REPORT.md`); absolute paths, `..` escapes and existing state files can no longer be overwritten, preserving the read-only contract.
+- **Handoff date validation (P2).** `validate_handoffs.py` accepts unquoted YAML dates (parsed as `datetime.date`) for `created_at`/`returned_at` in addition to quoted strings.
+- **Handoff schema and returned-record checks (P2).** `handoff.schema.yaml` now requires `to.package`; `validate_handoffs.py` verifies that a returned/closed handoff's `returned_record` stays inside `to.package`, exists, and is a finalized record.
+- **Bundled skill validator (P2).** added `shared/scripts/quick_validate.py`, which understands `disable-model-invocation` and checks `agents/openai.yaml` consistency; SKILL.md validation commands now point at it instead of the external `<skill-creator>` path.
+- CHANGELOG test count corrected from 39 to the actual 48; 11 regression tests added for the fixed failure windows (48 → 59).
+
 ## [0.2.0] - 2026-08-24
 
 Learning OS buildout: shared protocols, manual invocation model, and four new leaf skills.
@@ -14,7 +32,7 @@ Learning OS buildout: shared protocols, manual invocation model, and four new le
 - **study-report** skill: strictly read-only progress reports; every finding labeled confirmed / inferred / unknown / self-reported; activity shown separately from evidence.
 - **learning-handoff** skill: bounded mini-course handoffs between exam and course packages via artifact files only, with verifiable return conditions.
 - **study** router skill: intent-to-skill mapping; recommends only, never executes.
-- Regression tests for every new capability (39 tests).
+- Regression tests for every new capability (48 tests).
 
 ### Changed
 

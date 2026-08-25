@@ -22,7 +22,7 @@ disable-model-invocation: true
 2. **创建交接**：
 
    ```text
-   python learning-handoff/scripts/create_handoff.py <source-pkg> \
+   python scripts/create_handoff.py <source-pkg> \
      --record records/R0012.md --target-pkg <补课包目录> \
      --goal "能区分条件概率的分母和分子" \
      --include "conditional probability" --include "denominator selection" \
@@ -37,7 +37,7 @@ disable-model-invocation: true
 4. **返回**：
 
    ```text
-   python learning-handoff/scripts/complete_handoff.py --handoff <H####.md> --returned-record <目标包内记录路径>
+   python scripts/complete_handoff.py --handoff <H####.md> --returned-record <目标包内记录路径>
    ```
 
    完成标准：交接状态变为 returned，returned_record 指向目标包内已定稿记录。
@@ -47,7 +47,7 @@ disable-model-invocation: true
 6. **验证**：
 
    ```text
-   python learning-handoff/scripts/validate_handoffs.py <package-dir>
+   python scripts/validate_handoffs.py <package-dir>
    ```
 
    完成标准：所有交接文件通过校验；交接链条完整可追溯。
@@ -56,5 +56,5 @@ disable-model-invocation: true
 
 | 需要什么 | 读取 |
 |---|---|
-| 交接字段契约与规则 | `../../shared/schemas/handoff.schema.yaml` |
-| 记录字段契约（校验 returned_record） | `../../shared/references/record-contract.md` |
+| 交接字段契约与规则 | `../shared/schemas/handoff.schema.yaml` |
+| 记录字段契约（校验 returned_record） | `../shared/references/record-contract.md` |

@@ -22,7 +22,7 @@ disable-model-invocation: true
 2. **注册来源**：
 
    ```text
-   python source-grounded-study/scripts/register_source.py <package-dir> \
+   python scripts/register_source.py <package-dir> \
      --title "<标题>" --type <textbook|paper|webpage|lecture_notes|past_paper|syllabus|user_notes|other> \
      --reliability <official|course|user|synthetic|unknown> [--raw <原文件路径>]
    ```
@@ -38,7 +38,7 @@ disable-model-invocation: true
 6. **验证**：
 
    ```text
-   python source-grounded-study/scripts/validate_sources.py <package-dir>
+   python scripts/validate_sources.py <package-dir>
    ```
 
    完成标准：注册表通过校验；无来源的外部事实已被标记。
@@ -54,6 +54,6 @@ disable-model-invocation: true
 
 | 需要什么 | 读取 |
 |---|---|
-| 可靠性层级、合成标记、冲突处理原则 | `../../shared/references/source-provenance.md` |
-| 来源条目字段契约 | `../../shared/schemas/source.schema.yaml` |
+| 可靠性层级、合成标记、冲突处理原则 | `../shared/references/source-provenance.md` |
+| 来源条目字段契约 | `../shared/schemas/source.schema.yaml` |
 | 摘录与主张的写法、四区分 | `references/material-intake.md` |

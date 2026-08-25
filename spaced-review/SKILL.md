@@ -22,7 +22,7 @@ disable-model-invocation: true
 2. **计算到期项**：
 
    ```text
-   python spaced-review/scripts/build_review_session.py <package-dir>
+   python scripts/build_review_session.py <package-dir>
    ```
 
    完成标准：得到到期项列表及每项的建议任务类型；列表为空则告知用户无需复习并结束。
@@ -32,7 +32,7 @@ disable-model-invocation: true
 4. **落记录并更新队列**（每项一次调用）：
 
    ```text
-   python spaced-review/scripts/complete_review.py <package-dir> --objective-id <id> | --topic <t> \
+   python scripts/complete_review.py <package-dir> --objective-id <id> | --topic <t> \
      --review-kind <retrieval|explanation|variation|transfer|error_discrimination> \
      --performance <good|medium|poor> --hint-used <true|false> \
      --evidence-strength <strong|medium|weak> \
@@ -44,6 +44,7 @@ disable-model-invocation: true
 5. **验证**：
 
    ```text
+   # 跨 skill 验证：从 study-skills 仓库根目录执行
    python learning-course/scripts/validate_course.py <pkg> --strict-schema --pedagogical   # 课程包
    python exam-prep/scripts/validate_exam.py <pkg> --strict-schema                        # 考试包
    ```
@@ -55,5 +56,5 @@ disable-model-invocation: true
 | 需要什么 | 读取 |
 |---|---|
 | 任务类型选择、表现分级、session 组织 | `references/review-session.md` |
-| 复习记录字段契约 | `../../shared/references/record-contract.md` |
-| 队列条目字段与一致性规则 | `../../shared/schemas/review.schema.yaml` |
+| 复习记录字段契约 | `../shared/references/record-contract.md` |
+| 队列条目字段与一致性规则 | `../shared/schemas/review.schema.yaml` |
