@@ -1,0 +1,6 @@
+interface:
+  display_name: "Learning Handoff 学习交接"
+  short_description: "在考试包与课程包之间建立有界补课交接，返回时携带可验证证据"
+  default_prompt: "使用 $learning-handoff 把我的备考漏洞转成一次有界的补课并带回证据。"
+policy:
+  allow_implicit_invocation: false

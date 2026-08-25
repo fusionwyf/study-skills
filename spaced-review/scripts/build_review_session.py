@@ -2,7 +2,7 @@
 """Build a due spaced-repetition review session for a course or exam package.
 
 Usage:
-    python spaced-review/scripts/build_review_session.py <package-dir> [--limit N]
+    python scripts/build_review_session.py <package-dir> [--limit N]
 
 Detects the package kind (course.yaml vs exam.yaml), collects review_queue
 entries whose due_at has passed, and prints a YAML session plan to stdout:

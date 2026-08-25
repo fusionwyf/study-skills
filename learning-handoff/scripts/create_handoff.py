@@ -2,7 +2,7 @@
 """Create a bounded cross-package handoff from a finalized source record.
 
 Usage (see learning-handoff/SKILL.md step 2):
-    python learning-handoff/scripts/create_handoff.py <source-pkg> \
+    python scripts/create_handoff.py <source-pkg> \
       --record records/R0012.md --target-pkg <补课包目录> \
       --goal "..." [--include ...] [--exclude ...] \
       --return-condition "..." [--return-condition ...] [--to-skill learning-course]

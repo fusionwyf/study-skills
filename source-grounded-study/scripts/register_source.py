@@ -2,7 +2,7 @@
 """Register a study source into a package's SOURCES.md registry.
 
 Usage (see source-grounded-study/SKILL.md step 2):
-    python source-grounded-study/scripts/register_source.py <package-dir> \
+    python scripts/register_source.py <package-dir> \
       --title "<标题>" --type <textbook|paper|webpage|lecture_notes|past_paper|syllabus|user_notes|other> \
       --reliability <official|course|user|synthetic|unknown> [--raw <原文件路径>] [--coverage "<notes>"]
 
@@ -80,16 +80,27 @@ def resolve_layout(root: Path) -> tuple[str, Path, Path, Path]:
 
 
 def parse_rows(text: str) -> list[list[str]]:
+    """Parse a SOURCES.md table, honoring the ``\\|`` escaping used by cell().
+
+    Cells are split on pipes that are NOT preceded by a backslash, then the
+    escape is removed, so a title like ``A \\| B`` survives a round trip:
+    writing escapes ``|`` -> ``\\|`` and parsing unescapes it back.
+    """
     rows: list[list[str]] = []
     for line in text.splitlines():
         stripped = line.strip()
         if not stripped.startswith("|"):
             continue
-        cells = [cell.strip() for cell in stripped.strip("|").split("|")]
+        body = stripped.strip("|")
+        cells = [unescape_pipe(cell.strip()) for cell in re.split(r"(?<!\\)\|", body)]
         if not cells or cells[0] in {"source_id", "---"} or set(cells[0]) <= {"-", ":"}:
             continue
         rows.append(cells)
     return rows
+
+
+def unescape_pipe(value: str) -> str:
+    return value.replace("\\|", "|")
 
 
 def cell(value: str) -> str:
@@ -193,16 +204,35 @@ def main() -> int:
         new_registry_text = f"{TABLE_INTRO}\n{TABLE_HEADER}\n{TABLE_SEPARATOR}\n{row}\n"
 
     # All refusal paths are above this point; perform the writes now.
+    # Track every path we create so a mid-write failure rolls back the partial
+    # registration: a retry must not be blocked by orphaned folders/files.
+    created: list[Path] = []
     try:
         detail_dir.mkdir(parents=True, exist_ok=False)
+        created.append(detail_dir)
         (detail_dir / "excerpts.md").write_text(excerpts_skeleton(source_id, args.title.strip()), encoding="utf-8", newline="\n")
         (detail_dir / "claims.md").write_text(claims_skeleton(source_id), encoding="utf-8", newline="\n")
         if raw_target is not None and raw_source is not None:
             raw_dir.mkdir(parents=True, exist_ok=True)
             shutil.copy2(raw_source, raw_target)  # copy, never move/delete the original
+            created.append(raw_target)
         registry_path.parent.mkdir(parents=True, exist_ok=True)
         registry_path.write_text(new_registry_text, encoding="utf-8", newline="\n")
     except OSError as exc:
+        failures: list[str] = []
+        for path in reversed(created):
+            try:
+                if path.is_dir():
+                    shutil.rmtree(path)
+                else:
+                    path.unlink(missing_ok=True)
+            except OSError as rollback_exc:
+                failures.append(f"{path}: {rollback_exc}")
+        if failures:
+            return fail(
+                f"registration could not be written: {exc}; "
+                f"rollback incomplete — remove these manually: {'; '.join(failures)}"
+            )
         return fail(f"registration could not be written: {exc}")
 
     print(f"OK {source_id} registered in {registry_path.relative_to(root).as_posix()} ({args.title.strip()})")

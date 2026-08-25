@@ -2,7 +2,7 @@
 """Complete a handoff: mark it returned with verifiable evidence.
 
 Usage (see learning-handoff/SKILL.md step 4):
-    python learning-handoff/scripts/complete_handoff.py --handoff <H####.md> \
+    python scripts/complete_handoff.py --handoff <H####.md> \
       --returned-record <目标包内记录路径>
 
 Refuses unless the handoff is open and the returned record exists inside the

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Spaced Review 到期复习"
+  short_description: "执行到期复习：按队列组织复习 session，落记录并更新间隔"
+  default_prompt: "使用 $spaced-review 对到期复习项执行一次有时间边界的复习 session。"
+policy:
+  allow_implicit_invocation: false

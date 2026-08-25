@@ -2,7 +2,7 @@
 """Record one completed review and update the package's review queue.
 
 Usage (see spaced-review/SKILL.md step 4):
-    python spaced-review/scripts/complete_review.py <package-dir> \
+    python scripts/complete_review.py <package-dir> \
       --objective-id <id> | --topic <t> \
       --review-kind <retrieval|explanation|variation|transfer|error_discrimination> \
       --performance <good|medium|poor> --hint-used <true|false> \
@@ -93,24 +93,33 @@ def load_state(root: Path, filename: str):
     return state, yaml
 
 
-def build_record_text(args: argparse.Namespace, record_id: str, target_key: str, target: str) -> str:
+def build_record_text(args: argparse.Namespace, record_id: str, target_key: str, target: str, yaml_module) -> str:
+    """Serialize the review record frontmatter through yaml.safe_dump.
+
+    User-supplied strings (--next-action, the objective/topic target) are
+    never interpolated into YAML text directly: a value such as ``review:
+    chapter`` or ``foo # bar`` would otherwise break parsing. Building the
+    mapping first lets safe_dump quote/scalar-encode every value correctly.
+    """
     next_action = args.next_action or DEFAULT_NEXT_ACTION
-    frontmatter = f"""---
-record_schema: 1
-assessment_status: finalized
-record_id: {record_id}
-attempted_at: {dt.date.today().isoformat()}
-source_backed: {'true' if args.source_backed else 'false'}
-synthetic: {'true' if args.synthetic else 'false'}
-record_type: review
-review_kind: {args.review_kind}
-performance: {args.performance}
-hint_used: {'true' if args.hint_used == 'true' else 'false'}
-evidence_strength: {args.evidence_strength}
-next_action: {next_action}
-{target_key}: {target}
----"""
-    return f"""{frontmatter}
+    frontmatter = {
+        "record_schema": 1,
+        "assessment_status": "finalized",
+        "record_id": record_id,
+        "attempted_at": dt.date.today().isoformat(),
+        "source_backed": bool(args.source_backed),
+        "synthetic": bool(args.synthetic),
+        "record_type": "review",
+        "review_kind": args.review_kind,
+        "performance": args.performance,
+        "hint_used": args.hint_used == "true",
+        "evidence_strength": args.evidence_strength,
+        "next_action": next_action,
+        target_key: target,
+    }
+    dumped = yaml_module.safe_dump(frontmatter, allow_unicode=True, sort_keys=False, default_flow_style=False)
+    return f"""---
+{dumped}---
 # 复习记录 {record_id}
 
 ## 原始回答
@@ -224,14 +233,50 @@ def main() -> int:
     except Exception as exc:
         return fail(f"{state_file} cannot be serialized: {exc}")
 
-    # Serialize first, then write both artifacts; nothing is written on refusal paths above.
-    record_path.parent.mkdir(parents=True, exist_ok=True)
-    record_path.write_text(build_record_text(args, record_id, target_key, target), encoding="utf-8", newline="\n")
-    fd, temp_name = tempfile.mkstemp(prefix=f".{state_file}.", suffix=".tmp", dir=root)
+    # Write both artifacts transactionally so the "every interval change
+    # traces to a finalized record" invariant survives failures:
+    #   1. stage the new state text in a temp file (no visible change yet);
+    #   2. write the new record file;
+    #   3. atomically replace the state file.
+    # If step 3 fails, roll the record back: a finalized record must never
+    # outlive the queue update it belongs to.
+    try:
+        fd, temp_name = tempfile.mkstemp(prefix=f".{state_file}.", suffix=".tmp", dir=root)
+    except OSError as exc:
+        return fail(f"could not create temporary state file: {exc}")
     try:
         with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as handle:
             handle.write(dumped)
-        os.replace(temp_name, root / state_file)
+        record_path.parent.mkdir(parents=True, exist_ok=True)
+        record_path.write_text(
+            build_record_text(args, record_id, target_key, target, yaml),
+            encoding="utf-8",
+            newline="\n",
+        )
+        try:
+            os.replace(temp_name, root / state_file)
+        except OSError as exc:
+            try:
+                record_path.unlink(missing_ok=True)
+            except OSError as rollback_exc:
+                print(
+                    f"ERROR: {state_file} could not be updated: {exc}",
+                    file=sys.stderr,
+                )
+                print(
+                    f"ERROR: rollback of {record_relative} also failed: {rollback_exc}",
+                    file=sys.stderr,
+                )
+                print(
+                    f"RECOVERY: state update failed; delete {record_path} manually before re-running",
+                    file=sys.stderr,
+                )
+                return 1
+            return fail(
+                f"{state_file} could not be updated: {exc}; rolled back {record_relative}"
+            )
+    except OSError as exc:
+        return fail(f"could not write review artifacts: {exc}")
     finally:
         if os.path.exists(temp_name):
             os.unlink(temp_name)

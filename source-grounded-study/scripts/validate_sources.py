@@ -2,7 +2,7 @@
 """Validate a package's source registry against shared/schemas/source.schema.yaml.
 
 Usage:
-    python source-grounded-study/scripts/validate_sources.py <package-dir>
+    python scripts/validate_sources.py <package-dir>
 
 Checks:
 - registry exists at the package-native location (exam: root SOURCES.md;
@@ -82,17 +82,27 @@ def load_vocabularies(errors: list[str]) -> dict[str, list[str]]:
 
 
 def parse_rows(text: str) -> list[tuple[int, list[str]]]:
-    """Return (line_number, cells) for every data row of the markdown table."""
+    """Return (line_number, cells) for every data row of the markdown table.
+
+    Honors the ``\\|`` escaping written by register_source.py: cells are split
+    on pipes that are NOT preceded by a backslash, then unescaped, so a title
+    containing a literal pipe still parses as a single cell.
+    """
     rows: list[tuple[int, list[str]]] = []
     for number, line in enumerate(text.splitlines(), start=1):
         stripped = line.strip()
         if not stripped.startswith("|"):
             continue
-        cells = [cell.strip() for cell in stripped.strip("|").split("|")]
+        body = stripped.strip("|")
+        cells = [unescape_pipe(cell.strip()) for cell in re.split(r"(?<!\\)\|", body)]
         if not cells or cells[0] in {"source_id", "---"} or set(cells[0]) <= {"-", ":"}:
             continue
         rows.append((number, cells))
     return rows
+
+
+def unescape_pipe(value: str) -> str:
+    return value.replace("\\|", "|")
 
 
 def strip_html_comments(text: str) -> str:

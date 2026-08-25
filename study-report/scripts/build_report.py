@@ -2,11 +2,13 @@
 """Build a read-only progress report for a study package.
 
 Usage (see study-report/SKILL.md):
-    python study-report/scripts/build_report.py <package-dir> [--out REPORT.md]
+    python scripts/build_report.py <package-dir> [--out REPORT.md]
 
 Strictly read-only: derives everything from course.yaml/exam.yaml, records/
 frontmatter, lessons/, question bank JSONL and error-log.md. Without --out
-the report goes to stdout; with --out only that single file is written.
+the report goes to stdout; with --out the file is written under the
+package's exports/ directory only (`--out REPORT.md` -> exports/REPORT.md),
+so state files and records can never be overwritten.
 
 Every conclusion cites its evidence (record path / objective id / metric
 name). Findings are labeled confirmed / inferred / unknown / self-reported;
@@ -449,10 +451,28 @@ def main() -> int:
         return fail(str(exc))
 
     if args.out:
-        out_path = Path(args.out).expanduser().resolve()
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        out_path.write_text(report, encoding="utf-8", newline="\n")
-        print(f"OK report written: {out_path}")
+        rel = Path(args.out)
+        if rel.is_absolute() or ".." in rel.parts:
+            return fail("--out must be a relative path inside the package's exports/ directory")
+        parts = list(rel.parts)
+        if parts and parts[0] == "exports":
+            parts = parts[1:]
+        if not parts:
+            return fail("--out must name a file inside exports/ (e.g. exports/REPORT.md)")
+        exports_dir = root / "exports"
+        out_path = (exports_dir / Path(*parts)).resolve()
+        try:
+            out_path.relative_to(exports_dir.resolve())
+        except ValueError:
+            return fail("--out must stay inside the package's exports/ directory")
+        if out_path.is_dir():
+            return fail(f"--out points at a directory: {args.out}")
+        try:
+            out_path.parent.mkdir(parents=True, exist_ok=True)
+            out_path.write_text(report, encoding="utf-8", newline="\n")
+        except OSError as exc:
+            return fail(f"report could not be written: {exc}")
+        print(f"OK report written: {out_path.relative_to(root).as_posix()}")
     else:
         print(report, end="")
     return 0

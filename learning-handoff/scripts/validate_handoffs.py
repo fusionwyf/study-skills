@@ -2,14 +2,17 @@
 """Validate the handoffs/ directory of a package against handoff.schema.yaml.
 
 Usage:
-    python learning-handoff/scripts/validate_handoffs.py <package-dir>
+    python scripts/validate_handoffs.py <package-dir>
 
 An absent handoffs/ folder is valid (zero handoffs). Each handoff file is
 checked for: required frontmatter fields, nested from/to blocks with all
-required keys, boundary include/exclude present as lists, non-empty
-return_condition, id pattern ^H[0-9]{4}$ and cross-file uniqueness, status
-vocabulary, returned/closed implying returned_record, and from.record
-resolving to an existing file inside THIS package (traceability).
+required keys (to.package is required), boundary include/exclude present as
+lists, non-empty return_condition, id pattern ^H[0-9]{4}$ and cross-file
+uniqueness, status vocabulary, returned/closed implying returned_record that
+resolves to a finalized record inside the to.package directory, and
+from.record resolving to an existing file inside THIS package
+(traceability). created_at / returned_at accept both quoted strings and
+unquoted YAML date objects.
 
 Output: ERROR lines plus one SUMMARY line; exit 0 = valid, 1 = errors,
 2 = usage/IO error.
@@ -18,6 +21,7 @@ Output: ERROR lines plus one SUMMARY line; exit 0 = valid, 1 = errors,
 from __future__ import annotations
 
 import argparse
+import datetime as dt
 import re
 import sys
 from pathlib import Path
@@ -73,6 +77,26 @@ def require_str(metadata: dict, key: str, label: str, errors: list[str]) -> None
         errors.append(f"{label} missing non-empty string field: {key}")
 
 
+def is_iso_date(value: Any) -> bool:
+    """Accept both quoted (str) and unquoted (datetime.date) YAML dates.
+
+    PyYAML parses an unquoted ``2026-08-25`` as datetime.date, while quoted
+    values stay strings; the schema declares ``type: date``, so both forms
+    must validate. datetime.datetime (a date subclass) is deliberately
+    rejected because it carries a time component.
+    """
+    return type(value) is dt.date or (isinstance(value, str) and bool(DATE_RE.match(value)))
+
+
+def resolve_target_package(metadata: dict) -> Path | None:
+    """Resolve to.package to an absolute path, or None when it is unusable."""
+    to_block = metadata.get("to")
+    package = to_block.get("package") if isinstance(to_block, dict) else None
+    if not isinstance(package, str) or not package.strip():
+        return None
+    return Path(package).expanduser().resolve()
+
+
 def validate_handoff(path: Path, root: Path, yaml: Any, statuses: list[str], seen_ids: set[str], errors: list[str]) -> str | None:
     label = path.name
     try:
@@ -108,8 +132,11 @@ def validate_handoff(path: Path, root: Path, yaml: Any, statuses: list[str], see
         errors.append(f"{label} invalid status {status!r}; allowed {statuses}")
 
     created_at = metadata.get("created_at")
-    if not isinstance(created_at, str) or not DATE_RE.match(created_at):
+    if not is_iso_date(created_at):
         errors.append(f"{label} created_at must be YYYY-MM-DD, got {created_at!r}")
+    returned_at = metadata.get("returned_at")
+    if returned_at is not None and not is_iso_date(returned_at):
+        errors.append(f"{label} returned_at must be YYYY-MM-DD, got {returned_at!r}")
 
     conditions = metadata.get("return_condition")
     if not isinstance(conditions, list) or not conditions:
@@ -136,7 +163,7 @@ def validate_handoff(path: Path, root: Path, yaml: Any, statuses: list[str], see
     if not isinstance(to_block, dict):
         errors.append(f"{label} missing to block")
     else:
-        for key in ("skill", "goal"):
+        for key in ("skill", "package", "goal"):
             require_str(to_block, key, label, errors)
         boundary = to_block.get("boundary")
         if not isinstance(boundary, dict):
@@ -146,8 +173,35 @@ def validate_handoff(path: Path, root: Path, yaml: Any, statuses: list[str], see
                 if not isinstance(boundary.get(key), list):
                     errors.append(f"{label} to.boundary.{key} must be a list")
 
-    if status in {"returned", "closed"} and not isinstance(metadata.get("returned_record"), str):
-        errors.append(f"{label} status {status!r} requires returned_record")
+    if status in {"returned", "closed"}:
+        returned_record = metadata.get("returned_record")
+        if not isinstance(returned_record, str) or not returned_record.strip():
+            errors.append(f"{label} status {status!r} requires returned_record")
+        else:
+            target_pkg = resolve_target_package(metadata)
+            if target_pkg is None:
+                errors.append(f"{label} cannot verify returned_record without a usable to.package")
+            else:
+                rr = (
+                    (target_pkg / returned_record).resolve()
+                    if not Path(returned_record).is_absolute()
+                    else Path(returned_record).resolve()
+                )
+                try:
+                    rr.relative_to(target_pkg)
+                except ValueError:
+                    errors.append(f"{label} returned_record escapes the target package: {returned_record}")
+                else:
+                    if not rr.is_file():
+                        errors.append(f"{label} returned_record does not exist in target package: {returned_record}")
+                    else:
+                        try:
+                            record_block = split_frontmatter(rr.read_text(encoding="utf-8", errors="replace"))
+                            record_meta = yaml.safe_load(record_block) if record_block is not None else None
+                        except Exception:
+                            record_meta = None
+                        if not isinstance(record_meta, dict) or record_meta.get("assessment_status") != "finalized":
+                            errors.append(f"{label} returned_record is not a finalized record: {returned_record}")
 
     return handoff_id if isinstance(handoff_id, str) else None
 

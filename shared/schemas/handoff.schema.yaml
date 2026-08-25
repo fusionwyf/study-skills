@@ -27,6 +27,7 @@ from:
 to:
   required:
     skill: {type: str}
+    package: {type: str}
     goal: {type: str}
     boundary:
       include: {type: list}

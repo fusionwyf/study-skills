@@ -1,0 +1,6 @@
+interface:
+  display_name: "Study Report 学习进展报告"
+  short_description: "只读生成学习进展报告：证据覆盖、薄弱点、到期复习与下一步"
+  default_prompt: "使用 $study-report 为我的学习包生成一份可追溯的进展报告。"
+policy:
+  allow_implicit_invocation: false
