@@ -111,15 +111,28 @@ class ReadOnlyAndDeterminismTests(StudyReportTestCase):
     def test_out_run_touches_only_the_report_file(self) -> None:
         course = self.copy_course()
         before = hash_tree(course)
-        out_path = course / "REPORT.md"
-        result = run_script(BUILD_REPORT, course, "--out", out_path)
+        result = run_script(BUILD_REPORT, course, "--out", "REPORT.md")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
         after = hash_tree(course)
         new_files = set(after) - set(before)
-        self.assertEqual(new_files, {"REPORT.md"})
+        self.assertEqual(new_files, {"exports/REPORT.md"})
         for path, digest in before.items():
             self.assertEqual(after.get(path), digest, path)
+
+    def test_out_accepts_exports_prefixed_relative_path(self) -> None:
+        course = self.copy_course()
+        result = run_script(BUILD_REPORT, course, "--out", "exports/weekly/report.md")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue((course / "exports" / "weekly" / "report.md").is_file())
+
+    def test_out_rejects_escapes_and_absolute_paths_without_writes(self) -> None:
+        course = self.copy_course()
+        before = hash_tree(course)
+        for bad in (str(course / "course.yaml"), "../outside.md", "exports/../course.yaml"):
+            result = run_script(BUILD_REPORT, course, "--out", bad)
+            self.assertNotEqual(result.returncode, 0, bad)
+        self.assertEqual(hash_tree(course), before)
 
     def test_same_day_runs_are_byte_identical(self) -> None:
         course = self.copy_course()

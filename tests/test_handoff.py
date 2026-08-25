@@ -200,13 +200,14 @@ class ValidateHandoffTests(HandoffTestCase):
 
     def test_bad_status_fails_validation(self) -> None:
         exam = self.copy_exam()
+        course = self.copy_course()
         self.inject(
             exam,
             (
                 "handoff_schema: 1\nhandoff_id: H0042\nstatus: archived\ncreated_at: '2026-08-24'\n"
                 "return_condition:\n- one finalized application record\n"
                 "from:\n  skill: exam-prep\n  package: exam\n  record: records/R0001.md\n"
-                "to:\n  skill: learning-course\n  goal: 目标\n  boundary:\n    include: []\n    exclude: []\n"
+                f"to:\n  skill: learning-course\n  package: {course}\n  goal: 目标\n  boundary:\n    include: []\n    exclude: []\n"
             ),
         )
         result = run_script(VALIDATE, exam)
@@ -215,18 +216,111 @@ class ValidateHandoffTests(HandoffTestCase):
 
     def test_missing_boundary_include_fails_validation(self) -> None:
         exam = self.copy_exam()
+        course = self.copy_course()
         self.inject(
             exam,
             (
                 "handoff_schema: 1\nhandoff_id: H0042\nstatus: open\ncreated_at: '2026-08-24'\n"
                 "return_condition:\n- one finalized application record\n"
                 "from:\n  skill: exam-prep\n  package: exam\n  record: records/R0001.md\n"
-                "to:\n  skill: learning-course\n  goal: 目标\n  boundary:\n    exclude: []\n"
+                f"to:\n  skill: learning-course\n  package: {course}\n  goal: 目标\n  boundary:\n    exclude: []\n"
             ),
         )
         result = run_script(VALIDATE, exam)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("to.boundary.include must be a list", result.stdout)
+
+    def test_unquoted_created_at_date_object_validates(self) -> None:
+        exam = self.copy_exam()
+        course = self.copy_course()
+        # unquoted ISO date -> PyYAML parses it as datetime.date, not a string
+        self.inject(
+            exam,
+            (
+                "handoff_schema: 1\nhandoff_id: H0042\nstatus: open\ncreated_at: 2026-08-24\n"
+                "return_condition:\n- one finalized application record\n"
+                "from:\n  skill: exam-prep\n  package: exam\n  record: records/R0001.md\n"
+                f"to:\n  skill: learning-course\n  package: {course}\n  goal: 目标\n  boundary:\n    include: []\n    exclude: []\n"
+            ),
+        )
+        result = run_script(VALIDATE, exam)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("handoffs=1 open=1", result.stdout)
+
+    def test_missing_to_package_fails_validation(self) -> None:
+        exam = self.copy_exam()
+        self.inject(
+            exam,
+            (
+                "handoff_schema: 1\nhandoff_id: H0042\nstatus: open\ncreated_at: '2026-08-24'\n"
+                "return_condition:\n- one finalized application record\n"
+                "from:\n  skill: exam-prep\n  package: exam\n  record: records/R0001.md\n"
+                "to:\n  skill: learning-course\n  goal: 目标\n  boundary:\n    include: []\n    exclude: []\n"
+            ),
+        )
+        result = run_script(VALIDATE, exam)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("missing non-empty string field: package", result.stdout)
+
+    def test_returned_record_missing_or_unfinalized_fails_validation(self) -> None:
+        exam = self.copy_exam()
+        course = self.copy_course()
+        pending = course / "records" / "pending-evidence.md"
+        pending.write_text(
+            "---\nrecord_schema: 1\nassessment_status: pending\nlesson: 1\n"
+            "evidence_type: null\nevidence_strength: null\nsupported_objectives: []\n---\n# pending\n",
+            encoding="utf-8",
+        )
+        base = (
+            "handoff_schema: 1\nhandoff_id: H0042\nstatus: returned\ncreated_at: 2026-08-24\n"
+            "return_condition:\n- one finalized application record\n"
+            "from:\n  skill: exam-prep\n  package: exam\n  record: records/R0001.md\n"
+            f"to:\n  skill: learning-course\n  package: {course}\n  goal: 目标\n  boundary:\n    include: []\n    exclude: []\n"
+        )
+
+        self.inject(exam, base + "returned_record: records/ghost.md\n")
+        missing = run_script(VALIDATE, exam)
+        self.assertNotEqual(missing.returncode, 0)
+        self.assertIn("returned_record does not exist in target package", missing.stdout)
+
+        self.inject(exam, base + "returned_record: records/pending-evidence.md\n")
+        pending_result = run_script(VALIDATE, exam)
+        self.assertNotEqual(pending_result.returncode, 0)
+        self.assertIn("returned_record is not a finalized record", pending_result.stdout)
+
+    def test_returned_record_escaping_target_package_fails_validation(self) -> None:
+        exam = self.copy_exam()
+        course = self.copy_course()
+        self.inject(
+            exam,
+            (
+                "handoff_schema: 1\nhandoff_id: H0042\nstatus: returned\ncreated_at: '2026-08-24'\n"
+                "return_condition:\n- one finalized application record\n"
+                "from:\n  skill: exam-prep\n  package: exam\n  record: records/R0001.md\n"
+                f"to:\n  skill: learning-course\n  package: {course}\n  goal: 目标\n  boundary:\n    include: []\n    exclude: []\n"
+                f"returned_record: {EXAMPLE_EXAM / 'records' / 'R0001.md'}\n"
+            ),
+        )
+        result = run_script(VALIDATE, exam)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("returned_record escapes the target package", result.stdout)
+
+    def test_returned_record_happy_path_validates(self) -> None:
+        exam = self.copy_exam()
+        course = self.copy_course()
+        self.inject(
+            exam,
+            (
+                "handoff_schema: 1\nhandoff_id: H0042\nstatus: returned\ncreated_at: 2026-08-24\n"
+                "return_condition:\n- one finalized application record\n"
+                "from:\n  skill: exam-prep\n  package: exam\n  record: records/R0001.md\n"
+                f"to:\n  skill: learning-course\n  package: {course}\n  goal: 目标\n  boundary:\n    include: []\n    exclude: []\n"
+                "returned_record: records/0001-example-feedback.md\n"
+            ),
+        )
+        result = run_script(VALIDATE, exam)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("handoffs=1 open=0 returned=1", result.stdout)
 
     def test_absent_handoffs_folder_is_valid_zero(self) -> None:
         course = self.copy_course()

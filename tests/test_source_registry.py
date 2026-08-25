@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import importlib.util
 import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import yaml
 
@@ -104,6 +106,72 @@ class RegisterSourceTests(SourceRegistryTestCase):
         self.assertEqual(sync.returncode, 0, sync.stdout + sync.stderr)
         validation = run_script(EXAM_VALIDATE, exam, "--strict-schema")
         self.assertEqual(validation.returncode, 0, validation.stdout + validation.stderr)
+
+    def test_title_with_pipe_survives_round_trip(self) -> None:
+        course = self.copy_course()
+        title = "A | B 教材"
+        result = self.register(course, title, "textbook", "official")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("S001", result.stdout)
+
+        registry = course / "sources" / "SOURCES.md"
+        text = registry.read_text(encoding="utf-8")
+        # written escaped so the table stays 6 columns wide
+        self.assertIn("| S001 | A \\| B 教材 | textbook |", text)
+
+        # re-registering the same title must parse it back as ONE cell: the
+        # duplicate warning proves the title was not split on the escaped pipe
+        duplicate = self.register(course, title, "textbook", "official")
+        self.assertIn("WARNING: a source titled", duplicate.stderr)
+        self.assertIn("S002", duplicate.stdout)
+
+        validation = run_script(VALIDATE_SOURCES, course)
+        self.assertEqual(validation.returncode, 0, validation.stdout + validation.stderr)
+
+
+class RegisterSourceRollbackTests(SourceRegistryTestCase):
+    def load_module(self):
+        spec = importlib.util.spec_from_file_location("register_source", REGISTER)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+
+    def test_mid_write_failure_rolls_back_partial_registration(self) -> None:
+        course = self.copy_course()
+        module = self.load_module()
+
+        real_write = Path.write_text
+        state = {"n": 0}
+
+        def flaky_write(path, *args, **kwargs):
+            state["n"] += 1
+            if state["n"] == 2:  # excerpts.md writes first, claims.md fails second
+                raise OSError("simulated write failure")
+            return real_write(path, *args, **kwargs)
+
+        argv = [
+            "register_source.py",
+            str(course),
+            "--title",
+            "教材",
+            "--type",
+            "textbook",
+            "--reliability",
+            "official",
+        ]
+        with mock.patch.object(Path, "write_text", flaky_write):
+            with mock.patch.object(sys, "argv", argv):
+                rc = module.main()
+
+        self.assertNotEqual(rc, 0)
+        # the orphaned detail folder and the registry must both be gone,
+        # so a retry starts clean
+        self.assertFalse((course / "sources" / "S001").exists())
+        self.assertFalse((course / "sources" / "SOURCES.md").exists())
+
+        retry = self.register(course, "教材", "textbook", "official")
+        self.assertEqual(retry.returncode, 0, retry.stdout + retry.stderr)
+        self.assertIn("S001", retry.stdout)
 
 
 class ValidateSourcesTests(SourceRegistryTestCase):

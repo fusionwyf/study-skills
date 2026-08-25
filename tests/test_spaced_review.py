@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.util
 import shutil
 import subprocess
 import sys
@@ -7,6 +8,7 @@ import tempfile
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
+from unittest import mock
 
 import yaml
 
@@ -184,6 +186,81 @@ class CompleteReviewCourseTests(SpacedReviewTestCase):
         state = load_yaml(course / "course.yaml")
         self.assertEqual(state.get("review_queue"), [])
         self.assertNotIn("RV", str(state))
+
+    def test_next_action_with_yaml_special_chars_is_serialized_safely(self) -> None:
+        course = self.copy_course()
+        inject_due_entry(course / "course.yaml", "objective_id", "variables-and-assignment")
+        tricky = "复习: 第 5 章 # 重点（P(A|B) ≠ P(B|A)）"
+        result = run_script(
+            COMPLETE_REVIEW,
+            course,
+            "--objective-id",
+            "variables-and-assignment",
+            "--review-kind",
+            "variation",
+            "--performance",
+            "medium",
+            "--hint-used",
+            "false",
+            "--evidence-strength",
+            "medium",
+            "--raw-answer",
+            "答案：变量重新赋值会覆盖旧值。",
+            "--next-action",
+            tricky,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+        records = list((course / "records").glob("RV*.md"))
+        self.assertEqual(len(records), 1)
+        # the frontmatter must parse, and the value must round-trip unchanged
+        frontmatter = yaml.safe_load(records[0].read_text(encoding="utf-8").split("---", 2)[1])
+        self.assertEqual(frontmatter["next_action"], tricky)
+        self.assertEqual(frontmatter["objective_id"], "variables-and-assignment")
+
+        shared = run_script(SHARED_VALIDATE, records[0], "--type", "review")
+        self.assertEqual(shared.returncode, 0, shared.stdout + shared.stderr)
+        validation = run_script(COURSE_VALIDATE, course, "--strict-schema", "--pedagogical")
+        self.assertEqual(validation.returncode, 0, validation.stdout + validation.stderr)
+
+
+class CompleteReviewAtomicityTests(SpacedReviewTestCase):
+    def load_module(self):
+        spec = importlib.util.spec_from_file_location("complete_review", COMPLETE_REVIEW)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+
+    def test_state_replace_failure_rolls_back_record(self) -> None:
+        course = self.copy_course()
+        inject_due_entry(course / "course.yaml", "objective_id", "variables-and-assignment")
+        state_before = load_yaml(course / "course.yaml")
+
+        module = self.load_module()
+        argv = [
+            "complete_review.py",
+            str(course),
+            "--objective-id",
+            "variables-and-assignment",
+            "--review-kind",
+            "variation",
+            "--performance",
+            "good",
+            "--hint-used",
+            "false",
+            "--evidence-strength",
+            "strong",
+            "--raw-answer",
+            "答案",
+        ]
+        with mock.patch.object(module.os, "replace", side_effect=OSError("simulated replace failure")):
+            with mock.patch.object(sys, "argv", argv):
+                rc = module.main()
+
+        self.assertNotEqual(rc, 0)
+        # no orphan finalized record, no half-updated queue
+        self.assertFalse(list((course / "records").glob("RV*.md")))
+        self.assertEqual(load_yaml(course / "course.yaml"), state_before)
 
 
 class CompleteReviewExamTests(SpacedReviewTestCase):
