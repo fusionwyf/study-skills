@@ -173,6 +173,32 @@ class RegisterSourceRollbackTests(SourceRegistryTestCase):
         self.assertEqual(retry.returncode, 0, retry.stdout + retry.stderr)
         self.assertIn("S001", retry.stdout)
 
+    def test_registry_replace_failure_preserves_existing_registry(self) -> None:
+        exam = self.copy_exam()  # ships an existing SOURCES.md with S001
+        before = (exam / "SOURCES.md").read_bytes()
+
+        module = self.load_module()
+        argv = [
+            "register_source.py",
+            str(exam),
+            "--title",
+            "新来源",
+            "--type",
+            "textbook",
+            "--reliability",
+            "official",
+        ]
+        with mock.patch.object(module.os, "replace", side_effect=OSError("simulated replace failure")):
+            with mock.patch.object(sys, "argv", argv):
+                rc = module.main()
+
+        self.assertNotEqual(rc, 0)
+        # the pre-existing registry must survive byte-for-byte; the partial
+        # detail folder must be rolled back; no temp file may remain
+        self.assertEqual((exam / "SOURCES.md").read_bytes(), before)
+        self.assertFalse((exam / "source-materials" / "S002").exists())
+        self.assertFalse(list((exam / "source-materials").glob(".SOURCES.md.*.tmp")))
+
 
 class ValidateSourcesTests(SourceRegistryTestCase):
     def test_passes_on_registered_course_package_and_on_example_exam(self) -> None:

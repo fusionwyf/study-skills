@@ -322,11 +322,82 @@ class ValidateHandoffTests(HandoffTestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("handoffs=1 open=0 returned=1", result.stdout)
 
+    def test_returned_record_failing_shared_contract_fails_validation(self) -> None:
+        exam = self.copy_exam()
+        course = self.copy_course()
+        # finalized per assessment_status, but no lesson/mode/review_kind
+        # feature and missing contract fields -> must fail the shared contract
+        fake = course / "records" / "fake-finalized.md"
+        fake.write_text(
+            "---\nrecord_schema: 1\nassessment_status: finalized\nrecord_id: L9999\n"
+            "attempted_at: 2026-08-25\nsource_backed: false\nsynthetic: false\n---\n# fake\n",
+            encoding="utf-8",
+        )
+        self.inject(
+            exam,
+            (
+                "handoff_schema: 1\nhandoff_id: H0042\nstatus: returned\ncreated_at: '2026-08-24'\n"
+                "return_condition:\n- one finalized application record\n"
+                "from:\n  skill: exam-prep\n  package: exam\n  record: records/R0001.md\n"
+                f"to:\n  skill: learning-course\n  package: {course}\n  goal: 目标\n  boundary:\n    include: []\n    exclude: []\n"
+                "returned_record: records/fake-finalized.md\n"
+            ),
+        )
+        result = run_script(VALIDATE, exam)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("fails the shared record contract", result.stdout)
+
     def test_absent_handoffs_folder_is_valid_zero(self) -> None:
         course = self.copy_course()
         result = run_script(VALIDATE, course)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("handoffs=0", result.stdout)
+
+
+class SharedContractAndRelativePathTests(HandoffTestCase):
+    """Create-side shared-contract enforcement and workspace-relative
+    to.package handling."""
+
+    def test_create_refuses_finalized_record_failing_shared_contract(self) -> None:
+        exam = self.copy_exam()
+        course = self.copy_course()
+        fake = exam / "records" / "R9998.md"
+        fake.write_text(
+            "---\nrecord_schema: 1\nassessment_status: finalized\nrecord_id: R9998\n"
+            "attempted_at: 2026-08-25\nsource_backed: false\nsynthetic: false\n---\n# fake\n",
+            encoding="utf-8",
+        )
+        result = self.create(exam, course, record="records/R9998.md")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("fails the shared record contract", result.stderr)
+        self.assertFalse((exam / "handoffs").exists())
+
+    def test_to_package_is_workspace_relative_and_resolvable(self) -> None:
+        # source and target share the same temp drive, so relpath() yields a
+        # workspace-relative reference instead of an absolute machine path
+        exam = self.copy_exam()
+        course = self.copy_course()
+        result = self.create(exam, course)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        handoff = self.handoff_file(exam)
+        text = handoff.read_text(encoding="utf-8")
+        self.assertIn("package: ..", text)  # relative to the source package
+        self.assertNotIn(str(course), text)  # never the absolute machine path
+
+        # both validate and complete must resolve the relative package
+        validation = run_script(VALIDATE, exam)
+        self.assertEqual(validation.returncode, 0, validation.stdout + validation.stderr)
+        complete = run_script(
+            COMPLETE,
+            "--handoff",
+            handoff,
+            "--returned-record",
+            "records/0001-example-feedback.md",
+        )
+        self.assertEqual(complete.returncode, 0, complete.stdout + complete.stderr)
+        final = run_script(VALIDATE, exam)
+        self.assertEqual(final.returncode, 0, final.stdout + final.stderr)
+        self.assertIn("returned=1", final.stdout)
 
 
 if __name__ == "__main__":

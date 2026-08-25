@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.util
 import json
 import shutil
 import subprocess
@@ -7,6 +8,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import yaml
 
@@ -193,6 +195,32 @@ The learner predicted the output and explained the reassignment.
         result = run_script(COURSE_VALIDATE, course, "--strict-schema", "--pedagogical")
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("no matching lesson file", result.stdout)
+
+    def test_state_replace_failure_rolls_back_new_record(self) -> None:
+        course = self.copy_course()
+        state_before = (course / "course.yaml").read_bytes()
+
+        spec = importlib.util.spec_from_file_location("update_progress", COURSE_UPDATE)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        argv = [
+            "update_progress.py",
+            str(course),
+            "--lesson",
+            "1",
+            "--feedback-text",
+            "I feel confident",
+        ]
+        with mock.patch.object(module.os, "replace", side_effect=OSError("simulated replace failure")):
+            with mock.patch.object(sys, "argv", argv):
+                with self.assertRaises(SystemExit):
+                    module.main()
+
+        # the pending record is rolled back so the package has no orphan
+        # record without a last_feedback association; state stays untouched
+        self.assertFalse((course / "records" / "0001-feedback.md").exists())
+        self.assertEqual((course / "course.yaml").read_bytes(), state_before)
 
 
 class ExamPrepInvariantTests(PackageTestCase):

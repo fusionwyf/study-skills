@@ -262,6 +262,47 @@ class CompleteReviewAtomicityTests(SpacedReviewTestCase):
         self.assertFalse(list((course / "records").glob("RV*.md")))
         self.assertEqual(load_yaml(course / "course.yaml"), state_before)
 
+    def test_record_write_failure_leaves_no_partial_record(self) -> None:
+        course = self.copy_course()
+        inject_due_entry(course / "course.yaml", "objective_id", "variables-and-assignment")
+        state_before = load_yaml(course / "course.yaml")
+
+        module = self.load_module()
+        real_replace = module.os.replace
+        calls = {"n": 0}
+
+        def flaky_replace(src, dst):
+            calls["n"] += 1
+            if calls["n"] == 1:  # first replace is the record write
+                raise OSError("simulated record write failure")
+            return real_replace(src, dst)
+
+        argv = [
+            "complete_review.py",
+            str(course),
+            "--objective-id",
+            "variables-and-assignment",
+            "--review-kind",
+            "variation",
+            "--performance",
+            "good",
+            "--hint-used",
+            "false",
+            "--evidence-strength",
+            "strong",
+            "--raw-answer",
+            "答案",
+        ]
+        with mock.patch.object(module.os, "replace", side_effect=flaky_replace):
+            with mock.patch.object(sys, "argv", argv):
+                rc = module.main()
+
+        self.assertNotEqual(rc, 0)
+        # no partial RV#### file and no leftover temp file; state untouched
+        self.assertFalse(list((course / "records").glob("RV*.md")))
+        self.assertFalse(list((course / "records").glob(".RV*.tmp")))
+        self.assertEqual(load_yaml(course / "course.yaml"), state_before)
+
 
 class CompleteReviewExamTests(SpacedReviewTestCase):
     def test_topic_upsert_then_validate_exam_passes(self) -> None:
