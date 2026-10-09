@@ -20,6 +20,8 @@
 .viz-list li { cursor: pointer; padding: .8rem; border: 1px solid #ccd3df; border-radius: .5rem; background: #f8fafc; }
 .viz-list li:focus, .viz-list li:hover { border-color: #3157d5; outline: 2px solid #dce5ff; }
 .viz-list p { margin-bottom: 0; }
+.viz-edges { margin-block: 1rem 0; padding-left: 1.25rem; }
+.viz-edges li { margin-block: .25rem; }
 .viz-table { width: 100%; border-collapse: collapse; }
 .viz-table th, .viz-table td { padding: .55rem; border: 1px solid #ccd3df; text-align: left; }
 .viz-table th { background: #f0f3f8; }

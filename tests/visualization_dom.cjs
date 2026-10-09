@@ -34,9 +34,9 @@ const body = [
   section("surface-demo", "chart", {model: "s", domain: "d", precision: "p", traces: [{type: "surface", x: [0, 1], y: [0, 1], z: [[0, 1], [1, 2]]}]}),
   section("spatial-demo", "spatial", {model: "t", domain: "d", precision: "p", matrix: [[1, -1], [0, 1]], vector: [1, 0]}),
   section("shapes-demo", "spatial", {model: "t", domain: "d", precision: "p", shapes: [{title: "方格", description: "单位方格"}]}),
-  section("relation-demo", "relation", {model: "r", domain: "d", precision: "p", nodes: [{id: "a", label: "输入"}, {id: "b", label: "输出"}]}),
+  section("relation-demo", "relation", {model: "r", domain: "d", precision: "p", nodes: [{id: "a", label: "输入"}, {id: "b", label: "输出"}], edges: [{from: "a", to: "b", label: "产生"}]}),
   section("timeline-demo", "timeline", {model: "t", domain: "d", precision: "p", events: [{title: "开始"}, {title: "结束"}]}),
-  section("process-demo", "process", {model: "p", domain: "d", precision: "p", nodes: [{label: "准备"}, {label: "执行"}]}),
+  section("process-demo", "process", {model: "p", domain: "d", precision: "p", nodes: [{label: "准备"}, {label: "执行"}], edges: [{from: "准备", to: "执行"}]}),
   section("table-demo", "table", {model: "t", domain: "d", precision: "p", columns: [{key: "n", label: "方案"}, {key: "c", label: "成本"}], rows: [{n: "A", c: "低"}, {n: "B", c: "高"}]}),
   section("sequence-steps", "sequence", {model: "q", domain: "d", precision: "p", steps: [{title: "识别输入", description: "记录条件"}, {title: "解释输出"}, {title: "收尾"}]}),
   section("sequence-input", "sequence", {model: "q", domain: "d", precision: "p", input: [5, 1, 4, 2, 3]}),
@@ -95,8 +95,11 @@ const waits = () => new Promise(resolve => setTimeout(resolve, 300));
 
   // The library-free kinds.
   assert.equal(host("relation-demo").querySelectorAll(".viz-list li").length, 2);
+  assert.equal(host("relation-demo").querySelectorAll(".viz-edges li").length, 1);
+  assert.equal(host("relation-demo").querySelector(".viz-edges li").textContent, "a → b：产生");
   assert.equal(host("timeline-demo").querySelectorAll(".viz-list li").length, 2);
   assert.equal(host("process-demo").querySelectorAll(".viz-list li").length, 2);
+  assert.equal(host("process-demo").querySelectorAll(".viz-edges li").length, 1);
   assert.equal(host("table-demo").querySelectorAll(".viz-table tr").length, 3, "one header row plus two body rows");
   assert.equal(host("table-demo").querySelectorAll("th[scope=col]").length, 2);
 

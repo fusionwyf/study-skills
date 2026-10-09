@@ -58,5 +58,7 @@ assert.throws(() => validateConfig("chart", {...base, traces: [{type: "radar", x
 assert.throws(() => validateConfig("plot", {...base, traces: [{type: "scatter", x: [0, 1], y: [0, 1]}]}));
 assert.throws(() => validateConfig("spatial", {...base, matrix: [[1, 0], [0, NaN]], vector: [0, 1]}));
 assert.throws(() => validateConfig("spatial", {...base, matrix: [[1e308, 1e308], [0, 1]], vector: [2, 2]}));
+assert.throws(() => validateConfig("relation", {...base, nodes: [{id: "a"}], edges: [{from: "a"}]}));
+assert.throws(() => validateConfig("process", {...base, nodes: [{id: "a"}], edges: [{from: "a", to: ""}]}));
 validateConfig("chart", {...base, traces: [{type: "scatter", x: [0, 1, 2], y: [0, null, 2]}]});
 console.log("Module registry, algebra, trace invariants, counters, domain gaps and invalid-data checks passed");

@@ -27,7 +27,11 @@
     return config;
   }
   function validateTimeline(config) { return validateList(config, "events", "timeline"); }
-  function validateProcess(config) { return validateList(config, "nodes", "process"); }
+  function validateProcess(config) {
+    validateList(config, "nodes", "process");
+    if (config.edges && (!Array.isArray(config.edges) || config.edges.some(function (e) { return !e || !e.from || !e.to; }))) throw new Error("process edges 需要 from/to");
+    return config;
+  }
 
   /** Render whichever list the kind carries as an inspectable ordered list. */
   function renderList(node, config, kind) {
@@ -48,6 +52,16 @@
       list.appendChild(li);
     });
     host.appendChild(list);
+    if (config.edges && config.edges.length) {
+      var edges = document.createElement("ul");
+      edges.className = "viz-edges";
+      config.edges.forEach(function (edge) {
+        var item = document.createElement("li");
+        item.textContent = String(edge.from) + " → " + String(edge.to) + (edge.label ? "：" + edge.label : "");
+        edges.appendChild(item);
+      });
+      host.appendChild(edges);
+    }
     h.status(node, "共 " + items.length + " 项；选择一项查看说明。");
     h.record(node, {kind: kind, selected: null});
   }
