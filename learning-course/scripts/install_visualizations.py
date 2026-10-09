@@ -8,22 +8,32 @@ import shutil
 from pathlib import Path
 
 KIT = Path(__file__).resolve().parents[1] / "assets" / "visualizations"
+STANDARD_KINDS = ("chart", "spatial", "sequence", "relation", "timeline", "process", "table")
+# Kinds whose adapter renders with HTML/SVG only, so no vendor library is copied.
+# They are listed here so the caller is told they were intentionally skipped,
+# instead of being silently dropped when no manifest entry exists.
+VENDOR_FREE = ("sequence", "relation", "timeline", "process", "table")
 
 
-def install(course_dir: Path, components: list[str], force: bool = False) -> Path:
-    unknown = set(components) - {"plot", "geometry", "algorithm"}
+def install(course_dir: Path, components: list[str], force: bool = False) -> tuple[Path, list[str]]:
+    unknown = set(components) - set(STANDARD_KINDS)
     if unknown:
         raise ValueError(f"Unknown components: {sorted(unknown)}")
     if not (course_dir / "course.yaml").is_file():
         raise ValueError("Initialize the course package first; course.yaml is missing")
     target = course_dir / "assets" / "visualizations"
-    files = ["visualizations.js", "visualizations.css"]
+    files = ["visualizations.js", "visualizations.css", "adapters.json"]
     manifest = json.loads((KIT / "vendor" / "manifest.json").read_text(encoding="utf-8"))
     selected = {}
+    skipped: list[str] = []
     for name in components:
         if name in manifest:
             selected[name] = manifest[name]
             files.extend("vendor/" + file for file in manifest[name]["files"])
+        elif name in VENDOR_FREE:
+            skipped.append(f"{name}（适配器已随 visualizations.js 复制，无需 vendor 库）")
+        else:
+            raise ValueError(f"No vendor entry and no vendor-free adapter declared for: {name}")
     # Check every destination before making changes; never partially overwrite a kit.
     destinations = [target / file for file in files] + [target / "vendor" / "manifest.json"]
     if not force:
@@ -41,16 +51,21 @@ def install(course_dir: Path, components: list[str], force: bool = False) -> Pat
         shutil.copy2(KIT / file, destination)
     (target / "vendor").mkdir(exist_ok=True)
     (target / "vendor" / "manifest.json").write_text(json.dumps(selected, indent=2) + "\n", encoding="utf-8")
-    return target
+    return target, skipped
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("course_dir", type=Path)
-    parser.add_argument("--components", nargs="+", choices=("plot", "geometry", "algorithm"), required=True)
+    parser.add_argument("--components", nargs="+", choices=STANDARD_KINDS, required=True)
     parser.add_argument("--force", action="store_true")
     args = parser.parse_args()
-    print(install(args.course_dir.expanduser().resolve(), args.components, args.force))
+    target, skipped = install(args.course_dir.expanduser().resolve(), args.components, args.force)
+    print(target)
+    if skipped:
+        print("以下组件不需要 vendor 库，已跳过第三方文件复制：")
+        for entry in skipped:
+            print(f"  - {entry}")
     return 0
 
 

@@ -40,7 +40,10 @@ disable-model-invocation: true
 ├── INDEX.md
 ├── index.html
 ├── lessons/0001-<slug>.html
-├── assets/
+├── assets/              # course.js/css plus learnkit runtime
+│   ├── learnkit/
+│   │   └── renderers/   # text->rich-media renderers (math; code/media reserved)
+│   └── visualizations/  # optional adapters and pinned vendor libraries
 ├── reference/
 ├── records/
 └── exports/
@@ -53,9 +56,17 @@ disable-model-invocation: true
 1. 确认学习者的真实目标和可观察成功标准。动机、基础、时间和其他约束只在会影响路线时补充。
    携带补课交接文件时先读取 `../shared/references/learning-handoff.md`，将 goal、boundary 和返回条件写入目标包 `PLAN.md`，保存交接路径并遵守该边界。
 2. 当起点不确定且会改变路线时进行最小诊断；题数和形式由 Agent 决定。
-3. 读取 `references/course-state.md`，确定 v3 初始状态。使用 `scripts/init_course.py`；需要诊断时传入 `--diagnostic`。
+3. 读取 `references/state.md`，确定 v3 初始状态，再初始化课程包：
+
+   ```text
+   python scripts/init_course.py --course-dir <course-dir> \
+     --title "<课程标题>" --goal "<学习者真实目标>" [--language zh-CN] [--diagnostic]
+   ```
+
+   `--course-dir`、`--title`、`--goal` 均为必填；`--diagnostic` 只在第 2 步判定起点需要诊断时传入。目标目录已存在时脚本拒绝覆盖，除非显式加 `--force`。
 4. 在 `PLAN.md` 中维护课程路线和边界。它不是可重新生成文件。
 5. 选择适合本主题的教学模式，生成一个具有可验证学习成果和 evidence opportunity 的 HTML 课件。
+   `assets/course-template/lesson.html` 是示例态模板：复制后必须替换其中硬编码的 `data-course-id` 与 `data-objective`（模板值为 `example-course` / `example-objective`），并确保该 objective 已写入 `course.yaml` 的 `objectives`。否则 validator 会报 `lesson references unknown objective`。
 6. 将 phase 设为 `awaiting_evidence`，重新生成索引并验证课程包。
 
 完成条件：成功标准和 objective 已写入状态，第一课文件存在且引用已定义 objective，phase 为 `awaiting_evidence`，两条验证命令均通过。
@@ -101,25 +112,28 @@ HTML 的“复制学习记录”按钮只汇总原始答案、检查次数、提
 
 ## Recovery
 
-读取 `references/course-state.md`。从 `PLAN.md`、`INDEX.md`、lessons 和 records 生成 `course.recovered.yaml`，标明 confirmed、inferred 和 unknown；用户确认后才替换原 `course.yaml`。不要提供或执行 v2 自动迁移。
+读取 `references/state.md`。从 `PLAN.md`、`INDEX.md`、lessons 和 records 生成 `course.recovered.yaml`，标明 confirmed、inferred 和 unknown；用户确认后才替换原 `course.yaml`。不要提供或执行 v2 自动迁移。
 
 ## Export
 
-读取 `references/pdf-export.md`，确认范围和 `student`/`review` 模式，再使用 `scripts/export_pdf.py` 或可用的浏览器打印能力。PDF 放入 `exports/`；打印课件且模型具备视觉能力时检查分页、公式、图表、重叠和裁切。
+读取 `references/export.md`，确认范围和 `student`/`review` 模式，再使用 `scripts/export_pdf.py` 或可用的浏览器打印能力。PDF 放入 `exports/`；打印课件且模型具备视觉能力时检查分页、公式、图表、重叠和裁切。
 
 ## 参考路由
 
-- 创建、更新、续学或恢复状态：读取 `references/course-state.md`。
+课程侧只有四个参考文档，按任务读取：
+
+- `references/state.md`：创建、更新、续学或恢复课程状态；诊断与综合评估的挂载规则。诊断执行、练习梯度、证据升级和错误干预的细则见 `../shared/references/`。
+- `references/lesson.md`：创建或修改 HTML 课件组件、选择学科教学模式、设计认知层级。
+- `references/render.md`：公式、图表、交互可视化等运行时渲染（LearnKit、数学渲染器、可视化适配器）。
+- `references/export.md`：导出或审查 PDF。
+
+共享层按需读取：
+
 - 记录字段契约、record 校验报错：读取 `../shared/references/record-contract.md`。
 - 导入资料、摘录、主张追踪或来源冲突：读取 `../shared/references/material-intake.md`。
 - 跨包补课的创建、续接或返回：读取 `../shared/references/learning-handoff.md`。
-- 设计诊断、证据、难度调整或 mastery 判断：读取 `references/assessment.md`。
-- 需要显式设计认知层级时：读取 `references/bloom-taxonomy.md`；`cognitive_level` 始终可选。
-- 选择学科教学模式时：读取 `references/lesson-patterns.md`。
-- 创建或修改代码、图表、步骤、提示、参数探索、术语、反馈、问答、来源或其他 HTML 组件时：读取 `references/components.md` 并复用 `assets/course-template/`。
-- 使用公式组件时：同时读取 `references/math-rendering.md`。
-- 创建数学、统计、线性代数、几何或算法可视化时：同时读取 `references/visualizations.md`，按任务安装本地组件并核对计算模型、定义域、比例和不变量；不凭手绘路径推断数学结论。
-- 导出或审查 PDF 时：读取 `references/pdf-export.md`。
+- 诊断流程与错误分类：读取 `../shared/references/diagnostic-protocol.md`。
+- 练习梯度与证据升级：读取 `../shared/references/transfer-rubric.md`。
 
 `assets/example-course/` 只用于模板调试或 validator 烟雾测试，日常 create/continue 不读取。
 

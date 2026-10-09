@@ -1,5 +1,5 @@
 {
-  "plot": {
+  "chart": {
     "package": "plotly.js-dist-min",
     "version": "4.1.2",
     "license": "MIT",
@@ -14,7 +14,7 @@
       "plotly.js-dist-min/LICENSE": "8c45d9eaf50c2f72dd9c7ab9ef440788ba58a3538484b5c51c1f17d5128752e7"
     }
   },
-  "geometry": {
+  "spatial": {
     "package": "jsxgraph",
     "version": "1.14.0",
     "license": "(MIT OR LGPL-3.0-or-later)",

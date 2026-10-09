@@ -1,0 +1,43 @@
+{
+  "version": "1.1",
+  "note": "能力登记表。只登记运行时真的会渲染或驱动的名称；静态 HTML 与未实现项分开标注，避免 Agent 误用未实现组件。",
+  "runtime": {
+    "l1_core": ["StateStore", "SequenceStore", "EventBus(snapshot log)", "History(cursor)", "SpecValidator"],
+    "actions": ["PLAY", "PAUSE", "STEP_NEXT", "STEP_PREVIOUS", "SEEK", "RESET", "SET_PARAMETER", "SELECT_OBJECT", "MOVE_OBJECT", "SUBMIT_ANSWER"],
+    "section_types": ["explain", "sequence", "explore", "construct", "compare", "predict", "practice"],
+    "models": ["sequence(内建)", "<通过 registerModel 注册的领域模型>"]
+  },
+  "views": {
+    "note": "learnkit.js 内置并随运行时可用，通过 data-lk-view=\"<name>\" 绑定",
+    "implemented": ["status", "property-table", "event-log", "history", "change-summary", "legend", "stage"]
+  },
+  "kinds": {
+    "note": "visualizations.js 适配器，通过 data-visualization=\"<kind>\" 使用；chart/spatial 需 vendor 库，其余为 HTML/SVG 实现",
+    "implemented": ["chart", "relation", "timeline", "process", "spatial", "sequence", "table"],    "vendor_backed": ["chart", "spatial"]
+  },
+  "renderers": {
+    "note": "通过 LearnKit.registerRenderer(name, fn) 注册；fn(el, state, derived)",
+    "implemented": ["math", "math-inline"],
+    "reserved": ["code", "media"]
+  },
+  "static_html": {
+    "note": "由 course-template/lesson.html 提供静态结构，course.js 做渐进增强。这些不是运行时组件，但可直接写入课件并要求保留 data-* 契约。",
+    "classes": ["callout", "formula", "code-block", "steps", "quiz", "glossary", "reflection", "diagram", "card", "toc"],
+    "page_level": ["复制学习记录(course.js)", "自动目录(course.js)", "打印/导出模式(course.js)", "独立性选择框(course.js)"]
+  },
+  "planned": {
+    "note": "运行时尚未实现。不要仅凭名称在 LessonSpec 的 blocks 中引用；如需使用，先实现并回归本登记表。部分概念当前的替代做法见 static_html。",
+    "names": [
+      "ConceptCard", "KeyTakeaway", "WorkedExample", "CounterExample", "ComparisonTable",
+      "MediaViewer", "Annotation", "SourceReference", "Tabs", "Accordion", "SplitView",
+      "ProgressBar", "StepNavigator", "SingleChoice", "MultipleChoice", "TrueFalse",
+      "FillBlank", "MatchingExercise", "SequenceExercise", "PredictionExercise",
+      "InteractiveQuestion", "HintPanel", "FeedbackPanel", "ReflectionPrompt",
+      "EquationSteps", "CodeTrace", "VariableWatch", "SyntaxTreeView",
+      "SimulationStage", "HierarchyView", "ImageAnnotationView", "PlaybackControls",
+      "TimelineScrubber", "SpeedControl", "PanZoomControls", "InspectorPanel", "DetailPanel",
+      "ComparePanel", "HistoryPanel", "AnnotationLayer", "ThemeProvider", "TooltipProvider",
+      "Modal", "Toast", "LoadingState", "EmptyState", "ErrorBoundary", "AccessibilityControls", "HelpPanel"
+    ]
+  }
+}

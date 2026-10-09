@@ -1,6 +1,7 @@
 import hashlib
 import json
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -52,19 +53,29 @@ class VisualizationTests(unittest.TestCase):
             for file, checksum in dependency["sha256"].items():
                 self.assertEqual(hashlib.sha256((KIT / "vendor" / file).read_bytes()).hexdigest(), checksum)
 
-    def test_algorithm_only_install_is_offline_lightweight_and_refuses_overwrite(self):
+    def test_sequence_only_install_is_offline_lightweight_and_refuses_overwrite(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             (root / "course.yaml").write_text("schema_version: 3\n")
-            target = install(root, ["algorithm"])
+            target, skipped = install(root, ["sequence"])
             self.assertTrue((target / "visualizations.js").is_file())
             self.assertFalse((target / "vendor/plotly.js-dist-min").exists())
             self.assertEqual(json.loads((target / "vendor/manifest.json").read_text()), {})
+            # `skipped` holds human-readable notices, so match by substring.
+            self.assertTrue(any("sequence" in notice for notice in skipped))
             with self.assertRaises(FileExistsError):
-                install(root, ["plot"])
+                install(root, ["sequence"])
             self.assertFalse((target / "vendor/plotly.js-dist-min").exists())
-            install(root, ["plot", "geometry"], force=True)
+            install(root, ["chart", "spatial"], force=True)
             self.assertTrue((target / "vendor/jsxgraph/jsxgraphcore.js").is_file())
+
+    def test_unknown_and_legacy_component_names_are_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "course.yaml").write_text("schema_version: 3\n")
+            for name in ("plot", "geometry", "algorithm", "chart-ish"):
+                with self.assertRaises(ValueError):
+                    install(root, [name])
 
     def validate(self, body):
         errors = []
@@ -78,9 +89,16 @@ class VisualizationTests(unittest.TestCase):
     def test_missing_fallback_bad_json_and_unlabeled_keyboard_inputs_are_rejected(self):
         demo = (KIT / "demo.html").read_text()
         self.assertTrue(any("visible data-viz-fallback" in e for e in self.validate(demo.replace('data-viz-fallback', 'data-unused'))))
-        self.assertTrue(any("invalid JSON" in e for e in self.validate(demo.replace('"matrix": [[1, 1]', '"matrix": [[NaN, 1]'))))
+        self.assertTrue(any("invalid JSON" in e for e in self.validate(demo.replace('"vector":[1,0]', '"vector":[NaN,0]'))))
         self.assertTrue(any("keyboard controls" in e for e in self.validate(demo.replace('for="vector-x"', 'for="missing"'))))
-        self.assertTrue(any("unique id" in e for e in self.validate(demo.replace('id="surface"', 'id="reciprocal"'))))
+        self.assertTrue(any("unique id" in e for e in self.validate(demo.replace('id="spatial-demo"', 'id="chart-demo"'))))
+
+    def test_showcase_covers_every_registered_kind(self):
+        demo = (KIT / "demo.html").read_text()
+        registry = json.loads((KIT / "adapters.json").read_text())
+        registered = {k for k, v in registry["kinds"].items() if v["renderer"] != "registered extension"}
+        shown = set(re.findall(r'data-visualization="([^"]+)"', demo))
+        self.assertEqual(registered - shown, set(), "the showcase must exercise each built-in adapter")
 
     @unittest.skipUnless(shutil.which("node"), "Node is required for numerical/algorithm invariant checks")
     def test_runtime_algebra_trace_invariants_and_malformed_numeric_data(self):

@@ -22,6 +22,7 @@ STATUSES = {"draft", "active", "paused", "complete"}
 COGNITIVE_LEVELS = {"remember", "understand", "apply", "analyze", "evaluate", "create"}
 EVIDENCE_STRENGTHS = {"weak", "medium", "strong"}
 REPO_ROOT = Path(__file__).resolve().parents[2]
+VIZ_REGISTRY_PATH = Path(__file__).resolve().parents[1] / "assets" / "visualizations" / "adapters.json"
 RECORD_SCHEMA_PATH = REPO_ROOT / "shared" / "schemas" / "record.schema.yaml"
 SHARED_RECORD_VALIDATOR = REPO_ROOT / "shared" / "scripts" / "validate_record.py"
 if str(SHARED_RECORD_VALIDATOR.parent) not in sys.path:
@@ -424,6 +425,11 @@ def validate_open_components(lesson: Path, body: str, errors: list[str]) -> None
 
 
 def validate_visualizations(lesson: Path, body: str, errors: list[str]) -> None:
+    try:
+        registry = json.loads(VIZ_REGISTRY_PATH.read_text(encoding="utf-8"))
+        kinds = set((registry.get("kinds") or {}).keys())
+    except (OSError, json.JSONDecodeError):
+        kinds = {"chart", "relation", "timeline", "process", "spatial", "sequence", "table"}
     parser = ComponentParser()
     parser.feed(body)
     ids = [n["attrs"].get("id") for n in parser.nodes if n["attrs"].get("id")]
@@ -433,7 +439,7 @@ def validate_visualizations(lesson: Path, body: str, errors: list[str]) -> None:
             continue
         label = f"{lesson.name}: visualization {node['attrs'].get('id') or kind}"
         children = list(descendants(node))
-        if kind not in {"plot", "geometry", "algorithm"}:
+        if kind not in kinds:
             errors.append(f"{label} unsupported visualization type")
         if not node["attrs"].get("id") or ids.count(node["attrs"].get("id")) != 1:
             errors.append(f"{label} requires a unique id")
@@ -448,6 +454,20 @@ def validate_visualizations(lesson: Path, body: str, errors: list[str]) -> None:
                 if not isinstance(config, dict) or any(not isinstance(config.get(k), str) or not config[k].strip()
                                                        for k in ("model", "domain", "precision")):
                     errors.append(f"{label} requires model, domain and precision descriptions")
+                elif kind == "chart" and not isinstance(config.get("traces"), list):
+                    errors.append(f"{label} chart config requires traces")
+                elif kind == "relation" and not isinstance(config.get("nodes"), list):
+                    errors.append(f"{label} relation config requires nodes")
+                elif kind == "timeline" and not isinstance(config.get("events"), list):
+                    errors.append(f"{label} timeline config requires events")
+                elif kind == "process" and not isinstance(config.get("nodes"), list):
+                    errors.append(f"{label} process config requires nodes")
+                elif kind == "table" and (not isinstance(config.get("columns"), list) or not isinstance(config.get("rows"), list)):
+                    errors.append(f"{label} table config requires columns and rows")
+                elif kind == "sequence" and not isinstance(config.get("steps"), list) and not isinstance(config.get("input"), list):
+                    errors.append(f"{label} sequence config requires steps or input")
+                elif kind == "spatial" and not ((isinstance(config.get("matrix"), list) and isinstance(config.get("vector"), list)) or isinstance(config.get("shapes"), list)):
+                    errors.append(f"{label} spatial config requires matrix/vector or shapes")
             except (ValueError, TypeError) as exc:
                 errors.append(f"{label} invalid JSON: {exc}")
         hosts = [n for n in children if "data-viz-host" in n["attrs"]]
@@ -458,15 +478,15 @@ def validate_visualizations(lesson: Path, body: str, errors: list[str]) -> None:
         fallbacks = [n for n in children if "data-viz-fallback" in n["attrs"]]
         if not fallbacks or not any("".join(c["text"] for c in [f, *descendants(f)]).strip() for f in fallbacks) or any("hidden" in f["attrs"] for f in fallbacks):
             errors.append(f"{label} requires visible data-viz-fallback model and numeric/step description")
-        if kind in {"geometry", "algorithm"}:
+        if kind in {"spatial", "sequence"}:
             controls = [n for n in children if "data-viz-controls" in n["attrs"]]
             inputs = [n for c in controls for n in descendants(c) if n["tag"] == "input"]
             labels = {n["attrs"].get("for") for c in controls for n in descendants(c) if n["tag"] == "label"}
-            expected = "number" if kind == "geometry" else "range"
-            count = 2 if kind == "geometry" else 1
+            expected = "number" if kind == "spatial" else "range"
+            count = 2 if kind == "spatial" else 1
             if len(controls) != 1 or len(inputs) != count or any(n["attrs"].get("type") != expected or not n["attrs"].get("id") or n["attrs"]["id"] not in labels for n in inputs):
                 errors.append(f"{label} requires labeled {expected} keyboard controls")
-            if kind == "algorithm" and any(not any(n["tag"] == "button" and key in n["attrs"] for n in children) for key in ("data-viz-prev", "data-viz-next")):
+            if kind == "sequence" and any(not any(n["tag"] == "button" and key in n["attrs"] for n in children) for key in ("data-viz-prev", "data-viz-next")):
                 errors.append(f"{label} requires previous/next step buttons")
 
 

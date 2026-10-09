@@ -98,6 +98,11 @@ button { cursor: pointer; }
 .glossary dt { font-weight: 750; }
 .glossary dd { margin: 0; }
 .reflection textarea { width: 100%; min-height: 6rem; margin-top: 0.5rem; padding: 0.7rem; border: 1px solid var(--course-border); border-radius: 0.5rem; background: var(--course-surface); color: var(--course-text); }
+[data-role~="dialogue-practice"] textarea, [data-role~="teaching-target"] textarea { width: 100%; min-height: 6rem; padding: 0.7rem; border: 1px solid var(--course-border); border-radius: 0.5rem; background: var(--course-surface); color: var(--course-text); }
+.assistance-report { display: block; margin-top: 1rem; }
+.assistance-report select { max-width: 100%; padding: 0.45rem; background: var(--course-surface); color: var(--course-text); }
+[data-dialogue-turn] { margin-block: 1rem; }
+textarea[readonly] { background: var(--course-surface-muted); }
 .feedback-actions { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.9rem; }
 .feedback-actions [role="status"] { color: var(--course-success); font-size: 0.9rem; }
 .sources ul { margin-bottom: 0; }
@@ -125,6 +130,9 @@ button { cursor: pointer; }
   .course-header { padding: 0 0 8mm; border-bottom: 1px solid #aaa; }
   .lesson > section, .card, .callout, .quiz, .reflection, .reference-card, .diagram, .chart { break-inside: avoid; box-shadow: none; }
   .step.is-hidden { display: block; }
+  [data-dialogue-turn][hidden] { display: block !important; }
+  [data-teaching-key][hidden] { display: block !important; }
+  html[data-export-mode="student"] [data-teaching-key] { display: none !important; }
   .print-only { display: block; }
   .answer { display: block !important; }
   html[data-export-mode="student"] .answer { display: none !important; }

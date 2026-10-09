@@ -1,8 +1,8 @@
-# 课程状态协议（schema v3）
+# 课程状态（schema v3）
 
 仅在创建、续学、恢复或更新课程状态时读取本文件。
 
-## 事实来源
+## 一、事实来源
 
 - `course.yaml` 是唯一机器状态源。
 - `PLAN.md` 是可人工维护的学习者课程契约；课程路线和边界以它为准。
@@ -11,7 +11,7 @@
 - `sources/` 保存来源注册与摘录（由课程内部按 `../../shared/references/material-intake.md` 维护）。
 - `last_feedback` 只保存最新 record 的相对路径，不复制反馈内容。
 
-## 推荐结构
+## 二、推荐结构
 
 ```yaml
 schema_version: 3
@@ -51,7 +51,7 @@ last_feedback: null
 
 `cognitive_level` 是可选规划元数据。不要维护 `feedback_status`、`mode`、`roadmap`、`next_lesson`、独立 `checkpoint` 或顶层 `mastery`。
 
-## 枚举
+## 三、枚举
 
 课程 `status`：
 
@@ -69,17 +69,11 @@ last_feedback: null
 - `review_due`：有到期复习项。
 - `recovery`：状态缺失、损坏或版本不兼容。
 
-学习成果 `mastery`：
-
-- `unseen`
-- `recognition`
-- `application`
-- `transfer`
-- `uncertain`
+学习成果 `mastery`：`unseen`、`recognition`、`application`、`transfer`、`uncertain`。
 
 不要要求学习者机械经过每一级。除设为 `uncertain` 外，更新 mastery 必须引用一个 finalized record，且该 record 必须明确列出对应 objective 和 mastery。
 
-## 诊断
+## 四、诊断
 
 仅当起点不确定且会影响路线时进行最小诊断：
 
@@ -92,7 +86,7 @@ diagnostic:
 
 题目、回答和判断写入 record，不复制进 YAML。
 
-## Objective evidence
+## 五、Objective evidence
 
 ```yaml
 objectives:
@@ -108,7 +102,14 @@ objectives:
 
 任何学习反馈都可以记录为 evidence，但证据强度决定它能支持什么判断。单纯自评属于弱证据，不能独立升级 mastery。
 
-## Record 格式
+模块检查点不使用独立状态对象：把综合任务作为 `assessment` evidence 附加到相关 objective；证据冲突或缺失时使用 `uncertain`。
+
+诊断执行、练习梯度、证据优先级与升级、错误分类与干预，统一见：
+
+- [`../../shared/references/diagnostic-protocol.md`](../../shared/references/diagnostic-protocol.md)
+- [`../../shared/references/transfer-rubric.md`](../../shared/references/transfer-rubric.md)
+
+## 六、Record 格式
 
 记录文件保存在 `records/` 下，文件名使用 `NNNN-slug.md`（四位序号 + dash-case slug）。frontmatter 模板：
 
@@ -151,12 +152,12 @@ supported_objectives:
 
 各字段的类型、枚举和必填规则统一见 [`../../shared/references/record-contract.md`](../../shared/references/record-contract.md)；本文件只保留课程专属语义：
 
-- 新反馈先以 `assessment_status: pending` 保存，frontmatter 中的 evidence 字段保持 `null` 或空列表。Agent 完成可观察行为和判断后再设为 `finalized`。finalized record 中不得保留“待判断”“待补充”等占位内容；原始反馈正文保持不变。
+- 新反馈先以 `assessment_status: pending` 保存，frontmatter 中的 evidence 字段保持 `null` 或空列表。Agent 完成可观察行为和判断后再设为 `finalized`。finalized record 中不得保留"待判断""待补充"等占位内容；原始反馈正文保持不变。
 - `supported_objectives` 是 mastery 更新的唯一依据：除设为 `uncertain` 外，更新 objective 的 mastery 必须引用一条 finalized record，且该 record 必须在 `supported_objectives` 中明确列出对应 objective 和 mastery。
 - record 的 independence 同时满足共享契约的掌握级要求才可用于新更新；未知的旧记录只保留历史读取与警告。新的 complete 状态也要为每个目标提供符合独立性要求的证据。
 - 旧记录兼容：缺少新增公共字段（如 `record_id`、`attempted_at`）的已定稿旧记录仍然有效，validator 只产生警告，不做自动迁移。
 
-## Phase 转换
+## 七、Phase 转换
 
 - 初始化后根据是否需要诊断进入 `diagnostic` 或 `designing`。
 - 生成课件后进入 `awaiting_evidence`。
@@ -164,7 +165,7 @@ supported_objectives:
 - 收到 record 并更新证据后进入 `designing` 或 `review_due`。
 - 暂停和完成只修改 `status`，不创建同名 phase。
 
-## Recovery
+## 八、Recovery
 
 遇到缺失、无法解析、schema v2 或其他不兼容状态时：
 
@@ -176,7 +177,7 @@ supported_objectives:
 
 不要提供或隐式执行 v2 到 v3 迁移。
 
-## 更新纪律
+## 九、更新纪律
 
 - 每次状态更新修改 `updated_at`。
 - 写入新课前检查目标课号不存在。

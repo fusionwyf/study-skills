@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://learnkit.local/schema/lesson-spec.json",
+  "title": "LearnKit LessonSpec",
+  "type": "object",
+  "required": ["version", "title", "sections"],
+  "properties": {
+    "version": {"type": "string", "pattern": "^1\\."},
+    "title": {"type": "string", "minLength": 1},
+    "description": {"type": "string"},
+    "theme": {"type": "string"},
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "title"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"},
+          "type": {"enum": ["explain", "sequence", "explore", "construct", "compare", "predict", "practice"]},
+          "title": {"type": "string", "minLength": 1},
+          "blocks": {"type": "array"},
+          "model": {"type": "string"},
+          "controls": {"type": "array"},
+          "views": {"type": "array"},
+          "exercise": {"type": "object"}
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

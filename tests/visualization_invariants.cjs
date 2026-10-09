@@ -24,11 +24,15 @@ assert.throws(() => selectionSortTrace([1, NaN]));
 assert.throws(() => selectionSortTrace([Infinity, 2]));
 assert.throws(() => selectionSortTrace([1]));
 const base = {model: "y=x", domain: "[-1,1]", precision: "binary64"};
-assert.throws(() => validateConfig("plot", {...base, traces: [{type: "scatter", x: [0, 1], y: [0]}]}));
-assert.throws(() => validateConfig("plot", {...base, traces: [{type: "scatter", x: [0, 1], y: [0, Infinity]}]}));
-assert.throws(() => validateConfig("plot", {...base, traces: [{type: "scatter", x: [0, 1], y: [0, null], connectgaps: true}]}));
-assert.throws(() => validateConfig("plot", {...base, traces: [{type: "surface", x: [0, 1], y: [0, 1], z: [[0, 1]]}]}));
-assert.throws(() => validateConfig("geometry", {...base, matrix: [[1, 0], [0, NaN]], vector: [0, 1]}));
-assert.throws(() => validateConfig("geometry", {...base, matrix: [[1e308, 1e308], [0, 1]], vector: [2, 2]}));
-validateConfig("plot", {...base, traces: [{type: "scatter", x: [0, 1, 2], y: [0, null, 2]}]});
+// Rejects shape mismatches, non-finite values, wrong grid dimensions and
+// unknown kinds; `null` is a deliberate data gap, not an error.
+assert.throws(() => validateConfig("chart", {...base, traces: [{type: "scatter", x: [0, 1], y: [0]}]}));
+assert.throws(() => validateConfig("chart", {...base, traces: [{type: "scatter", x: [0, 1], y: [0, Infinity]}]}));
+assert.throws(() => validateConfig("chart", {...base, traces: [{type: "scatter", x: [0, 1], y: [0, "1"]}]}));
+assert.throws(() => validateConfig("chart", {...base, traces: [{type: "surface", x: [0, 1], y: [0, 1], z: [[0, 1]]}]}));
+assert.throws(() => validateConfig("chart", {...base, traces: [{type: "radar", x: [0, 1], y: [0, 1]}]}));
+assert.throws(() => validateConfig("plot", {...base, traces: [{type: "scatter", x: [0, 1], y: [0, 1]}]}));
+assert.throws(() => validateConfig("spatial", {...base, matrix: [[1, 0], [0, NaN]], vector: [0, 1]}));
+assert.throws(() => validateConfig("spatial", {...base, matrix: [[1e308, 1e308], [0, 1]], vector: [2, 2]}));
+validateConfig("chart", {...base, traces: [{type: "scatter", x: [0, 1, 2], y: [0, null, 2]}]});
 console.log("Algebra, trace invariants, counters, domain gaps and invalid-data checks passed");

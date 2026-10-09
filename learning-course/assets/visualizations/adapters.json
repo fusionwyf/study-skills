@@ -1,0 +1,27 @@
+{
+  "version": "1.0",
+  "note": "可视化适配器注册表。核心只定义数据契约和生命周期；学科扩展通过 registerKind() 注册，不把领域图形塞进核心。",
+  "shared": {
+    "requires": [
+      "唯一 id 的容器 data-visualization=\"<kind>\"",
+      "一个 application/json 的 data-viz-config，含 model、domain、precision 非空说明",
+      "一个唯一 id 的 data-viz-host（初始 hidden）",
+      "一个 data-viz-status role=\"status\"",
+      "一个可见 data-viz-fallback，说明模型、范围、精度与核对点/步骤"
+    ],
+    "lifecycle": ["validate", "render", "update", "select", "destroy"],
+    "safety": ["JSON 只承载数据", "不执行表达式字符串", "库缺失时保留文字后备"]
+  },
+  "kinds": {
+    "chart": {"label": "数据图表：曲线、柱状、散点、曲面、热图", "data": "traces", "renderer": "Plotly 或内置 SVG"},
+    "relation": {"label": "关系图：节点与边", "data": "nodes + edges", "renderer": "HTML/SVG", "supports": ["knowledge", "network", "biological", "dependency"]},
+    "timeline": {"label": "时间轴：事件和阶段", "data": "events", "renderer": "HTML/SVG", "supports": ["history", "experiment", "algorithm", "project"]},
+    "process": {"label": "流程与状态图", "data": "nodes + optional edges", "renderer": "HTML/SVG", "supports": ["flow", "state-machine", "decision-tree"]},
+    "spatial": {"label": "空间与几何画布", "data": "matrix + vector or shapes", "renderer": "JSXGraph 或 HTML/SVG"},
+    "sequence": {"label": "通用步骤回放", "data": "steps or input", "renderer": "HTML", "controls": ["range", "previous", "next"]},
+    "table": {"label": "结构化数据表", "data": "columns + rows", "renderer": "HTML"},
+    "simulation": {"label": "学科模拟舞台", "data": "adapter-defined snapshot", "renderer": "registered extension"},
+    "hierarchy": {"label": "层级结构", "data": "nodes + parent", "renderer": "registered extension"},
+    "image-annotation": {"label": "图片热点标注", "data": "image + annotations", "renderer": "registered extension"}
+  }
+}

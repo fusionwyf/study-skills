@@ -43,16 +43,38 @@ def main() -> int:
     course_id = slugify(course_dir.name)
     now = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     template_dir = Path(__file__).resolve().parents[1] / "assets" / "course-template"
+    learnkit_dir = Path(__file__).resolve().parents[1] / "assets" / "learnkit"
 
     for name in ("lessons", "assets", "reference", "records", "exports"):
         (course_dir / name).mkdir(parents=True, exist_ok=True)
     (course_dir / "assets" / "vendor").mkdir(parents=True, exist_ok=True)
 
-    for filename in ("course.css", "course.js", "math.js"):
+    for filename in ("course.css", "course.js"):
         target = course_dir / "assets" / filename
         if target.exists() and not args.force:
             raise FileExistsError(f"Refusing to overwrite existing file: {target}")
         shutil.copy2(template_dir / filename, target)
+
+    # L1 runtime and the declarative schema are dependency-free, so every new
+    # course gets the same portable foundation. Optional vendor renderers stay
+    # opt-in through install_visualizations.py.
+    learnkit_target = course_dir / "assets" / "learnkit"
+    learnkit_target.mkdir(parents=True, exist_ok=True)
+    for filename in ("learnkit.js", "lesson-spec.schema.json", "components.json"):
+        target = learnkit_target / filename
+        if target.exists() and not args.force:
+            raise FileExistsError(f"Refusing to overwrite existing file: {target}")
+        shutil.copy2(learnkit_dir / filename, target)
+
+    # Renderers live under learnkit/renderers/. math.js is the text->KaTeX
+    # renderer and is dependency-free (no vendor files are copied).
+    renderers_target = learnkit_target / "renderers"
+    renderers_target.mkdir(parents=True, exist_ok=True)
+    for filename in ("math.js",):
+        target = renderers_target / filename
+        if target.exists() and not args.force:
+            raise FileExistsError(f"Refusing to overwrite existing file: {target}")
+        shutil.copy2(learnkit_dir / "renderers" / filename, target)
 
     phase = "diagnostic" if args.diagnostic else "designing"
     diagnostic_status = "pending" if args.diagnostic else "skipped"
