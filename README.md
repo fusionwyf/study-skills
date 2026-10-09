@@ -18,6 +18,8 @@ Design and run structured study courses with a full learning loop: diagnose → 
 - Spaced review queue with performance-adjusted intervals
 - Interactive HTML lesson template with KaTeX math rendering, dark mode, keyboard nav
 - Learner-teaches-AI corrections and sequential dialogue practice, with every prompt and raw answer included in copied learning records
+- Optional offline math/CS visualization kit: Plotly numeric curves, heatmaps and 3D surfaces; JSXGraph draggable 2D linear transformations with equal units; computed selection-sort playback with code and operation counts. Includes numeric/step print fallbacks and current-state capture in learning records
+- Visualization guide: `learning-course/references/visualizations.md`; runnable showcase: `learning-course/assets/visualizations/demo.html`; selectively install with `install_visualizations.py` (no third-party libraries copied for algorithm-only lessons)
 - Python scripts: `init_course.py`, `validate_course.py`, `update_progress.py`, `build_index.py`, `export_pdf.py`
 
 ### exam-prep

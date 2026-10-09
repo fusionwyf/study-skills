@@ -270,6 +270,16 @@
       });
     });
 
+    var visualizations = lesson.querySelectorAll("[data-visualization]");
+    if (visualizations.length) {
+      lines.push("", "## 可视化观察（当前状态；不代表完成练习）");
+      visualizations.forEach(function (node) {
+        lines.push("", "### " + (node.id || node.dataset.visualization),
+          "- 渲染状态: " + (node.dataset.vizReady || "not-loaded"),
+          "- 当前参数/步骤: " + (node.dataset.visualState || "unknown"));
+      });
+    }
+
     lines.push("", "## 学习者反馈");
     var reflections = [];
     lesson.querySelectorAll(".reflection label").forEach(function (label) {

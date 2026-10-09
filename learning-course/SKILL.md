@@ -118,6 +118,7 @@ HTML 的“复制学习记录”按钮只汇总原始答案、检查次数、提
 - 选择学科教学模式时：读取 `references/lesson-patterns.md`。
 - 创建或修改代码、图表、步骤、提示、参数探索、术语、反馈、问答、来源或其他 HTML 组件时：读取 `references/components.md` 并复用 `assets/course-template/`。
 - 使用公式组件时：同时读取 `references/math-rendering.md`。
+- 创建数学、统计、线性代数、几何或算法可视化时：同时读取 `references/visualizations.md`，按任务安装本地组件并核对计算模型、定义域、比例和不变量；不凭手绘路径推断数学结论。
 - 导出或审查 PDF 时：读取 `references/pdf-export.md`。
 
 `assets/example-course/` 只用于模板调试或 validator 烟雾测试，日常 create/continue 不读取。

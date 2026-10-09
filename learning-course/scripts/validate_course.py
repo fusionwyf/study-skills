@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import subprocess
 import sys
@@ -354,7 +355,7 @@ class ComponentParser(HTMLParser):
         self.stack = []
 
     def handle_starttag(self, tag, attrs):
-        node = {"tag": tag, "attrs": dict(attrs), "children": []}
+        node = {"tag": tag, "attrs": dict(attrs), "children": [], "text": ""}
         self.nodes.append(node)
         if self.stack:
             self.stack[-1]["children"].append(node)
@@ -371,6 +372,10 @@ class ComponentParser(HTMLParser):
             if self.stack[index]["tag"] == tag:
                 del self.stack[index:]
                 break
+
+    def handle_data(self, data):
+        if self.stack:
+            self.stack[-1]["text"] += data
 
 
 def descendants(node):
@@ -418,8 +423,56 @@ def validate_open_components(lesson: Path, body: str, errors: list[str]) -> None
         errors.append(f"{lesson.name}: duplicate open-practice question ids")
 
 
+def validate_visualizations(lesson: Path, body: str, errors: list[str]) -> None:
+    parser = ComponentParser()
+    parser.feed(body)
+    ids = [n["attrs"].get("id") for n in parser.nodes if n["attrs"].get("id")]
+    for node in parser.nodes:
+        kind = node["attrs"].get("data-visualization")
+        if kind is None:
+            continue
+        label = f"{lesson.name}: visualization {node['attrs'].get('id') or kind}"
+        children = list(descendants(node))
+        if kind not in {"plot", "geometry", "algorithm"}:
+            errors.append(f"{label} unsupported visualization type")
+        if not node["attrs"].get("id") or ids.count(node["attrs"].get("id")) != 1:
+            errors.append(f"{label} requires a unique id")
+        configs = [n for n in children if "data-viz-config" in n["attrs"]]
+        if len(configs) != 1 or configs[0]["tag"] != "script" or configs[0]["attrs"].get("type") != "application/json":
+            errors.append(f"{label} requires one application/json data-viz-config")
+        else:
+            try:
+                def reject_constant(value):
+                    raise ValueError(f"non-finite JSON constant: {value}")
+                config = json.loads(configs[0]["text"], parse_constant=reject_constant)
+                if not isinstance(config, dict) or any(not isinstance(config.get(k), str) or not config[k].strip()
+                                                       for k in ("model", "domain", "precision")):
+                    errors.append(f"{label} requires model, domain and precision descriptions")
+            except (ValueError, TypeError) as exc:
+                errors.append(f"{label} invalid JSON: {exc}")
+        hosts = [n for n in children if "data-viz-host" in n["attrs"]]
+        if len(hosts) != 1 or not hosts[0]["attrs"].get("id") or ids.count(hosts[0]["attrs"].get("id")) != 1:
+            errors.append(f"{label} requires one uniquely identified data-viz-host")
+        if not any("data-viz-status" in n["attrs"] and n["attrs"].get("role") == "status" for n in children):
+            errors.append(f"{label} requires a data-viz-status with role=status")
+        fallbacks = [n for n in children if "data-viz-fallback" in n["attrs"]]
+        if not fallbacks or not any("".join(c["text"] for c in [f, *descendants(f)]).strip() for f in fallbacks) or any("hidden" in f["attrs"] for f in fallbacks):
+            errors.append(f"{label} requires visible data-viz-fallback model and numeric/step description")
+        if kind in {"geometry", "algorithm"}:
+            controls = [n for n in children if "data-viz-controls" in n["attrs"]]
+            inputs = [n for c in controls for n in descendants(c) if n["tag"] == "input"]
+            labels = {n["attrs"].get("for") for c in controls for n in descendants(c) if n["tag"] == "label"}
+            expected = "number" if kind == "geometry" else "range"
+            count = 2 if kind == "geometry" else 1
+            if len(controls) != 1 or len(inputs) != count or any(n["attrs"].get("type") != expected or not n["attrs"].get("id") or n["attrs"]["id"] not in labels for n in inputs):
+                errors.append(f"{label} requires labeled {expected} keyboard controls")
+            if kind == "algorithm" and any(not any(n["tag"] == "button" and key in n["attrs"] for n in children) for key in ("data-viz-prev", "data-viz-next")):
+                errors.append(f"{label} requires previous/next step buttons")
+
+
 def validate_pedagogy(lesson: Path, body: str, errors: list[str], warnings: list[str]) -> None:
     validate_open_components(lesson, body, errors)
+    validate_visualizations(lesson, body, errors)
     objective = data_value(body, "objective")
     evidence = data_value(body, "evidence")
     if not objective or not has_data_role(body, "objective"):

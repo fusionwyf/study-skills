@@ -1,0 +1,30 @@
+/* Optional visualization layout. Keep descriptions visible even after rendering. */
+.visualization { min-width: 0; padding: 1rem; margin-block: 1.5rem; border: 1px solid #ccd3df; border-radius: .75rem; background: #fff; color: #1d2433; }
+.viz-host { width: 100%; height: 26rem; overflow: hidden; }
+[data-visualization="geometry"] .viz-host { max-width: 32rem; height: auto; aspect-ratio: 1; margin: auto; }
+[data-visualization="algorithm"] .viz-host { height: auto; overflow: visible; }
+.viz-controls { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; padding-block: .75rem; }
+.visualization [hidden] { display: none !important; }
+.viz-controls input[type="number"] { width: 7rem; }
+.viz-controls input[type="range"] { max-width: 100%; }
+.viz-controls button { min-height: 2.5rem; }
+.viz-status { overflow-wrap: anywhere; min-height: 1.75rem; }
+.viz-evidence > label { display: block; margin-block: .75rem; }
+.viz-evidence > textarea { width: 100%; min-height: 7rem; padding: .75rem; }
+.viz-array { display: flex; flex-wrap: wrap; list-style: none; padding: 0; gap: .5rem; }
+.viz-array li { min-width: 4rem; text-align: center; padding: .75rem; border: 2px solid #8c96a6; border-radius: .3rem; }
+.viz-array .is-active { border-style: dashed; border-color: #3157d5; }
+.viz-array .is-sorted { background: #e8f4ee; border-color: #157347; }
+.viz-code { font-family: ui-monospace, monospace; overflow-wrap: anywhere; }
+.viz-code .is-current { background: #e9eefc; outline: 1px solid #3157d5; }
+.viz-fallback table { border-collapse: collapse; width: 100%; }
+.viz-fallback th, .viz-fallback td { padding: .4rem; border: 1px solid #ccd3df; text-align: left; }
+.viz-print-image { display: none; }
+@media (max-width: 480px) { .viz-host { height: 20rem; } .visualization { padding: .5rem; } }
+@media print {
+  .visualization { break-inside: avoid; padding: .5rem; }
+  .viz-controls, .viz-host, .viz-status { display: none !important; }
+  .viz-print-image { display: block; width: 100%; max-height: 85mm; object-fit: contain; }
+  .viz-code .is-current { outline: none; background: transparent; }
+  .viz-fallback { display: block !important; }
+}
