@@ -1,5 +1,5 @@
 {
-  "version": "1.3",
+  "version": "1.4",
   "note": "能力登记表。只登记运行时真的会渲染或驱动的名称；静态 HTML、按需安装项与未实现项分开标注，避免 Agent 误用未实现组件。公式与代码着色都不走 LearnKit：课件从 CDN 引入 KaTeX / highlight.js，直接书写 LaTeX 定界符即可。",
   "runtime": {
     "l1_core": ["StateStore", "SequenceStore", "EventBus(snapshot log)", "History(cursor)", "SpecValidator"],
@@ -12,9 +12,19 @@
     "implemented": ["status", "property-table", "event-log", "history", "change-summary", "legend", "stage"]
   },
   "kinds": {
-    "note": "visualizations.js 适配器，通过 data-visualization=\"<kind>\" 使用；chart/spatial 需 vendor 库，其余为 HTML/SVG 实现",
+    "note": "可视化适配器，通过 data-visualization=\"<kind>\" 使用。内核 visualizations.js 只管注册表与生命周期，每个 kind 在自己的模块里；tier 决定它从哪来：universal 由 init_course.py 随默认包复制，optional 由 install_optional.py 安装。",
     "implemented": ["chart", "relation", "timeline", "process", "spatial", "sequence", "table"],
-    "vendor_backed": ["chart", "spatial"]
+    "vendor_backed": ["chart", "spatial"],
+    "universal": {
+      "note": "默认包自带，课程无需任何操作；无第三方库。模块已按 init_course.py 复制到 assets/visualizations/kinds/。",
+      "kinds": ["relation", "timeline", "process", "sequence", "table"],
+      "modules": ["kinds/list.js", "kinds/sequence.js", "kinds/table.js"]
+    },
+    "optional": {
+      "note": "需要安装后才可用；装之前不要在课件里引用对应 kind，也不要写对应的 kinds/*.js script 标签。",
+      "kinds": ["chart", "spatial"],
+      "modules": ["kinds/chart.js", "kinds/spatial.js"]
+    }
   },
   "static_html": {
     "note": "由 course-template/lesson.html 提供静态结构，course.js 做渐进增强。这些不是运行时组件，但可直接写入课件并要求保留 data-* 契约。",
@@ -27,13 +37,9 @@
     "install": "python scripts/install_optional.py <course-dir> --components <name> [...]",
     "components": {
       "code-highlight": {"label": "代码块语法着色", "needs": "CDN highlight.js 11.12.0（36 种内置语言）+ 随包复制的官方主题样式表", "target": "assets/optional/code-highlight"},
-      "theme": {"label": "主题与自定义 Theme", "needs": "无", "target": "assets/optional/theme"},
-      "chart": {"label": "数据图表", "needs": "Plotly（随 install_optional.py 复制）", "target": "assets/visualizations"},
-      "spatial": {"label": "几何与空间画布", "needs": "JSXGraph（随 install_optional.py 复制）", "target": "assets/visualizations"}
-    },
-    "free_kinds": {
-      "note": "以下可视化 kind 不需要第三方库，但仍要装适配器文件才可用",
-      "names": ["sequence", "relation", "timeline", "process", "table"]
+      "theme": {"label": "主题切换器（换肤层）", "needs": "无", "target": "assets/optional/theme"},
+      "chart": {"label": "数据图表", "needs": "Plotly（随 install_optional.py 复制）", "target": "assets/visualizations", "module": "kinds/chart.js"},
+      "spatial": {"label": "几何与空间画布", "needs": "JSXGraph（随 install_optional.py 复制）", "target": "assets/visualizations", "module": "kinds/spatial.js"}
     }
   },
   "planned": {

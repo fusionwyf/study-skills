@@ -151,6 +151,15 @@ print(check_result(3))</code></pre></div>
   </div>
   <script src="../assets/learnkit/learnkit.js"></script>
   <script src="../assets/course.js"></script>
+  <!-- 可视化内核 + 通用 kind（relation/timeline/process、sequence、table）。
+       这三支模块不带第三方库，随 init_course.py 复制。chart 与 spatial 需要
+       第三方库，用 install_optional.py 装好后，在本区块末尾追加它们各自的
+       kinds 模块 script 标签即可（模块名与 kind 同名）。
+       没有 data-visualization 容器时这些脚本不做任何事。 -->
+  <script src="../assets/visualizations/visualizations.js"></script>
+  <script src="../assets/visualizations/kinds/list.js"></script>
+  <script src="../assets/visualizations/kinds/sequence.js"></script>
+  <script src="../assets/visualizations/kinds/table.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
   <script>

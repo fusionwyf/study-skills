@@ -9,3 +9,6 @@ exports/*.tmp
 
 # Cached third-party test fixtures (fetched on demand)
 tests/.cache/
+
+# Scratch space for local end-to-end runs (headless browser profiles, throwaway courses)
+.tmp-*/

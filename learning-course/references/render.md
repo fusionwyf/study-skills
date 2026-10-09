@@ -96,18 +96,30 @@ D_{\mathbf{u}} f(P_0) = \nabla f(P_0) \cdot \mathbf{u}
 
 核心运行时只管理状态、动作、历史和记录，适配器负责把同一份模型数据呈现为图表、关系图、时间轴、流程、空间画布或步骤回放。学科扩展应登记数据契约并调用 `registerKind()`，不把某一门课的计算逻辑写进核心渲染器。
 
+可视化适配器分两层，界线是「是否随课程内容决定」：
+
+| 层 | 内容 | 来源 | 课程要做什么 |
+|---|---|---|---|
+| 通用 | 内核、`relation`、`timeline`、`process`、`sequence`、`table` | `init_course.py` 随默认包复制 | 什么都不用做 |
+| 随内容决定 | `chart`、`spatial` | `install_optional.py` 按需安装 | 需要时装，然后加一支 script |
+
+内核 `assets/visualizations/visualizations.js` 只管注册表、生命周期、容器接线和后备路径，**自己不渲染任何东西**。每个 kind 在自己的模块里：
+`kinds/list.js`（`relation`/`timeline`/`process` 共用一套列表渲染，各有自己的校验器）、`kinds/sequence.js`、`kinds/table.js`、`kinds/chart.js`、`kinds/spatial.js`。这样拆是因为 `chart` 要 4.7 MB 的 Plotly、`spatial` 要 JSXGraph，而另外五个是纯 HTML/SVG——合成一个文件会逼每门课都背上那两个重依赖。
+
+加载顺序：内核在前，用到的 kind 模块在后。没有 `data-visualization` 容器的页面加载这些脚本不会有任何副作用。
+
 ### 选择表达方式
 
-| 学习问题 | 适配器 | 最小数据 |
-|---|---|---|
-| 数值变化、实验测量、函数、分布 | `chart` | `traces` |
-| 概念、网络、调控、依赖 | `relation` | `nodes`、可选 `edges` |
-| 历史、实验过程、执行轨迹 | `timeline` | `events` |
-| 流程、状态机、决策树 | `process` | `nodes`、可选 `edges` |
-| 几何、结构、空间关系 | `spatial` | `matrix + vector` 或 `shapes` |
-| 推导、操作、算法步骤 | `sequence` | `steps` |
-| 结构化证据或结果 | `table` | `columns`、`rows` |
-| 学科模拟器 | `simulation` | 由扩展适配器声明 |
+| 学习问题 | 适配器 | 最小数据 | 层 |
+|---|---|---|---|
+| 数值变化、实验测量、函数、分布 | `chart` | `traces` | 可选 |
+| 概念、网络、调控、依赖 | `relation` | `nodes`、可选 `edges` | 通用 |
+| 历史、实验过程、执行轨迹 | `timeline` | `events` | 通用 |
+| 流程、状态机、决策树 | `process` | `nodes`、可选 `edges` | 通用 |
+| 几何、结构、空间关系 | `spatial` | `matrix + vector` 或 `shapes` | 可选 |
+| 推导、操作、算法步骤 | `sequence` | `steps` 或 `input` | 通用 |
+| 结构化证据或结果 | `table` | `columns`、`rows` | 通用 |
+| 学科模拟器 | `simulation` | 由扩展适配器声明 | 扩展 |
 
 ### 容器契约
 
@@ -143,7 +155,7 @@ D_{\mathbf{u}} f(P_0) = \nabla f(P_0) \cdot \mathbf{u}
 4. 在没有脚本、第三方库缺失、WebGL 不可用或配置错误时保留 fallback，不显示空白舞台。
 5. 为键盘、窄屏、打印和 `prefers-reduced-motion` 提供降级路径。
 
-内置 `chart` 优先使用本地 Plotly；未加载 Plotly 时使用无依赖 SVG。`spatial` 在 JSXGraph 可用时提供可拖动向量，否则保留结构说明。`relation`、`timeline`、`process`、`sequence` 和 `table` 使用 HTML，可独立打开 HTML 文件。
+内置 `chart` 优先使用本地 Plotly；未加载 Plotly 时使用无依赖 SVG。`spatial` 在 JSXGraph 可用时提供可拖动向量，否则**列出 A、v 与 Av 供手工核对**，不留空白舞台。`relation`、`timeline`、`process`、`sequence` 和 `table` 使用 HTML，可独立打开 HTML 文件。
 
 `sequence` 的控件使用一个带 label 的 range、上一项和下一项按钮；`spatial` 的数字输入必须可键盘编辑并限制在有限范围。播放、单步、暂停、重置属于通用 LearnKit 动作，适配器不各自复制一套状态机。
 
@@ -151,13 +163,19 @@ D_{\mathbf{u}} f(P_0) = \nabla f(P_0) \cdot \mathbf{u}
 
 ## 四、代码着色与主题
 
-这两个能力**不在默认课程包里**。默认包只带 `course.css` 的中性基线和 LearnKit 运行时；需要时用安装脚本按需复制。
+代码着色和主题切换器**不在默认课程包里**。默认包只带 `course.css` 的中性基线、LearnKit 运行时和上面第一节说的通用可视化层；这两个需要时用安装脚本按需复制。
 
 ```text
 python scripts/install_optional.py <course-dir> --components code-highlight theme
 ```
 
 组件目录是 `assets/optional/<name>/`，每个都带 README 说明接线方式、可改的 token 和降级行为。装之前不要在课件里引用。
+
+同理，`chart` 与 `spatial` 属于「随课程内容决定」的可选可视化 kind，也要显式安装；装完记得在页面里补上各自的 kinds 模块 script 标签。
+
+```text
+python scripts/install_optional.py <course-dir> --components chart spatial
+```
 
 ### 代码着色
 
@@ -212,5 +230,5 @@ python scripts/validate_course.py <course-dir> --strict-schema --pedagogical
 ```
 
 - `LearnKit.validateLessonSpec(spec)` 校验页面结构。
-- `assets/visualizations/adapters.json` 是适配器目录的单一来源，`scripts/validate_course.py` 用它与 `learnkit.js` 注册表检查容器契约。完整示例见 `assets/visualizations/demo.html`。
+- `assets/visualizations/adapters.json` 是适配器目录的单一来源，每个条目用 `tier`（`universal`/`optional`）标明它属于哪一层、用 `module` 标明实现在哪个文件；`scripts/validate_course.py` 用它检查容器契约。完整示例见 `assets/visualizations/demo.html`。
 - 打印或导出前等待 `document.fonts.ready` 与 `window.__COURSE_VISUALIZATIONS_READY__ === true`，然后检查每个容器的 `data-viz-ready="true"`；失败时以 fallback 作为可读结果。KaTeX 公式会在 `DOMContentLoaded` 后的同步扫描中渲染完，等待字体就绪即可覆盖。装了代码着色时可选等待 `window.__COURSE_CODE_HIGHLIGHT_READY__`；为 `false` 说明 CDN 不可达，此时按无色原文打印即可。

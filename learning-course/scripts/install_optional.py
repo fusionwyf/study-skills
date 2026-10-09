@@ -1,15 +1,21 @@
 #!/usr/bin/env python3
 """Install optional learning-course components into a course package.
 
-Optional components are deliberately kept out of the default package so a plain
-course stays small and offline. This script copies only what a course asks for:
+Two tiers of component exist, and only the second one is handled here:
 
-    python scripts/install_optional.py <course-dir> --components code-highlight theme
-    python scripts/install_optional.py <course-dir> --components chart spatial
+* **Universal** — the visualisation core, the library-free kinds (`relation`,
+  `timeline`, `process`, `sequence`, `table`), the LearnKit runtime and the
+  static lesson markup. Every course gets these from `init_course.py`; nothing
+  in a course has to ask for them.
+* **Content-dependent / optional** — installed on demand by this script, so a
+  plain course stays small and offline:
 
-Visualization kinds share one adapter kit; `chart` and `spatial` additionally
-pull their pinned vendor library. `code-highlight` ships the official
-highlight.js theme stylesheets it selects from, so it works offline.
+      python scripts/install_optional.py <course-dir> --components code-highlight theme
+      python scripts/install_optional.py <course-dir> --components chart spatial
+
+`chart` and `spatial` are visualisation kinds that need a pinned third-party
+library (Plotly, JSXGraph). Installing one copies only that kind's module plus
+its vendor tree, never the whole kit.
 """
 
 from __future__ import annotations
@@ -24,10 +30,13 @@ SKILL = Path(__file__).resolve().parents[1]
 OPTIONAL = SKILL / "assets" / "optional"
 VIZ_KIT = SKILL / "assets" / "visualizations"
 
-# Visualization kinds, split by whether they need a pinned third-party library.
+# Universal, library-free kinds. Registered in every course by init_course.py,
+# so asking for one here is a no-op worth reporting rather than an error.
+VIZ_UNIVERSAL_KINDS = ("relation", "timeline", "process", "sequence", "table")
+# Optional kinds backed by a pinned vendor library. These are the only ones
+# this script installs.
 VIZ_VENDOR_KINDS = ("chart", "spatial")
-VIZ_FREE_KINDS = ("sequence", "relation", "timeline", "process", "table")
-VISUALIZATION_KINDS = VIZ_VENDOR_KINDS + VIZ_FREE_KINDS
+VISUALIZATION_KINDS = VIZ_UNIVERSAL_KINDS + VIZ_VENDOR_KINDS
 
 # Components that are plain files plus an optional vendor tree.
 SIMPLE_COMPONENTS = {
@@ -75,32 +84,34 @@ def _verify_vendor(manifest: dict, kinds: list[str]) -> dict:
 
 
 def install_visualizations(course_dir: Path, kinds: list[str], force: bool) -> list[str]:
-    """Copy the shared adapter kit plus any vendor library the kinds require."""
+    """Copy the kind module and vendor library for each requested optional kind.
+
+    Only `chart` and `spatial` reach this function; the library-free kinds are
+    part of the universal tier and never get here. A course that installs
+    neither pays nothing — the core and the universal modules are already on
+    disk from init_course.py.
+    """
     target = course_dir / "assets" / "visualizations"
-    manifest = json.loads((VIZ_KIT / "vendor" / "manifest.json").read_text(encoding="utf-8"))
-    selected = _verify_vendor(manifest, kinds)
+    vendor_manifest = json.loads((VIZ_KIT / "vendor" / "manifest.json").read_text(encoding="utf-8"))
+    selected = _verify_vendor(vendor_manifest, kinds)
 
-    files = ["visualizations.js", "visualizations.css", "adapters.json"]
-    for dependency in selected.values():
-        files.extend("vendor/" + name for name in dependency["files"])
+    modules = [f"kinds/{name}.js" for name in kinds]
+    vendor_files = ["vendor/" + name for dependency in selected.values() for name in dependency["files"]]
 
-    destinations = [target / name for name in files] + [target / "vendor" / "manifest.json"]
+    destinations = [target / name for name in modules + vendor_files] + [target / "vendor" / "manifest.json"]
     _check_targets(destinations, force)
 
-    for name in files:
+    for name in modules + vendor_files:
         destination = target / name
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(VIZ_KIT / name, destination)
-    (target / "vendor").mkdir(exist_ok=True)
+
+    # The vendor manifest is written per course so a reader sees exactly which
+    # libraries this course actually carries, not the full catalogue.
+    (target / "vendor").mkdir(parents=True, exist_ok=True)
     (target / "vendor" / "manifest.json").write_text(json.dumps(selected, indent=2) + "\n", encoding="utf-8")
 
-    notices = []
-    for name in kinds:
-        if name in selected:
-            notices.append(f"visualizations/{name}：已复制 {selected[name]['package']} {selected[name]['version']}")
-        else:
-            notices.append(f"visualizations/{name}：适配器已随 visualizations.js 提供，无需 vendor 库")
-    return notices
+    return [f"visualizations/{name}：已复制 kinds/{name}.js 与 {selected[name]['package']} {selected[name]['version']}" for name in kinds]
 
 
 def install_simple(course_dir: Path, name: str, force: bool) -> list[str]:
@@ -127,7 +138,12 @@ def install(course_dir: Path, components: list[str], force: bool = False) -> lis
         raise InstallError(f"Unknown components: {sorted(unknown)}; choose from {known}")
 
     notices: list[str] = []
-    viz_kinds = [name for name in components if name in VISUALIZATION_KINDS]
+    # Universal kinds arrive with init_course.py. Asking for one here is
+    # harmless but must not create an empty kit directory, so answer plainly.
+    for name in components:
+        if name in VIZ_UNIVERSAL_KINDS:
+            notices.append(f"visualizations/{name}：通用 kind，已随 init_course.py 进入默认包，无需安装")
+    viz_kinds = [name for name in components if name in VIZ_VENDOR_KINDS]
     if viz_kinds:
         notices.extend(install_visualizations(course_dir, viz_kinds, force))
     for name in components:

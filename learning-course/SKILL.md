@@ -42,8 +42,8 @@ disable-model-invocation: true
 ├── lessons/0001-<slug>.html
 ├── assets/              # course.js/css plus learnkit runtime
 │   ├── learnkit/        # state engine and declarative lesson schema
-│   ├── visualizations/  # optional adapters and pinned vendor libraries
-│   └── optional/        # optional components (code highlighting, theme)
+│   ├── visualizations/  # visualization core + universal kinds; plus any optional one installed
+│   └── optional/        # optional components (code highlighting, theme switcher)
 ├── reference/
 ├── records/
 └── exports/
@@ -51,7 +51,7 @@ disable-model-invocation: true
 
 保留完整目录骨架。课号使用四位连续数字，slug 使用安全的 dash-case。创建前检查现有文件，避免覆盖已有课程。
 
-`assets/visualizations/` 与 `assets/optional/` 只在装了对应可选组件后存在；默认包不包含它们。
+`assets/visualizations/` 默认就存在：内核加 `relation`、`timeline`、`process`、`sequence`、`table` 这五个无第三方库的 kind 随包复制，课程直接写容器就能用。`chart` 与 `spatial` 需要 Plotly / JSXGraph，属于「随课程内容决定」的可选 kind，用 `install_optional.py` 装后才可用。`assets/optional/` 只在装了对应组件后存在。
 
 ## Create
 
@@ -141,14 +141,20 @@ HTML 的“复制学习记录”按钮只汇总原始答案、检查次数、提
 
 ## 可选组件
 
-代码着色、主题换肤、图表与几何这些能力**默认不在课程包里**。需要时按需安装，装之前不要在课件里引用：
+组件分两层，界线是「是否随课程内容决定」：
+
+- **通用**：主题、交互式测验与反馈、无库可视化 kind（`relation`、`timeline`、`process`、`sequence`、`table`）都已随默认包就绪，课程无需任何操作。
+- **随内容决定**：代码着色、`chart`、`spatial`（含主题切换器）默认不在包里，需要时按需安装，装之前不要在课件里引用：
 
 ```text
 python scripts/install_optional.py <course-dir> --components code-highlight theme
 python scripts/install_optional.py <course-dir> --components chart spatial
 ```
 
-可选组件清单、依赖和降级行为见 `assets/optional/manifest.json`；每个组件目录内自带 README。登记表 `assets/learnkit/components.json` 的 `optional` 段是唯一权威来源，不要引用其中没有的名字。
+装 `chart` / `spatial` 后，在本课脚本区追加对应的 kinds 模块（模块名与 kind 同名）：
+`<script src="../assets/visualizations/kinds/chart.js"></script>`。
+
+可选组件清单、依赖和降级行为见 `assets/optional/manifest.json`；每个组件目录内自带 README。登记表 `assets/learnkit/components.json` 的 `kinds.universal`、`kinds.optional` 与 `optional` 三段是唯一权威来源，不要引用其中没有的名字。
 
 ## 验证
 

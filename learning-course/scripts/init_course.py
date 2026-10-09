@@ -56,9 +56,7 @@ def main() -> int:
 
     # L1 runtime and the declarative schema are dependency-free, so every new
     # course gets the same portable foundation. Math rendering comes from the
-    # KaTeX CDN. Optional components (code highlighting, theme, charting) are
-    # deliberately absent here and installed on demand with install_optional.py,
-    # so a plain course stays small and offline.
+    # KaTeX CDN.
     learnkit_target = course_dir / "assets" / "learnkit"
     learnkit_target.mkdir(parents=True, exist_ok=True)
     for filename in ("learnkit.js", "lesson-spec.schema.json", "components.json"):
@@ -66,6 +64,29 @@ def main() -> int:
         if target.exists() and not args.force:
             raise FileExistsError(f"Refusing to overwrite existing file: {target}")
         shutil.copy2(learnkit_dir / filename, target)
+
+    # The universal tier of the visualisation kit. Everything here is plain
+    # HTML/SVG with no third-party library, so a new course can render a
+    # relation graph, a timeline, a process, a step playback and a table out of
+    # the box. The optional kinds (`chart` needs 4.7 MB of Plotly, `spatial`
+    # needs JSXGraph) stay out and are copied by install_optional.py only when
+    # a course asks for them.
+    visualization_dir = Path(__file__).resolve().parents[1] / "assets" / "visualizations"
+    visualization_target = course_dir / "assets" / "visualizations"
+    universal_files = [
+        "visualizations.js",
+        "visualizations.css",
+        "adapters.json",
+        "kinds/list.js",
+        "kinds/sequence.js",
+        "kinds/table.js",
+    ]
+    for filename in universal_files:
+        target = visualization_target / filename
+        if target.exists() and not args.force:
+            raise FileExistsError(f"Refusing to overwrite existing file: {target}")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(visualization_dir / filename, target)
 
     phase = "diagnostic" if args.diagnostic else "designing"
     diagnostic_status = "pending" if args.diagnostic else "skipped"
