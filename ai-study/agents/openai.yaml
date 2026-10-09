@@ -1,0 +1,6 @@
+interface:
+  display_name: "AI 辅助学习"
+  short_description: "用 AI 辅导与反馈提升可验证的独立能力"
+  default_prompt: "使用 $ai-study 帮我围绕一个具体主题建立 AI 辅助学习循环。"
+policy:
+  allow_implicit_invocation: false

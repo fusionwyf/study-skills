@@ -4,6 +4,10 @@ WorkBuddy skills for structured learning, exam preparation, and spaced review.
 
 ## Skills
 
+### ai-study
+
+Use AI for explanation, practice, feedback, and review while checking independent ability. Includes a repeatable learning loop, reusable tutor/reviewer/coach prompts, subject-specific workflows, and a lightweight long-term Obsidian setup.
+
 ### learning-course
 
 Design and run structured study courses with a full learning loop: diagnose → design → teach → assess → review. Features:
@@ -66,7 +70,7 @@ Bounded mini-course handoffs between exam and course packages. Features:
 - Traceable gap origin: every handoff cites its source record and validates against the shared contract
 - Python scripts: `create_handoff.py`, `complete_handoff.py`, `validate_handoffs.py`, backed by the shared `handoff.schema.yaml`
 
-All leaf skills share the same infrastructure: unified record schemas in `shared/schemas/`, the human-readable record contract in `shared/references/record-contract.md`, and the generic validator `shared/scripts/validate_record.py` used by every skill's package validator.
+Package-based skills share the same infrastructure: unified record schemas in `shared/schemas/`, the human-readable record contract in `shared/references/record-contract.md`, and the generic validator `shared/scripts/validate_record.py` used by package validators.
 
 ## Requirements
 
@@ -80,6 +84,7 @@ Clone or copy the whole `study-skills` folder into your WorkBuddy skills folder 
 Activate a skill explicitly by name:
 
 - `$study` — not sure which one? The router recommends the right skill for your goal.
+- `$ai-study` — build an AI-assisted learning loop and verify independent learning.
 - `$learning-course` — durable mastery courses.
 - `$exam-prep` — exam outcome preparation.
 - `$spaced-review` — due review sessions over course or exam packages.

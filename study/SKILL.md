@@ -12,6 +12,7 @@ disable-model-invocation: true
 
 | 用户目标 | 推荐激活 |
 |---|---|
+| 设计或执行 AI 辅助学习循环、AI 导师提示词、长期复盘或 Obsidian 学习工作流 | `$ai-study` |
 | 长期系统学会一个主题（多课课程、持续掌握、课程包续学） | `$learning-course` |
 | 准备一场考试（日期、分数、真题、刷题、模考、readiness） | `$exam-prep` |
 | 复习到期知识点（间隔复习、交错练习、遗忘曲线） | `$spaced-review` |

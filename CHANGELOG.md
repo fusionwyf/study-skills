@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- **ai-study skill.** Adds a reusable AI-assisted learning loop centered on independent attempts, graduated tutoring, source checks, and unaided transfer evidence; includes long-term review and optional Obsidian workflows. The `$study` router and skill index now point to it.
+
 ## [0.2.2] - 2026-08-25
 
 Recovery and evidence-contract hardening: atomic registry/report writes, rollback coverage, and shared record-contract enforcement for handoffs.
