@@ -149,7 +149,40 @@ D_{\mathbf{u}} f(P_0) = \nabla f(P_0) \cdot \mathbf{u}
 
 可视化只是探索工具，不自动证明掌握。课件仍应安排预测、解释、反例、无辅助变式或独立产物，并把可视化当前状态作为观察记录导出，而不是直接写成 mastery。数学、统计和算法内容还必须核对定义域、采样步长、比例、不变量和边界值。有限采样或透视图不能替代证明；算法回放来自真实执行状态，不能把观看回放当作实现能力。
 
-## 四、生成检查与验证
+## 四、代码着色与主题
+
+这两个能力**不在默认课程包里**。默认包只带 `course.css` 的中性基线和 LearnKit 运行时；需要时用安装脚本按需复制。
+
+```text
+python scripts/install_optional.py <course-dir> --components code-highlight theme
+```
+
+组件目录是 `assets/optional/<name>/`，每个都带 README 说明接线方式、可改的 token 和降级行为。装之前不要在课件里引用。
+
+### 代码着色
+
+代码块默认只有等宽字体和底色，**没有任何 token 着色**。需要着色时装 `code-highlight`：它从 CDN 引入 highlight.js 11.12.0 的默认构建（约 126KB，内置 36 种语言，含 C、Python、bash、SQL、Rust、Go、Java），一行 `highlightAll()` 扫描全文的 `.code-block pre code`。
+
+语言取自 `.code-language` 标签或 `code` 的 `language-*` class，常见别名会自动归一。**不在内置清单里的语言退化为不着色原文，不会发额外请求**。完全离线时把同版本引擎放进包内并先用 `window.hljs` 注册，组件检测到就不会联网。
+
+换配色有两条路：改 `.code-block` 的 `--code-token-*` 变量（跟着课程主题走），或在本组件样式之后引入 highlight.js 官方主题（516 套）。细节见 `assets/optional/code-highlight/README.md`。
+
+### 主题
+
+`course.css` 里所有视觉决策都是 `--course-*` token。装 `theme` 组件后，这些 token 变成可整体覆盖的换肤层，**组件类名和 `data-*` 契约完全不动**：
+
+```css
+[data-theme="warm"] {
+  --course-bg: #fbf7f2;  --course-text: #2c2118;
+  --course-accent: #b45309;  --course-radius: 0.25rem;
+}
+```
+
+本组件**不提供任何配色方案**——主题就是课程自己的 CSS。要给代码块声明明暗表面时在 `<html>` 上加 `data-theme-surface="light"`。需要切换器时提供 `window.COURSE_THEMES` 列表和 `<div data-theme-switch>`；只有一个主题时不生成切换器。不起脚本、只写死 `<html data-theme="...">` 也能换肤。
+
+完整 token 清单、切换器配置和降级行为见 `assets/optional/theme/README.md`。
+
+## 五、生成检查与验证
 
 生成前先选一个可验证学习成果和一个主模式；生成后检查：
 
@@ -164,11 +197,11 @@ D_{\mathbf{u}} f(P_0) = \nabla f(P_0) \cdot \mathbf{u}
 验证入口：
 
 ```text
-python scripts/install_visualizations.py <course-dir> --components chart spatial sequence
+python scripts/install_optional.py <course-dir> --components chart spatial
 python scripts/build_index.py <course-dir>
 python scripts/validate_course.py <course-dir> --strict-schema --pedagogical
 ```
 
 - `LearnKit.validateLessonSpec(spec)` 校验页面结构。
 - `assets/visualizations/adapters.json` 是适配器目录的单一来源，`scripts/validate_course.py` 用它与 `learnkit.js` 注册表检查容器契约。完整示例见 `assets/visualizations/demo.html`。
-- 打印或导出前等待 `document.fonts.ready` 与 `window.__COURSE_VISUALIZATIONS_READY__ === true`，然后检查每个容器的 `data-viz-ready="true"`；失败时以 fallback 作为可读结果。KaTeX 公式会在 `DOMContentLoaded` 后的同步扫描中渲染完，等待字体就绪即可覆盖。
+- 打印或导出前等待 `document.fonts.ready` 与 `window.__COURSE_VISUALIZATIONS_READY__ === true`，然后检查每个容器的 `data-viz-ready="true"`；失败时以 fallback 作为可读结果。KaTeX 公式会在 `DOMContentLoaded` 后的同步扫描中渲染完，等待字体就绪即可覆盖。装了代码着色时可选等待 `window.__COURSE_CODE_HIGHLIGHT_READY__`；为 `false` 说明 CDN 不可达，此时按无色原文打印即可。

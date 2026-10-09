@@ -6,3 +6,6 @@ exports/*.tmp
 .venv/
 .openchamber/
 .playwright-cli/
+
+# Cached third-party test fixtures (fetched on demand)
+tests/.cache/

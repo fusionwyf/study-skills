@@ -1,0 +1,97 @@
+/*
+ * Optional component: code block syntax highlighting (highlight.js).
+ *
+ * This file does NOT ship a colour scheme. It only:
+ *   1. gives the code surface sane defaults that follow the course tokens, and
+ *   2. names the token classes so a course can restyle them.
+ *
+ * To use one of the 516 ready-made highlight.js themes, load it AFTER this file
+ * (or instead of it) — see README.md. To brand the code block, set the four
+ * --code-token-* variables below; they are the only knobs you need.
+ */
+
+.code-block {
+  /* Follow the course palette by default; override per course as needed. */
+  --code-token-comment: #8b949e;
+  --code-token-keyword: #ff7b72;
+  --code-token-string: #a5d6ff;
+  --code-token-number: #79c0ff;
+  --code-token-title: #d2a8ff;
+  --code-token-builtin: #79c0ff;
+  --code-token-attr: #7ee787;
+  --code-token-symbol: #ffa657;
+  --code-token-deletion: #ffdcd7;
+}
+
+/* --- Token classes produced by highlight.js ------------------------------ */
+
+.hljs-comment,
+.hljs-quote { color: var(--code-token-comment); font-style: italic; }
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-doctag,
+.hljs-name { color: var(--code-token-keyword); font-weight: 600; }
+
+.hljs-string,
+.hljs-regexp,
+.hljs-addition,
+.hljs-meta-string { color: var(--code-token-string); }
+
+.hljs-number,
+.hljs-variable,
+.hljs-template-variable { color: var(--code-token-number); }
+
+.hljs-title,
+.hljs-title.class_,
+.hljs-title.function_,
+.hljs-section { color: var(--code-token-title); }
+
+.hljs-built_in,
+.hljs-type,
+.hljs-class .hljs-title { color: var(--code-token-builtin); }
+
+.hljs-attr,
+.hljs-attribute,
+.hljs-property,
+.hljs-selector-class,
+.hljs-selector-id,
+.hljs-selector-attr,
+.hljs-selector-pseudo { color: var(--code-token-attr); }
+
+.hljs-symbol,
+.hljs-bullet,
+.hljs-link,
+.hljs-meta,
+.hljs-meta-keyword { color: var(--code-token-symbol); }
+
+.hljs-emphasis { font-style: italic; }
+.hljs-strong { font-weight: 700; }
+
+/* highlight.js marks the element it processed; keep our surface intact. */
+.code-block code.hljs {
+  display: block;
+  padding: 0;
+  background: none;
+  overflow: visible;
+}
+
+/*
+ * Print: colour and emphasis are unreliable on paper and break copy-paste
+ * fidelity. Flatten every token back to the plain source text.
+ */
+@media print {
+  .code-block .hljs,
+  .code-block .hljs * {
+    color: inherit !important;
+    background: none !important;
+    font-style: normal !important;
+    font-weight: inherit !important;
+  }
+  .code-language { color: inherit !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .code-block .hljs * { transition: none !important; }
+}

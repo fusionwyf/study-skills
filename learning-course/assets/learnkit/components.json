@@ -1,6 +1,6 @@
 {
-  "version": "1.2",
-  "note": "能力登记表。只登记运行时真的会渲染或驱动的名称；静态 HTML 与未实现项分开标注，避免 Agent 误用未实现组件。公式渲染不走 LearnKit：课件从 CDN 引入 KaTeX + auto-render，直接书写 \\(...\\) 与 \\[...\\]。",
+  "version": "1.3",
+  "note": "能力登记表。只登记运行时真的会渲染或驱动的名称；静态 HTML、按需安装项与未实现项分开标注，避免 Agent 误用未实现组件。公式与代码着色都不走 LearnKit：课件从 CDN 引入 KaTeX / highlight.js，直接书写 LaTeX 定界符即可。",
   "runtime": {
     "l1_core": ["StateStore", "SequenceStore", "EventBus(snapshot log)", "History(cursor)", "SpecValidator"],
     "actions": ["PLAY", "PAUSE", "STEP_NEXT", "STEP_PREVIOUS", "SEEK", "RESET", "SET_PARAMETER", "SELECT_OBJECT", "MOVE_OBJECT", "SUBMIT_ANSWER"],
@@ -13,26 +13,31 @@
   },
   "kinds": {
     "note": "visualizations.js 适配器，通过 data-visualization=\"<kind>\" 使用；chart/spatial 需 vendor 库，其余为 HTML/SVG 实现",
-    "implemented": ["chart", "relation", "timeline", "process", "spatial", "sequence", "table"],    "vendor_backed": ["chart", "spatial"]
+    "implemented": ["chart", "relation", "timeline", "process", "spatial", "sequence", "table"],
+    "vendor_backed": ["chart", "spatial"]
   },
   "static_html": {
     "note": "由 course-template/lesson.html 提供静态结构，course.js 做渐进增强。这些不是运行时组件，但可直接写入课件并要求保留 data-* 契约。",
     "classes": ["callout", "formula", "code-block", "steps", "quiz", "glossary", "reflection", "diagram", "card", "toc"],
     "page_level": ["复制学习记录(course.js)", "自动目录(course.js)", "打印/导出模式(course.js)", "独立性选择框(course.js)"]
   },
+  "optional": {
+    "note": "不在默认课程包里，用 scripts/install_optional.py 按需复制。装之前不要引用；每个组件自带 README 说明接线与降级行为。",
+    "catalogue": "assets/optional/manifest.json",
+    "install": "python scripts/install_optional.py <course-dir> --components <name> [...]",
+    "components": {
+      "code-highlight": {"label": "代码块语法着色", "needs": "CDN highlight.js 11.12.0（36 种内置语言）；可换本地 vendor", "target": "assets/optional/code-highlight"},
+      "theme": {"label": "主题与自定义 Theme", "needs": "无", "target": "assets/optional/theme"},
+      "chart": {"label": "数据图表", "needs": "Plotly（随 install_optional.py 复制）", "target": "assets/visualizations"},
+      "spatial": {"label": "几何与空间画布", "needs": "JSXGraph（随 install_optional.py 复制）", "target": "assets/visualizations"}
+    },
+    "free_kinds": {
+      "note": "以下可视化 kind 不需要第三方库，但仍要装适配器文件才可用",
+      "names": ["sequence", "relation", "timeline", "process", "table"]
+    }
+  },
   "planned": {
     "note": "运行时尚未实现。不要仅凭名称在 LessonSpec 的 blocks 中引用；如需使用，先实现并回归本登记表。部分概念当前的替代做法见 static_html。",
-    "names": [
-      "ConceptCard", "KeyTakeaway", "WorkedExample", "CounterExample", "ComparisonTable",
-      "MediaViewer", "Annotation", "SourceReference", "Tabs", "Accordion", "SplitView",
-      "ProgressBar", "StepNavigator", "SingleChoice", "MultipleChoice", "TrueFalse",
-      "FillBlank", "MatchingExercise", "SequenceExercise", "PredictionExercise",
-      "InteractiveQuestion", "HintPanel", "FeedbackPanel", "ReflectionPrompt",
-      "EquationSteps", "CodeTrace", "VariableWatch", "SyntaxTreeView",
-      "SimulationStage", "HierarchyView", "ImageAnnotationView", "PlaybackControls",
-      "TimelineScrubber", "SpeedControl", "PanZoomControls", "InspectorPanel", "DetailPanel",
-      "ComparePanel", "HistoryPanel", "AnnotationLayer", "ThemeProvider", "TooltipProvider",
-      "Modal", "Toast", "LoadingState", "EmptyState", "ErrorBoundary", "AccessibilityControls", "HelpPanel"
-    ]
+    "names": ["ConceptCard", "KeyTakeaway", "WorkedExample", "CounterExample", "ComparisonTable", "MediaViewer", "Annotation", "SourceReference", "Tabs", "Accordion", "SplitView", "ProgressBar", "StepNavigator", "SingleChoice", "MultipleChoice", "TrueFalse", "FillBlank", "MatchingExercise", "SequenceExercise", "PredictionExercise", "InteractiveQuestion", "HintPanel", "FeedbackPanel", "ReflectionPrompt", "EquationSteps", "CodeTrace", "VariableWatch", "SyntaxTreeView", "SimulationStage", "HierarchyView", "ImageAnnotationView", "PlaybackControls", "TimelineScrubber", "SpeedControl", "PanZoomControls", "InspectorPanel", "DetailPanel", "ComparePanel", "HistoryPanel", "AnnotationLayer", "Modal", "Toast", "LoadingState", "EmptyState", "ErrorBoundary", "AccessibilityControls", "HelpPanel"]
   }
 }

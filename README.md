@@ -18,9 +18,13 @@ Design and run structured study courses with a full learning loop: diagnose → 
 - Spaced review queue with performance-adjusted intervals
 - Interactive HTML lesson template with KaTeX math rendering from CDN (write formulas as `\(...\)` / `\[...\]`; the auto-render plugin scans the page)
 - Learner-teaches-AI corrections and sequential dialogue practice, with every prompt and raw answer included in copied learning records
-- Optional offline math/CS visualization kit: Plotly numeric curves, heatmaps and 3D surfaces; JSXGraph draggable 2D linear transformations with equal units; computed selection-sort playback with code and operation counts. Includes numeric/step print fallbacks and current-state capture in learning records
-- Lesson, render and export guides: `learning-course/references/` (four documents: `state`, `lesson`, `render`, `export`); runnable showcase: `learning-course/assets/visualizations/demo.html`; selectively install with `install_visualizations.py` (no third-party libraries copied for HTML/SVG-only kinds)
-- Python scripts: `init_course.py`, `validate_course.py`, `update_progress.py`, `build_index.py`, `export_pdf.py`, `install_visualizations.py`, `build_visualization_data.py`
+- Optional, on-demand components — the default package stays small and offline, and you install only what a course needs:
+  - `code-highlight` — syntax colouring via CDN highlight.js (36 built-in languages); unknown languages degrade to plain text, printing flattens to copyable source
+  - `theme` — full `--course-*` token layer with a theme switcher, so a course can rebrand without touching a single component class or `data-*` marker
+  - `chart` / `spatial` — Plotly numeric curves, heatmaps and 3D surfaces; JSXGraph draggable 2D linear transformations with equal units
+  - `sequence` / `relation` / `timeline` / `process` / `table` — dependency-free HTML/SVG adapters
+- Lesson, render and export guides: `learning-course/references/` (four documents: `state`, `lesson`, `render`, `export`); runnable showcase: `learning-course/assets/visualizations/demo.html`
+- Python scripts: `init_course.py`, `validate_course.py`, `update_progress.py`, `build_index.py`, `export_pdf.py`, `install_optional.py`, `build_visualization_data.py`
 
 ### exam-prep
 
@@ -97,6 +101,12 @@ python shared/scripts/validate_sources.py exam-prep/assets/example-exam
 python shared/scripts/validate_handoffs.py exam-prep/assets/example-exam
 python study/scripts/build_report.py learning-course/assets/example-course
 python shared/scripts/validate_record.py exam-prep/assets/example-exam/records/R0001.md
+```
+
+Install optional components into a course package only when a lesson needs them:
+
+```text
+python learning-course/scripts/install_optional.py <course-dir> --components code-highlight theme
 ```
 
 ## License

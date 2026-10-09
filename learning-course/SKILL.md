@@ -42,13 +42,16 @@ disable-model-invocation: true
 ├── lessons/0001-<slug>.html
 ├── assets/              # course.js/css plus learnkit runtime
 │   ├── learnkit/        # state engine and declarative lesson schema
-│   └── visualizations/  # optional adapters and pinned vendor libraries
+│   ├── visualizations/  # optional adapters and pinned vendor libraries
+│   └── optional/        # optional components (code highlighting, theme)
 ├── reference/
 ├── records/
 └── exports/
 ```
 
 保留完整目录骨架。课号使用四位连续数字，slug 使用安全的 dash-case。创建前检查现有文件，避免覆盖已有课程。
+
+`assets/visualizations/` 与 `assets/optional/` 只在装了对应可选组件后存在；默认包不包含它们。
 
 ## Create
 
@@ -123,7 +126,7 @@ HTML 的“复制学习记录”按钮只汇总原始答案、检查次数、提
 
 - `references/state.md`：创建、更新、续学或恢复课程状态；诊断与综合评估的挂载规则。诊断执行、练习梯度、证据升级和错误干预的细则见 `../shared/references/`。
 - `references/lesson.md`：创建或修改 HTML 课件组件、选择学科教学模式、设计认知层级。
-- `references/render.md`：公式、图表、交互可视化等运行时渲染（LearnKit、数学渲染器、可视化适配器）。
+- `references/render.md`：公式、图表、交互可视化等运行时渲染（LearnKit、KaTeX、可视化适配器、可选组件与主题）。
 - `references/export.md`：导出或审查 PDF。
 
 共享层按需读取：
@@ -135,6 +138,17 @@ HTML 的“复制学习记录”按钮只汇总原始答案、检查次数、提
 - 练习梯度与证据升级：读取 `../shared/references/transfer-rubric.md`。
 
 `assets/example-course/` 只用于模板调试或 validator 烟雾测试，日常 create/continue 不读取。
+
+## 可选组件
+
+代码着色、主题换肤、图表与几何这些能力**默认不在课程包里**。需要时按需安装，装之前不要在课件里引用：
+
+```text
+python scripts/install_optional.py <course-dir> --components code-highlight theme
+python scripts/install_optional.py <course-dir> --components chart spatial
+```
+
+可选组件清单、依赖和降级行为见 `assets/optional/manifest.json`；每个组件目录内自带 README。登记表 `assets/learnkit/components.json` 的 `optional` 段是唯一权威来源，不要引用其中没有的名字。
 
 ## 验证
 

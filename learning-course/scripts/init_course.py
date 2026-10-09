@@ -47,7 +47,6 @@ def main() -> int:
 
     for name in ("lessons", "assets", "reference", "records", "exports"):
         (course_dir / name).mkdir(parents=True, exist_ok=True)
-    (course_dir / "assets" / "vendor").mkdir(parents=True, exist_ok=True)
 
     for filename in ("course.css", "course.js"):
         target = course_dir / "assets" / filename
@@ -57,8 +56,9 @@ def main() -> int:
 
     # L1 runtime and the declarative schema are dependency-free, so every new
     # course gets the same portable foundation. Math rendering comes from the
-    # KaTeX CDN; optional vendor libraries stay opt-in through
-    # install_visualizations.py.
+    # KaTeX CDN. Optional components (code highlighting, theme, charting) are
+    # deliberately absent here and installed on demand with install_optional.py,
+    # so a plain course stays small and offline.
     learnkit_target = course_dir / "assets" / "learnkit"
     learnkit_target.mkdir(parents=True, exist_ok=True)
     for filename in ("learnkit.js", "lesson-spec.schema.json", "components.json"):

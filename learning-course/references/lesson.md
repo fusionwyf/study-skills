@@ -127,6 +127,8 @@ JavaScript 等本轮非空回答后保存原话、锁定文本域，再显示下
 
 使用 `.code-block`、语言标记和 `<pre><code>`。说明输入、输出和运行条件。复制按钮是渐进增强，禁用 JavaScript 时代码仍可读。
 
+默认不给代码上色。需要 token 着色时装 `code-highlight` 可选组件，语言取自这里的 `.code-language` 标记；接线与配色见 `render.md`。
+
 ### 图形与图解
 
 按任务选择 `chart`、`relation`、`timeline`、`process`、`spatial`、`sequence`、`table`。概念关系图可使用带 `<title>`、`<desc>` 和文字摘要的 SVG；数学曲线、曲面、坐标几何、实验数据和算法状态应从计算模型和真实数据生成。详细契约见 `render.md`。
@@ -158,6 +160,10 @@ JavaScript 等本轮非空回答后保存原话、锁定文本域，再显示下
 ### 通用行为
 
 所有组件支持键盘、窄屏、打印和减少动画偏好。重要正文在 JavaScript 失败时仍可读取；交互状态不能只依靠颜色或悬停。
+
+### 视觉与主题
+
+`course.css` 是中性基线，全部视觉决策都是 `--course-*` token。改 token 即可换肤，**不需要改动组件类名或 `data-*` 标记**。需要完整换肤层（含主题切换器）时装 `theme` 可选组件，见 `render.md`。
 
 ## 四、Bloom 认知层级
 

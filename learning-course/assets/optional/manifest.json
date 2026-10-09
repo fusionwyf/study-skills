@@ -1,0 +1,38 @@
+{
+  "version": "1.0",
+  "note": "可选组件登记表。这些能力不进入默认课程包，由 scripts/install_optional.py 按需复制到 <course>/assets/optional/<name>/。组件自带 JS/CSS/README；需要第三方库时在 vendor 字段登记文件和 sha256。",
+  "components": {
+    "code-highlight": {
+      "label": "代码块语法着色",
+      "files": ["code-highlight/code-highlight.js", "code-highlight/code-highlight.css"],
+      "docs": "code-highlight/README.md",
+      "wiring": "head 引入 code-highlight.css，正文末尾引入 code-highlight.js；脚本自动处理所有 .code-block pre code",
+      "degrade": "脚本缺失或禁用 JavaScript 时保留单色原文；打印强制还原为可复制文本"
+    },
+    "theme": {
+      "label": "主题与自定义 Theme",
+      "files": ["theme/theme.js", "theme/theme.css"],
+      "docs": "theme/README.md",
+      "wiring": "head 引入 theme.css，正文末尾引入 theme.js；用 html[data-theme] 或脚本的切换按钮选择主题",
+      "degrade": "脚本缺失时按系统偏好生效；打印强制浅色"
+    },
+    "chart": {
+      "label": "数据图表（Plotly）",
+      "files": ["visualizations/visualizations.js", "visualizations/visualizations.css", "visualizations/adapters.json"],
+      "vendor": "visualizations/vendor/manifest.json",
+      "vendor_kinds": ["chart"],
+      "docs": "../../references/render.md",
+      "wiring": "由 install_optional.py --components chart 安装；复用同一套适配器，本组件只补 Plotly",
+      "degrade": "Plotly 缺失时回退到内置 SVG 折线"
+    },
+    "spatial": {
+      "label": "几何与空间画布（JSXGraph）",
+      "files": ["visualizations/visualizations.js", "visualizations/visualizations.css", "visualizations/adapters.json"],
+      "vendor": "visualizations/vendor/manifest.json",
+      "vendor_kinds": ["spatial"],
+      "docs": "../../references/render.md",
+      "wiring": "由 install_optional.py --components spatial 安装；复用同一套适配器，本组件只补 JSXGraph",
+      "degrade": "JSXGraph 缺失时回退到结构说明"
+    }
+  }
+}
