@@ -42,7 +42,7 @@ disable-model-invocation: true
 └── exports/
 ~~~
 
-使用 `scripts/init_exam.py <exam-dir> --title "<exam name>"` 初始化 schema v2。新包始终为 `provisional`；登记来源并生成题库后运行 `scripts/update_exam.py <exam-dir> --sync-materials`。只有来源和 source-backed questions 足以支撑计划时才设为 `confirmed`。
+使用 `scripts/init_exam.py <exam-dir> [--title "<exam name>"]` 初始化 schema v2（`--title` 省略时从目录名派生）。新包始终为 `provisional`；登记来源并生成题库后运行 `scripts/update_exam.py <exam-dir> --sync-materials`。只有来源和 source-backed questions 足以支撑计划时才设为 `confirmed`。
 
 使用 `scripts/update_exam.py` 更新 mode、readiness 和 materials。readiness 更新必须同时传入 `--evidence-record`，且 record 明确列出本次测得的 metrics。恢复损坏文件时写入 `exam.recovered.yaml`，不直接修补原状态。
 
@@ -81,7 +81,7 @@ python scripts/update_exam.py <exam-dir> --sync-materials
 
 ## Readiness
 
-使用 readiness，不使用 mastery。字段固定为 accuracy、speed、coverage、stability 和 confidence；它是备考工作指标，不是真实预测分。评分规则读取 `references/review-and-cram.md`。每次更新只修改 record 的 `metrics` 实际测得的字段；high confidence 需要 source-backed questions 和 source-backed evidence。
+使用 readiness，不使用 mastery。字段固定为 accuracy、speed、coverage、stability 和 confidence；它是备考工作指标，不是真实预测分。评分细则、更新约束与独立性要求读取 `references/review-and-cram.md`。
 
 ## 错题复盘
 
@@ -109,7 +109,7 @@ review 发现系统性前置漏洞，或学习者带着补课证据返回时，�
 - review 中创建或接回跨包补课：读取 ../shared/references/learning-handoff.md。
 - 复盘错题、估算 readiness、模考或冲刺：读取 references/review-and-cram.md。
 - 生成交互选择、填空、短答或计时练习：复制并改造 assets/drill-template/index.html。
-- HTML drill 包含公式时：读取 references/math-rendering.md，并保留无 KaTeX 时的纯文本后备。
+- HTML drill 包含公式时：读取 references/question-handling.md 的 Formulas in drills 一节，并保留无 KaTeX 时的纯文本后备。
 - 需要查看完整包格式或调试 validator：读取 assets/example-exam/；日常备考不要修改示例包。
 
 ## 验证

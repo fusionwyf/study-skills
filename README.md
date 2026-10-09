@@ -20,7 +20,7 @@ Design and run structured study courses with a full learning loop: diagnose → 
 - Learner-teaches-AI corrections and sequential dialogue practice, with every prompt and raw answer included in copied learning records
 - Optional offline math/CS visualization kit: Plotly numeric curves, heatmaps and 3D surfaces; JSXGraph draggable 2D linear transformations with equal units; computed selection-sort playback with code and operation counts. Includes numeric/step print fallbacks and current-state capture in learning records
 - Lesson, render and export guides: `learning-course/references/` (four documents: `state`, `lesson`, `render`, `export`); runnable showcase: `learning-course/assets/visualizations/demo.html`; selectively install with `install_visualizations.py` (no third-party libraries copied for HTML/SVG-only kinds)
-- Python scripts: `init_course.py`, `validate_course.py`, `update_progress.py`, `build_index.py`, `export_pdf.py`
+- Python scripts: `init_course.py`, `validate_course.py`, `update_progress.py`, `build_index.py`, `export_pdf.py`, `install_visualizations.py`, `build_visualization_data.py`
 
 ### exam-prep
 

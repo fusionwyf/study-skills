@@ -1,6 +1,6 @@
 # 诊断协议（Diagnostic Protocol）
 
-新建课程、设计练习、安排检查点、评估备考起点、或判断是否升级难度时读这里。课程侧应用见 learning-course 的 assessment 参考；考试侧应用见 exam-prep 的 workflows Diagnose 分支。
+新建课程、设计练习、安排检查点、评估备考起点、或判断是否升级难度时读这里。课程侧应用见 learning-course 的 `references/state.md`；考试侧应用见 exam-prep 的 workflows Diagnose 分支。
 
 ## 何时诊断
 

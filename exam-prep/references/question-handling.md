@@ -20,11 +20,9 @@ General reliability hierarchy and conflict rules: see `../../shared/references/s
 
 ## Source registration
 
-Required fields and reliability values follow `../../shared/references/source-provenance.md` and `../../shared/schemas/source.schema.yaml`.
+Field types and reliability values follow `../../shared/references/source-provenance.md` and `../../shared/schemas/source.schema.yaml`; the registration commands live in SKILL.md.
 
-Register materials, excerpts, and claims through `../../shared/references/material-intake.md`; the current exam workflow calls the shared scripts directly. Re-sync materials after registration or question-bank changes with `scripts/update_exam.py <exam-dir> --sync-materials` (from `exam-prep/`).
-
-When files are large, extract only the sections needed for the current task and keep the original in source-materials/.
+When files are large, extract only the sections needed for the current task and keep the original in source-materials/. Re-sync material counts after any registration or question-bank change (`update_exam.py --sync-materials`).
 
 ## Extraction rules
 
@@ -70,7 +68,28 @@ Use HTML drill templates for:
 - timed recall,
 - checklist-style cram review.
 
-If a drill contains formulas, read math-rendering.md and keep readable fallback text.
+### Formulas in drills
+
+`assets/drill-template/math.js` is an optional local KaTeX bridge: it makes no network request and renders only when `vendor/katex/` is present.
+
+~~~text
+assets/drill-template/
+├── index.html
+├── math.js
+└── vendor/katex/          # optional; drop KaTeX here to enable rendering
+    ├── katex.min.css
+    ├── katex.min.js
+    └── fonts/
+~~~
+
+If `vendor/katex/` is absent, keep the page readable with plain formula text; do not add CDN links. Plain prompts may use \(...\), \[...\], or $$...$$, which the template converts into `data-tex` spans before calling `math.js`. For exact control use `prompt_html` or `answer_or_rubric_html`:
+
+~~~html
+<span class="math-expression" data-display-mode="inline" data-tex="P(A\mid B)">P(A given B)</span>
+<span class="math-expression math-block" data-tex="x=\frac{-b\pm\sqrt{b^2-4ac}}{2a}">quadratic formula</span>
+~~~
+
+Every formula needs readable fallback text or a nearby explanation.
 
 Use chat or Markdown records for:
 

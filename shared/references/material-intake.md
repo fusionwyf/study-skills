@@ -17,7 +17,7 @@
 
    完成标准：分配 `S###`、写入索引、创建 `excerpts.md` 和 `claims.md`；本地原文件通过 `--raw` 保留副本。原文只增不改，无法判断可靠性时记 unknown。
 3. 按下文四区分填充当前任务所需摘录与主张。外部事实有来源或显式标记 unverified；冲突主张标为 contested 并记录取舍依据。
-4. 下游题目在 `source` 字段引用 `S###`；课程内容按 `../../learning-course/references/components.md` 的组件契约携带来源状态；合成派生物注明 `synthetic-from-*`。
+4. 下游题目在 `source` 字段引用 `S###`；课程内容按 `../../learning-course/references/lesson.md` 的组件契约携带来源状态；合成派生物注明 `synthetic-from-*`。
 5. 验证注册表：
 
    ```text
