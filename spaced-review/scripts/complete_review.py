@@ -133,6 +133,7 @@ def build_record_text(args: argparse.Namespace, record_id: str, target_key: str,
         "attempted_at": dt.date.today().isoformat(),
         "source_backed": bool(args.source_backed),
         "synthetic": bool(args.synthetic),
+        "independence": args.independence,
         "record_type": "review",
         "review_kind": args.review_kind,
         "performance": args.performance,
@@ -174,11 +175,15 @@ def main() -> int:
     parser.add_argument("--performance", required=True, choices=PERFORMANCES)
     parser.add_argument("--hint-used", required=True, choices=("true", "false"))
     parser.add_argument("--evidence-strength", required=True, choices=EVIDENCE_STRENGTHS)
+    parser.add_argument("--independence", choices=("independent", "with_hints", "ai_guided"),
+                        help="Observed assistance; omitted by legacy callers means unknown")
     parser.add_argument("--raw-answer", required=True, help="Verbatim learner answer")
     parser.add_argument("--next-action", help="Defaults to a neutral next step")
     parser.add_argument("--source-backed", action="store_true")
     parser.add_argument("--synthetic", action="store_true")
     args = parser.parse_args()
+    if args.independence == "independent" and args.hint_used == "true":
+        return fail("independent review cannot have --hint-used true")
 
     root = Path(args.package_dir).expanduser().resolve()
     if not root.is_dir():
@@ -239,7 +244,8 @@ def main() -> int:
     if record_path.exists():
         return fail(f"review record already exists: {record_relative}")
 
-    interval = next_interval(previous_interval, args.performance, args.review_kind, args.hint_used == "true")
+    assisted = args.hint_used == "true" or args.independence in {"with_hints", "ai_guided"}
+    interval = next_interval(previous_interval, args.performance, args.review_kind, assisted)
     due_at = (dt.datetime.now(dt.timezone.utc) + dt.timedelta(days=interval)).isoformat(timespec="seconds").replace("+00:00", "Z")
     today = dt.date.today().isoformat()
 

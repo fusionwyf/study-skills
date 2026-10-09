@@ -7,6 +7,9 @@ All notable changes to this project are documented in this file.
 ### Added
 
 - **ai-study skill.** Adds a reusable AI-assisted learning loop centered on independent attempts, graduated tutoring, source checks, and unaided transfer evidence; includes long-term review and optional Obsidian workflows. The `$study` router and skill index now point to it.
+- **Evidence independence.** Shared records distinguish `independent`, `with_hints`, and `ai_guided` performance from task provenance and evidence strength. New mastery updates and completion enforce the shared independence policy; legacy missing values remain unknown and historical state emits warnings without rewriting records.
+- **Open learning interactions.** The course template adds learner-teaches-AI correction tasks and fixed sequential dialogue practice. Copied records include every prompt, raw response, submitted/displayed state, self-reported help, and observed guidance; component validation checks answer labels and complete round structures.
+- **Independent-verification reminders.** Course updates and course/exam reports flag three consecutive finalized AI-guided attempts by attempt chronology, with citations and an independent follow-up rather than a claim of cognitive decline.
 
 ### Changed
 
@@ -14,7 +17,9 @@ All notable changes to this project are documented in this file.
 - **Shared source intake.** `register_source.py`, `validate_sources.py`, and `material-intake.md` move from `source-grounded-study/` to `shared/`. Course and exam workflows register sources directly; exam materials are re-synced after intake.
 - **Progress queries in study.** `build_report.py` moves from `study-report/scripts/` to `study/scripts/`; the reporting protocol becomes `study/references/progress-report.md`. The router directly generates and interprets reports while preserving learning state.
 - **Internal handoffs.** The handoff protocol becomes `shared/references/learning-handoff.md`, and its three scripts move to `shared/scripts/`. Exam review and course continuation handle bounded remediation and evidence return internally; cross-package learning still uses explicitly activated experience skills.
-- Existing package schemas and script behavior are preserved. Direct callers must update the removed script paths; regression tests use the new locations.
+- Infrastructure relocation preserves existing package layouts and source/handoff helper behavior. Direct callers must update the removed script paths; regression tests use the new locations.
+- Progress reports confirm course ability only with strong independent evidence, and exam metrics only with source-backed independent records. Assisted or unknown-independence records are labeled inferred. Hinted or AI-guided review success does not lengthen intervals.
+- AI tutor prompts now state checkable teaching order, attempt-first assistance, and difficulty/redundancy adjustments; the role table includes AI as a simulated student. Material intake documents source-traceable transformations, and learning guidance cites verified retrieval/spacing study identifiers with the 2006 meta-analysis distinguished from the 2008 experiment.
 
 ## [0.2.2] - 2026-08-25
 

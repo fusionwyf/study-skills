@@ -25,6 +25,12 @@ import sys
 from pathlib import Path
 from typing import Any
 
+SHARED_SCRIPTS = Path(__file__).resolve().parents[2] / "shared" / "scripts"
+if str(SHARED_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SHARED_SCRIPTS))
+
+from validate_record import independence_error, recent_guided_records  # noqa: E402
+
 SECTIONS = ("当前目标", "证据覆盖率", "已确认能力", "仍不确定能力", "最近错误模式", "到期复习", "风险", "下一步建议")
 READINESS_METRICS = ("accuracy", "speed", "coverage", "stability")
 DATE_LINE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
@@ -134,7 +140,12 @@ def objective_support(records: list[dict]) -> dict[str, list[dict]]:
 def classify_objective(objective_id: str, state_mastery: Any, support: dict[str, list[dict]]) -> tuple[str, list[dict]]:
     """Return (label, supporting records) using record evidence, not activity."""
     backs = support.get(objective_id, [])
-    strong = [r for r in backs if r["fm"].get("evidence_strength") == "strong"]
+    strong = [r for r in backs if r["fm"].get("evidence_strength") == "strong"
+              and r["fm"].get("independence") == "independent"
+              and any(isinstance(e, dict) and e.get("id") == objective_id
+                      and e.get("mastery") in ("recognition", "application", "transfer")
+                      and independence_error(r["fm"], e.get("mastery")) is None
+                      for e in r["fm"].get("supported_objectives", []))]
     if strong:
         return "confirmed", strong
     if backs:
@@ -232,21 +243,21 @@ def build_course_report(root: Path, yaml: Any) -> str:
 
     coverage_lines = [
         f"- 证据覆盖：{len(backed)}/{total} 个目标有至少一条 finalized 记录支撑。",
-        f"- 强证据覆盖：{len([o for o in objectives if classifications[str(o['id'])][0] == 'confirmed'])}/{total} 个目标有 strong 记录支撑。",
+        f"- 独立强证据覆盖：{len(confirmed)}/{total} 个目标有 strong + independent 记录支撑。",
         f"- 活动量 ≠ 掌握：lessons/ 共 {len(list((root / 'lessons').glob('*.html')))} 个课件；证据量见上（records/*.md）。",
     ]
     sections["证据覆盖率"] = coverage_lines
 
     confirmed_lines = [
-        f"- [confirmed] {o['id']} — {classifications[str(o['id'])][1][0]['fm'].get('evidence_strength')} 证据 "
+        f"- [confirmed] {o['id']} — independent + {classifications[str(o['id'])][1][0]['fm'].get('evidence_strength')} 证据 "
         f"{', '.join(r['path'] for r in classifications[str(o['id'])][1])}"
         for o in confirmed
-    ] or ["（无）——没有任何目标拥有 strong 定稿记录。"]
+    ] or ["（无）——没有任何目标拥有 strong + independent 定稿记录。"]
     sections["已确认能力"] = confirmed_lines
 
     uncertain_lines: list[str] = []
     for label, explanation in (
-        ("inferred", "仅由 medium/weak 证据支撑"),
+        ("inferred", "证据强度不足、依赖辅助或独立性未知"),
         ("unknown", "无定稿记录支撑"),
         ("self-reported", "自述或 uncertain 状态"),
     ):
@@ -286,6 +297,14 @@ def build_course_report(root: Path, yaml: Any) -> str:
     sections["到期复习"] = review_lines
 
     risk_lines: list[str] = []
+    for record in records:
+        independence = record["fm"].get("independence")
+        if independence != "independent":
+            risk_lines.append(f"- [inferred] {record['path']}：independence={independence or 'unknown'}；不能据此确认独立能力。")
+    streak = recent_guided_records(records)
+    if streak:
+        risk_lines.append("- 近期缺乏独立验证证据：最近 3 条定稿记录均为 ai_guided（"
+                          + ", ".join(r["path"] for r in streak) + "）。这不是能力下降的因果判断。")
     for o in objectives:
         label = classifications[str(o["id"])][0]
         if label in {"inferred", "self-reported"}:
@@ -307,7 +326,7 @@ def build_course_report(root: Path, yaml: Any) -> str:
         backs = support.get(str(weakest["id"]), [])
         if backs:
             suggestion_lines.append(
-                f"- 为 {weakest['id']} 安排变式练习补强证据（现有 {', '.join(r['path'] for r in backs)}）。"
+                f"- 为 {weakest['id']} 安排无辅助变式练习补强独立证据（现有 {', '.join(r['path'] for r in backs)}）。"
             )
         else:
             suggestion_lines.append(
@@ -316,7 +335,7 @@ def build_course_report(root: Path, yaml: Any) -> str:
     if not suggestion_lines:
         strongest = confirmed[0]["id"] if confirmed else "（无目标）"
         suggestion_lines.append(
-            f"- 所有目标均有 strong 定稿证据；建议推进下一课，并为 {strongest} 安排一次迁移任务保持掌握（依据：records/*.md）。"
+            f"- 所有目标均有 strong + independent 定稿证据；建议推进下一课，并为 {strongest} 安排一次迁移任务保持掌握（依据：records/*.md）。"
         )
     sections["下一步建议"] = suggestion_lines
 
@@ -335,7 +354,7 @@ def classify_readiness_metric(metric: str, value: Any, evidence: list[dict], rec
         record = records_by_path.get(path)
         if record is None:
             continue
-        if record["fm"].get("source_backed") is True:
+        if record["fm"].get("source_backed") is True and record["fm"].get("independence") == "independent":
             confirmed_paths.append(path)
         else:
             inferred_paths.append(path)
@@ -373,7 +392,8 @@ def build_exam_report(root: Path, yaml: Any) -> str:
     metric_lines: list[str] = []
     for metric in READINESS_METRICS:
         label, paths = classify_readiness_metric(metric, readiness.get(metric), evidence, records_by_path)
-        cite = f" — {', '.join(paths)}" if paths else " — 无记录支撑"
+        cite = (" — " + ", ".join(f"{p}（independence={records_by_path[p]['fm'].get('independence') or 'unknown'}）"
+                                 for p in paths)) if paths else " — 无记录支撑"
         metric_lines.append(f"- [{label}] {metric} = {readiness.get(metric)!r}{cite}")
     sections["已确认能力"] = (
         [line for line in metric_lines if line.startswith("- [confirmed]")]
@@ -410,6 +430,10 @@ def build_exam_report(root: Path, yaml: Any) -> str:
         if label in {"inferred", "self-reported"}:
             cite = f"（{', '.join(paths)}）" if paths else ""
             risk_lines.append(f"- {metric} 仅由{label}证据支撑{cite}。")
+    streak = recent_guided_records(records)
+    if streak:
+        risk_lines.append("- 近期缺乏独立验证证据：最近 3 条定稿记录均为 ai_guided（"
+                          + ", ".join(r["path"] for r in streak) + "）。安排一次无辅助限时复测。")
     if due:
         risk_lines.append(f"- {len(due)} 项复习已到期（{', '.join(item['target'] for item in due)}）。")
     if not risk_lines:

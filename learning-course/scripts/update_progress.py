@@ -18,6 +18,7 @@ if str(SHARED_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SHARED_SCRIPTS))
 
 from spaced_repetition import next_interval  # noqa: E402
+from validate_record import independence_error, recent_guided_records  # noqa: E402
 
 
 MASTERY_VALUES = {"unseen", "recognition", "application", "transfer", "uncertain"}
@@ -99,6 +100,9 @@ def require_finalized_evidence(
     requested: list[tuple[str, str]],
 ) -> tuple[str, str]:
     metadata = load_record_metadata(path, yaml)
+    issue = independence_error(metadata)
+    if issue:
+        raise SystemExit(issue)
     if metadata.get("record_schema") != 1 or metadata.get("assessment_status") != "finalized":
         raise SystemExit(f"evidence record must use record_schema 1 and assessment_status finalized: {path}")
     body = path.read_text(encoding="utf-8")
@@ -121,6 +125,10 @@ def require_finalized_evidence(
     missing = [f"{objective_id}={mastery}" for objective_id, mastery in requested if (objective_id, mastery) not in supported_pairs]
     if missing:
         raise SystemExit(f"evidence record does not support requested mastery updates: {', '.join(missing)}")
+    for _, mastery in requested:
+        issue = independence_error(metadata, mastery)
+        if issue:
+            raise SystemExit(issue)
     return evidence_type, evidence_strength
 
 
@@ -160,6 +168,7 @@ record_id: {record_id}
 attempted_at: {attempted_at}
 source_backed: false
 synthetic: false
+independence: {args.independence or 'null'}
 lesson: {args.lesson}
 evidence_type: null
 evidence_strength: null
@@ -195,6 +204,8 @@ def main() -> int:
     parser.add_argument("--status", choices=("draft", "active", "paused", "complete"))
     parser.add_argument("--feedback-file")
     parser.add_argument("--feedback-text")
+    parser.add_argument("--independence", choices=("independent", "with_hints", "ai_guided"),
+                        help="Assistance observed for captured feedback; unset stays unknown")
     parser.add_argument("--evidence-record", help="Existing path inside records/")
     parser.add_argument("--objective", action="append", help="OBJECTIVE_ID=MASTERY; may be repeated")
     parser.add_argument("--review", action="append", help="Objective ID to schedule for review")
@@ -216,6 +227,8 @@ def main() -> int:
         raise SystemExit("--performance requires at least one --review objective")
     if args.feedback_file and args.feedback_text:
         raise SystemExit("use only one of --feedback-file or --feedback-text")
+    if args.independence and not (args.feedback_file or args.feedback_text):
+        raise SystemExit("--independence applies only to new feedback; finalized records are immutable")
     if args.evidence_record and (args.feedback_file or args.feedback_text):
         raise SystemExit("use either a new feedback record or --evidence-record, not both")
     if (args.feedback_file or args.feedback_text) and args.objective:
@@ -279,6 +292,20 @@ def main() -> int:
             for item in objectives
         ):
             raise SystemExit("status complete requires evidence-backed mastery for every objective")
+        for objective in objectives:
+            supported = False
+            for evidence in objective["evidence"]:
+                if not isinstance(evidence, dict) or evidence.get("mastery") != objective["mastery"]:
+                    continue
+                path, _ = record_relative(root, evidence.get("record", ""))
+                try:
+                    require_finalized_evidence(path, yaml, [(objective["id"], objective["mastery"])])
+                except SystemExit:
+                    continue
+                supported = True
+                break
+            if not supported:
+                raise SystemExit(f"status complete requires independence-qualified evidence for {objective['id']}")
     if args.status:
         state["status"] = args.status
         changed = True
@@ -334,6 +361,18 @@ def main() -> int:
     print(state_path)
     if generated:
         print(record_path)
+    finalized = []
+    for path in (root / "records").glob("*.md"):
+        try:
+            metadata = load_record_metadata(path, yaml)
+        except SystemExit:
+            continue
+        if metadata.get("assessment_status") == "finalized":
+            finalized.append({"path": path.relative_to(root).as_posix(), "fm": metadata})
+    streak = recent_guided_records(finalized)
+    if streak:
+        print("WARNING: 近期缺乏独立验证证据；最近 3 条定稿记录均为 ai_guided。安排一次无辅助变式或迁移任务。 "
+              + ", ".join(r["path"] for r in streak))
     return 0
 
 

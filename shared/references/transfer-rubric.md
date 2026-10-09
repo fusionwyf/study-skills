@@ -18,7 +18,7 @@ recognition 认出
 
 - **recognition**：在选项中认出正确答案或"见过这个"。选择题、识别题、主观信心只能证明这一级。
 - **explanation**：用自己的话说清为什么、边界条件和反例。
-- **application**：独立完成熟悉形态的任务。
+- **application**：完成熟悉形态的任务；掌握更新至少要求 `with_hints`，报告确认独立能力仍要求 `independent`。
 - **variation**：换参数、换表象、换提问方向后仍能完成。
 - **transfer**：带进全新场景，自己选择方法并解释取舍。
 
@@ -33,3 +33,5 @@ recognition 认出
 - 只有弱证据时，保持当前难度并安排针对性诊断。
 - 不同表述的回忆、应用或迁移表现达标后再升级。
 - 证据冲突或缺失时标记 uncertain，不猜。
+
+独立性与掌握级的必要条件见 `record-contract.md` 和 `../schemas/record.schema.yaml` 的 `mastery_independence`。AI 引导下正确完成不等于独立能力；迁移复测应使用新任务，先作答后反馈。

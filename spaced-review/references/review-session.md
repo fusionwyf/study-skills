@@ -26,6 +26,8 @@
 
 `hint_used` 独立于 `performance` 记录：提示后做对是 medium，不是 good。
 
+按共享 record contract 记录 `independence`。没有点击页面提示不能证明未使用外部 AI；unknown 不自动补成 independent。`with_hints` 和 `ai_guided` 即使任务做对，也不拿独立 good 的延长间隔。
+
 ## Session 组织
 
 - 有时间边界：覆盖全部到期项，或到达时间盒即停；剩余项明确延期并说明原因。

@@ -14,6 +14,7 @@ vocabularies:
   assessment_status: [pending, finalized]
   record_type: [attempt, review]
   evidence_strength: [strong, medium, weak]
+  independence: [independent, with_hints, ai_guided]
   mastery: [unseen, recognition, application, transfer, uncertain]
   exam_mode: [diagnose, plan, drill, review, mock, cram, postmortem]
   metric: [accuracy, speed, coverage, stability]
@@ -30,8 +31,15 @@ common:
     synthetic: {type: bool}
   on_finalize_recommended:
     record_id: {type: str, pattern: "^[A-Z]{1,2}[0-9]{4}$"}
+    independence: {vocabulary: independence}
   optional:
     record_type: {vocabulary: record_type, default: attempt}
+    independence: {vocabulary: independence}
+
+mastery_independence:
+  recognition: [independent, with_hints, ai_guided]
+  application: [independent, with_hints]
+  transfer: [independent]
 
 types:
   course_lesson:

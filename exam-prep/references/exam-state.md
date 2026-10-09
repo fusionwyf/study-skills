@@ -85,6 +85,7 @@ metrics:
   - accuracy
 source_backed: true
 synthetic: false
+independence: independent   # 仅在该次尝试无 AI 辅助时使用；否则记录实际帮助
 ---
 # Attempt
 

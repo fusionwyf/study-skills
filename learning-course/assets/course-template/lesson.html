@@ -88,6 +88,40 @@ print(check_result(3))</code></pre></div>
           <div class="callout" data-kind="warning"><p class="callout-title">误区：把结论当成无条件规则。</p><p>说明误区为什么产生、什么条件会使它失效，以及如何自检。</p></div>
         </section>
 
+        <!-- 两种开放练习按主题选择；即时对照不自动推断掌握度。 -->
+        <section class="card" data-role="evidence teaching-target" data-question-id="teach-ai" data-answer-kind="open" aria-labelledby="teach-ai-title">
+          <h2 id="teach-ai-title">你来教 AI：纠正一个误解</h2>
+          <p>下面是模拟学生的错误理解，请指出错误、说明适用条件，并给一个反例。</p>
+          <blockquote>“只要背下结论，就可以在任何条件下套用；不需要解释为什么。”</blockquote>
+          <label for="teach-ai-answer">你会怎样纠正这个学生？</label>
+          <textarea id="teach-ai-answer"></textarea>
+          <button class="button" type="button" data-teaching-check hidden>保存纠正并查看对照要点</button>
+          <div class="answer review-only" data-role="answer-feedback" data-teaching-key>
+            <p>对照要点：说明规则的前提；指出遗漏条件会怎样；用一个反例检验误解。具体主题应替换成可核验的概念与反例。</p>
+            <p>这些是自检要点，开放回答仍由老师结合原始记录评估。</p>
+          </div>
+        </section>
+
+        <section class="card" data-role="evidence dialogue-practice" data-question-id="dialogue-1" data-answer-kind="open" aria-labelledby="dialogue-title">
+          <h2 id="dialogue-title">逐轮追问</h2>
+          <p>每轮先作答再继续。这里使用预写追问；提交后的原始回答会保留。</p>
+          <div data-dialogue-turn="1">
+            <label for="dialogue-answer-1" data-dialogue-prompt>先解释：你选择这条规则的依据是什么？</label>
+            <textarea id="dialogue-answer-1"></textarea>
+          </div>
+          <div data-dialogue-turn="2">
+            <label for="dialogue-answer-2" data-dialogue-prompt>如果去掉一个前提条件，你的结论还成立吗？给一个反例。</label>
+            <textarea id="dialogue-answer-2"></textarea>
+          </div>
+          <div data-dialogue-turn="3">
+            <label for="dialogue-answer-3" data-dialogue-prompt>换到一个新场景，你会先检查什么，再选择方法？</label>
+            <textarea id="dialogue-answer-3"></textarea>
+          </div>
+          <button class="button" type="button" data-dialogue-next hidden>保存本轮并继续</button>
+          <p data-dialogue-status role="status"></p>
+          <noscript><p>可以按顺序填写所有轮次，并把每轮问题和回答手动发给老师。</p></noscript>
+        </section>
+
         <section data-role="retrieval" aria-labelledby="retrieval-title">
           <h2 id="retrieval-title">合卷检索</h2>
           <p>合上上文，凭记忆回答：本课规则适用于什么条件？遇到变式时你会先检查哪一步？</p>

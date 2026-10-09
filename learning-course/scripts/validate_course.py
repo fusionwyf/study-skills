@@ -7,6 +7,7 @@ import argparse
 import re
 import subprocess
 import sys
+from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -22,6 +23,8 @@ EVIDENCE_STRENGTHS = {"weak", "medium", "strong"}
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RECORD_SCHEMA_PATH = REPO_ROOT / "shared" / "schemas" / "record.schema.yaml"
 SHARED_RECORD_VALIDATOR = REPO_ROOT / "shared" / "scripts" / "validate_record.py"
+if str(SHARED_RECORD_VALIDATOR.parent) not in sys.path:
+    sys.path.insert(0, str(SHARED_RECORD_VALIDATOR.parent))
 # Only used when shared/schemas/record.schema.yaml cannot be read; the load failure
 # itself is reported as an error, so the schema stays the source of truth.
 FALLBACK_VOCABULARIES = {
@@ -163,6 +166,7 @@ def validate_yaml_schema(
 ) -> None:
     try:
         import yaml  # type: ignore
+        from validate_record import independence_error
     except ImportError:
         errors.append("--strict-schema requires PyYAML")
         return
@@ -260,6 +264,12 @@ def validate_yaml_schema(
                 if target is not None:
                     metadata = record_metadata(target, yaml, label, errors)
                     if metadata is not None:
+                        issue = independence_error(metadata, evidence_mastery)
+                        if issue:
+                            if metadata.get("independence") is None:
+                                warnings.append(f"{label}: legacy independence unknown; {issue}; arrange independent verification")
+                            else:
+                                errors.append(f"{label}: {issue}")
                         if metadata.get("assessment_status") == "finalized":
                             if is_legacy_record(metadata):
                                 print(
@@ -334,7 +344,82 @@ def validate_yaml_schema(
                             errors.append(f"{label} references a different objective")
 
 
+class ComponentParser(HTMLParser):
+    """Collect element structure for the optional open-practice contracts."""
+    VOID_TAGS = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"}
+
+    def __init__(self):
+        super().__init__()
+        self.nodes = []
+        self.stack = []
+
+    def handle_starttag(self, tag, attrs):
+        node = {"tag": tag, "attrs": dict(attrs), "children": []}
+        self.nodes.append(node)
+        if self.stack:
+            self.stack[-1]["children"].append(node)
+        if tag not in self.VOID_TAGS:
+            self.stack.append(node)
+
+    def handle_startendtag(self, tag, attrs):
+        self.handle_starttag(tag, attrs)
+        if tag not in self.VOID_TAGS:
+            self.handle_endtag(tag)
+
+    def handle_endtag(self, tag):
+        for index in range(len(self.stack) - 1, -1, -1):
+            if self.stack[index]["tag"] == tag:
+                del self.stack[index:]
+                break
+
+
+def descendants(node):
+    for child in node["children"]:
+        yield child
+        yield from descendants(child)
+
+
+def validate_open_components(lesson: Path, body: str, errors: list[str]) -> None:
+    parser = ComponentParser()
+    parser.feed(body)
+    tasks = [n for n in parser.nodes if set((n["attrs"].get("data-role") or "").split()) & {"teaching-target", "dialogue-practice"}]
+    question_ids = []
+    for task in tasks:
+        attrs = task["attrs"]
+        label = f"{lesson.name}: {attrs.get('data-question-id') or 'open component'}"
+        question_ids.append(attrs.get("data-question-id"))
+        if not attrs.get("data-question-id") or attrs.get("data-answer-kind") != "open":
+            errors.append(f"{label} requires data-question-id and data-answer-kind=open")
+        children = list(descendants(task))
+        fields = [n for n in children if n["tag"] == "textarea"]
+        labels = {n["attrs"].get("for") for n in children if n["tag"] == "label"}
+        if not fields or any(not f["attrs"].get("id") or f["attrs"]["id"] not in labels for f in fields):
+            errors.append(f"{label} requires labeled textarea answers")
+        roles = (attrs.get("data-role") or "").split()
+        if "dialogue-practice" in roles:
+            turns = [n for n in children if "data-dialogue-turn" in n["attrs"]]
+            ids = [n["attrs"].get("data-dialogue-turn") for n in turns]
+            if not ids or any(not i for i in ids) or len(ids) != len(set(ids)):
+                errors.append(f"{label} requires unique nonempty data-dialogue-turn ids")
+            for turn in turns:
+                contents = list(descendants(turn))
+                if sum(n["tag"] == "textarea" for n in contents) != 1 or not any("data-dialogue-prompt" in n["attrs"] for n in contents):
+                    errors.append(f"{label} each turn requires a prompt and one textarea")
+                if turn["attrs"].get("data-guidance") not in {None, "with_hints", "ai_guided"}:
+                    errors.append(f"{label} invalid data-guidance")
+            if not any(n["tag"] == "button" and "data-dialogue-next" in n["attrs"] for n in children):
+                errors.append(f"{label} missing data-dialogue-next button")
+            if not any("data-dialogue-status" in n["attrs"] for n in children):
+                errors.append(f"{label} missing data-dialogue-status")
+        if "teaching-target" in roles:
+            if not any(n["tag"] == "button" and "data-teaching-check" in n["attrs"] for n in children) or not any("data-teaching-key" in n["attrs"] for n in children):
+                errors.append(f"{label} requires data-teaching-check button and data-teaching-key")
+    if len(question_ids) != len(set(question_ids)):
+        errors.append(f"{lesson.name}: duplicate open-practice question ids")
+
+
 def validate_pedagogy(lesson: Path, body: str, errors: list[str], warnings: list[str]) -> None:
+    validate_open_components(lesson, body, errors)
     objective = data_value(body, "objective")
     evidence = data_value(body, "evidence")
     if not objective or not has_data_role(body, "objective"):

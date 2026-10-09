@@ -77,6 +77,7 @@ assessment_status: finalized
 lesson: 1
 evidence_type: application
 evidence_strength: strong
+independence: independent
 supported_objectives:
   - id: {objective}
     mastery: {mastery}

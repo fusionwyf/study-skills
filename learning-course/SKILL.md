@@ -92,10 +92,12 @@ python ../shared/scripts/validate_sources.py <course-dir>
 HTML 的“复制学习记录”按钮只汇总原始答案、检查次数、提示使用、即时题目判定和学习者反思，不推断 mastery。学习者把结构化 Markdown 粘贴给 Agent 后使用两阶段记录：
 
 1. 使用 `scripts/update_progress.py <course-dir> --lesson <N> --feedback-file <file>` 捕获原始反馈；生成的 record 保持 `assessment_status: pending`。
-2. 在 record 中区分可观察行为和自我报告，填写 evidence type、strength、supported objectives，并设为 `assessment_status: finalized`。
+2. 在 record 中区分可观察行为和自我报告，填写 evidence type、strength、independence、supported objectives，并设为 `assessment_status: finalized`。独立性字段与升级边界读取 `../shared/references/record-contract.md`；页面反馈包含多轮回答时逐轮保留问题与原话。
 3. 使用 `--evidence-record <record> --objective <ID=MASTERY>` 更新状态。objective 必须已经存在，record 必须明确支持该更新。
 
 完成条件：原始反馈未被改写，finalized record 不含待判断占位符，状态中的 evidence type、strength 和 mastery 与 record frontmatter 一致。除 `uncertain` 外，修改 mastery 必须引用 finalized record。复习间隔只由 `update_progress.py` 的当前算法管理，主文件不复制算法。
+
+最近 3 条定稿记录连续为 `ai_guided` 时提醒近期缺乏独立验证，下一步安排无辅助变式或迁移任务。这是补证信号，不能据此断言能力下降；长期比较应使用难度、允许工具和评分标准可比的独立测试。
 
 ## Recovery
 

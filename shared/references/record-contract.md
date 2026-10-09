@@ -34,7 +34,22 @@ synthetic: false             # 任务是否为 Agent 合成
 ```yaml
 record_id: L0001             # ^[A-Z]{1,2}[0-9]{4}$；前缀约定：L=课程，R=考试，RV=复习
 record_type: attempt         # attempt | review，默认 attempt
+independence: independent    # independent | with_hints | ai_guided
 ```
+
+## 独立性与证据边界
+
+新记录定稿时填写 `independence`，独立于 `source_backed`（任务来源）和 `evidence_strength`（证据强度）：
+
+- `independent`：该次尝试没有 AI 提示、代答或关键步骤引导；学习者自行完成。
+- `with_hints`：给过方向或局部提示，关键工作仍由学习者完成。
+- `ai_guided`：AI 提供关键推理、实质性步骤或答案，学习者在其引导下完成。
+
+依据可观察过程填写，并在正文区分页面观察、学习者自述和 Agent 判断。`hint_used: false` 只说明没有记录到提示，不自动证明 independent；`hint_used: true` 与 independent 不相容。多轮回答保留逐轮问题、原话、提示及顺序；同一条记录使用支持目标的尝试中最低的独立性。需要为独立复测单独记证据时新建记录。
+
+mastery 限制以 schema 的 `mastery_independence` 为准：transfer 必须 independent；application 至少 with_hints 或 independent；ai_guided 最多 recognition。独立性达标是必要条件，仍须任务与表现支持相应级别，不能自动升级。
+
+旧记录未填写时表示 unknown，不猜测、不修改定稿历史。它仍可用于阅读和历史状态校验（警告），但不能支撑新的 application/transfer 更新；新增一次可核验尝试来补证。报告对 independent + strong 才确认独立能力，其余证据注明辅助程度或未知。
 
 ## 类型专属字段
 

@@ -60,6 +60,8 @@ class StudyReportTestCase(unittest.TestCase):
 class CourseReportTests(StudyReportTestCase):
     def test_report_has_all_sections_and_confirms_strong_objective(self) -> None:
         course = self.copy_course()
+        record = course / "records" / "0001-example-feedback.md"
+        record.write_text(record.read_text(encoding="utf-8").replace("evidence_strength: strong", "evidence_strength: strong\nindependence: independent"), encoding="utf-8")
         result = run_script(BUILD_REPORT, course)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         for section in SECTION_TITLES:
@@ -96,6 +98,8 @@ class CourseReportTests(StudyReportTestCase):
 class ExamReportTests(StudyReportTestCase):
     def test_readiness_classification_and_error_log_parsing(self) -> None:
         exam = self.copy_exam()
+        record = exam / "records" / "R0001.md"
+        record.write_text(record.read_text(encoding="utf-8").replace("source_backed: true", "source_backed: true\nindependence: independent"), encoding="utf-8")
         result = run_script(BUILD_REPORT, exam)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         for metric in ("accuracy", "speed", "coverage", "stability"):

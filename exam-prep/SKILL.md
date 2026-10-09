@@ -87,6 +87,8 @@ python scripts/update_exam.py <exam-dir> --sync-materials
 
 区分 agent_observed_issue、suggested_causes 和 user_confirmed_cause；Agent 可以建议，用户最终定性。记录结构读取 references/review-and-cram.md。
 
+新尝试记录定稿时按共享 record contract 填写 `independence`；readiness 是该条件下的测量，不把有 AI 引导的分数解释成无辅助考试能力。独立复测另建记录，保留历史。
+
 review 发现系统性前置漏洞，或学习者带着补课证据返回时，读取 `../shared/references/learning-handoff.md` 并内部使用共享交接脚本。向学习者说明补课目标、边界与返回条件，再引导进入 `$learning-course`；交接本身不更新 readiness。
 
 ## Cram

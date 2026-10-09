@@ -45,6 +45,20 @@
 
 提示控件使用 `data-hint`，使反馈导出可以记录是否使用提示。答案、解释和错误原因必须在 DOM 中可访问，不能只靠颜色表达。
 
+## 学习者教 AI
+
+使用 `data-role="evidence teaching-target"`、稳定的 `data-question-id` 和 `data-answer-kind="open"`。标注模拟学生的错误理解，让学习者输入纠正、条件与反例。文本域需关联 label；对照要点用 `data-teaching-key`，保存按钮用 `data-teaching-check`。
+
+复用模板实现：先留下原始回答，点击按钮后锁定回答并显示对照要点。页面只提供自检依据，开放回答由 Agent 评估；不做关键词匹配评分。无脚本时问题、输入区与要点可读，学生版打印隐藏要点，审阅版显示。
+
+## 多轮追问
+
+使用 `data-role="evidence dialogue-practice"` 和 `data-answer-kind="open"`；每个轮次是一个 `data-dialogue-turn="1"` 容器，包含 `data-dialogue-prompt` 的 label 及关联 textarea。继续按钮标 `data-dialogue-next`，状态区标 `data-dialogue-status`。
+
+按 lesson.html 的样例预写“解释依据 → 条件/反例 → 新场景”的追问，数量由目标决定。普通问题不自动算提示；包含方向提示时标 `data-guidance="with_hints"`，提供关键推理步骤时标 `data-guidance="ai_guided"`。当前模板按固定顺序展示，不连接 AI 服务或自适应生成追问。
+
+JavaScript 每次等本轮非空回答后保存原话、锁定文本域，再显示下一问；允许中途复制，已提交/未提交和已展示状态都纳入记录。无脚本与打印时各轮可见，可顺序填写并手动提交。课件外聊天的多轮教学也按相同问题/原话/帮助/顺序保存记录，不因载体不同丢失证据。
+
 ## 学习记录复制
 
 当 `data-feedback="required"` 时，提供 `data-copy-feedback` 按钮。`course.js` 将以下内容汇总为结构化 Markdown：
@@ -54,8 +68,12 @@
 - 检查次数与提示使用情况
 - 有标准答案时的即时判定
 - 学习者填写的困惑、解释或反思
+- 每题辅助情况的学习者自述与页面观察（缺失为 unknown，不根据未点击提示猜为独立）
+- 多轮追问的各轮问题、原话、展示与提交状态；教 AI 练习是否在作答后查看要点
 
 浏览器不写回课程文件，也不生成 mastery 建议。学习者把记录粘贴给 Agent，Agent 原样保存到 `records/`。
+
+`course.js` 为每题补充帮助情况选择框；`data-hint` 会记录已用提示，`data-guidance="ai_guided"` 标记实质引导。观察到帮助后选择框不会允许“独立完成”，但浏览器看不到外部 AI 帮助，因此输出仍保留自述标签。Agent 按 `../../shared/references/record-contract.md` 定稿 independence。
 
 ## 公式
 

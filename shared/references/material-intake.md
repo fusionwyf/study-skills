@@ -41,6 +41,22 @@
 
 前两类可以当作来源事实引用；后两类引用时必须保留标记。
 
+## 材料转化
+
+登记与摘录完成后，按当前学习目标选择一种转化。先确定覆盖范围、难度和可检查成果；保留题干、答案与评分依据的分离。生成物与逐字抽取物使用不同来源标记。
+
+| 来源 | 转化 | 输出位置 | 追踪要求 |
+|---|---|---|---|
+| 教材章节 | 抽取原题，或生成基础/变式/迁移练习 | 考试包 `question-bank/`；课程包 lesson 或 `reference/` | 原题 `source: S###`；生成题 `synthetic: true`、`source: synthetic-from-S###`，附摘录位置 |
+| 论文 | 论证结构：问题、主张、证据、假设、限制、反例 | 课程 `sources/S###/claims.md`；考试 `source-materials/S###/claims.md` | 每条 claim 回指 excerpt 的章节/页码，推断单独标记；论文没有报告的结果记 unverified |
+| 讲义 | 检索卡片或按需导出 Anki TSV | 课程 `reference/`；考试 `exports/` | 生成卡片注明 `synthetic-from-S###` 和位置，答案核验原文；不宣称已导入 Anki |
+| 真题 | 参数、表征或条件变化的变式 | 考试 `question-bank/`；课程 lesson 或 `reference/` | `synthetic: true`、`source: synthetic-from-Q####`，保存原题到 S### 的来源链 |
+| 任意材料 | 模拟口试题与逐轮追问、评分要点 | 考试 `drills/`；课程 lesson 的 `dialogue-practice` | 题目/评分点引用 S### 与位置，预写追问和生成情境保留合成状态 |
+
+教材/真题可先用 `python exam-prep/scripts/build_question_bank.py <material.md> <exam-dir> --output <bank.jsonl> --source-id S###` 从 Markdown/text 抽题，再人工核对原文并补评分点。PDF 先用可用解析工具或人工摘录转成文本；脚本不直接解析 PDF。`--source-id S###` 只适用于原文抽取，不为生成题伪造原始来源。
+
+完成标准：覆盖当前目标，每个产物都能回查来源或明确标记合成/未验证，答案已对照原文核验，输出放在对应包的目录。转化材料不是掌握证据；后续仍让学习者先尝试再评估。
+
 ## 摘录纪律
 
 - 只摘当前任务需要的章节；大文件保留原文，按需摘录。

@@ -120,6 +120,7 @@ record_id: L0003
 attempted_at: 2026-01-15
 source_backed: false
 synthetic: false
+independence: null           # 定稿前按实际过程填写，不能从正确答案猜测
 lesson: 3
 evidence_type: application
 evidence_strength: strong
@@ -152,6 +153,7 @@ supported_objectives:
 
 - 新反馈先以 `assessment_status: pending` 保存，frontmatter 中的 evidence 字段保持 `null` 或空列表。Agent 完成可观察行为和判断后再设为 `finalized`。finalized record 中不得保留“待判断”“待补充”等占位内容；原始反馈正文保持不变。
 - `supported_objectives` 是 mastery 更新的唯一依据：除设为 `uncertain` 外，更新 objective 的 mastery 必须引用一条 finalized record，且该 record 必须在 `supported_objectives` 中明确列出对应 objective 和 mastery。
+- record 的 independence 同时满足共享契约的掌握级要求才可用于新更新；未知的旧记录只保留历史读取与警告。新的 complete 状态也要为每个目标提供符合独立性要求的证据。
 - 旧记录兼容：缺少新增公共字段（如 `record_id`、`attempted_at`）的已定稿旧记录仍然有效，validator 只产生警告，不做自动迁移。
 
 ## Phase 转换

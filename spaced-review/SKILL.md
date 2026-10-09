@@ -37,6 +37,7 @@ disable-model-invocation: true
      --review-kind <retrieval|explanation|variation|transfer|error_discrimination> \
      --performance <good|medium|poor> --hint-used <true|false> \
      --evidence-strength <strong|medium|weak> \
+     --independence <independent|with_hints|ai_guided> \
      --raw-answer "<学习者原话>" [--next-action "<下一步>"]
 
    # 考试包
@@ -44,10 +45,11 @@ disable-model-invocation: true
      --review-kind <retrieval|explanation|variation|transfer|error_discrimination> \
      --performance <good|medium|poor> --hint-used <true|false> \
      --evidence-strength <strong|medium|weak> \
+     --independence <independent|with_hints|ai_guided> \
      --raw-answer "<学习者原话>" [--next-action "<下一步>"]
    ```
 
-   完成标准：脚本确认记录已写入且队列已更新；延期项不调用本步，直接在队列中顺延。
+   按实际过程填写 independence；使用过提示不能标为 independent。完成标准：脚本确认记录已写入且队列已更新；延期项不调用本步，直接在队列中顺延。旧直接调用可省略 independence 并保留 unknown，不能据此推断独立能力。
 
 5. **验证**：
 

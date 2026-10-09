@@ -8,6 +8,8 @@
 - 每个重要结论都引用具体 record 或来源；没有证据就说 unknown。
 - 区分四类信息：confirmed（有定稿强证据）、inferred（依赖推断或弱证据）、unknown（无证据）、self-reported（仅学习者自述）。
 - 完成活动不等于掌握：报告同时呈现活动量与证据量。
+- 独立能力的 confirmed 要有 strong + independent 课程证据；考试 readiness 的 confirmed 要有 source-backed + independent 记录。with_hints、ai_guided 和缺失 independence 的记录保留为 inferred，缺失表示 unknown，不推测独立完成。
+- 最近 3 条定稿记录按 attempted_at、record_id、路径排序后均为 ai_guided 时提示补独立验证；这是证据缺口，不是能力退化的因果证明。
 
 ## 工作流程
 

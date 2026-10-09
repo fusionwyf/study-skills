@@ -4,7 +4,7 @@
 Reads shared/schemas/record.schema.yaml and validates a record's YAML frontmatter
 against the unified contract shared by learning-course, exam-prep and
 spaced-review. Field definitions live only in the schema file; this script
-contains no field knowledge of its own.
+loads field vocabularies and mastery-independence policy from that schema.
 
 Usage:
     python shared/scripts/validate_record.py <record.md> [--type TYPE]
@@ -139,7 +139,8 @@ class Checker:
             else:
                 self._check(name, spec, fm[name])
         for name, spec in (group.get("optional") or {}).items():
-            if name in fm and fm[name] is not None:
+            # Finalize-recommended fields have already been checked above.
+            if name in fm and fm[name] is not None and not (finalized and name in (group.get("on_finalize_recommended") or {})):
                 self._check(name, spec, fm[name])
         one_of = group.get("one_of") or {}
         if one_of:
@@ -186,6 +187,15 @@ class Checker:
             "one_of": tspec.get("one_of"),
         }
         self.check_group(type_group, fm, finalized)
+        if fm.get("independence") == "independent" and fm.get("hint_used") is True:
+            self.errors.append("independent evidence cannot have hint_used true")
+        if finalized and tname == "course_lesson" and fm.get("independence") is not None:
+            supported = fm.get("supported_objectives")
+            for objective in supported if isinstance(supported, list) else []:
+                if isinstance(objective, dict):
+                    issue = independence_error(fm, objective.get("mastery"), self.schema)
+                    if issue:
+                        self.errors.append(issue)
         return tname
 
 
@@ -204,6 +214,56 @@ def contract_errors(metadata: dict) -> list[str]:
     checker = Checker(schema)
     checker.run(metadata, "auto")
     return list(checker.errors)
+
+
+def independence_error(metadata: dict, mastery: str | None = None, schema: dict | None = None) -> str | None:
+    """Check assistance against the shared policy; missing means unknown.
+
+    Legacy records remain readable, but unknown independence cannot authorize
+    new application/transfer updates. Callers validating historical state can
+    surface that missing field as a warning instead of rewriting old records.
+    """
+    if schema is None:
+        schema = yaml.safe_load(SCHEMA_PATH.read_text(encoding="utf-8"))
+    independence = metadata.get("independence")
+    if mastery is not None and not isinstance(mastery, str):
+        return f"invalid mastery: {mastery!r}"
+    if independence is not None and independence not in schema["vocabularies"]["independence"]:
+        return f"invalid independence: {independence!r}"
+    if independence == "independent" and metadata.get("hint_used") is True:
+        return "independent evidence cannot have hint_used true"
+    allowed = schema.get("mastery_independence", {}).get(mastery)
+    if allowed and independence not in allowed:
+        if mastery == "recognition" and independence is None:
+            return None
+        return f"mastery {mastery} requires independence in {allowed}; got {independence or 'unknown'}"
+    return None
+
+
+def recent_guided_records(records: list[dict]) -> list[dict]:
+    """Return a three-record guided streak, ordered by attempt date then id.
+
+    Pending records are excluded by callers. Undated legacy records sort first;
+    the reminder describes missing practice evidence, not cognitive decline.
+    """
+    def key(record):
+        fm = record["fm"]
+        value = fm.get("attempted_at")
+        moment = None
+        try:
+            moment = dt.datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        except (ValueError, TypeError):
+            pass
+        if moment is None:
+            timestamp = float("-inf")
+        else:
+            if moment.tzinfo is None:
+                moment = moment.replace(tzinfo=dt.timezone.utc)
+            timestamp = moment.timestamp()
+        return timestamp, str(fm.get("record_id") or record["path"]), record["path"]
+
+    latest = sorted(records, key=key)[-3:]
+    return latest if len(latest) == 3 and all(r["fm"].get("independence") == "ai_guided" for r in latest) else []
 
 
 def main() -> int:

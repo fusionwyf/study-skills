@@ -13,9 +13,11 @@ Use AI for explanation, practice, feedback, and review while checking independen
 Design and run structured study courses with a full learning loop: diagnose → design → teach → assess → review. Features:
 
 - Schema v3 state management (`course.yaml`) with finalized-record mastery tracking
+- Assistance-aware evidence: `transfer` requires independent performance; `application` permits independent or hinted performance; AI-guided work supports recognition only
 - Bloom-aligned cognitive levels and checkpoint system
 - Spaced review queue with performance-adjusted intervals
 - Interactive HTML lesson template with KaTeX math rendering, dark mode, keyboard nav
+- Learner-teaches-AI corrections and sequential dialogue practice, with every prompt and raw answer included in copied learning records
 - Python scripts: `init_course.py`, `validate_course.py`, `update_progress.py`, `build_index.py`, `export_pdf.py`
 
 ### exam-prep
@@ -37,6 +39,7 @@ Run due spaced-repetition review sessions against an existing course or exam pac
 - Due-session execution: collects due `review_queue` entries from `course.yaml` or `exam.yaml` and plans one time-boxed session
 - Five review task types: retrieval, explanation, variation, transfer, and error discrimination (first review retrieves; poor performance triggers error discrimination)
 - Record-linked interval updates: every interval change traces to a finalized review record (`records/RV####-*.md`) under the shared record contract
+- Observed independence is recorded separately from task provenance; hinted or AI-guided success does not extend the review interval
 - Python scripts: `build_review_session.py`, `complete_review.py`, plus the shared `spaced_repetition.py` interval algorithm
 
 ## Study Router and Progress Reports
@@ -44,7 +47,8 @@ Run due spaced-repetition review sessions against an existing course or exam pac
 `$study` recommends one of the four learning experiences. Progress queries run `study/scripts/build_report.py` directly, then explain the findings:
 
 - Reads existing state, record frontmatter, lessons, question bank, and error log; preserves learning state
-- Four-way labeling of every finding: confirmed (strong finalized evidence) / inferred / unknown / self-reported
+- Four-way labeling of every finding: confirmed (independence-qualified finalized evidence) / inferred / unknown / self-reported
+- Assisted and unknown-independence records stay visible without confirming independent ability; three consecutive AI-guided attempts prompt an independent check
 - Evidence coverage vs activity: objectives-with-records or source-backed readiness next to raw activity counts
 - Due-review surfacing and deterministic, citation-backed next-step suggestions
 - Prints reports by default; writes only under the package's `exports/` when saving is requested
@@ -55,6 +59,7 @@ Run due spaced-repetition review sessions against an existing course or exam pac
 Course and exam workflows call these services internally:
 
 - **Source registration:** `shared/references/material-intake.md` and `shared/scripts/register_source.py`, `validate_sources.py`. Reliability tiers, verbatim excerpts, sourced/unverified/contested claims, and synthetic marking keep questions and lessons traceable to `S###`. Exam packages keep root `SOURCES.md` + `source-materials/`; course and standalone workspaces use `sources/SOURCES.md` + `sources/<source_id>/`.
+- **Material transformation:** the intake protocol covers extracted vs generated exercises, paper argument maps, retrieval cards, variants, and oral-exam prompts, using each package's existing output layout and preserving source/synthetic markers.
 - **Bounded handoffs:** `shared/references/learning-handoff.md` and `shared/scripts/create_handoff.py`, `complete_handoff.py`, `validate_handoffs.py`. Exam review or course continuation can turn a finalized gap record into a mini-course with include/exclude boundaries and verifiable return conditions. The handoff artifact links the packages; each maintains its own state. Learners choose the proposed lesson without activating an infrastructure skill.
 
 Package-based skills share the same infrastructure: unified record schemas in `shared/schemas/`, the human-readable record contract in `shared/references/record-contract.md`, and the generic validator `shared/scripts/validate_record.py` used by package validators.
@@ -78,7 +83,7 @@ Activate a skill explicitly by name:
 
 To add a PDF to an existing package, ask its `$learning-course` or `$exam-prep` workflow. Source intake and cross-package handoffs are internal operations. All five entrypoints remain explicit-only (`disable-model-invocation: true` and `allow_implicit_invocation: false`).
 
-The former source, report, and handoff skills no longer have `SKILL.md` or UI metadata. For direct script integrations, use the new paths above; package formats are unchanged.
+The former source, report, and handoff skills no longer have `SKILL.md` or UI metadata. For direct script integrations, use the new paths above. Course schema v3, exam schema v2, and record schema v1 are retained with an additive `independence` field (`independent`, `with_hints`, `ai_guided`). Missing independence remains unknown: historical state validates with warnings and records are never auto-migrated, but new application/transfer updates and course completion require qualifying evidence.
 
 ## Validation
 

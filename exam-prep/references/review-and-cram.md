@@ -54,6 +54,8 @@ Scores are working indicators, not predicted exam scores.
 
 Prefer ranges or conservative updates when data is limited. A readiness update changes only metrics listed in a finalized record and cites that record through `readiness_evidence`. High confidence requires source-backed questions and source-backed readiness evidence.
 
+Record the attempt's actual `independence` under the shared record contract. Compare timed scores under the same assistance conditions; guided practice is useful training but does not prove unaided exam performance. Progress reports label assisted or unknown-independence measurements inferred; use a separate independent attempt to verify them.
+
 ## Mock review
 
 After a mock, report:
