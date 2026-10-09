@@ -4,7 +4,7 @@
 # 都遵循本契约。字段定义全仓库唯一，validator 从本文件读取。
 #
 # 消费方：exam-prep（SOURCES.md）、learning-course（课程来源区块）、
-# source-grounded-study（Phase 2 的注册与追踪流程）。
+# shared/scripts/register_source.py 与 validate_sources.py（内部注册与追踪流程）。
 
 schema: source-registry
 version: 1

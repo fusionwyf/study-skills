@@ -10,9 +10,9 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CREATE = ROOT / "learning-handoff" / "scripts" / "create_handoff.py"
-COMPLETE = ROOT / "learning-handoff" / "scripts" / "complete_handoff.py"
-VALIDATE = ROOT / "learning-handoff" / "scripts" / "validate_handoffs.py"
+CREATE = ROOT / "shared" / "scripts" / "create_handoff.py"
+COMPLETE = ROOT / "shared" / "scripts" / "complete_handoff.py"
+VALIDATE = ROOT / "shared" / "scripts" / "validate_handoffs.py"
 EXAMPLE_COURSE = ROOT / "learning-course" / "assets" / "example-course"
 EXAMPLE_EXAM = ROOT / "exam-prep" / "assets" / "example-exam"
 

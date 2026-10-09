@@ -2,7 +2,7 @@
 """Validate the handoffs/ directory of a package against handoff.schema.yaml.
 
 Usage:
-    python scripts/validate_handoffs.py <package-dir>
+    python shared/scripts/validate_handoffs.py <package-dir>
 
 An absent handoffs/ folder is valid (zero handoffs). Each handoff file is
 checked for: required frontmatter fields, nested from/to blocks with all

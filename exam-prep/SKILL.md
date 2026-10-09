@@ -50,6 +50,19 @@ disable-model-invocation: true
 
 优先使用用户给定资料，不把 Agent 生成题当作默认来源。把资料保存或登记到 source-materials/ 和 SOURCES.md。从资料中抽取题目、处理来源优先级或生成变式题时读取 references/question-handling.md，并使用 scripts/build_question_bank.py 生成题库草稿。
 
+## 注册来源
+
+学习者提供 PDF、教材、讲义、真题或网页时，读取 `../shared/references/material-intake.md`，在当前备考流程内登记。以下命令从 `exam-prep/` 目录执行；目标包路径使用绝对路径：
+
+~~~text
+python ../shared/scripts/register_source.py <exam-dir> \
+  --title "<标题>" --type past_paper --reliability unknown --raw <原文件路径>
+python ../shared/scripts/validate_sources.py <exam-dir>
+python scripts/update_exam.py <exam-dir> --sync-materials
+~~~
+
+按实际资料选择 type 和 reliability；网页无本地文件时省略 `--raw`。完成条件：根目录 `SOURCES.md` 已登记 `S###`，所需摘录与主张可回查，题目 source 引用该 id，materials 已同步且考试包验证通过。
+
 ## 题型处理
 
 选择题、填空题和短答题可以使用 assets/drill-template/index.html 生成交互练习、计时、隐藏答案和复制记录。
@@ -74,6 +87,8 @@ disable-model-invocation: true
 
 区分 agent_observed_issue、suggested_causes 和 user_confirmed_cause；Agent 可以建议，用户最终定性。记录结构读取 references/review-and-cram.md。
 
+review 发现系统性前置漏洞，或学习者带着补课证据返回时，读取 `../shared/references/learning-handoff.md` 并内部使用共享交接脚本。向学习者说明补课目标、边界与返回条件，再引导进入 `$learning-course`；交接本身不更新 readiness。
+
 ## Cram
 
 进入 cram 后，以考前速记为主，不展开系统课程。如果用户要求补知识，只围绕高频题型和当前错题补最短路径，不创建 learning-course 任务。cram 输出结构读取 references/review-and-cram.md。
@@ -88,6 +103,8 @@ disable-model-invocation: true
 - 记录字段契约、record 校验报错：读取 ../shared/references/record-contract.md。
 - 进入 diagnose、plan、drill、review、mock、cram 或 postmortem：读取 references/workflows.md 的对应分支。
 - 导入资料、抽题、生成变式题或处理题型：读取 references/question-handling.md。
+- 注册来源、摘录、主张追踪或资料冲突：读取 ../shared/references/material-intake.md。
+- review 中创建或接回跨包补课：读取 ../shared/references/learning-handoff.md。
 - 复盘错题、估算 readiness、模考或冲刺：读取 references/review-and-cram.md。
 - 生成交互选择、填空、短答或计时练习：复制并改造 assets/drill-template/index.html。
 - HTML drill 包含公式时：读取 references/math-rendering.md，并保留无 KaTeX 时的纯文本后备。

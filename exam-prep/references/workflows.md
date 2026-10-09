@@ -36,7 +36,7 @@ Completion criterion: every attempted question has a record, feedback, and next 
 
 Completion criterion: observed issue and confirmed cause remain separate, resolved items have later-attempt evidence, and the next check is scheduled.
 
-漏洞需要系统补课时，通过 `$learning-handoff` 建立交接，保持两个包独立。
+漏洞需要超出当前题型的系统补课时，读取 `../../shared/references/learning-handoff.md`，说明目标、include/exclude 和返回条件，学习者选择补课后内部运行共享交接脚本。给出 `$learning-course` 的目标目录与交接文件路径；不要求激活交接 skill。返回证据沿同一协议接回，保持两个包独立。
 
 ## Mock
 

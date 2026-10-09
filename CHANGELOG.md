@@ -8,6 +8,14 @@ All notable changes to this project are documented in this file.
 
 - **ai-study skill.** Adds a reusable AI-assisted learning loop centered on independent attempts, graduated tutoring, source checks, and unaided transfer evidence; includes long-term review and optional Obsidian workflows. The `$study` router and skill index now point to it.
 
+### Changed
+
+- **Four learning experiences plus the study router.** Source intake and bounded handoffs are internal package operations; their former skill entrypoints and UI metadata are removed. Remaining entrypoints retain explicit-only invocation.
+- **Shared source intake.** `register_source.py`, `validate_sources.py`, and `material-intake.md` move from `source-grounded-study/` to `shared/`. Course and exam workflows register sources directly; exam materials are re-synced after intake.
+- **Progress queries in study.** `build_report.py` moves from `study-report/scripts/` to `study/scripts/`; the reporting protocol becomes `study/references/progress-report.md`. The router directly generates and interprets reports while preserving learning state.
+- **Internal handoffs.** The handoff protocol becomes `shared/references/learning-handoff.md`, and its three scripts move to `shared/scripts/`. Exam review and course continuation handle bounded remediation and evidence return internally; cross-package learning still uses explicitly activated experience skills.
+- Existing package schemas and script behavior are preserved. Direct callers must update the removed script paths; regression tests use the new locations.
+
 ## [0.2.2] - 2026-08-25
 
 Recovery and evidence-contract hardening: atomic registry/report writes, rollback coverage, and shared record-contract enforcement for handoffs.

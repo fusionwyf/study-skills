@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build a read-only progress report for a study package.
 
-Usage (see study-report/SKILL.md):
+Usage (from the study skill directory; see study/references/progress-report.md):
     python scripts/build_report.py <package-dir> [--out REPORT.md]
 
 Strictly read-only: derives everything from course.yaml/exam.yaml, records/

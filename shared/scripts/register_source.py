@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Register a study source into a package's SOURCES.md registry.
 
-Usage (see source-grounded-study/SKILL.md step 2):
-    python scripts/register_source.py <package-dir> \
+Usage (from the repository root; see shared/references/material-intake.md):
+    python shared/scripts/register_source.py <package-dir> \
       --title "<标题>" --type <textbook|paper|webpage|lecture_notes|past_paper|syllabus|user_notes|other> \
       --reliability <official|course|user|synthetic|unknown> [--raw <原文件路径>] [--coverage "<notes>"]
 
@@ -30,7 +30,7 @@ TABLE_INTRO = "# Sources\n"
 TABLE_HEADER = "| source_id | title | type | registered_at | reliability | coverage |"
 TABLE_SEPARATOR = "| --- | --- | --- | --- | --- | --- |"
 SOURCE_ID_RE = re.compile(r"^S(\d{3})$")
-# Fallbacks mirroring SKILL.md; shared/schemas/source.schema.yaml stays the source of truth.
+# Fallbacks for environments without PyYAML; the schema is the source of truth.
 FALLBACK_VOCABULARIES = {
     "source_type": ["textbook", "paper", "webpage", "lecture_notes", "past_paper", "syllabus", "user_notes", "other"],
     "reliability": ["official", "course", "user", "synthetic", "unknown"],

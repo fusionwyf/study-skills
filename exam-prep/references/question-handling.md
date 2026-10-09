@@ -22,6 +22,8 @@ General reliability hierarchy and conflict rules: see `../../shared/references/s
 
 Required fields and reliability values follow `../../shared/references/source-provenance.md` and `../../shared/schemas/source.schema.yaml`.
 
+Register materials, excerpts, and claims through `../../shared/references/material-intake.md`; the current exam workflow calls the shared scripts directly. Re-sync materials after registration or question-bank changes with `scripts/update_exam.py <exam-dir> --sync-materials` (from `exam-prep/`).
+
 When files are large, extract only the sections needed for the current task and keep the original in source-materials/.
 
 ## Extraction rules

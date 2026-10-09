@@ -1,6 +1,0 @@
-interface:
-  display_name: "Source Grounded Study 来源溯源"
-  short_description: "注册学习资料、逐字摘录、追踪主张，让每个外部事实可追溯"
-  default_prompt: "使用 $source-grounded-study 把资料注册进学习包并保持事实可溯源。"
-policy:
-  allow_implicit_invocation: false

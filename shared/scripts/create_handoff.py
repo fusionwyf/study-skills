@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Create a bounded cross-package handoff from a finalized source record.
 
-Usage (see learning-handoff/SKILL.md step 2):
-    python scripts/create_handoff.py <source-pkg> \
+Usage (from the repository root; see shared/references/learning-handoff.md):
+    python shared/scripts/create_handoff.py <source-pkg> \
       --record records/R0012.md --target-pkg <补课包目录> \
       --goal "..." [--include ...] [--exclude ...] \
       --return-condition "..." [--return-condition ...] [--to-skill learning-course]

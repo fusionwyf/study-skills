@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Validate a package's source registry against shared/schemas/source.schema.yaml.
 
-Usage:
-    python scripts/validate_sources.py <package-dir>
+Usage (from the repository root):
+    python shared/scripts/validate_sources.py <package-dir>
 
 Checks:
 - registry exists at the package-native location (exam: root SOURCES.md;

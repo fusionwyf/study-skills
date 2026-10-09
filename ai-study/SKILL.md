@@ -12,7 +12,7 @@ disable-model-invocation: true
 
 - 用本 skill 设计或执行 AI 辅助学习方法、单次学习循环、长期复盘和轻量 Obsidian 记录。
 - 需要可续学的多课课程包、目标状态和正式掌握度记录时，改用 `$learning-course`。
-- 备考、到期复习、来源登记或只读进展报告分别使用 `$exam-prep`、`$spaced-review`、`$source-grounded-study`、`$study-report`。
+- 备考和到期复习分别使用 `$exam-prep`、`$spaced-review`；已有学习包的只读进展查询使用 `$study`。向已有包导入资料由该包的 `$learning-course` 或 `$exam-prep` 内部处理。
 - 不因一次学习对话自动新建课程包、笔记系统或自动化；先解决眼前的学习目标。
 
 ## 工作流程

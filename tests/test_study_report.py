@@ -12,7 +12,7 @@ import yaml
 
 
 ROOT = Path(__file__).resolve().parents[1]
-BUILD_REPORT = ROOT / "study-report" / "scripts" / "build_report.py"
+BUILD_REPORT = ROOT / "study" / "scripts" / "build_report.py"
 EXAMPLE_COURSE = ROOT / "learning-course" / "assets" / "example-course"
 EXAMPLE_EXAM = ROOT / "exam-prep" / "assets" / "example-exam"
 

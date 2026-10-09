@@ -27,6 +27,8 @@ disable-model-invocation: true
 - **continue**：根据状态、到期复习和最新 evidence 继续教学。
 - **export**：导出单课或整门课程，不改变学习状态。
 
+向已有包添加资料是当前课程的内部操作，按下文注册来源，不要求切换 skill。
+
 单次答疑保持普通答疑。课程中的独立知识问题可以进入 `teaching` phase，但回答本身不等于生成新课件。
 
 ## 课程包
@@ -49,6 +51,7 @@ disable-model-invocation: true
 ## Create
 
 1. 确认学习者的真实目标和可观察成功标准。动机、基础、时间和其他约束只在会影响路线时补充。
+   携带补课交接文件时先读取 `../shared/references/learning-handoff.md`，将 goal、boundary 和返回条件写入目标包 `PLAN.md`，保存交接路径并遵守该边界。
 2. 当起点不确定且会改变路线时进行最小诊断；题数和形式由 Agent 决定。
 3. 读取 `references/course-state.md`，确定 v3 初始状态。使用 `scripts/init_course.py`；需要诊断时传入 `--diagnostic`。
 4. 在 `PLAN.md` 中维护课程路线和边界。它不是可重新生成文件。
@@ -59,15 +62,28 @@ disable-model-invocation: true
 
 ## Continue
 
-1. 读取 `course.yaml`、`PLAN.md`、最近相关 lesson 和最新 `records/`。
+1. 读取 `course.yaml`、`PLAN.md`、最近相关 lesson 和最新 `records/`；有交接时同时定位 `PLAN.md` 保存的 incoming 交接路径或当前包 `handoffs/` 中的 outgoing 交接。
 2. schema 缺失、损坏或不是 v3 时按 recovery 处理，不自动迁移。
 3. 优先处理到期复习和学习者明确提出的问题。
 4. 根据 evidence 强度决定保持难度、补前置、增加变式、推进或设为 `uncertain`。
+   若有 incoming 交接、已有跨包交接待返回，或 finalized evidence 表明需要独立的有界补课包，读取 `../shared/references/learning-handoff.md` 并按对应分支处理。incoming 补课获得约定的返回证据时执行协议的返回分支；课程内可补的前置仍按本流程教学。
 5. 生成下一课后进入 `awaiting_evidence`。不要提前创建不存在的反馈。
 
-完成条件：所有新 mastery 都可追溯到 finalized record；下一项动作是到期复习、针对性补救或一节引用已定义 objective 的新课；状态与索引已经验证。
+完成条件：所有新 mastery 都可追溯到 finalized record；下一项动作是到期复习、针对性补救、有界补课交接或一节引用已定义 objective 的新课；状态与索引已经验证。
 
 单独回答课程问题时使用 `teaching`：要求学习者作答后进入 `awaiting_evidence`；纯澄清后恢复先前 phase。生成课件不使用 `teaching`。
+
+## 注册来源
+
+学习者提供 PDF、教材、讲义或网页时，读取 `../shared/references/material-intake.md`。从 `learning-course/` 目录运行（目标包路径使用绝对路径）：
+
+```text
+python ../shared/scripts/register_source.py <course-dir> \
+  --title "<标题>" --type textbook --reliability unknown --raw <原文件路径>
+python ../shared/scripts/validate_sources.py <course-dir>
+```
+
+按实际资料选择 type 和 reliability；网页无本地文件时省略 `--raw`。完成条件：`sources/SOURCES.md` 已登记 `S###`，所需摘录与主张可回查，lesson 按组件契约引用来源，来源校验通过。
 
 ## Evidence 与反馈
 
@@ -93,6 +109,8 @@ HTML 的“复制学习记录”按钮只汇总原始答案、检查次数、提
 
 - 创建、更新、续学或恢复状态：读取 `references/course-state.md`。
 - 记录字段契约、record 校验报错：读取 `../shared/references/record-contract.md`。
+- 导入资料、摘录、主张追踪或来源冲突：读取 `../shared/references/material-intake.md`。
+- 跨包补课的创建、续接或返回：读取 `../shared/references/learning-handoff.md`。
 - 设计诊断、证据、难度调整或 mastery 判断：读取 `references/assessment.md`。
 - 需要显式设计认知层级时：读取 `references/bloom-taxonomy.md`；`cognitive_level` 始终可选。
 - 选择学科教学模式时：读取 `references/lesson-patterns.md`。

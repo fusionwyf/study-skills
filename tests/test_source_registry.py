@@ -13,8 +13,8 @@ import yaml
 
 
 ROOT = Path(__file__).resolve().parents[1]
-REGISTER = ROOT / "source-grounded-study" / "scripts" / "register_source.py"
-VALIDATE_SOURCES = ROOT / "source-grounded-study" / "scripts" / "validate_sources.py"
+REGISTER = ROOT / "shared" / "scripts" / "register_source.py"
+VALIDATE_SOURCES = ROOT / "shared" / "scripts" / "validate_sources.py"
 EXAM_VALIDATE = ROOT / "exam-prep" / "scripts" / "validate_exam.py"
 EXAM_UPDATE = ROOT / "exam-prep" / "scripts" / "update_exam.py"
 EXAMPLE_COURSE = ROOT / "learning-course" / "assets" / "example-course"

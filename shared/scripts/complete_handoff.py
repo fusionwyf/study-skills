@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Complete a handoff: mark it returned with verifiable evidence.
 
-Usage (see learning-handoff/SKILL.md step 4):
-    python scripts/complete_handoff.py --handoff <H####.md> \
+Usage (from the repository root; see shared/references/learning-handoff.md):
+    python shared/scripts/complete_handoff.py --handoff <H####.md> \
       --returned-record <目标包内记录路径>
 
 Refuses unless the handoff is open and the returned record exists inside the

@@ -1,6 +1,6 @@
 # 学习交接记录契约（machine-readable）
 #
-# learning-handoff 在两个独立的学习包之间建立显式交接。
+# shared/references/learning-handoff.md 定义两个独立学习包的内部交接流程。
 # 交接是 artifact coupling：只通过交接文件传递，不直接修改对方包的内部状态。
 # 交接记录保存在发起包的 handoffs/ 目录；两个包始终保持独立，不合并状态。
 
