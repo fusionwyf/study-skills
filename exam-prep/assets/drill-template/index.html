@@ -4,9 +4,27 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Exam Prep Drill</title>
-  <link rel="stylesheet" href="vendor/katex/katex.min.css">
-  <script src="vendor/katex/katex.min.js"></script>
-  <script src="math.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script>
+    // KaTeX auto-render: formulas are written inline as \(...\) and \[...\].
+    // Missing KaTeX (offline) leaves the LaTeX source readable.
+    document.addEventListener("DOMContentLoaded", function () {
+      if (!window.renderMathInElement) return;
+      window.__EXAM_PREP_MATH_READY__ = true;
+      window.renderExamPrepMath = function (scope) {
+        renderMathInElement(scope || document.body, {
+          delimiters: [
+            {left: "\\(", right: "\\)", display: false},
+            {left: "\\[", right: "\\]", display: true}
+          ],
+          throwOnError: false
+        });
+      };
+      window.renderExamPrepMath(document.body);
+    });
+  </script>
   <style>
     :root {
       color-scheme: light dark;
@@ -87,19 +105,11 @@
       white-space: pre-wrap;
       margin-bottom: 18px;
     }
-    .math-expression {
-      font-family: Georgia, "Times New Roman", serif;
-    }
-    .math-block {
-      display: block;
+    /* KaTeX renders into .katex / .katex-display; allow wide display math to scroll. */
+    .katex-display {
       overflow-x: auto;
-      margin: 12px 0;
-      padding: 10px 12px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: var(--accent-soft);
-      text-align: center;
-      white-space: normal;
+      overflow-y: hidden;
+      padding: 4px 0;
     }
     textarea, input[type="text"] {
       width: 100%;
@@ -261,30 +271,18 @@
         .replace(/'/g, "&#039;");
     }
 
-    function escapeAttr(value) {
-      return escapeHtml(value).replace(/\n/g, " ");
-    }
-
     function renderMathText(element, text) {
-      var escaped = escapeHtml(text || "");
-      escaped = escaped.replace(/\\\[([\s\S]+?)\\\]/g, function (_, tex) {
-        return '<span class="math-expression math-block" data-tex="' + escapeAttr(tex) + '">' + escapeHtml(tex) + '</span>';
-      });
-      escaped = escaped.replace(/\$\$([\s\S]+?)\$\$/g, function (_, tex) {
-        return '<span class="math-expression math-block" data-tex="' + escapeAttr(tex) + '">' + escapeHtml(tex) + '</span>';
-      });
-      escaped = escaped.replace(/\\\(([\s\S]+?)\\\)/g, function (_, tex) {
-        return '<span class="math-expression" data-display-mode="inline" data-tex="' + escapeAttr(tex) + '">' + escapeHtml(tex) + '</span>';
-      });
-      element.innerHTML = escaped;
-      if (window.renderExamPrepMath) window.renderExamPrepMath();
+      // Keep the LaTeX delimiters in the markup; KaTeX auto-render scans the
+      // container afterwards. Without KaTeX the source stays readable.
+      element.innerHTML = escapeHtml(text || "");
+      if (window.renderExamPrepMath) window.renderExamPrepMath(element);
     }
 
     function renderQuestionContent(element, question, key) {
       var htmlKey = key + "_html";
       if (question[htmlKey]) {
         element.innerHTML = question[htmlKey];
-        if (window.renderExamPrepMath) window.renderExamPrepMath();
+        if (window.renderExamPrepMath) window.renderExamPrepMath(element);
         return;
       }
       renderMathText(element, question[key] || "");

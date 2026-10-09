@@ -70,26 +70,19 @@ Use HTML drill templates for:
 
 ### Formulas in drills
 
-`assets/drill-template/math.js` is an optional local KaTeX bridge: it makes no network request and renders only when `vendor/katex/` is present.
+The drill template loads KaTeX and its auto-render plugin from CDN and scans the page on load, so prompts and rubrics can carry LaTeX directly: \(...\) for inline math, \[...\] for display math.
 
 ~~~text
-assets/drill-template/
-├── index.html
-├── math.js
-└── vendor/katex/          # optional; drop KaTeX here to enable rendering
-    ├── katex.min.css
-    ├── katex.min.js
-    └── fonts/
+The conditional probability is \(P(A \mid B) = P(A \cap B) / P(B)\).
+
+\[
+x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}
+~~~
 ~~~
 
-If `vendor/katex/` is absent, keep the page readable with plain formula text; do not add CDN links. Plain prompts may use \(...\), \[...\], or $$...$$, which the template converts into `data-tex` spans before calling `math.js`. For exact control use `prompt_html` or `answer_or_rubric_html`:
+No per-formula markup is needed. If KaTeX cannot load (offline, blocked CDN), the LaTeX source stays readable on the page and the rest of the drill is unaffected — so every formula should also have a nearby plain-language explanation of what it means. To keep a drill fully offline, vendor the same KaTeX build into the drill folder and swap the three CDN URLs for local relative paths; the formula authoring stays the same.
 
-~~~html
-<span class="math-expression" data-display-mode="inline" data-tex="P(A\mid B)">P(A given B)</span>
-<span class="math-expression math-block" data-tex="x=\frac{-b\pm\sqrt{b^2-4ac}}{2a}">quadratic formula</span>
-~~~
-
-Every formula needs readable fallback text or a nearby explanation.
+For exact control (custom HTML, tables, or a formula before other markup) use `prompt_html` or `answer_or_rubric_html`, which the template inserts verbatim and then scans for math like any other content.
 
 Use chat or Markdown records for:
 

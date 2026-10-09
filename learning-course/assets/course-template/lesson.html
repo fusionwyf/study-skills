@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>第 0001 课｜课程标题</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <link rel="stylesheet" href="../assets/course.css">
 </head>
 <body>
@@ -47,7 +48,7 @@
         <section aria-labelledby="core-title">
           <h2 id="core-title">核心解释</h2>
           <p>先用自然语言说明机制，再给出正式定义、规则或判断框架。</p>
-          <div class="formula" aria-label="a 的平方加 b 的平方等于 c 的平方"><span class="math-expression" data-tex="a^2 + b^2 = c^2">a² + b² = c²</span><small>公式说明：写明符号含义、成立条件和使用边界。</small></div>
+          <div class="formula"><p>\(a^2 + b^2 = c^2\)</p><small>公式说明：写明符号含义、成立条件和使用边界。</small></div>
         </section>
 
         <section aria-labelledby="code-title">
@@ -150,7 +151,20 @@ print(check_result(3))</code></pre></div>
   </div>
   <script src="../assets/learnkit/learnkit.js"></script>
   <script src="../assets/course.js"></script>
-  <!-- 数学渲染走 LearnKit renderer；未加载 KaTeX 时公式保留后备文本。 -->
-  <script src="../assets/learnkit/renderers/math.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script>
+    // KaTeX auto-render: 公式直接写 \(...\) 与 \[...\]，无需逐条标注。
+    document.addEventListener("DOMContentLoaded", function () {
+      if (!window.renderMathInElement) return;
+      renderMathInElement(document.body, {
+        delimiters: [
+          {left: "\\(", right: "\\)", display: false},
+          {left: "\\[", right: "\\]", display: true}
+        ],
+        throwOnError: false
+      });
+    });
+  </script>
 </body>
 </html>

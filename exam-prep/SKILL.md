@@ -109,7 +109,7 @@ review 发现系统性前置漏洞，或学习者带着补课证据返回时，�
 - review 中创建或接回跨包补课：读取 ../shared/references/learning-handoff.md。
 - 复盘错题、估算 readiness、模考或冲刺：读取 references/review-and-cram.md。
 - 生成交互选择、填空、短答或计时练习：复制并改造 assets/drill-template/index.html。
-- HTML drill 包含公式时：读取 references/question-handling.md 的 Formulas in drills 一节，并保留无 KaTeX 时的纯文本后备。
+- HTML drill 包含公式时：读取 references/question-handling.md 的 Formulas in drills 一节，公式直接写 LaTeX 定界符，并保留一句文字说明。
 - 需要查看完整包格式或调试 validator：读取 assets/example-exam/；日常备考不要修改示例包。
 
 ## 验证

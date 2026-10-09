@@ -16,7 +16,7 @@ Design and run structured study courses with a full learning loop: diagnose → 
 - Assistance-aware evidence: `transfer` requires independent performance; `application` permits independent or hinted performance; AI-guided work supports recognition only
 - Optional Bloom cognitive levels as planning metadata (not a separate checkpoint state)
 - Spaced review queue with performance-adjusted intervals
-- Interactive HTML lesson template with optional KaTeX math rendering (drop KaTeX into `assets/vendor/katex/`; without it formulas fall back to readable text)
+- Interactive HTML lesson template with KaTeX math rendering from CDN (write formulas as `\(...\)` / `\[...\]`; the auto-render plugin scans the page)
 - Learner-teaches-AI corrections and sequential dialogue practice, with every prompt and raw answer included in copied learning records
 - Optional offline math/CS visualization kit: Plotly numeric curves, heatmaps and 3D surfaces; JSXGraph draggable 2D linear transformations with equal units; computed selection-sort playback with code and operation counts. Includes numeric/step print fallbacks and current-state capture in learning records
 - Lesson, render and export guides: `learning-course/references/` (four documents: `state`, `lesson`, `render`, `export`); runnable showcase: `learning-course/assets/visualizations/demo.html`; selectively install with `install_visualizations.py` (no third-party libraries copied for HTML/SVG-only kinds)

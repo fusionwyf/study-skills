@@ -9,10 +9,12 @@ LearnKit 把课程页面拆成四层：L1 运行时、L2 基础 UI、L3 可视�
 ```text
 LessonSpec / DOM 标记 → L1 运行时解析 → 模型(registerModel) → derive 派生值
                                 ↓
-                    注册表分发 → renderer(公式) / adapter(chart·spatial·…) → DOM
+                    注册表分发 → renderer(可选节点渲染) / adapter(chart·spatial·…) → DOM
 ```
 
-三个注册表互不重叠：L1 运行时的 `registerModel` 管模型逻辑、`registerRenderer` 管节点渲染（如数学公式），L3 适配器层的 `registerKind` 管可视化适配器（图表、几何等）。扩展只新增注册项，不修改核心运行时。
+数学公式不在这条管线里：它由页面直接引入的 KaTeX auto-render 处理，见第二节。
+
+两个内置注册表加一个可选钩子：L1 运行时的 `registerModel` 管模型逻辑、`registerRenderer` 是留给扩展的节点渲染钩子（当前无内置实现），L3 适配器层的 `registerKind` 管可视化适配器（图表、几何等）。扩展只新增注册项，不修改核心运行时。
 
 ## 一、LessonSpec
 
@@ -53,40 +55,42 @@ L2 负责布局、文字、公式、代码、输入和反馈；L3 负责 `ChartV
 
 公共属性可使用 `id`、`title`、`description`、`data`、`bind`、`actions`、`disabled`、`visible`、`className`。组件没有意义的属性应省略。视图、控件和模型通过状态订阅连接，避免组件互相查询 DOM。
 
-## 二、数学渲染器
+## 二、数学渲染
 
-数学是 LearnKit 的一个渲染器，实现位于 `assets/learnkit/renderers/math.js`。它通过 `LearnKit.registerRenderer("math", ...)` 注册，在 `learnkit.js` 之后加载。
-
-```text
-assets/
-├── learnkit/
-│   ├── learnkit.js
-│   └── renderers/
-│       └── math.js            # 注册 math renderer
-└── vendor/katex/
-    ├── katex.min.css
-    ├── katex.min.js
-    └── fonts/
-```
-
-把 KaTeX 文件放在课程包内，避免依赖 CDN。不同 Agent 可以使用已有本地资源；无法取得 KaTeX 时保留纯文本公式，不要编造或下载未经允许的资源。普通课程不加入 KaTeX vendor 资源。
-
-加载顺序（`learnkit.js` 必须早于 renderer，否则 `registerRenderer` 不存在）：
+公式用 KaTeX：课程页面从 CDN 引入 KaTeX 与它的 auto-render 插件，公式直接写成 LaTeX 定界符，插件扫描全文渲染。不需要注册 LearnKit renderer，也不需要逐条标注公式。
 
 ```html
-<link rel="stylesheet" href="../assets/vendor/katex/katex.min.css">
-<script src="../assets/learnkit/learnkit.js"></script>
-<script src="../assets/vendor/katex/katex.min.js"></script>
-<script src="../assets/learnkit/renderers/math.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  if (!window.renderMathInElement) return;
+  renderMathInElement(document.body, {
+    delimiters: [
+      {left: "\\(", right: "\\)", display: false},
+      {left: "\\[", right: "\\]", display: true}
+    ],
+    throwOnError: false
+  });
+});
+</script>
 ```
 
-在 `.math-expression` 或其他元素上使用 `data-tex`：
+公式直接写在正文里：
 
 ```html
-<span class="math-expression" data-tex="a^2+b^2=c^2" aria-label="a 的平方加 b 的平方等于 c 的平方">a² + b² = c²</span>
+行内写法：设 \(f\) 在 \(P_0\) 处可微，则方向的坡度是 \(D_{\mathbf{u}} f(P_0)\)。
+
+展示写法：
+\[
+D_{\mathbf{u}} f(P_0) = \nabla f(P_0) \cdot \mathbf{u}
+\]
 ```
 
-`math.js` 只在检测到 `window.katex` 后渲染，不发起网络请求；没有 KaTeX 时保留元素原有文本，也不标记 `data-math-rendered`。公式必须提供 `aria-label` 或附近的文字解释。行内公式使用 `data-display-mode="inline"`，默认公式按展示模式渲染。
+`throwOnError: false` 让单个公式出错时不中断整页；公式语法错误退化为可读的原文。auto-render 找不到 KaTeX（离线、CDN 被拦）时页面保留 LaTeX 源码，正文其余部分不受影响，因此公式旁仍应有一句文字说明符号含义和成立条件。
+
+课程包默认不加本地 KaTeX 资源。需要完全离线时，把同版本 KaTeX 放进包内 `assets/vendor/katex/`，并把上面三处 CDN 地址改为本地相对路径；两条路径都只改引入方式，公式写法不变。
 
 ## 三、可视化适配器
 
@@ -167,4 +171,4 @@ python scripts/validate_course.py <course-dir> --strict-schema --pedagogical
 
 - `LearnKit.validateLessonSpec(spec)` 校验页面结构。
 - `assets/visualizations/adapters.json` 是适配器目录的单一来源，`scripts/validate_course.py` 用它与 `learnkit.js` 注册表检查容器契约。完整示例见 `assets/visualizations/demo.html`。
-- 打印或导出前等待 `document.fonts.ready`、`window.__COURSE_MATH_READY__` 与 `window.__COURSE_VISUALIZATIONS_READY__ === true`，然后检查每个容器的 `data-viz-ready="true"`；失败时以 fallback 作为可读结果。
+- 打印或导出前等待 `document.fonts.ready` 与 `window.__COURSE_VISUALIZATIONS_READY__ === true`，然后检查每个容器的 `data-viz-ready="true"`；失败时以 fallback 作为可读结果。KaTeX 公式会在 `DOMContentLoaded` 后的同步扫描中渲染完，等待字体就绪即可覆盖。

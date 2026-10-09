@@ -19,7 +19,7 @@
 - 为动态图表、关系图、时间轴、流程、空间画布和步骤回放准备 `.print-snapshot` 或等价文字后备；滑杆至少输出起点、典型值和边界值，步骤组件输出当前步骤和完整步骤表。
 - 图形使用矢量 SVG 或足够分辨率的静态图；HTML 适配器保留可打印表格和列表。
 - 链接保留可点击目标；必要时在打印版显示 URL。
-- 使用本地字体和数学资源，等待 `document.fonts.ready`、`window.__COURSE_MATH_READY__` 与 `window.__COURSE_VISUALIZATIONS_READY__`。
+- 使用本地字体；等 `document.fonts.ready` 与 `window.__COURSE_VISUALIZATIONS_READY__` 就绪。公式由 KaTeX 在页面加载时同步渲染，确保导出前页面已完整显示。
 
 ## 渲染优先级
 

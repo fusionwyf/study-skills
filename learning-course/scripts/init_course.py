@@ -56,8 +56,9 @@ def main() -> int:
         shutil.copy2(template_dir / filename, target)
 
     # L1 runtime and the declarative schema are dependency-free, so every new
-    # course gets the same portable foundation. Optional vendor renderers stay
-    # opt-in through install_visualizations.py.
+    # course gets the same portable foundation. Math rendering comes from the
+    # KaTeX CDN; optional vendor libraries stay opt-in through
+    # install_visualizations.py.
     learnkit_target = course_dir / "assets" / "learnkit"
     learnkit_target.mkdir(parents=True, exist_ok=True)
     for filename in ("learnkit.js", "lesson-spec.schema.json", "components.json"):
@@ -65,16 +66,6 @@ def main() -> int:
         if target.exists() and not args.force:
             raise FileExistsError(f"Refusing to overwrite existing file: {target}")
         shutil.copy2(learnkit_dir / filename, target)
-
-    # Renderers live under learnkit/renderers/. math.js is the text->KaTeX
-    # renderer and is dependency-free (no vendor files are copied).
-    renderers_target = learnkit_target / "renderers"
-    renderers_target.mkdir(parents=True, exist_ok=True)
-    for filename in ("math.js",):
-        target = renderers_target / filename
-        if target.exists() and not args.force:
-            raise FileExistsError(f"Refusing to overwrite existing file: {target}")
-        shutil.copy2(learnkit_dir / "renderers" / filename, target)
 
     phase = "diagnostic" if args.diagnostic else "designing"
     diagnostic_status = "pending" if args.diagnostic else "skipped"

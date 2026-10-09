@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>第 0001 课｜什么是变量</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <link rel="stylesheet" href="../assets/course.css">
 </head>
 <body>
@@ -129,7 +130,20 @@ print(score)</code></pre></div>
   </div>
   <script src="../assets/learnkit/learnkit.js"></script>
   <script src="../assets/course.js"></script>
-  <!-- 数学渲染走 LearnKit renderer；未加载 KaTeX 时公式保留后备文本。 -->
-  <script src="../assets/learnkit/renderers/math.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script>
+    // KaTeX auto-render: 公式直接写 \(...\) 与 \[...\]，无需逐条标注。
+    document.addEventListener("DOMContentLoaded", function () {
+      if (!window.renderMathInElement) return;
+      renderMathInElement(document.body, {
+        delimiters: [
+          {left: "\\(", right: "\\)", display: false},
+          {left: "\\[", right: "\\]", display: true}
+        ],
+        throwOnError: false
+      });
+    });
+  </script>
 </body>
 </html>

@@ -575,11 +575,16 @@ def main() -> int:
             lesson_objectives.add(objective)
         if args.pedagogical:
             validate_pedagogy(lesson, body, errors, warnings)
+        # A lesson usually pulls several files from one CDN (KaTeX ships its
+        # stylesheet, core script and auto-render plugin separately). Report the
+        # remote hosts once per lesson instead of once per link so real warnings
+        # stay visible.
+        external_hosts: list[str] = []
         for link in LINK_RE.findall(body):
             parsed = urlsplit(link)
             if parsed.scheme or link.startswith("#") or link.startswith("//"):
-                if parsed.scheme in {"http", "https"}:
-                    warnings.append(f"external network dependency: {lesson.name} -> {link}")
+                if parsed.scheme in {"http", "https"} and parsed.netloc not in external_hosts:
+                    external_hosts.append(parsed.netloc)
                 continue
             target = (lesson.parent / link.split("#", 1)[0]).resolve()
             try:
@@ -589,6 +594,8 @@ def main() -> int:
                 continue
             if link.split("#", 1)[0] and not target.exists():
                 errors.append(f"missing local link: {lesson.name} -> {link}")
+        for host in external_hosts:
+            warnings.append(f"external network dependency: {lesson.name} -> {host}")
 
     if numbers and numbers != list(range(1, len(numbers) + 1)):
         errors.append(f"lesson numbers are not continuous from 0001: {numbers}")

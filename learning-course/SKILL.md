@@ -41,8 +41,7 @@ disable-model-invocation: true
 ├── index.html
 ├── lessons/0001-<slug>.html
 ├── assets/              # course.js/css plus learnkit runtime
-│   ├── learnkit/
-│   │   └── renderers/   # text->rich-media renderers (math; code/media reserved)
+│   ├── learnkit/        # state engine and declarative lesson schema
 │   └── visualizations/  # optional adapters and pinned vendor libraries
 ├── reference/
 ├── records/

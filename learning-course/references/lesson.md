@@ -121,7 +121,7 @@ JavaScript 等本轮非空回答后保存原话、锁定文本域，再显示下
 
 ### 公式
 
-使用 `.formula` 容器和带 `data-tex` 的 `.math-expression`。提供可读后备文本及 `aria-label`。渲染细节见 `render.md`。
+使用 `.formula` 容器，公式正文直接写 LaTeX 定界符 `\(...\)` 或 `\[...\]`，由 KaTeX auto-render 渲染。公式旁提供一句文字，说明符号含义、成立条件和使用边界。渲染细节见 `render.md`。
 
 ### 代码
 

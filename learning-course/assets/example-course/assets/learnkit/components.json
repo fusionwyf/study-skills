@@ -1,6 +1,6 @@
 {
-  "version": "1.1",
-  "note": "能力登记表。只登记运行时真的会渲染或驱动的名称；静态 HTML 与未实现项分开标注，避免 Agent 误用未实现组件。",
+  "version": "1.2",
+  "note": "能力登记表。只登记运行时真的会渲染或驱动的名称；静态 HTML 与未实现项分开标注，避免 Agent 误用未实现组件。公式渲染不走 LearnKit：课件从 CDN 引入 KaTeX + auto-render，直接书写 \\(...\\) 与 \\[...\\]。",
   "runtime": {
     "l1_core": ["StateStore", "SequenceStore", "EventBus(snapshot log)", "History(cursor)", "SpecValidator"],
     "actions": ["PLAY", "PAUSE", "STEP_NEXT", "STEP_PREVIOUS", "SEEK", "RESET", "SET_PARAMETER", "SELECT_OBJECT", "MOVE_OBJECT", "SUBMIT_ANSWER"],
@@ -14,11 +14,6 @@
   "kinds": {
     "note": "visualizations.js 适配器，通过 data-visualization=\"<kind>\" 使用；chart/spatial 需 vendor 库，其余为 HTML/SVG 实现",
     "implemented": ["chart", "relation", "timeline", "process", "spatial", "sequence", "table"],    "vendor_backed": ["chart", "spatial"]
-  },
-  "renderers": {
-    "note": "通过 LearnKit.registerRenderer(name, fn) 注册；fn(el, state, derived)",
-    "implemented": ["math", "math-inline"],
-    "reserved": ["code", "media"]
   },
   "static_html": {
     "note": "由 course-template/lesson.html 提供静态结构，course.js 做渐进增强。这些不是运行时组件，但可直接写入课件并要求保留 data-* 契约。",
