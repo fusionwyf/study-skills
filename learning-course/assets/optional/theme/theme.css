@@ -43,19 +43,14 @@
 
 /*
  * --- Theme surface declaration -------------------------------------------
- * `data-theme-surface` tells optional components which way the theme leans, so
- * the code block can pick readable token colours. Set it alongside data-theme.
- * Anything other than "light" keeps the dark-friendly defaults.
+ * `data-theme-surface` tells optional components which way the theme leans. The
+ * code block reads it to choose a matching official highlight.js theme (see
+ * code-highlight/theme.js), so this file only needs to move the *code surface*
+ * tokens with it; the token colours are the theme's job.
+ *
+ * Anything other than "light" keeps the dark-friendly defaults from course.css.
  */
 html[data-theme-surface="light"] .code-block {
-  --code-token-comment: #6b7280;
-  --code-token-keyword: #cf222e;
-  --code-token-string: #0a3069;
-  --code-token-number: #0550ae;
-  --code-token-title: #8250df;
-  --code-token-builtin: #0550ae;
-  --code-token-attr: #116329;
-  --code-token-symbol: #953800;
   --course-code-bg: #f6f8fa;
   --course-code-text: #1f2328;
   --course-code-muted: #57606a;

@@ -81,13 +81,15 @@
 
 ### 三、声明主题表面
 
-代码高亮的 token 要按明/暗两套取值。在 `<html>` 上标一下即可：
+代码块要按明/暗两套取色。在 `<html>` 上标一下即可：
 
 ```html
 <html lang="zh-CN" data-theme-surface="light">
 ```
 
-`light` 会启用一套浅色代码配色；不写则按深色处理。两个组件都装了才需要关心这个。
+`light` 会把代码底切到浅色，并让 `code-highlight` 加载配套的浅色官方主题；不写则按深色处理。装了 `code-highlight` 才需要关心这个。
+
+**token 颜色不归本组件管**——代码着色用的是 highlight.js 官方主题（见 `code-highlight/README.md`）。`data-theme-surface` 在这里只负责两件事：切代码块的底色/文字色，以及告诉 `code-highlight` 该挑哪套官方主题。
 
 ## 注册与切换
 
@@ -132,7 +134,7 @@
 
 ## 与代码高亮的关系
 
-两个组件是解耦的：`theme` 改颜色，`code-highlight` 上色。同时使用时，`theme.js` 切换主题会派发 `course:themechange` 事件：
+两个组件是解耦的：`theme` 管课程配色，`code-highlight` 管代码着色。同时使用时，切换器换主题会派发 `course:themechange` 事件，`code-highlight/theme.js` **自己监听并换官方主题**，不需要课程写任何胶水代码：
 
 ```js
 window.addEventListener("course:themechange", function (e) {
@@ -140,3 +142,5 @@ window.addEventListener("course:themechange", function (e) {
   // 需要的话在这里让第三方组件重新取色
 });
 ```
+
+如果你自己写了别的组件要跟着换肤，监听同一个事件即可。

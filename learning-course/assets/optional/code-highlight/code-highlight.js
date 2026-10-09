@@ -1,16 +1,15 @@
 /*
  * Optional component: code block syntax highlighting via highlight.js.
  *
- * Same shape as the math renderer: a pinned CDN build supplies the engine and a
- * stylesheet supplies the colours. highlight.js adds `hljs` classes to the code
- * element; theming is plain CSS, so a course can either swap in one of the
- * bundled highlight.js themes or restyle the token classes itself.
+ * Same shape as the math renderer: a pinned CDN build supplies the engine and
+ * an official theme stylesheet supplies the colours (`theme.js` picks which
+ * one). This file only wires the loader — it deliberately holds no language
+ * table and no colour table. highlight.js already knows which languages it
+ * carries, so we ask it (`hljs.getLanguage`) instead of keeping a copy that
+ * drifts.
  *
- * This file only wires the loader. It is small on purpose: the engine is
- * fetched from the CDN, not bundled, and a course that does not highlight code
- * never pays for it.
- *
- * Wiring: load code-highlight.css in <head> and this file at the end of <body>.
+ * Wiring: load code-highlight.css in <head>, then this file and theme.js at
+ * the end of <body>.
  * See README.md for the swap-in-theme recipe and the offline option.
  */
 (function (root) {
@@ -19,65 +18,80 @@
   var HLJS_VERSION = "11.12.0";
   var HLJS_BASE = "https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@" + HLJS_VERSION + "/build/";
 
-  // Languages the pinned default build already contains. A block asking for
-  // anything else stays unhighlighted rather than triggering an extra request.
-  var BUNDLED = ("bash c cpp csharp css diff go graphql ini java javascript json kotlin " +
-    "less lua makefile markdown objectivec perl php plaintext python python-repl r ruby " +
-    "rust scss shell sql swift typescript vbnet wasm xml yaml").split(" ");
-
-  var ALIASES = {
-    js: "javascript", jsx: "javascript", mjs: "javascript", cjs: "javascript", node: "javascript",
-    ts: "typescript", tsx: "typescript",
-    py: "python", python3: "python", ipython: "python-repl",
-    rb: "ruby", sh: "bash", zsh: "bash", console: "shell", terminal: "shell",
-    yml: "yaml", toml: "ini", conf: "ini", cfg: "ini",
-    cs: "csharp", "c++": "cpp", "c#": "csharp",
-    h: "c", hpp: "cpp",
-    rs: "rust", golang: "go",
-    html: "xml", xhtml: "xml", svg: "xml",
-    text: "plaintext", txt: "plaintext", "": "plaintext",
-    jl: "python", matlab: "python", tex: "plaintext", latex: "plaintext"
+  /*
+   * Aliases highlight.js does not resolve on its own. Everything else
+   * (`js`, `py`, `sh`, `yml`, `html`, `c++`, `c#`, `objc`, `toml`, …) the
+   * library already understands.
+   */
+  var EXTRA_ALIASES = {
+    node: "javascript",
+    console: "shell",
+    terminal: "shell",
+    conf: "ini",
+    cfg: "ini",
+    "objective-c": "objectivec",
+    python3: "python",
+    /* No bundled grammar is close enough, so these degrade to plain text
+       rather than silently mis-colouring source. */
+    jl: "plaintext", matlab: "plaintext",
+    tex: "plaintext", latex: "plaintext"
   };
-
-  function normalize(language) {
-    var key = String(language || "").trim().toLowerCase();
-    return ALIASES[key] || key;
-  }
 
   /** Read the language from the block's visible label or the code class list. */
   function languageOf(codeBlock, code) {
+    var text = "";
     var label = codeBlock.querySelector(".code-language");
-    if (label && label.textContent.trim()) return normalize(label.textContent);
-    var match = /(?:language|lang|highlight)[-:]([A-Za-z0-9+#]+)/.exec(code.className || "");
-    return match ? normalize(match[1]) : "";
+    if (label && label.textContent.trim()) {
+      text = label.textContent;
+    } else {
+      var match = /(?:language|lang|highlight)[-:]([A-Za-z0-9+#]+)/.exec(code.className || "");
+      if (match) text = match[1];
+    }
+    var key = String(text || "").trim().toLowerCase();
+    return EXTRA_ALIASES[key] || key;
   }
 
   function highlightBlock(hljs, codeBlock) {
     var code = codeBlock.querySelector("pre code");
     if (!code || code.dataset.highlighted === "true") return;
     if (!code.textContent.trim()) return;
-    var language = languageOf(codeBlock, code);
-    // `plaintext` is always available and is also the graceful path for a
-    // language this build does not carry.
-    var use = BUNDLED.indexOf(language) === -1 ? "plaintext" : language;
-    if (use !== "plaintext") {
-      code.classList.add("language-" + use);
-      code.classList.remove("language-plaintext");
-    }
+
+    var requested = languageOf(codeBlock, code);
+    var known = requested && hljs.getLanguage(requested);
+    var use = known ? requested : "plaintext";
+
+    /*
+     * `highlightElement` auto-detects when the element carries no language it
+     * recognises, which would guess a grammar for an unknown language instead
+     * of degrading. Pinning `plaintext` keeps the documented contract and also
+     * stops highlight.js from stamping a stray `language-*` class on the block.
+     */
+    code.classList.add("language-" + use);
     hljs.highlightElement(code);
+
+    /*
+     * Called last: highlight.js appends the canonical class next to whatever it
+     * found, so an aliased label ends up as `language-py language-python`. Keep
+     * only the resolved class — one source of truth for the grammar in use.
+     */
+    Array.prototype.slice.call(code.classList).forEach(function (name) {
+      if (/^language-/.test(name) && name !== "language-" + use) code.classList.remove(name);
+    });
     code.dataset.highlighted = "true";
     code.dataset.language = use;
   }
 
+  function highlightAll(hljs, scope) {
+    var nodes = (scope || document).querySelectorAll(".code-block");
+    Array.prototype.forEach.call(nodes, function (block) { highlightBlock(hljs, block); });
+  }
+
   function boot(hljs) {
-    var blocks = document.querySelectorAll(".code-block");
-    Array.prototype.forEach.call(blocks, function (block) { highlightBlock(hljs, block); });
+    highlightAll(hljs, document);
     // Expose for dynamically added blocks (a lesson that injects markup later).
     root.CourseCodeHighlight = {
-      highlightAll: function (scope) {
-        var nodes = (scope || document).querySelectorAll(".code-block");
-        Array.prototype.forEach.call(nodes, function (block) { highlightBlock(hljs, block); });
-      },
+      highlightAll: function (scope) { highlightAll(hljs, scope); },
+      languages: function () { return hljs.listLanguages().slice(); },
       version: HLJS_VERSION
     };
     root.__COURSE_CODE_HIGHLIGHT_READY__ = true;

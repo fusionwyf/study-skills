@@ -8,7 +8,8 @@ course stays small and offline. This script copies only what a course asks for:
     python scripts/install_optional.py <course-dir> --components chart spatial
 
 Visualization kinds share one adapter kit; `chart` and `spatial` additionally
-pull their pinned vendor library. Everything else is JS/CSS with no dependency.
+pull their pinned vendor library. `code-highlight` ships the official
+highlight.js theme stylesheets it selects from, so it works offline.
 """
 
 from __future__ import annotations
@@ -30,7 +31,14 @@ VISUALIZATION_KINDS = VIZ_VENDOR_KINDS + VIZ_FREE_KINDS
 
 # Components that are plain files plus an optional vendor tree.
 SIMPLE_COMPONENTS = {
-    "code-highlight": {"source": OPTIONAL / "code-highlight", "target": "assets/optional/code-highlight", "files": ["code-highlight.js", "code-highlight.css", "README.md"]},
+    "code-highlight": {
+        "source": OPTIONAL / "code-highlight",
+        "target": "assets/optional/code-highlight",
+        "files": [
+            "code-highlight.js", "code-highlight.css", "theme.js",
+            "github.min.css", "github-dark.min.css", "README.md",
+        ],
+    },
     "theme": {"source": OPTIONAL / "theme", "target": "assets/optional/theme", "files": ["theme.js", "theme.css", "README.md"]},
 }
 

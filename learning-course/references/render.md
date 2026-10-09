@@ -163,9 +163,18 @@ python scripts/install_optional.py <course-dir> --components code-highlight them
 
 代码块默认只有等宽字体和底色，**没有任何 token 着色**。需要着色时装 `code-highlight`：它从 CDN 引入 highlight.js 11.12.0 的默认构建（约 126KB，内置 36 种语言，含 C、Python、bash、SQL、Rust、Go、Java），一行 `highlightAll()` 扫描全文的 `.code-block pre code`。
 
-语言取自 `.code-language` 标签或 `code` 的 `language-*` class，常见别名会自动归一。**不在内置清单里的语言退化为不着色原文，不会发额外请求**。完全离线时把同版本引擎放进包内并先用 `window.hljs` 注册，组件检测到就不会联网。
+**配色直接用官方主题，不手写色表**。组件按课程表面自动挑一套并随包复制，离线也能用：
 
-换配色有两条路：改 `.code-block` 的 `--code-token-*` 变量（跟着课程主题走），或在本组件样式之后引入 highlight.js 官方主题（516 套）。细节见 `assets/optional/code-highlight/README.md`。
+| 课程表面 | 官方主题 |
+|---|---|
+| `data-theme-surface="light"` | `github.min.css` |
+| 其它 / 未声明且系统为深色 | `github-dark.min.css` |
+
+官方主题会硬塞 `code.hljs` 的背景和 padding，`code-highlight.css` 用更高优先级把它们收回课程自己管，所以**token 颜色来自官方主题、底色和留白来自 `course.css`**。换主题只改 `theme.js` 的 `LIGHT`/`DARK` 常量；用 `theme` 组件的切换器换肤时靠 `course:themechange` 事件自动跟随。
+
+语言取自 `.code-language` 标签或 `code` 的 `language-*` class。组件不维护语言表，直接问引擎 `hljs.getLanguage()`；**它不认识的语言退化为不着色原文，不发额外请求，也不会被猜成别的语言**。完全离线时把同版本引擎放进包内并先用 `window.hljs` 注册即可。
+
+细节见 `assets/optional/code-highlight/README.md`。
 
 ### 主题
 

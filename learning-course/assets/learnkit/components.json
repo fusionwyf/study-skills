@@ -26,7 +26,7 @@
     "catalogue": "assets/optional/manifest.json",
     "install": "python scripts/install_optional.py <course-dir> --components <name> [...]",
     "components": {
-      "code-highlight": {"label": "代码块语法着色", "needs": "CDN highlight.js 11.12.0（36 种内置语言）；可换本地 vendor", "target": "assets/optional/code-highlight"},
+      "code-highlight": {"label": "代码块语法着色", "needs": "CDN highlight.js 11.12.0（36 种内置语言）+ 随包复制的官方主题样式表", "target": "assets/optional/code-highlight"},
       "theme": {"label": "主题与自定义 Theme", "needs": "无", "target": "assets/optional/theme"},
       "chart": {"label": "数据图表", "needs": "Plotly（随 install_optional.py 复制）", "target": "assets/visualizations"},
       "spatial": {"label": "几何与空间画布", "needs": "JSXGraph（随 install_optional.py 复制）", "target": "assets/visualizations"}
