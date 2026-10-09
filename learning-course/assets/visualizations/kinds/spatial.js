@@ -78,26 +78,68 @@
     h.record(node, {kind: "spatial", vector: config.vector, image: output});
   }
 
-  function renderSpatial(node, config) {
-    if (config.matrix && config.vector && root.JXG) {
-      h.show(node);
-      var host = h.find(node, "[data-viz-host]");
-      var output = core.vectorImage(config.matrix, config.vector);
-      // `Math.max` over a spread would be the only ES2015 spread in the kit;
-      // the rest of the runtime is ES5-shaped, so reduce instead.
-      var bound = Math.max(5, Math.max.apply(Math, config.vector.map(Math.abs)), Math.max.apply(Math, output.map(Math.abs))) + 1;
-      var board = root.JXG.JSXGraph.initBoard(host.id, {boundingbox: [-bound, bound, bound, -bound], axis: true, keepaspectratio: true, showCopyright: false, showNavigation: false, pan: {enabled: false}, zoom: {enabled: false}, resize: {enabled: true}});
-      var point = board.create("point", config.vector, {name: "v", size: 4, color: "#3157d5"});
-      var transformed = board.create("point", [
-        function () { return core.vectorImage(config.matrix, [point.X(), point.Y()])[0]; },
-        function () { return core.vectorImage(config.matrix, [point.X(), point.Y()])[1]; }
-      ], {name: "Av", fixed: true, size: 4, color: "#b42318"});
-      board.create("arrow", [[0, 0], point], {strokeColor: "#3157d5", strokeWidth: 3});
-      board.create("arrow", [[0, 0], transformed], {strokeColor: "#b42318", strokeWidth: 3, dash: 2});
-      h.status(node, "v = (" + config.vector.map(h.fmt).join(", ") + ")；Av = (" + output.map(h.fmt).join(", ") + ")");
-      h.record(node, {kind: "spatial", vector: config.vector, image: output});
-    } else if (config.matrix && config.vector) {
-      renderTransformFallback(node, config);
+  async function renderSpatial(node, config) {
+    var controls = h.find(node, "[data-viz-controls]"), inputs = controls
+      ? Array.prototype.slice.call(controls.querySelectorAll("input[type=number]")) : [];
+    var currentVector = config.vector ? config.vector.slice() : null;
+    function readVector() {
+      if (inputs.length !== 2) return currentVector;
+      var next = inputs.map(function (input) { return Number(input.value); });
+      return next.every(h.finite) ? next : currentVector;
+    }
+    function syncInputs(vector) {
+      inputs.forEach(function (input, index) { input.value = vector[index]; });
+    }
+    if (config.matrix && config.vector) {
+      currentVector = readVector();
+      syncInputs(currentVector);
+      if (!root.JXG) await h.loadVendor("jsxgraph/jsxgraphcore.js", "JXG");
+      if (root.JXG) await h.loadStylesheet("jsxgraph/jsxgraph.css");
+      if (root.JXG) {
+        h.show(node);
+        var host = h.find(node, "[data-viz-host]");
+        var output = core.vectorImage(config.matrix, currentVector);
+        // `Math.max` over a spread would be the only ES2015 spread in the kit;
+        // the rest of the runtime is ES5-shaped, so reduce instead.
+        var bound = Math.max(5, Math.max.apply(Math, currentVector.map(Math.abs)), Math.max.apply(Math, output.map(Math.abs))) + 1;
+        var board = root.JXG.JSXGraph.initBoard(host.id, {boundingbox: [-bound, bound, bound, -bound], axis: true, keepaspectratio: true, showCopyright: false, showNavigation: false, pan: {enabled: false}, zoom: {enabled: false}, resize: {enabled: true}});
+        var point = board.create("point", currentVector, {name: "v", size: 4, color: "#3157d5"});
+        var transformed = board.create("point", [
+          function () { return core.vectorImage(config.matrix, [point.X(), point.Y()])[0]; },
+          function () { return core.vectorImage(config.matrix, [point.X(), point.Y()])[1]; }
+        ], {name: "Av", fixed: true, size: 4, color: "#b42318"});
+        board.create("arrow", [[0, 0], point], {strokeColor: "#3157d5", strokeWidth: 3});
+        board.create("arrow", [[0, 0], transformed], {strokeColor: "#b42318", strokeWidth: 3, dash: 2});
+        function recordVector(vector) {
+          var image = core.vectorImage(config.matrix, vector);
+          h.status(node, "v = (" + vector.map(h.fmt).join(", ") + ")；Av = (" + image.map(h.fmt).join(", ") + ")");
+          h.record(node, {kind: "spatial", vector: vector, image: image});
+        }
+        inputs.forEach(function (input) {
+          input.addEventListener("change", function () {
+            var vector = readVector();
+            currentVector = vector;
+            point.moveTo(vector, 0);
+            board.update();
+            recordVector(vector);
+          });
+        });
+        point.on("drag", function () {
+          currentVector = [point.X(), point.Y()];
+          syncInputs(currentVector);
+          recordVector(currentVector);
+        });
+        recordVector(currentVector);
+        return {destroy: function () { if (board && board.remove) board.remove(); }};
+      }
+      function paintFallback() {
+        var nextConfig = Object.assign({}, config, {vector: currentVector.slice()});
+        renderTransformFallback(node, nextConfig);
+      }
+      inputs.forEach(function (input) {
+        input.addEventListener("change", function () { currentVector = readVector(); syncInputs(currentVector); paintFallback(); });
+      });
+      paintFallback();
     } else {
       renderShapes(node, config.shapes || []);
     }

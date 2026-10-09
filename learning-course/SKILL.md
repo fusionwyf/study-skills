@@ -143,18 +143,17 @@ HTML 的“复制学习记录”按钮只汇总原始答案、检查次数、提
 
 组件分两层，界线是「是否随课程内容决定」：
 
-- **通用**：主题、交互式测验与反馈、无库可视化 kind（`relation`、`timeline`、`process`、`sequence`、`table`）都已随默认包就绪，课程无需任何操作。
-- **随内容决定**：代码着色、`chart`、`spatial`（含主题切换器）默认不在包里，需要时按需安装，装之前不要在课件里引用：
+- **通用**：交互式测验与反馈、无库可视化 kind（`relation`、`timeline`、`process`、`sequence`、`table`）都已随默认包就绪，课程无需任何操作。
+- **随内容决定**：代码着色、主题切换器、`chart`、`spatial` 默认不在包里，需要时按需安装，装之前不要在课件里引用：
 
 ```text
 python scripts/install_optional.py <course-dir> --components code-highlight theme
 python scripts/install_optional.py <course-dir> --components chart spatial
 ```
 
-装 `chart` / `spatial` 后，在本课脚本区追加对应的 kinds 模块（模块名与 kind 同名）：
-`<script src="../assets/visualizations/kinds/chart.js"></script>`。
+装 `chart` / `spatial` 后，安装脚本会把组件登记到课程的 `assets/asset-manifest.json`；课件仍需加载对应 kind 模块。模块会从同一课程包的 `visualizations/vendor/` 自动加载已校验的本地 vendor，缺失时保留 fallback。
 
-可选组件清单、依赖和降级行为见 `assets/optional/manifest.json`；每个组件目录内自带 README。登记表 `assets/learnkit/components.json` 的 `kinds.universal`、`kinds.optional` 与 `optional` 三段是唯一权威来源，不要引用其中没有的名字。
+可选组件清单、依赖和降级行为见 `assets/optional/manifest.json`；每个组件目录内自带 README。课程实际安装状态以课程包自己的 `assets/asset-manifest.json` 为准，能力说明仍见 `assets/learnkit/components.json`。
 
 ## 验证
 

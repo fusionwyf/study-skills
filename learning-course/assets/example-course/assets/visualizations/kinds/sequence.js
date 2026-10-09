@@ -22,8 +22,10 @@
     return config;
   }
 
-  function renderSequence(node, config) {
-    var states = config.steps || core.selectionSortTrace(config.input), index = 0;
+  function renderSequence(node, config, context) {
+    var states = config.steps || core.selectionSortTrace(config.input);
+    var sourceStore = context && context.sourceStore;
+    var index = sourceStore ? sourceStore.getDerived().index : 0;
     h.show(node);
     var host = h.find(node, "[data-viz-host]"), controls = h.find(node, "[data-viz-controls]");
     var slider = controls && controls.querySelector("input[type=range]");
@@ -64,11 +66,24 @@
 
     if (controls) {
       var prev = controls.querySelector("[data-viz-prev]"), next = controls.querySelector("[data-viz-next]");
-      if (prev) prev.addEventListener("click", function () { if (index) { index--; paint(); } });
-      if (next) next.addEventListener("click", function () { if (index < states.length - 1) { index++; paint(); } });
-      if (slider) slider.addEventListener("input", function () { index = Number(slider.value); paint(); });
+      if (prev) prev.addEventListener("click", function () {
+        if (sourceStore) sourceStore.dispatch({type: "STEP_PREVIOUS"});
+        else if (index) { index--; paint(); }
+      });
+      if (next) next.addEventListener("click", function () {
+        if (sourceStore) sourceStore.dispatch({type: "STEP_NEXT"});
+        else if (index < states.length - 1) { index++; paint(); }
+      });
+      if (slider) slider.addEventListener("input", function () {
+        if (sourceStore) sourceStore.dispatch({type: "SEEK", index: Number(slider.value)});
+        else { index = Number(slider.value); paint(); }
+      });
     }
     paint();
+    return sourceStore ? {update: function (nodeElement, nodeConfig, snapshot) {
+      index = Number(snapshot.derived.index) || 0;
+      paint();
+    }} : null;
   }
 
   core.registerKind("sequence", {validate: validateSequence, render: renderSequence});

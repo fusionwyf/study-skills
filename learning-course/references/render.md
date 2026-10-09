@@ -106,7 +106,7 @@ D_{\mathbf{u}} f(P_0) = \nabla f(P_0) \cdot \mathbf{u}
 内核 `assets/visualizations/visualizations.js` 只管注册表、生命周期、容器接线和后备路径，**自己不渲染任何东西**。每个 kind 在自己的模块里：
 `kinds/list.js`（`relation`/`timeline`/`process` 共用一套列表渲染，各有自己的校验器）、`kinds/sequence.js`、`kinds/table.js`、`kinds/chart.js`、`kinds/spatial.js`。这样拆是因为 `chart` 要 4.7 MB 的 Plotly、`spatial` 要 JSXGraph，而另外五个是纯 HTML/SVG——合成一个文件会逼每门课都背上那两个重依赖。
 
-加载顺序：内核在前，用到的 kind 模块在后。没有 `data-visualization` 容器的页面加载这些脚本不会有任何副作用。
+加载顺序：内核在前，用到的 kind 模块在后。`chart` 和 `spatial` 模块会从同一课程包的 `visualizations/vendor/` 自动加载已校验的本地依赖；没有 `data-visualization` 容器的页面不会创建可视化实例。
 
 ### 选择表达方式
 
@@ -147,7 +147,7 @@ D_{\mathbf{u}} f(P_0) = \nabla f(P_0) \cdot \mathbf{u}
 
 ### 适配器生命周期
 
-扩展适配器实现 `validate(config)` 和 `render(node, config)`，需要动态模型时再提供 `update(state, derived)`、`select(target)`、`destroy()`。渲染器应：
+扩展适配器实现 `validate(config)` 和 `render(node, config, context)`，需要动态模型时返回 `update` / `destroy`，或在注册项上提供 `update`。容器声明 `data-viz-source="#learnkit-id"` 后，内核会把同一个 LearnKit store 的 snapshot 传给适配器。渲染器应：
 
 1. 初始化时核对数据形状、有限数值、定义域、单位和假设。
 2. 用真实状态更新图形，同时把当前参数、步骤或选中对象写入 `data-visual-state`。
@@ -171,7 +171,7 @@ python scripts/install_optional.py <course-dir> --components code-highlight them
 
 组件目录是 `assets/optional/<name>/`，每个都带 README 说明接线方式、可改的 token 和降级行为。装之前不要在课件里引用。
 
-同理，`chart` 与 `spatial` 属于「随课程内容决定」的可选可视化 kind，也要显式安装；装完记得在页面里补上各自的 kinds 模块 script 标签。
+同理，`chart` 与 `spatial` 属于「随课程内容决定」的可选可视化 kind，也要显式安装；装完记得在页面里补上各自的 kinds 模块 script 标签。模块会自动接线同包 vendor，不需要再手工写 Plotly / JSXGraph 的 script 标签。
 
 ```text
 python scripts/install_optional.py <course-dir> --components chart spatial

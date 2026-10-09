@@ -65,6 +65,12 @@ def main() -> int:
             raise FileExistsError(f"Refusing to overwrite existing file: {target}")
         shutil.copy2(learnkit_dir / filename, target)
 
+    asset_manifest = Path(__file__).resolve().parents[1] / "assets" / "asset-manifest.json"
+    asset_manifest_target = course_dir / "assets" / "asset-manifest.json"
+    if asset_manifest_target.exists() and not args.force:
+        raise FileExistsError(f"Refusing to overwrite existing file: {asset_manifest_target}")
+    shutil.copy2(asset_manifest, asset_manifest_target)
+
     # The universal tier of the visualisation kit. Everything here is plain
     # HTML/SVG with no third-party library, so a new course can render a
     # relation graph, a timeline, a process, a step playback and a table out of

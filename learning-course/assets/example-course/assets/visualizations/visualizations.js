@@ -28,6 +28,9 @@
 
   var adapters = {};
   var document = root.document;
+  var moduleBase = document && document.currentScript && document.currentScript.src
+    ? document.currentScript.src.replace(/[^/]*$/, "") : null;
+  var assetPromises = {};
 
   /* --- Shared numeric and DOM helpers used by every kind ---------------- */
 
@@ -45,6 +48,31 @@
   function clear(el) { while (el && el.firstChild) el.removeChild(el.firstChild); }
   function status(node, text) { var target = find(node, "[data-viz-status]"); if (target) target.textContent = text; }
   function show(node) { var host = find(node, "[data-viz-host]"), controls = find(node, "[data-viz-controls]"); if (host) host.hidden = false; if (controls) controls.hidden = false; }
+
+  function loadAsset(relative, globalName, stylesheet) {
+    if (globalName && root[globalName]) return Promise.resolve(true);
+    if (!document || !moduleBase) return Promise.resolve(false);
+    if (assetPromises[relative]) return assetPromises[relative];
+    assetPromises[relative] = new Promise(function (resolve) {
+      var url;
+      try { url = new URL(relative, moduleBase).href; }
+      catch (error) { url = moduleBase + relative; }
+      if (stylesheet) {
+        var link = document.createElement("link");
+        link.rel = "stylesheet"; link.href = url;
+        link.onload = function () { resolve(true); };
+        link.onerror = function () { resolve(false); };
+        (document.head || document.documentElement).appendChild(link);
+        return;
+      }
+      var script = document.createElement("script");
+      script.src = url; script.async = false;
+      script.onload = function () { resolve(!globalName || !!root[globalName]); };
+      script.onerror = function () { resolve(false); };
+      (document.head || document.documentElement).appendChild(script);
+    });
+    return assetPromises[relative];
+  }
 
   /* --- Registry --------------------------------------------------------- */
 
@@ -112,7 +140,9 @@
     // DOM/numeric conventions live in exactly one place.
     helpers: {
       finite: finite, finiteArray: finiteArray, find: find, fmt: fmt, escape: escape,
-      record: record, svgEl: svgEl, clear: clear, status: status, show: show
+      record: record, svgEl: svgEl, clear: clear, status: status, show: show,
+      loadVendor: function (relative, globalName) { return loadAsset("vendor/" + relative, globalName, false); },
+      loadStylesheet: function (relative) { return loadAsset("vendor/" + relative, null, true); }
     },
     /** Which kinds are actually loaded — used by tests and by course.js. */
     loaded: function () { return Object.keys(adapters).sort(); }
@@ -129,7 +159,26 @@
         var configNode = find(node, "[data-viz-config]");
         if (!configNode) throw new Error("缺少 data-viz-config");
         var kind = node.dataset.visualization, config = validateConfig(kind, JSON.parse(configNode.textContent));
-        await adapters[kind].render(node, config);
+        var sourceStore = null;
+        if (node.dataset.vizSource) {
+          var source = document.querySelector(node.dataset.vizSource);
+          sourceStore = source && source.__learnkitStore;
+          if (!sourceStore) throw new Error("data-viz-source 未找到 LearnKit 状态源：" + node.dataset.vizSource);
+        }
+        var instance = await adapters[kind].render(node, config, {sourceStore: sourceStore});
+        var instanceUpdate = instance && typeof instance.update === "function" ? instance.update : adapters[kind].update;
+        if (sourceStore && typeof instanceUpdate === "function") {
+          var update = function (snapshot) { instanceUpdate(node, config, snapshot, instance); };
+          node.__vizUnsubscribe = sourceStore.subscribe(update);
+          update(sourceStore.snapshot());
+        }
+        if (instance && typeof instance.destroy === "function" && root.addEventListener) {
+          node.__vizDestroy = function () {
+            if (node.__vizUnsubscribe) node.__vizUnsubscribe();
+            instance.destroy();
+          };
+          root.addEventListener("pagehide", node.__vizDestroy, {once: true});
+        }
         node.dataset.vizReady = "true";
       } catch (error) {
         // A missing kind module and a malformed config both land here; either

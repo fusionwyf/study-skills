@@ -63,10 +63,17 @@
 
   async function renderChart(node, config) {
     h.show(node);
+    if (!root.Plotly) await h.loadVendor("plotly.js-dist-min/plotly.min.js", "Plotly");
     if (root.Plotly) {
       var host = h.find(node, "[data-viz-host]");
       await root.Plotly.newPlot(host, config.traces.map(function (t) { return Object.assign({}, t, {connectgaps: false}); }), Object.assign({margin: {t: 35, r: 25, b: 55, l: 55}, autosize: true}, config.layout || {}), {responsive: true, displaylogo: false, showSendToCloud: false});
-      host.on("plotly_click", function (event) { var p = event.points && event.points[0]; if (p) h.status(node, "选中点：x = " + h.fmt(p.x) + (typeof p.y === "number" ? "，y = " + h.fmt(p.y) : "")); });
+      host.on("plotly_click", function (event) {
+        var p = event.points && event.points[0];
+        if (p) {
+          h.status(node, "选中点：x = " + h.fmt(p.x) + (typeof p.y === "number" ? "，y = " + h.fmt(p.y) : ""));
+          h.record(node, {kind: "chart", model: config.model, selected: {curve: p.curveNumber, point: p.pointNumber, x: p.x, y: p.y}});
+        }
+      });
     } else renderChartSvg(node, config);
     h.record(node, {kind: "chart", model: config.model});
   }

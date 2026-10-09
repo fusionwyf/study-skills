@@ -1,6 +1,6 @@
 {
   "version": "1.4",
-  "note": "能力登记表。只登记运行时真的会渲染或驱动的名称；静态 HTML、按需安装项与未实现项分开标注，避免 Agent 误用未实现组件。公式与代码着色都不走 LearnKit：课件从 CDN 引入 KaTeX / highlight.js，直接书写 LaTeX 定界符即可。",
+  "note": "能力登记表。只登记运行时真的会渲染或驱动的名称；静态 HTML、按需安装项与未实现项分开标注，避免 Agent 误用未实现组件。课程实际安装状态写入课程包 assets/asset-manifest.json。公式与代码着色都不走 LearnKit：课件从 CDN 引入 KaTeX / highlight.js，直接书写 LaTeX 定界符即可。",
   "runtime": {
     "l1_core": ["StateStore", "SequenceStore", "EventBus(snapshot log)", "History(cursor)", "SpecValidator"],
     "actions": ["PLAY", "PAUSE", "STEP_NEXT", "STEP_PREVIOUS", "SEEK", "RESET", "SET_PARAMETER", "SELECT_OBJECT", "MOVE_OBJECT", "SUBMIT_ANSWER"],

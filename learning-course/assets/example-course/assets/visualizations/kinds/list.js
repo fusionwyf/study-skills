@@ -41,7 +41,10 @@
       li.dataset.index = index;
       li.innerHTML = "<strong>" + h.escape(item.title || item.label || item.name || (item.id || index + 1)) + "</strong>" +
         (item.description || item.summary ? "<p>" + h.escape(item.description || item.summary) + "</p>" : "");
-      li.addEventListener("click", function () { h.status(node, (item.title || item.label || item.name || item.id) + (item.date ? " · " + item.date : "")); });
+      li.addEventListener("click", function () {
+        h.status(node, (item.title || item.label || item.name || item.id) + (item.date ? " · " + item.date : ""));
+        h.record(node, {kind: kind, selected: index});
+      });
       list.appendChild(li);
     });
     host.appendChild(list);

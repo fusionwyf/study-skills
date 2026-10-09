@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -425,22 +426,58 @@ def validate_open_components(lesson: Path, body: str, errors: list[str]) -> None
 
 
 def validate_visualizations(lesson: Path, body: str, errors: list[str]) -> None:
+    course_root = lesson.resolve().parent.parent
+    is_course_package = (course_root / "course.yaml").is_file()
+    registry_path = course_root / "assets" / "visualizations" / "adapters.json" if is_course_package else VIZ_REGISTRY_PATH
     try:
-        registry = json.loads(VIZ_REGISTRY_PATH.read_text(encoding="utf-8"))
-        kinds = set((registry.get("kinds") or {}).keys())
+        registry = json.loads(registry_path.read_text(encoding="utf-8"))
+        registry_kinds = registry.get("kinds") or {}
+        kinds = set(registry_kinds.keys())
     except (OSError, json.JSONDecodeError):
+        registry_kinds = {}
         kinds = {"chart", "relation", "timeline", "process", "spatial", "sequence", "table"}
     parser = ComponentParser()
     parser.feed(body)
     ids = [n["attrs"].get("id") for n in parser.nodes if n["attrs"].get("id")]
+    links = {os.path.normpath(link.split("#", 1)[0]).replace("\\", "/") for link in LINK_RE.findall(body)}
+    installed_optional: set[str] | None = None
+    asset_manifest = course_root / "assets" / "asset-manifest.json"
+    if is_course_package and asset_manifest.is_file():
+        try:
+            manifest = json.loads(asset_manifest.read_text(encoding="utf-8"))
+            state = manifest.get("visualizations", {}) if isinstance(manifest, dict) else {}
+            values = state.get("optional_kinds", []) if isinstance(state, dict) else []
+            installed_optional = set(values) if isinstance(values, list) else set()
+        except (OSError, json.JSONDecodeError):
+            errors.append(f"{lesson.name}: invalid assets/asset-manifest.json")
     for node in parser.nodes:
         kind = node["attrs"].get("data-visualization")
         if kind is None:
             continue
         label = f"{lesson.name}: visualization {node['attrs'].get('id') or kind}"
         children = list(descendants(node))
+        entry = registry_kinds.get(kind) if isinstance(registry_kinds, dict) else None
         if kind not in kinds:
             errors.append(f"{label} unsupported visualization type")
+        elif is_course_package:
+            module = entry.get("module") if isinstance(entry, dict) else None
+            tier = entry.get("tier") if isinstance(entry, dict) else None
+            if not isinstance(module, str) or not module:
+                errors.append(f"{label} registry entry has no implementation module")
+            else:
+                module_path = course_root / "assets" / "visualizations" / module
+                expected = os.path.relpath(module_path, lesson.parent).replace("\\", "/")
+                if not module_path.is_file():
+                    errors.append(f"{label} implementation module is missing: {module}")
+                if os.path.normpath(expected) not in links:
+                    errors.append(f"{label} lesson does not load {expected}")
+            if tier == "optional" and installed_optional is not None and kind not in installed_optional:
+                errors.append(f"{label} optional kind is not installed in asset-manifest.json")
+            if tier == "extension" and (not isinstance(module, str) or not module):
+                errors.append(f"{label} extension kind requires an explicit module registration")
+            css = os.path.relpath(course_root / "assets" / "visualizations" / "visualizations.css", lesson.parent).replace("\\", "/")
+            if os.path.normpath(css) not in links:
+                errors.append(f"{label} lesson does not load {css}")
         if not node["attrs"].get("id") or ids.count(node["attrs"].get("id")) != 1:
             errors.append(f"{label} requires a unique id")
         configs = [n for n in children if "data-viz-config" in n["attrs"]]

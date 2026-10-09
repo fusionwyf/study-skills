@@ -29,7 +29,7 @@
       "vendor": "visualizations/vendor/manifest.json",
       "vendor_kinds": ["chart"],
       "docs": "../../references/render.md",
-      "wiring": "由 install_optional.py --components chart 安装；复制 kinds/chart.js 与 Plotly，页面在内核之后追加 <script src=\"../assets/visualizations/kinds/chart.js\">",
+      "wiring": "由 install_optional.py --components chart 安装；复制 kinds/chart.js 与 Plotly，页面在内核之后追加 kind 模块 script；模块会从同包 vendor 自动加载 Plotly",
       "degrade": "Plotly 缺失时回退到内置 SVG 折线"
     },
     "spatial": {
@@ -38,7 +38,7 @@
       "vendor": "visualizations/vendor/manifest.json",
       "vendor_kinds": ["spatial"],
       "docs": "../../references/render.md",
-      "wiring": "由 install_optional.py --components spatial 安装；复制 kinds/spatial.js 与 JSXGraph，页面在内核之后追加 <script src=\"../assets/visualizations/kinds/spatial.js\">",
+      "wiring": "由 install_optional.py --components spatial 安装；复制 kinds/spatial.js 与 JSXGraph，页面在内核之后追加 kind 模块 script；模块会从同包 vendor 自动加载 JSXGraph 与 CSS",
       "degrade": "JSXGraph 缺失时回退到结构说明"
     }
   },

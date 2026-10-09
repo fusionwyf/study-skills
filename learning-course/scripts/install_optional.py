@@ -29,6 +29,7 @@ from pathlib import Path
 SKILL = Path(__file__).resolve().parents[1]
 OPTIONAL = SKILL / "assets" / "optional"
 VIZ_KIT = SKILL / "assets" / "visualizations"
+ASSET_MANIFEST = "assets/asset-manifest.json"
 
 # Universal, library-free kinds. Registered in every course by init_course.py,
 # so asking for one here is a no-op worth reporting rather than an error.
@@ -39,17 +40,7 @@ VIZ_VENDOR_KINDS = ("chart", "spatial")
 VISUALIZATION_KINDS = VIZ_UNIVERSAL_KINDS + VIZ_VENDOR_KINDS
 
 # Components that are plain files plus an optional vendor tree.
-SIMPLE_COMPONENTS = {
-    "code-highlight": {
-        "source": OPTIONAL / "code-highlight",
-        "target": "assets/optional/code-highlight",
-        "files": [
-            "code-highlight.js", "code-highlight.css", "theme.js",
-            "github.min.css", "github-dark.min.css", "README.md",
-        ],
-    },
-    "theme": {"source": OPTIONAL / "theme", "target": "assets/optional/theme", "files": ["theme.js", "theme.css", "README.md"]},
-}
+SIMPLE_COMPONENTS = ("code-highlight", "theme")
 
 
 class InstallError(Exception):
@@ -60,13 +51,60 @@ def _read_manifest() -> dict[str, object]:
     return json.loads((OPTIONAL / "manifest.json").read_text(encoding="utf-8"))
 
 
-def _check_targets(paths: list[Path], force: bool) -> None:
-    """Refuse before touching anything so a failed run never half-writes."""
-    if force:
-        return
-    for path in paths:
-        if path.exists():
-            raise InstallError(f"Refusing to overwrite: {path}; use --force to replace it")
+def _simple_spec(name: str) -> dict[str, object]:
+    catalogue = _read_manifest().get("components", {})
+    entry = catalogue.get(name) if isinstance(catalogue, dict) else None
+    if not isinstance(entry, dict):
+        raise InstallError(f"Optional component is missing from manifest: {name}")
+    files = entry.get("files")
+    if not isinstance(files, list) or not all(isinstance(item, str) for item in files):
+        raise InstallError(f"Optional component has invalid files list: {name}")
+    prefix = name + "/"
+    relative_files = [item[len(prefix):] if item.startswith(prefix) else item for item in files]
+    docs = entry.get("docs")
+    if isinstance(docs, str) and docs.startswith(prefix):
+        relative_files.append(docs[len(prefix):])
+    return {
+        "source": OPTIONAL / name,
+        "target": f"assets/optional/{name}",
+        "files": relative_files,
+    }
+
+
+def _copy_file(source: Path, destination: Path, force: bool) -> None:
+    """Copy one asset idempotently, rejecting only a real content conflict."""
+    if destination.exists() and not force:
+        if destination.is_file() and destination.read_bytes() == source.read_bytes():
+            return
+        raise InstallError(f"Refusing to overwrite changed asset: {destination}; use --force to replace it")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(source, destination)
+
+
+def _load_asset_manifest(course_dir: Path) -> dict[str, object]:
+    path = course_dir / ASSET_MANIFEST
+    if not path.is_file():
+        return {
+            "version": 1,
+            "visualizations": {
+                "universal_kinds": list(VIZ_UNIVERSAL_KINDS),
+                "optional_kinds": [],
+            },
+            "components": [],
+        }
+    try:
+        manifest = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise InstallError(f"invalid {ASSET_MANIFEST}: {exc}") from exc
+    if not isinstance(manifest, dict):
+        raise InstallError(f"{ASSET_MANIFEST} must contain an object")
+    return manifest
+
+
+def _save_asset_manifest(course_dir: Path, manifest: dict[str, object]) -> None:
+    path = course_dir / ASSET_MANIFEST
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
 def _verify_vendor(manifest: dict, kinds: list[str]) -> dict:
@@ -98,33 +136,34 @@ def install_visualizations(course_dir: Path, kinds: list[str], force: bool) -> l
     modules = [f"kinds/{name}.js" for name in kinds]
     vendor_files = ["vendor/" + name for dependency in selected.values() for name in dependency["files"]]
 
-    destinations = [target / name for name in modules + vendor_files] + [target / "vendor" / "manifest.json"]
-    _check_targets(destinations, force)
-
     for name in modules + vendor_files:
-        destination = target / name
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(VIZ_KIT / name, destination)
+        _copy_file(VIZ_KIT / name, target / name, force)
 
-    # The vendor manifest is written per course so a reader sees exactly which
-    # libraries this course actually carries, not the full catalogue.
+    # Merge with already-installed vendor libraries. Re-running the command or
+    # adding a second optional kind must preserve the first kind's lock entry.
+    vendor_manifest_path = target / "vendor" / "manifest.json"
+    installed = {}
+    if vendor_manifest_path.is_file():
+        try:
+            installed = json.loads(vendor_manifest_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            raise InstallError(f"invalid course vendor manifest: {exc}") from exc
+    if not isinstance(installed, dict):
+        raise InstallError("course vendor manifest must contain an object")
+    installed.update(selected)
     (target / "vendor").mkdir(parents=True, exist_ok=True)
-    (target / "vendor" / "manifest.json").write_text(json.dumps(selected, indent=2) + "\n", encoding="utf-8")
+    vendor_manifest_path.write_text(json.dumps(installed, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
     return [f"visualizations/{name}：已复制 kinds/{name}.js 与 {selected[name]['package']} {selected[name]['version']}" for name in kinds]
 
 
 def install_simple(course_dir: Path, name: str, force: bool) -> list[str]:
     """Copy a self-contained component directory (optional JS/CSS/README)."""
-    spec = SIMPLE_COMPONENTS[name]
+    spec = _simple_spec(name)
     source: Path = spec["source"]
     target = course_dir / spec["target"]
-    destinations = [target / filename for filename in spec["files"]]
-    _check_targets(destinations, force)
     for filename in spec["files"]:
-        destination = target / filename
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source / filename, destination)
+        _copy_file(source / filename, target / filename, force)
     return [f"{name}：已复制到 {spec['target']}"]
 
 
@@ -132,6 +171,7 @@ def install(course_dir: Path, components: list[str], force: bool = False) -> lis
     if not (course_dir / "course.yaml").is_file():
         raise InstallError("Initialize the course package first; course.yaml is missing")
 
+    components = list(dict.fromkeys(components))
     unknown = [name for name in components if name not in SIMPLE_COMPONENTS and name not in VISUALIZATION_KINDS]
     if unknown:
         known = sorted(list(SIMPLE_COMPONENTS) + list(VISUALIZATION_KINDS))
@@ -149,6 +189,24 @@ def install(course_dir: Path, components: list[str], force: bool = False) -> lis
     for name in components:
         if name in SIMPLE_COMPONENTS:
             notices.extend(install_simple(course_dir, name, force))
+    manifest = _load_asset_manifest(course_dir)
+    viz_state = manifest.setdefault("visualizations", {})
+    if not isinstance(viz_state, dict):
+        raise InstallError(f"{ASSET_MANIFEST} visualizations must be an object")
+    viz_state.setdefault("universal_kinds", list(VIZ_UNIVERSAL_KINDS))
+    optional_kinds = viz_state.setdefault("optional_kinds", [])
+    if not isinstance(optional_kinds, list):
+        raise InstallError(f"{ASSET_MANIFEST} optional_kinds must be a list")
+    for name in viz_kinds:
+        if name not in optional_kinds:
+            optional_kinds.append(name)
+    installed_components = manifest.setdefault("components", [])
+    if not isinstance(installed_components, list):
+        raise InstallError(f"{ASSET_MANIFEST} components must be a list")
+    for name in components:
+        if name in SIMPLE_COMPONENTS and name not in installed_components:
+            installed_components.append(name)
+    _save_asset_manifest(course_dir, manifest)
     return notices
 
 

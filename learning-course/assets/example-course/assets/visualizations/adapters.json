@@ -3,7 +3,7 @@
   "note": "可视化适配器注册表。核心只定义数据契约和生命周期；学科扩展通过 registerKind() 注册，不把领域图形塞进核心。tier 说明该 kind 属于哪一层：universal 由 init_course.py 随默认包复制，optional 需 install_optional.py 安装。",
   "shared": {
     "requires": [
-      "唯一 id 的容器 data-visualization=\"<kind>\"",
+      "唯一 id 的容器 data-visualization=\"<kind>\"，动态模型可用 data-viz-source 指向 LearnKit 容器",
       "一个 application/json 的 data-viz-config，含 model、domain、precision 非空说明",
       "一个唯一 id 的 data-viz-host（初始 hidden）",
       "一个 data-viz-status role=\"status\"",

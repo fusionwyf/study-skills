@@ -95,6 +95,7 @@ class VisualizationTests(unittest.TestCase):
             for name in ("visualizations.js", "visualizations.css", "adapters.json",
                          "kinds/list.js", "kinds/sequence.js", "kinds/table.js"):
                 self.assertTrue((target / name).is_file(), f"init_course.py must ship {name}")
+            self.assertTrue((root / "assets/asset-manifest.json").is_file())
             # ...and carries no vendor library, so a plain course stays offline.
             self.assertFalse((target / "vendor").exists())
             self.assertFalse((target / "kinds/chart.js").exists())
@@ -108,12 +109,13 @@ class VisualizationTests(unittest.TestCase):
             self.assertEqual(sorted(json.loads((target / "vendor/manifest.json").read_text())), ["chart"])
             self.assertTrue(any("chart" in notice for notice in notices))
 
-            # A second install without --force must refuse before writing anything.
-            with self.assertRaises(InstallError):
-                install(root, ["spatial"])
-            self.assertFalse((target / "kinds/spatial.js").exists())
-            install(root, ["spatial"], force=True)
+            # Optional installs are composable and preserve the first vendor lock.
+            install(root, ["spatial"])
+            self.assertTrue((target / "kinds/spatial.js").is_file())
             self.assertTrue((target / "vendor/jsxgraph/jsxgraphcore.js").is_file())
+            self.assertEqual(sorted(json.loads((target / "vendor/manifest.json").read_text())), ["chart", "spatial"])
+            asset_manifest = json.loads((root / "assets/asset-manifest.json").read_text())
+            self.assertEqual(sorted(asset_manifest["visualizations"]["optional_kinds"]), ["chart", "spatial"])
 
     def test_universal_kind_names_installed_directly_report_instead_of_copying(self):
         """A course asking for a universal kind gets a notice, not a second copy."""
@@ -148,9 +150,12 @@ class VisualizationTests(unittest.TestCase):
             self.assertTrue((theme / "theme.css").is_file())
             # No visualization kit and no vendor tree should be pulled in.
             self.assertFalse((root / "assets/visualizations").exists())
-            # A partial install must not happen: the refusal comes before any copy.
-            with self.assertRaises(InstallError):
-                install(root, ["theme", "chart"])
+            # Repeating a component and adding a visualization is safe and recorded.
+            install(root, ["theme", "chart"])
+            self.assertTrue((root / "assets/visualizations/kinds/chart.js").is_file())
+            asset_manifest = json.loads((root / "assets/asset-manifest.json").read_text())
+            self.assertEqual(asset_manifest["components"], ["code-highlight", "theme"])
+            self.assertEqual(asset_manifest["visualizations"]["optional_kinds"], ["chart"])
 
     def test_declared_visualization_kinds_match_the_shipped_modules(self):
         """`adapters.json` and `kinds/` must agree, so no course references a missing module."""
@@ -170,6 +175,7 @@ class VisualizationTests(unittest.TestCase):
         sources = {
             "course.css": SKILL / "assets/course-template/course.css",
             "course.js": SKILL / "assets/course-template/course.js",
+            "asset-manifest.json": SKILL / "assets/asset-manifest.json",
             "learnkit/components.json": SKILL / "assets/learnkit/components.json",
             "learnkit/learnkit.js": SKILL / "assets/learnkit/learnkit.js",
             "learnkit/lesson-spec.schema.json": SKILL / "assets/learnkit/lesson-spec.schema.json",
@@ -193,11 +199,37 @@ class VisualizationTests(unittest.TestCase):
 
     def test_lesson_template_wires_the_universal_visualization_modules(self):
         template = (SKILL / "assets/course-template/lesson.html").read_text()
+        self.assertIn("visualizations/visualizations.css", template)
         for name in ("visualizations.js", "kinds/list.js", "kinds/sequence.js", "kinds/table.js"):
             self.assertIn(f"visualizations/{name}", template, f"the lesson template must load {name}")
         # Optional kinds must stay out until a course installs them.
         for name in ("kinds/chart.js", "kinds/spatial.js"):
             self.assertNotIn(name, template, f"the default template must not reference {name}")
+
+    def test_course_validator_uses_course_assets_and_installed_optional_state(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            created = subprocess.run(
+                [sys.executable, "-X", "utf8", str(ROOT / "learning-course/scripts/init_course.py"),
+                 "--course-dir", str(root), "--title", "t", "--goal", "g"],
+                capture_output=True, text=True,
+            )
+            self.assertEqual(created.returncode, 0, created.stdout + created.stderr)
+            lesson = root / "lessons/0001-model.html"
+            body = '''<link rel="stylesheet" href="../assets/visualizations/visualizations.css">
+<section id="v" data-visualization="chart"><div data-viz-fallback>fallback</div>
+<div id="h" data-viz-host hidden></div><p data-viz-status role="status"></p>
+<script type="application/json" data-viz-config>{"model":"m","domain":"d","precision":"p","traces":[{"x":[0],"y":[0]}]}</script></section>'''
+            lesson.write_text(body, encoding="utf-8")
+            errors = []
+            validate_visualizations(lesson, body, errors)
+            self.assertTrue(any("implementation module is missing" in error for error in errors))
+            install(root, ["chart"])
+            body += '<script src="../assets/visualizations/kinds/chart.js"></script>'
+            lesson.write_text(body, encoding="utf-8")
+            errors = []
+            validate_visualizations(lesson, body, errors)
+            self.assertEqual(errors, [])
 
     def test_optional_manifest_lists_only_real_files(self):
         registry = json.loads((KIT.parent / "optional/manifest.json").read_text())
