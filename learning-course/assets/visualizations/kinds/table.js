@@ -46,5 +46,7 @@
     h.record(node, {kind: "table", rows: config.rows.length});
   }
 
-  core.registerKind("table", {validate: validateTable, render: renderTable});
+  core.registerKind("table", {validate: validateTable, render: renderTable, update: function (node, config, snapshot) {
+    var next = h.boundConfig(node, config, snapshot); validateTable(next); renderTable(node, next);
+  }});
 }(typeof window !== "undefined" ? window : globalThis));

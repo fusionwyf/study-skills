@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>图像观察与标注</title>
+    <link rel="stylesheet" href="../assets/course.css" />
+    <link rel="stylesheet" href="../assets/visualizations/visualizations.css" />
+    <link rel="stylesheet" href="../assets/optional/media/media.css" />
+  </head>
+  <body>
+    <div class="course-shell">
+      <header class="course-header">
+        <h1>图像观察与标注</h1>
+        <a href="../index.html">课件目录</a>
+      </header>
+      <main
+        class="lesson"
+        data-course-id="acceptance-course"
+        data-lesson-id="0005"
+        data-objective="design"
+        data-evidence="practice"
+        data-retrieval="required"
+        data-feedback="required"
+        data-source-status="not-needed"
+        data-answer-status="provided"
+      >
+        <section data-role="objective">
+          <h2>学习成果</h2>
+          <p>基于图像位置与明确标准提出改进并解释理由</p>
+        </section>
+        <section>
+          <h2>动线与庭院</h2>
+          <p>
+            这是原创示意图。蓝线连接入口与庭院。评价标准是路径可辨识、可达性与空间停留，图形本身不代表已通过建筑规范审查。
+          </p>
+        </section>
+        <section
+          data-role="evidence"
+          data-question-id="design-observation"
+          data-answer-kind="open"
+        >
+          <figure id="site-media" data-media>
+            <div data-media-frame>
+              <img
+                src="../reference/site.svg"
+                alt="入口在左，蓝色路径通向中央庭院的平面示意图"
+              />
+            </div>
+            <figcaption data-media-fallback>
+              1. 入口在图左侧。2.
+              庭院在中央。点击热点观察，并提出一个有理由的改进。
+            </figcaption>
+            <p data-media-status role="status"></p>
+            <script type="application/json" data-media-config>
+              {
+                "hotspots": [
+                  {
+                    "id": "entry",
+                    "label": "入口",
+                    "x": 10,
+                    "y": 50,
+                    "description": "路径起点"
+                  },
+                  {
+                    "id": "court",
+                    "label": "庭院",
+                    "x": 50,
+                    "y": 50,
+                    "description": "停留空间"
+                  }
+                ]
+              }
+            </script>
+          </figure>
+          <label for="design-notes">观察、修改与理由</label
+          ><textarea id="design-notes"></textarea>
+          <p data-role="answer-feedback">
+            对照：说明观察位置、采用的评价标准与修改理由；开放回答由 agent
+            评估。
+          </p>
+        </section>
+        <section data-role="retrieval">
+          <h2>合卷检索</h2>
+          <p>暂时遮住图片，描述入口到庭院的路线，并用一个明确标准解释你的修改方案。</p>
+        </section>
+        <section class="reflection" data-role="learner-feedback">
+          <label for="reflection">哪里仍不确定？</label
+          ><textarea id="reflection"></textarea
+          ><button type="button" data-copy-feedback>复制学习记录</button
+          ><span data-copy-feedback-status role="status"></span>
+        </section>
+      </main>
+    </div>
+    <script src="../assets/learnkit/learnkit.js"></script>
+    <script src="../assets/course.js"></script>
+    <script src="../assets/visualizations/visualizations.js"></script>
+    <script src="../assets/visualizations/kinds/list.js"></script>
+    <script src="../assets/visualizations/kinds/sequence.js"></script>
+    <script src="../assets/visualizations/kinds/table.js"></script>
+    <script src="../assets/optional/media/media.js"></script>
+  </body>
+</html>

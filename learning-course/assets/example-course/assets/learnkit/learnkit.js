@@ -254,13 +254,9 @@
   }
 
   var SECTION_TYPES = ["explain", "sequence", "explore", "construct", "compare", "predict", "practice"];
-  var BLOCK_TYPES = [
-    "rich-text", "concept-card", "key-takeaway", "callout", "worked-example", "counter-example",
-    "comparison-table", "media-viewer", "annotation", "source-reference", "formula-block", "equation-steps",
-    "code-block", "chart", "relation-graph", "timeline", "process-diagram", "spatial-canvas",
-    "simulation-stage", "table", "sequence", "hierarchy", "image-annotation", "single-choice",
-    "multiple-choice", "true-false", "fill-blank", "matching", "prediction", "interactive-question"
-  ];
+  // LessonSpec is a planning format; blocks are static HTML, not renderer names.
+  var BLOCK_TYPES = ["html"];
+
 
   // Validate the agent-facing page description before a renderer is selected.
   // This is deliberately structural: it does not attempt to infer pedagogy from prose.
@@ -284,9 +280,9 @@
       ["blocks", "controls", "views"].forEach(function (key) {
         if (section[key] !== undefined && !Array.isArray(section[key])) errors.push("sections[" + index + "]." + key + " must be an array");
       });
-      (section.blocks || []).forEach(function (block, blockIndex) {
-        if (!block || typeof block !== "object" || !BLOCK_TYPES.includes(block.type)) {
-          errors.push("sections[" + index + "].blocks[" + blockIndex + "] has unsupported type: " + (block && block.type));
+      (Array.isArray(section.blocks) ? section.blocks : []).forEach(function (block, blockIndex) {
+        if (!block || typeof block !== "object" || !BLOCK_TYPES.includes(block.type) || typeof block.content !== "string") {
+          errors.push("sections[" + index + "].blocks[" + blockIndex + "] requires type=html and string content; write HTML + data-* instead: " + (block && block.type));
         }
       });
     });

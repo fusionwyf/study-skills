@@ -1,0 +1,469 @@
+{
+  "version": 1,
+  "entrypoint": "HTML + data-*；LessonSpec 用于规划，不负责生成整页",
+  "roles": {
+    "common": "通用页面、输入、状态与证据",
+    "rendering": "数据到文字/图像的通用呈现",
+    "specialized": "领域模型与图元，优先留在课程 assets/extensions/"
+  },
+  "delivery": [
+    "default",
+    "optional",
+    "external",
+    "extension"
+  ],
+  "assets": {
+    "course-runtime": {
+      "role": "common",
+      "delivery": "default",
+      "status": "implemented",
+      "files": [
+        "course-template/course.js",
+        "course-template/course.css"
+      ],
+      "dependencies": [
+        "state-runtime"
+      ],
+      "supports": [
+        "测验、提示、开放回答、数字与填空回答、原始学习记录"
+      ],
+      "limitations": [
+        "页面判定只针对本题，不推断掌握"
+      ],
+      "example": "acceptance-course/lessons/0001-math.html",
+      "fallback": "正文与静态后备在无脚本和打印时可读",
+      "targets": {
+        "course-template/course.js": "course.js",
+        "course-template/course.css": "course.css"
+      }
+    },
+    "state-runtime": {
+      "role": "common",
+      "delivery": "default",
+      "status": "implemented",
+      "files": [
+        "learnkit/learnkit.js",
+        "learnkit/components.json",
+        "learnkit/lesson-spec.schema.json"
+      ],
+      "dependencies": [],
+      "supports": [
+        "状态、历史、模型和视图注册"
+      ],
+      "limitations": [
+        "LessonSpec 是规划校验器，不是整页生成器"
+      ],
+      "example": "acceptance-course/lessons/0002-probability.html",
+      "fallback": "正文与静态后备在无脚本和打印时可读"
+    },
+    "viz-core": {
+      "role": "rendering",
+      "delivery": "default",
+      "status": "implemented",
+      "files": [
+        "visualizations/visualizations.js",
+        "visualizations/visualizations.css",
+        "visualizations/adapters.json"
+      ],
+      "dependencies": [
+        "state-runtime"
+      ],
+      "supports": [
+        "注册、初始化、状态订阅、销毁、后备"
+      ],
+      "limitations": [
+        "专用模型必须显式注册"
+      ],
+      "example": "acceptance-course/lessons/0002-probability.html",
+      "fallback": "正文与静态后备在无脚本和打印时可读"
+    },
+    "relation": {
+      "role": "rendering",
+      "delivery": "default",
+      "status": "implemented",
+      "files": [
+        "visualizations/kinds/list.js"
+      ],
+      "dependencies": [
+        "viz-core"
+      ],
+      "supports": [
+        "关系图：节点与边"
+      ],
+      "limitations": [
+        "确定性二维布局，适合中小型图；大型网络用扩展"
+      ],
+      "example": "acceptance-course/lessons/0004-history.html",
+      "fallback": "正文与静态后备在无脚本和打印时可读",
+      "kind": "relation",
+      "module": "kinds/list.js",
+      "adapter": {
+        "label": "关系图：节点与边",
+        "data": "nodes + edges",
+        "renderer": "HTML/SVG",
+        "supports": [
+          "knowledge",
+          "network",
+          "biological",
+          "dependency"
+        ]
+      },
+      "dynamic": true,
+      "bind": "snapshot.derived.visualizations[容器 id] 或 snapshot.derived.visualization；sequence 使用 derived.index"
+    },
+    "timeline": {
+      "role": "rendering",
+      "delivery": "default",
+      "status": "implemented",
+      "files": [
+        "visualizations/kinds/list.js"
+      ],
+      "dependencies": [
+        "viz-core"
+      ],
+      "supports": [
+        "时间轴：事件和阶段"
+      ],
+      "limitations": [
+        "时间顺序由数据提供，不猜测日期"
+      ],
+      "example": "acceptance-course/lessons/0004-history.html",
+      "fallback": "正文与静态后备在无脚本和打印时可读",
+      "kind": "timeline",
+      "module": "kinds/list.js",
+      "adapter": {
+        "label": "时间轴：事件和阶段",
+        "data": "events",
+        "renderer": "HTML/SVG",
+        "supports": [
+          "history",
+          "experiment",
+          "algorithm",
+          "project"
+        ]
+      },
+      "dynamic": true,
+      "bind": "snapshot.derived.visualizations[容器 id] 或 snapshot.derived.visualization；sequence 使用 derived.index"
+    },
+    "process": {
+      "role": "rendering",
+      "delivery": "default",
+      "status": "implemented",
+      "files": [
+        "visualizations/kinds/list.js"
+      ],
+      "dependencies": [
+        "viz-core"
+      ],
+      "supports": [
+        "流程与状态图"
+      ],
+      "limitations": [
+        "节点与有向边，不执行领域状态机"
+      ],
+      "example": "acceptance-course/lessons/0003-algorithm.html",
+      "fallback": "正文与静态后备在无脚本和打印时可读",
+      "kind": "process",
+      "module": "kinds/list.js",
+      "adapter": {
+        "label": "流程与状态图",
+        "data": "nodes + optional edges",
+        "renderer": "HTML/SVG",
+        "supports": [
+          "flow",
+          "state-machine",
+          "decision-tree"
+        ]
+      },
+      "dynamic": true,
+      "bind": "snapshot.derived.visualizations[容器 id] 或 snapshot.derived.visualization；sequence 使用 derived.index"
+    },
+    "sequence": {
+      "role": "rendering",
+      "delivery": "default",
+      "status": "implemented",
+      "files": [
+        "visualizations/kinds/sequence.js"
+      ],
+      "dependencies": [
+        "viz-core"
+      ],
+      "supports": [
+        "通用步骤回放"
+      ],
+      "limitations": [
+        "steps 用于通用回放；input 是兼容用法，仅执行选择排序"
+      ],
+      "example": "acceptance-course/lessons/0003-algorithm.html",
+      "fallback": "正文与静态后备在无脚本和打印时可读",
+      "kind": "sequence",
+      "module": "kinds/sequence.js",
+      "adapter": {
+        "label": "通用步骤回放",
+        "data": "steps or input",
+        "renderer": "HTML",
+        "controls": [
+          "range",
+          "previous",
+          "next"
+        ]
+      },
+      "dynamic": true,
+      "bind": "snapshot.derived.visualizations[容器 id] 或 snapshot.derived.visualization；sequence 使用 derived.index"
+    },
+    "table": {
+      "role": "rendering",
+      "delivery": "default",
+      "status": "implemented",
+      "files": [
+        "visualizations/kinds/table.js"
+      ],
+      "dependencies": [
+        "viz-core"
+      ],
+      "supports": [
+        "结构化数据表"
+      ],
+      "limitations": [
+        "二维结构化数据"
+      ],
+      "example": "acceptance-course/lessons/0001-math.html",
+      "fallback": "正文与静态后备在无脚本和打印时可读",
+      "kind": "table",
+      "module": "kinds/table.js",
+      "adapter": {
+        "label": "结构化数据表",
+        "data": "columns + rows",
+        "renderer": "HTML"
+      },
+      "dynamic": true,
+      "bind": "snapshot.derived.visualizations[容器 id] 或 snapshot.derived.visualization；sequence 使用 derived.index"
+    },
+    "chart": {
+      "role": "rendering",
+      "delivery": "optional",
+      "status": "implemented",
+      "files": [
+        "visualizations/kinds/chart.js"
+      ],
+      "dependencies": [
+        "viz-core"
+      ],
+      "supports": [
+        "数据图表：曲线、柱状、散点、曲面、热图"
+      ],
+      "limitations": [
+        "scatter/bar/surface/heatmap；网格后备为文字，非三维渲染"
+      ],
+      "example": "acceptance-course/lessons/0002-probability.html",
+      "fallback": "正文与静态后备在无脚本和打印时可读",
+      "kind": "chart",
+      "module": "kinds/chart.js",
+      "adapter": {
+        "label": "数据图表：曲线、柱状、散点、曲面、热图",
+        "data": "traces",
+        "renderer": "Plotly 或内置 SVG"
+      },
+      "dynamic": true,
+      "bind": "snapshot.derived.visualizations[容器 id] 或 snapshot.derived.visualization；sequence 使用 derived.index",
+      "vendor": "chart"
+    },
+    "spatial": {
+      "role": "rendering",
+      "delivery": "optional",
+      "status": "implemented",
+      "files": [
+        "visualizations/kinds/spatial.js"
+      ],
+      "dependencies": [
+        "viz-core"
+      ],
+      "supports": [
+        "空间与几何画布"
+      ],
+      "limitations": [
+        "内置矩阵模型仅限二维线性变换；其他几何用专用扩展"
+      ],
+      "example": "acceptance-course/lessons/0001-math.html",
+      "fallback": "正文与静态后备在无脚本和打印时可读",
+      "kind": "spatial",
+      "module": "kinds/spatial.js",
+      "adapter": {
+        "label": "空间与几何画布",
+        "data": "matrix + vector or shapes",
+        "renderer": "JSXGraph 或 HTML/SVG"
+      },
+      "dynamic": true,
+      "bind": "snapshot.derived.visualizations[容器 id] 或 snapshot.derived.visualization；sequence 使用 derived.index",
+      "vendor": "spatial"
+    },
+    "theme": {
+      "role": "rendering",
+      "delivery": "optional",
+      "status": "implemented",
+      "files": [
+        "optional/theme/theme.js",
+        "optional/theme/theme.css",
+        "optional/theme/README.md"
+      ],
+      "dependencies": [],
+      "supports": [
+        "主题切换器（换肤层）"
+      ],
+      "limitations": [
+        "按组件 README 接线"
+      ],
+      "example": "optional/theme/README.md",
+      "fallback": "脚本缺失时按系统偏好生效；打印强制浅色",
+      "docs": "optional/theme/README.md",
+      "wiring": "head 在 course.css 之后引入 theme.css，正文末尾引入 theme.js；用 html[data-theme] 或脚本的切换按钮选择主题"
+    },
+    "code-highlight": {
+      "role": "rendering",
+      "delivery": "optional",
+      "status": "implemented",
+      "files": [
+        "optional/code-highlight/code-highlight.js",
+        "optional/code-highlight/code-highlight.css",
+        "optional/code-highlight/theme.js",
+        "optional/code-highlight/github.min.css",
+        "optional/code-highlight/github-dark.min.css",
+        "optional/code-highlight/README.md"
+      ],
+      "dependencies": [],
+      "supports": [
+        "代码块语法着色"
+      ],
+      "limitations": [
+        "按组件 README 接线"
+      ],
+      "example": "optional/code-highlight/README.md",
+      "fallback": "脚本缺失或禁用 JavaScript 时保留单色原文；语言不在内置清单时不着色；打印强制还原为可复制文本",
+      "docs": "optional/code-highlight/README.md",
+      "wiring": "head 引入 code-highlight.css，正文末尾依次引入 theme.js（挑官方主题）与 code-highlight.js（上色）；脚本自动处理所有 .code-block pre code",
+      "network": {
+        "default": "CDN highlight.js 11.12.0",
+        "offline": "预置同版本引擎并先注册 window.hljs"
+      }
+    },
+    "media": {
+      "role": "common",
+      "delivery": "optional",
+      "status": "implemented",
+      "files": [
+        "optional/media/media.js",
+        "optional/media/media.css",
+        "optional/media/README.md"
+      ],
+      "dependencies": [
+        "course-runtime"
+      ],
+      "supports": [
+        "图片、音频、视频原生控件；图片热点与开放文字标注；标注进入学习记录",
+        "音视频原生播放与文字稿"
+      ],
+      "limitations": [
+        "热点为 0..100 百分比坐标；音视频由浏览器原生播放器支持，不自动判定听力能力"
+      ],
+      "example": "acceptance-course/lessons/0005-design.html",
+      "fallback": "正文与静态后备在无脚本和打印时可读",
+      "docs": "optional/media/README.md",
+      "wiring": "course.css 后加载 media.css；LearnKit、course.js 后加载 media.js；使用 data-media 与 data-media-config",
+      "examples": [
+        "acceptance-course/lessons/0005-design.html",
+        "acceptance-course/lessons/0006-language.html"
+      ]
+    },
+    "katex": {
+      "role": "rendering",
+      "delivery": "external",
+      "status": "implemented",
+      "files": [],
+      "dependencies": [],
+      "supports": [
+        "LaTeX 公式"
+      ],
+      "limitations": [
+        "默认 CDN；完全离线需同版本 JS/CSS/fonts"
+      ],
+      "example": "example-course/lessons/0001-example.html",
+      "fallback": "显示 LaTeX 原文与文字解释",
+      "network": {
+        "default": "KaTeX 0.16.11 CDN",
+        "offline": "assets/vendor/katex/，替换三处引入地址"
+      }
+    },
+    "simulation": {
+      "role": "specialized",
+      "delivery": "extension",
+      "status": "extension-required",
+      "files": [],
+      "dependencies": [
+        "viz-core"
+      ],
+      "supports": [
+        "学科模拟舞台"
+      ],
+      "limitations": [
+        "需课程专用模块与 registry 条目"
+      ],
+      "example": "acceptance-course/lessons/0005-design.html",
+      "fallback": "领域文字、图像或步骤表",
+      "kind": "simulation",
+      "adapter": {
+        "label": "学科模拟舞台",
+        "data": "adapter-defined snapshot",
+        "renderer": "registered extension",
+        "tier": "extension"
+      }
+    },
+    "hierarchy": {
+      "role": "specialized",
+      "delivery": "extension",
+      "status": "extension-required",
+      "files": [],
+      "dependencies": [
+        "viz-core"
+      ],
+      "supports": [
+        "层级结构"
+      ],
+      "limitations": [
+        "需课程专用模块与 registry 条目"
+      ],
+      "example": "acceptance-course/lessons/0005-design.html",
+      "fallback": "领域文字、图像或步骤表",
+      "kind": "hierarchy",
+      "adapter": {
+        "label": "层级结构",
+        "data": "nodes + parent",
+        "renderer": "registered extension",
+        "tier": "extension"
+      }
+    },
+    "image-annotation": {
+      "role": "specialized",
+      "delivery": "extension",
+      "status": "extension-required",
+      "files": [],
+      "dependencies": [
+        "viz-core"
+      ],
+      "supports": [
+        "课程专用的自由绘制、区域或专业图像标注"
+      ],
+      "limitations": [
+        "基础图片热点与文字观察使用 media；本项需要课程专用模块与 registry 条目"
+      ],
+      "example": "acceptance-course/lessons/0005-design.html",
+      "fallback": "领域文字、图像或步骤表",
+      "kind": "image-annotation",
+      "adapter": {
+        "label": "专用图像标注扩展",
+        "data": "image + annotations",
+        "renderer": "registered extension",
+        "tier": "extension"
+      }
+    }
+  }
+}

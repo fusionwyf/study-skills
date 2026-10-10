@@ -1,49 +1,199 @@
 {
   "version": "1.4",
-  "note": "能力登记表。只登记运行时真的会渲染或驱动的名称；静态 HTML、按需安装项与未实现项分开标注，避免 Agent 误用未实现组件。课程实际安装状态写入课程包 assets/asset-manifest.json。公式与代码着色都不走 LearnKit：课件从 CDN 引入 KaTeX / highlight.js，直接书写 LaTeX 定界符即可。",
+  "note": "catalog.json 的能力索引；HTML + data-* 为制作入口，LessonSpec 不生成整页。planned 名称不是可用 renderer。",
   "runtime": {
-    "l1_core": ["StateStore", "SequenceStore", "EventBus(snapshot log)", "History(cursor)", "SpecValidator"],
-    "actions": ["PLAY", "PAUSE", "STEP_NEXT", "STEP_PREVIOUS", "SEEK", "RESET", "SET_PARAMETER", "SELECT_OBJECT", "MOVE_OBJECT", "SUBMIT_ANSWER"],
-    "section_types": ["explain", "sequence", "explore", "construct", "compare", "predict", "practice"],
-    "models": ["sequence(内建)", "<通过 registerModel 注册的领域模型>"]
+    "l1_core": [
+      "StateStore",
+      "SequenceStore",
+      "EventBus(snapshot log)",
+      "History(cursor)",
+      "SpecValidator"
+    ],
+    "actions": [
+      "PLAY",
+      "PAUSE",
+      "STEP_NEXT",
+      "STEP_PREVIOUS",
+      "SEEK",
+      "RESET",
+      "SET_PARAMETER",
+      "SELECT_OBJECT",
+      "MOVE_OBJECT",
+      "SUBMIT_ANSWER"
+    ],
+    "section_types": [
+      "explain",
+      "sequence",
+      "explore",
+      "construct",
+      "compare",
+      "predict",
+      "practice"
+    ],
+    "models": [
+      "sequence(内建)",
+      "<通过 registerModel 注册的领域模型>"
+    ]
   },
   "views": {
     "note": "learnkit.js 内置并随运行时可用，通过 data-lk-view=\"<name>\" 绑定",
-    "implemented": ["status", "property-table", "event-log", "history", "change-summary", "legend", "stage"]
+    "implemented": [
+      "status",
+      "property-table",
+      "event-log",
+      "history",
+      "change-summary",
+      "legend",
+      "stage"
+    ]
   },
   "kinds": {
     "note": "可视化适配器，通过 data-visualization=\"<kind>\" 使用。内核 visualizations.js 只管注册表与生命周期，每个 kind 在自己的模块里；tier 决定它从哪来：universal 由 init_course.py 随默认包复制，optional 由 install_optional.py 安装。",
-    "implemented": ["chart", "relation", "timeline", "process", "spatial", "sequence", "table"],
-    "vendor_backed": ["chart", "spatial"],
+    "implemented": [
+      "relation",
+      "timeline",
+      "process",
+      "sequence",
+      "table",
+      "chart",
+      "spatial"
+    ],
+    "vendor_backed": [
+      "chart",
+      "spatial"
+    ],
     "universal": {
       "note": "默认包自带，课程无需任何操作；无第三方库。模块已按 init_course.py 复制到 assets/visualizations/kinds/。",
-      "kinds": ["relation", "timeline", "process", "sequence", "table"],
-      "modules": ["kinds/list.js", "kinds/sequence.js", "kinds/table.js"]
+      "kinds": [
+        "relation",
+        "timeline",
+        "process",
+        "sequence",
+        "table"
+      ],
+      "modules": [
+        "kinds/list.js",
+        "kinds/sequence.js",
+        "kinds/table.js"
+      ]
     },
     "optional": {
       "note": "需要安装后才可用；装之前不要在课件里引用对应 kind，也不要写对应的 kinds/*.js script 标签。",
-      "kinds": ["chart", "spatial"],
-      "modules": ["kinds/chart.js", "kinds/spatial.js"]
+      "kinds": [
+        "chart",
+        "spatial"
+      ],
+      "modules": [
+        "kinds/chart.js",
+        "kinds/spatial.js"
+      ]
     }
   },
   "static_html": {
     "note": "由 course-template/lesson.html 提供静态结构，course.js 做渐进增强。这些不是运行时组件，但可直接写入课件并要求保留 data-* 契约。",
-    "classes": ["callout", "formula", "code-block", "steps", "quiz", "glossary", "reflection", "diagram", "card", "toc"],
-    "page_level": ["复制学习记录(course.js)", "自动目录(course.js)", "打印/导出模式(course.js)", "独立性选择框(course.js)"]
+    "classes": [
+      "callout",
+      "formula",
+      "code-block",
+      "steps",
+      "quiz",
+      "glossary",
+      "reflection",
+      "diagram",
+      "card",
+      "toc"
+    ],
+    "page_level": [
+      "复制学习记录(course.js)",
+      "自动目录(course.js)",
+      "打印/导出模式(course.js)",
+      "独立性选择框(course.js)",
+      "数字与填空回答(course.js)"
+    ]
   },
   "optional": {
     "note": "不在默认课程包里，用 scripts/install_optional.py 按需复制。装之前不要引用；每个组件自带 README 说明接线与降级行为。",
     "catalogue": "assets/optional/manifest.json",
     "install": "python scripts/install_optional.py <course-dir> --components <name> [...]",
     "components": {
-      "code-highlight": {"label": "代码块语法着色", "needs": "CDN highlight.js 11.12.0（36 种内置语言）+ 随包复制的官方主题样式表", "target": "assets/optional/code-highlight"},
-      "theme": {"label": "主题切换器（换肤层）", "needs": "无", "target": "assets/optional/theme"},
-      "chart": {"label": "数据图表", "needs": "Plotly（随 install_optional.py 复制）", "target": "assets/visualizations", "module": "kinds/chart.js"},
-      "spatial": {"label": "几何与空间画布", "needs": "JSXGraph（随 install_optional.py 复制）", "target": "assets/visualizations", "module": "kinds/spatial.js"}
+      "chart": {
+        "label": "数据图表：曲线、柱状、散点、曲面、热图",
+        "target": "assets/visualizations",
+        "needs": "chart"
+      },
+      "spatial": {
+        "label": "空间与几何画布",
+        "target": "assets/visualizations",
+        "needs": "spatial"
+      },
+      "theme": {
+        "label": "主题切换器（换肤层）",
+        "target": "assets/optional/theme",
+        "needs": "无"
+      },
+      "code-highlight": {
+        "label": "代码块语法着色",
+        "target": "assets/optional/code-highlight",
+        "needs": "CDN highlight.js 11.12.0"
+      },
+      "media": {
+        "label": "图片、音频、视频原生控件；图片热点与开放文字标注；标注进入学习记录",
+        "target": "assets/optional/media",
+        "needs": "无"
+      }
     }
   },
   "planned": {
     "note": "运行时尚未实现。不要仅凭名称在 LessonSpec 的 blocks 中引用；如需使用，先实现并回归本登记表。部分概念当前的替代做法见 static_html。",
-    "names": ["ConceptCard", "KeyTakeaway", "WorkedExample", "CounterExample", "ComparisonTable", "MediaViewer", "Annotation", "SourceReference", "Tabs", "Accordion", "SplitView", "ProgressBar", "StepNavigator", "SingleChoice", "MultipleChoice", "TrueFalse", "FillBlank", "MatchingExercise", "SequenceExercise", "PredictionExercise", "InteractiveQuestion", "HintPanel", "FeedbackPanel", "ReflectionPrompt", "EquationSteps", "CodeTrace", "VariableWatch", "SyntaxTreeView", "SimulationStage", "HierarchyView", "ImageAnnotationView", "PlaybackControls", "TimelineScrubber", "SpeedControl", "PanZoomControls", "InspectorPanel", "DetailPanel", "ComparePanel", "HistoryPanel", "AnnotationLayer", "Modal", "Toast", "LoadingState", "EmptyState", "ErrorBoundary", "AccessibilityControls", "HelpPanel"]
-  }
+    "names": [
+      "ConceptCard",
+      "KeyTakeaway",
+      "WorkedExample",
+      "CounterExample",
+      "ComparisonTable",
+      "MediaViewer",
+      "Annotation",
+      "SourceReference",
+      "Tabs",
+      "Accordion",
+      "SplitView",
+      "ProgressBar",
+      "StepNavigator",
+      "SingleChoice",
+      "MultipleChoice",
+      "TrueFalse",
+      "FillBlank",
+      "MatchingExercise",
+      "SequenceExercise",
+      "PredictionExercise",
+      "InteractiveQuestion",
+      "HintPanel",
+      "FeedbackPanel",
+      "ReflectionPrompt",
+      "EquationSteps",
+      "CodeTrace",
+      "VariableWatch",
+      "SyntaxTreeView",
+      "SimulationStage",
+      "HierarchyView",
+      "ImageAnnotationView",
+      "PlaybackControls",
+      "TimelineScrubber",
+      "SpeedControl",
+      "PanZoomControls",
+      "InspectorPanel",
+      "DetailPanel",
+      "ComparePanel",
+      "HistoryPanel",
+      "AnnotationLayer",
+      "Modal",
+      "Toast",
+      "LoadingState",
+      "EmptyState",
+      "ErrorBoundary",
+      "AccessibilityControls",
+      "HelpPanel"
+    ]
+  },
+  "catalogue": "assets/catalog.json"
 }

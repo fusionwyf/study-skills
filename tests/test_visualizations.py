@@ -176,6 +176,7 @@ class VisualizationTests(unittest.TestCase):
             "course.css": SKILL / "assets/course-template/course.css",
             "course.js": SKILL / "assets/course-template/course.js",
             "asset-manifest.json": SKILL / "assets/asset-manifest.json",
+            "catalog.json": SKILL / "assets/catalog.json",
             "learnkit/components.json": SKILL / "assets/learnkit/components.json",
             "learnkit/learnkit.js": SKILL / "assets/learnkit/learnkit.js",
             "learnkit/lesson-spec.schema.json": SKILL / "assets/learnkit/lesson-spec.schema.json",
@@ -225,7 +226,7 @@ class VisualizationTests(unittest.TestCase):
             validate_visualizations(lesson, body, errors)
             self.assertTrue(any("implementation module is missing" in error for error in errors))
             install(root, ["chart"])
-            body += '<script src="../assets/visualizations/kinds/chart.js"></script>'
+            body += '<script src="../assets/visualizations/visualizations.js"></script><script src="../assets/visualizations/kinds/chart.js"></script>'
             lesson.write_text(body, encoding="utf-8")
             errors = []
             validate_visualizations(lesson, body, errors)
@@ -275,7 +276,7 @@ class VisualizationTests(unittest.TestCase):
     def test_every_kind_renders_in_a_dom_including_the_library_missing_fallbacks(self):
         """Each kind must put something readable on screen, vendor library or not."""
         harness = ROOT / "tests/visualization_dom.cjs"
-        jsdom = Path("C:/Users/wy/.workbuddy/binaries/node/workspace/node_modules/jsdom")
+        jsdom = Path(os.environ.get("JSDOM_PATH", "/mnt/c/Users/wy/.workbuddy/binaries/node/workspace/node_modules/jsdom" if os.name != "nt" else "C:/Users/wy/.workbuddy/binaries/node/workspace/node_modules/jsdom"))
         if not jsdom.exists():
             self.skipTest("jsdom is required for DOM rendering checks")
         env = dict(os.environ, NODE_PATH=str(jsdom.parent))
@@ -292,7 +293,7 @@ class VisualizationTests(unittest.TestCase):
         than fails, so an offline checkout still runs the rest of the suite.
         """
         harness = ROOT / "tests/optional_components.cjs"
-        jsdom = Path("C:/Users/wy/.workbuddy/binaries/node/workspace/node_modules/jsdom")
+        jsdom = Path(os.environ.get("JSDOM_PATH", "/mnt/c/Users/wy/.workbuddy/binaries/node/workspace/node_modules/jsdom" if os.name != "nt" else "C:/Users/wy/.workbuddy/binaries/node/workspace/node_modules/jsdom"))
         if not jsdom.exists():
             self.skipTest("jsdom is required for DOM behaviour checks")
         engine = fetch_highlight_engine()

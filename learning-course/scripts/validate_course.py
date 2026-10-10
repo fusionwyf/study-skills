@@ -12,6 +12,7 @@ import sys
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urlsplit
+from validate_assets import validate_asset_package, validate_wiring, validate_data
 
 
 REQUIRED_DIRS = ("lessons", "assets", "reference", "records", "exports")
@@ -431,9 +432,13 @@ def validate_visualizations(lesson: Path, body: str, errors: list[str]) -> None:
     registry_path = course_root / "assets" / "visualizations" / "adapters.json" if is_course_package else VIZ_REGISTRY_PATH
     try:
         registry = json.loads(registry_path.read_text(encoding="utf-8"))
+        if not isinstance(registry, dict) or not isinstance(registry.get("kinds"), dict):
+            raise ValueError("registry kinds must be an object")
         registry_kinds = registry.get("kinds") or {}
         kinds = set(registry_kinds.keys())
-    except (OSError, json.JSONDecodeError):
+    except (OSError, ValueError):
+        if is_course_package:
+            errors.append(f"{lesson.name}: missing or invalid course visualization registry")
         registry_kinds = {}
         kinds = {"chart", "relation", "timeline", "process", "spatial", "sequence", "table"}
     parser = ComponentParser()
@@ -447,9 +452,14 @@ def validate_visualizations(lesson: Path, body: str, errors: list[str]) -> None:
             manifest = json.loads(asset_manifest.read_text(encoding="utf-8"))
             state = manifest.get("visualizations", {}) if isinstance(manifest, dict) else {}
             values = state.get("optional_kinds", []) if isinstance(state, dict) else []
-            installed_optional = set(values) if isinstance(values, list) else set()
-        except (OSError, json.JSONDecodeError):
+            if not isinstance(values, list) or not all(isinstance(value, str) for value in values):
+                raise ValueError("optional_kinds must be a string list")
+            installed_optional = set(values)
+        except (OSError, ValueError):
             errors.append(f"{lesson.name}: invalid assets/asset-manifest.json")
+    if is_course_package and any("data-visualization" in n["attrs"] for n in parser.nodes):
+        validate_wiring(lesson, body, errors)
+        if not asset_manifest.is_file(): errors.append(f"{lesson.name}: missing assets/asset-manifest.json")
     for node in parser.nodes:
         kind = node["attrs"].get("data-visualization")
         if kind is None:
@@ -478,6 +488,9 @@ def validate_visualizations(lesson: Path, body: str, errors: list[str]) -> None:
             css = os.path.relpath(course_root / "assets" / "visualizations" / "visualizations.css", lesson.parent).replace("\\", "/")
             if os.path.normpath(css) not in links:
                 errors.append(f"{label} lesson does not load {css}")
+            source = node["attrs"].get("data-viz-source")
+            if source and (not source.startswith("#") or not any(n["attrs"].get("id") == source[1:] and "data-learnkit" in n["attrs"] for n in parser.nodes)):
+                errors.append(f"{label} data-viz-source requires an existing LearnKit id")
         if not node["attrs"].get("id") or ids.count(node["attrs"].get("id")) != 1:
             errors.append(f"{label} requires a unique id")
         configs = [n for n in children if "data-viz-config" in n["attrs"]]
@@ -505,8 +518,9 @@ def validate_visualizations(lesson: Path, body: str, errors: list[str]) -> None:
                     errors.append(f"{label} sequence config requires steps or input")
                 elif kind == "spatial" and not ((isinstance(config.get("matrix"), list) and isinstance(config.get("vector"), list)) or isinstance(config.get("shapes"), list)):
                     errors.append(f"{label} spatial config requires matrix/vector or shapes")
+                if isinstance(config, dict): validate_data(kind, config)
             except (ValueError, TypeError) as exc:
-                errors.append(f"{label} invalid JSON: {exc}")
+                errors.append(f"{label} invalid JSON/config: {exc}")
         hosts = [n for n in children if "data-viz-host" in n["attrs"]]
         if len(hosts) != 1 or not hosts[0]["attrs"].get("id") or ids.count(hosts[0]["attrs"].get("id")) != 1:
             errors.append(f"{label} requires one uniquely identified data-viz-host")
@@ -527,8 +541,56 @@ def validate_visualizations(lesson: Path, body: str, errors: list[str]) -> None:
                 errors.append(f"{label} requires previous/next step buttons")
 
 
+def validate_answers_and_media(lesson: Path, body: str, errors: list[str]) -> None:
+    parser = ComponentParser(); parser.feed(body)
+    ids = [n['attrs'].get('id') for n in parser.nodes if n['attrs'].get('id')]
+    questions = []
+    for node in parser.nodes:
+        attrs = node['attrs']; children = list(descendants(node))
+        if attrs.get('data-question-id'):
+            questions.append(attrs['data-question-id'])
+        if attrs.get('data-answer-kind') in ('numeric', 'fill'):
+            label = f"{lesson.name}: answer {attrs.get('data-question-id')}"
+            inputs = [n for n in children if 'data-answer-input' in n['attrs']]
+            labels = {n['attrs'].get('for') for n in children if n['tag']=='label'}
+            if not attrs.get('data-question-id') or len(inputs)!=1 or not inputs[0]['attrs'].get('id') or ids.count(inputs[0]['attrs']['id']) != 1 or inputs[0]['attrs']['id'] not in labels:
+                errors.append(f'{label} requires unique question id and labeled data-answer-input')
+            if not any(n['tag']=='button' and 'data-answer-check' in n['attrs'] for n in children) or not any('answer-feedback' in n['attrs'].get('data-role','').split() for n in children):
+                errors.append(f'{label} requires check button and answer-feedback')
+            try:
+                if attrs['data-answer-kind']=='numeric':
+                    import math
+                    expected = float(attrs['data-expected']); tolerance = float(attrs.get('data-tolerance','0'))
+                    if not math.isfinite(expected) or not math.isfinite(tolerance) or tolerance<0: raise ValueError('invalid expected/tolerance')
+                else:
+                    answers = json.loads(attrs['data-accepted'])
+                    if not isinstance(answers,list) or not answers or not all(isinstance(v,str) and v.strip() for v in answers): raise ValueError('accepted must be nonempty strings')
+            except (KeyError,ValueError,TypeError): errors.append(f'{label} requires valid expected/tolerance or accepted answers')
+        if 'data-media' in attrs:
+            label = f"{lesson.name}: media {attrs.get('id','')}"
+            if not any('data-media-fallback' in n['attrs'] and n['text'].strip() for n in children): errors.append(f'{label} requires readable media fallback/transcript')
+            for image in [n for n in children if n['tag']=='img']:
+                if not image['attrs'].get('alt'): errors.append(f'{label} image needs alt')
+            for medium in [n for n in children if n['tag'] in ('audio','video')]:
+                if 'controls' not in medium['attrs']: errors.append(f'{label} requires native media controls')
+            configs = [n for n in children if 'data-media-config' in n['attrs']]
+            if configs:
+                try:
+                    config = json.loads(configs[0]['text'])
+                    if not isinstance(config, dict): raise ValueError('media config must be object')
+                    hotspots = config.get('hotspots',[])
+                    if not isinstance(hotspots,list): raise ValueError('hotspots must be list')
+                    used = set()
+                    for h in hotspots:
+                        if not isinstance(h,dict) or not isinstance(h.get('id'),str) or not h['id'] or h['id'] in used or not isinstance(h.get('label'), str) or not h['label'].strip() or any(not isinstance(h.get(k),(float,int)) or isinstance(h.get(k),bool) or not 0<=h[k]<=100 for k in ('x','y')): raise ValueError('invalid hotspot')
+                        used.add(h['id'])
+                except (ValueError,TypeError,KeyError): errors.append(f'{label} invalid hotspot config')
+    if len(questions)!=len(set(questions)): errors.append(f'{lesson.name}: duplicate question ids')
+
+
 def validate_pedagogy(lesson: Path, body: str, errors: list[str], warnings: list[str]) -> None:
     validate_open_components(lesson, body, errors)
+    validate_answers_and_media(lesson, body, errors)
     validate_visualizations(lesson, body, errors)
     objective = data_value(body, "objective")
     evidence = data_value(body, "evidence")
@@ -590,6 +652,7 @@ def main() -> int:
         if not (root / name).is_file():
             errors.append(f"missing file: {name}")
 
+    validate_asset_package(root, errors)
     yaml_path = root / "course.yaml"
     if yaml_path.is_file():
         text = yaml_path.read_text(encoding="utf-8", errors="replace")
@@ -610,6 +673,7 @@ def main() -> int:
         objective = data_value(body, "objective")
         if objective:
             lesson_objectives.add(objective)
+        if "data-visualization" not in body: validate_wiring(lesson, body, errors)
         if args.pedagogical:
             validate_pedagogy(lesson, body, errors, warnings)
         # A lesson usually pulls several files from one CDN (KaTeX ships its

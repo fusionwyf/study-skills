@@ -2,42 +2,19 @@
 
 当课程包含公式、图表、交互或任何需要运行时渲染的组件时读取本文件。
 
-LearnKit 把课程页面拆成四层：L1 运行时、L2 基础 UI、L3 可视化与交互、L4 教学模板。Agent 只生成声明式 `LessonSpec` 和受约束的模型注册；运行时创建 HTML、绑定控件、保存历史并提供无脚本后备。
+制作入口是 **HTML + 稳定的 data-* 契约**。Agent 编写正文和后备，运行时绑定控件、状态与记录；它不会从 LessonSpec 自动生成完整页面。
 
-主数据流是单向的：
+职责与交付方式分别记录在 `assets/catalog.json`：common 管基础交互与证据，rendering 管通用呈现，specialized 管领域模型。default/optional/external/extension 说明如何交付。选资源与扩展流程见 `assets.md`。
 
-```text
-LessonSpec / DOM 标记 → L1 运行时解析 → 模型(registerModel) → derive 派生值
-                                ↓
-                    注册表分发 → renderer(可选节点渲染) / adapter(chart·spatial·…) → DOM
-```
+数据流：页面 HTML/JSON → `registerModel` 的 reduce/derive → 状态订阅 → 通用 view/可视化 adapter → DOM。数学公式单独由 KaTeX auto-render 处理。
 
-数学公式不在这条管线里：它由页面直接引入的 KaTeX auto-render 处理，见第二节。
+LearnKit 的 `registerModel` 管领域模型；`registerRenderer` 是专用 stage 的渲染钩子；CourseVisualizations 的 `registerKind` 管图形适配器。扩展放在课程 `assets/extensions/`，登记课程 registry 与 module，按依赖顺序加载。
 
-两个内置注册表加一个可选钩子：L1 运行时的 `registerModel` 管模型逻辑、`registerRenderer` 是留给扩展的节点渲染钩子（当前无内置实现），L3 适配器层的 `registerKind` 管可视化适配器（图表、几何等）。扩展只新增注册项，不修改核心运行时。
+## 一、LessonSpec 与实际页面
 
-## 一、LessonSpec
+LessonSpec 只描述规划结构、校验 section id/type/title。`blocks` 如需保存片段，使用 `{type:"html", content:"..."}`；运行时不注入它。`concept-card`、`multiple-choice` 等尚未实现的声明式 block 会被拒绝。对应课件可以使用 `lesson.md` 的静态 HTML 契约。
 
-```js
-const lesson = {
-  version: "1.0",
-  title: "探索一个系统如何变化",
-  sections: [
-    { id: "intro", type: "explain", title: "基本概念", blocks: [
-      { type: "concept-card", title: "初始状态", content: "系统从给定条件开始。" }
-    ] },
-    { id: "explore", type: "explore", title: "交互实验", model: "example-model",
-      controls: [{ type: "slider", label: "参数", bind: "params.value", min: 0, max: 100, step: 1 }],
-      views: [{ type: "chart", source: "derived.chartData" }, { type: "property-table", source: "derived.properties" }] },
-    { id: "check", type: "practice", title: "检查理解", exercise: {
-      type: "single-choice", prompt: "改变参数后，哪个状态会发生变化？", options: ["A", "B", "C"], answer: 1,
-      explanation: "根据状态更新规则，B 会变化。"
-    } }
-  ]
-};
-```
-
-`version`、`title` 和每个 section 的 `id/type/title` 是必填项。section 类型是 `explain`、`sequence`、`explore`、`construct`、`compare`、`predict`、`practice`。配置只描述内容、绑定和数据；模型逻辑通过 `LearnKit.registerModel(name, {initialState, reduce, derive})` 提供。
+动态容器写 `data-learnkit="explore|sequence|construct|compare|predict"` 与 `data-lk-config`；模型通过 `LearnKit.registerModel(name, {initialState, reduce, derive})` 提供，在 LearnKit 脚本之后、初始化之前注册。完整的概率联动示例见 `assets/acceptance-course/lessons/0002-probability.html`。
 
 ### 标准模式和动作
 
@@ -51,9 +28,9 @@ const lesson = {
 
 ### 组件分层
 
-L2 负责布局、文字、公式、代码、输入和反馈；L3 负责 `ChartView`、`RelationGraph`、`TimelineView`、`ProcessDiagram`、`SpatialCanvas`、`SimulationStage`、`TableView`、`SequenceView`、`HierarchyView` 和观察面板；L4 将它们组合成概念讲解、分步推导、交互实验、案例比较和练习模板。领域适配器只新增模型和图元契约，不复制状态、事件、历史和证据记录。
+静态 HTML 与 course.js 负责布局、文字、回答和证据；LearnKit 管状态；visualizations 的已实现 kind 管视图。simulation/hierarchy 是扩展槽位，使用前需要实际实现。领域模型提供数据，不复制历史与证据运行时。
 
-公共属性可使用 `id`、`title`、`description`、`data`、`bind`、`actions`、`disabled`、`visible`、`className`。组件没有意义的属性应省略。视图、控件和模型通过状态订阅连接，避免组件互相查询 DOM。
+HTML 属性与 JSON 字段按组件契约和最小用例编写；当前没有统一的 props → 页面渲染接口。视图、控件和模型通过状态订阅连接。
 
 ## 二、数学渲染
 
@@ -100,11 +77,11 @@ D_{\mathbf{u}} f(P_0) = \nabla f(P_0) \cdot \mathbf{u}
 
 | 层 | 内容 | 来源 | 课程要做什么 |
 |---|---|---|---|
-| 通用 | 内核、`relation`、`timeline`、`process`、`sequence`、`table` | `init_course.py` 随默认包复制 | 什么都不用做 |
+| 默认 | 内核、`relation`、`timeline`、`process`、`sequence`、`table` | `init_course.py` 随默认包复制 | 按模板加载用到的模块 |
 | 随内容决定 | `chart`、`spatial` | `install_optional.py` 按需安装 | 需要时装，然后加一支 script |
 
 内核 `assets/visualizations/visualizations.js` 只管注册表、生命周期、容器接线和后备路径，**自己不渲染任何东西**。每个 kind 在自己的模块里：
-`kinds/list.js`（`relation`/`timeline`/`process` 共用一套列表渲染，各有自己的校验器）、`kinds/sequence.js`、`kinds/table.js`、`kinds/chart.js`、`kinds/spatial.js`。这样拆是因为 `chart` 要 4.7 MB 的 Plotly、`spatial` 要 JSXGraph，而另外五个是纯 HTML/SVG——合成一个文件会逼每门课都背上那两个重依赖。
+`kinds/list.js`（关系/流程的 SVG 节点边及带日期的 HTML 时间轴）、`kinds/sequence.js`、`kinds/table.js`、`kinds/chart.js`、`kinds/spatial.js`。这样拆是因为 `chart` 要 4.7 MB 的 Plotly、`spatial` 要 JSXGraph，而另外五个是纯 HTML/SVG——合成一个文件会逼每门课都背上那两个重依赖。
 
 加载顺序：内核在前，用到的 kind 模块在后。`chart` 和 `spatial` 模块会从同一课程包的 `visualizations/vendor/` 自动加载已校验的本地依赖；没有 `data-visualization` 容器的页面不会创建可视化实例。
 
@@ -147,7 +124,9 @@ D_{\mathbf{u}} f(P_0) = \nabla f(P_0) \cdot \mathbf{u}
 
 ### 适配器生命周期
 
-扩展适配器实现 `validate(config)` 和 `render(node, config, context)`，需要动态模型时返回 `update` / `destroy`，或在注册项上提供 `update`。容器声明 `data-viz-source="#learnkit-id"` 后，内核会把同一个 LearnKit store 的 snapshot 传给适配器。渲染器应：
+扩展适配器实现 `validate(config)` 和 `render(node, config, context)`，需要动态模型时返回 `update` / `destroy`，或在注册项上提供 `update`。容器声明 `data-viz-source="#learnkit-id"` 后，内核会把同一个 LearnKit store 的 snapshot 传给适配器。内置 chart/spatial/table/relation/process/timeline 从 `snapshot.derived.visualizations[容器 id]` 读取配置覆盖项，单视图也可用 `derived.visualization`；sequence 读取 `derived.index` 并限制到步骤范围。图表 update 使用 Plotly.react 或 SVG 重绘。绑定 sourceStore 的 spatial 向模型发送 SET_PARAMETER，参数名为 config.vectorParameter（默认 vector），领域模型需要处理该二维数组。声明状态源而适配器不支持 update 时明确失败。
+
+例如概率模型返回 `derived.visualizations["probability-chart"] = {traces:[{type:"bar",x:["成功","失败"],y:[p,1-p]}]}`。同一横轴使用数值或分类之一；bar 接受分类字符串。graph edges 的 from/to 必须引用唯一节点 id。timeline 的 date 始终显示，事件顺序由生成的数据决定。渲染器应：
 
 1. 初始化时核对数据形状、有限数值、定义域、单位和假设。
 2. 用真实状态更新图形，同时把当前参数、步骤或选中对象写入 `data-visual-state`。
@@ -229,6 +208,6 @@ python scripts/build_index.py <course-dir>
 python scripts/validate_course.py <course-dir> --strict-schema --pedagogical
 ```
 
-- `LearnKit.validateLessonSpec(spec)` 校验页面结构。
-- `assets/visualizations/adapters.json` 是适配器目录的单一来源，每个条目用 `tier`（`universal`/`optional`）标明它属于哪一层、用 `module` 标明实现在哪个文件；`scripts/validate_course.py` 用它检查容器契约。完整示例见 `assets/visualizations/demo.html`。
+- `LearnKit.validateLessonSpec(spec)` 只校验规划结构。交付前检查页面实际 ready 标记、操作结果与学习记录，结构校验不能替代运行验证。
+- `assets/catalog.json` 是能力、文件和交付方式的权威来源；`scripts/sync_asset_catalog.py` 生成兼容登记表。`assets/visualizations/adapters.json` 是课程运行时的适配器投影，每个条目用 `tier`（`universal`/`optional`）标明它属于哪一层、用 `module` 标明实现在哪个文件；`scripts/validate_course.py` 用它检查容器契约。完整示例见 `assets/visualizations/demo.html`。
 - 打印或导出前等待 `document.fonts.ready` 与 `window.__COURSE_VISUALIZATIONS_READY__ === true`，然后检查每个容器的 `data-viz-ready="true"`；失败时以 fallback 作为可读结果。KaTeX 公式会在 `DOMContentLoaded` 后的同步扫描中渲染完，等待字体就绪即可覆盖。装了代码着色时可选等待 `window.__COURSE_CODE_HIGHLIGHT_READY__`；为 `false` 说明 CDN 不可达，此时按无色原文打印即可。

@@ -1,0 +1,58 @@
+schema_version: 3
+course_id: acceptance-course
+title: 通用资产验收课件
+language: zh-CN
+created_at: 2026-10-10 08:07:17+00:00
+updated_at: 2026-10-10 08:07:17+00:00
+status: active
+phase: awaiting_evidence
+learner:
+  goal: 验证六类课件的可复用资产与领域扩展
+  motivation: null
+  prior_knowledge: []
+  constraints: {}
+diagnostic:
+  status: skipped
+  record: null
+  skipped_reason: 起点已有充分信息，初始化时不需要诊断
+success_criteria:
+- 独立推导平方函数的导数，并核对矩阵作用于二维向量
+- 解释参数与分类图表的联动，并核对概率归一化
+- 检查执行轨迹的不变量，并独立完成变式
+- 区分材料、解释和局限，构造有依据的论证
+- 基于图像位置与明确标准提出改进并解释理由
+- 验证音频、文字稿、填空回答与学习记录流程
+current_lesson: 6
+objectives:
+- id: math
+  statement: 独立推导平方函数的导数，并核对矩阵作用于二维向量
+  cognitive_level: apply
+  mastery: unseen
+  evidence: []
+- id: probability
+  statement: 解释参数与分类图表的联动，并核对概率归一化
+  cognitive_level: apply
+  mastery: unseen
+  evidence: []
+- id: algorithm
+  statement: 检查执行轨迹的不变量，并独立完成变式
+  cognitive_level: apply
+  mastery: unseen
+  evidence: []
+- id: history
+  statement: 区分材料、解释和局限，构造有依据的论证
+  cognitive_level: apply
+  mastery: unseen
+  evidence: []
+- id: design
+  statement: 基于图像位置与明确标准提出改进并解释理由
+  cognitive_level: apply
+  mastery: unseen
+  evidence: []
+- id: language
+  statement: 验证音频、文字稿、填空回答与学习记录流程
+  cognitive_level: apply
+  mastery: unseen
+  evidence: []
+review_queue: []
+last_feedback: null

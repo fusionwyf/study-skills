@@ -96,42 +96,9 @@
     return adapter.validate(config);
   }
 
-  /* --- Linear algebra shared by the vector-shaped kinds ----------------- */
-
-  function vectorImage(matrix, vector) {
-    return matrix.map(function (row) { return row[0] * vector[0] + row[1] * vector[1]; });
-  }
-
-  /**
-   * Build a step trace for selection sort. Lives here rather than in the
-   * `sequence` module because `algorithm`-style content asks for it directly.
-   */
-  function selectionSortTrace(input) {
-    if (!Array.isArray(input) || input.length < 2 || input.length > 32 || !input.every(finite)) throw new Error("序列输入需为 2–32 个有限数值");
-    var values = input.slice(), states = [], comparisons = 0, swaps = 0;
-    function save(line, message, active, sorted) { states.push({values: values.slice(), line: line, message: message, active: active, sorted: sorted, comparisons: comparisons, swaps: swaps}); }
-    save(0, "初始序列；先预测第一轮会确定哪个位置。", [], 0);
-    for (var i = 0; i < values.length - 1; i++) {
-      var min = i;
-      save(1, "设定当前位置 i = " + i + "，候选位置 min = " + min, [i], i);
-      for (var j = i + 1; j < values.length; j++) {
-        comparisons++;
-        var smaller = values[j] < values[min];
-        save(2, "比较位置 " + j + " 与候选位置 " + min + "；结果为 " + smaller, [j, min], i);
-        if (smaller) { min = j; save(3, "候选位置更新为 " + min, [min], i); }
-      }
-      if (min !== i) { var temp = values[i]; values[i] = values[min]; values[min] = temp; swaps++; }
-      save(4, "本轮结束；前 " + (i + 1) + " 个元素已就位。", [i, min], i + 1);
-    }
-    save(5, "排序完成，共比较 " + comparisons + " 次、交换 " + swaps + " 次。", [], values.length);
-    return states;
-  }
-
   /* --- Public surface --------------------------------------------------- */
 
   var api = {
-    vectorImage: vectorImage,
-    selectionSortTrace: selectionSortTrace,
     validateCommon: validateCommon,
     validateConfig: validateConfig,
     registerKind: registerKind,
@@ -140,6 +107,11 @@
     // DOM/numeric conventions live in exactly one place.
     helpers: {
       finite: finite, finiteArray: finiteArray, find: find, fmt: fmt, escape: escape,
+      boundConfig: function (node, config, snapshot) {
+        var derived = snapshot && snapshot.derived || {};
+        var value = derived.visualizations && derived.visualizations[node.id] || derived.visualization;
+        return value ? Object.assign({}, config, value) : config;
+      },
       record: record, svgEl: svgEl, clear: clear, status: status, show: show,
       loadVendor: function (relative, globalName) { return loadAsset("vendor/" + relative, globalName, false); },
       loadStylesheet: function (relative) { return loadAsset("vendor/" + relative, null, true); }
@@ -167,19 +139,39 @@
         }
         var instance = await adapters[kind].render(node, config, {sourceStore: sourceStore});
         var instanceUpdate = instance && typeof instance.update === "function" ? instance.update : adapters[kind].update;
-        if (sourceStore && typeof instanceUpdate === "function") {
-          var update = function (snapshot) { instanceUpdate(node, config, snapshot, instance); };
+        if (sourceStore && typeof instanceUpdate !== "function") throw new Error("此适配器不支持 data-viz-source 动态更新");
+        if (sourceStore) {
+          var revision = 0;
+          var update = function (snapshot) {
+            var current = ++revision;
+            function failed(error) {
+              if (current !== revision) return;
+              node.dataset.vizReady = "failed";
+              var host = find(node, "[data-viz-host]"); if (host) host.hidden = true;
+              status(node, error.message);
+            }
+            try {
+              var result = instanceUpdate(node, config, snapshot, instance);
+              if (result && typeof result.then === "function") {
+                node.dataset.vizReady = "pending";
+                return Promise.resolve(result).then(function () {
+                  if (current === revision) node.dataset.vizReady = "true";
+                }, failed);
+              }
+              node.dataset.vizReady = "true";
+            } catch (error) { failed(error); }
+          };
           node.__vizUnsubscribe = sourceStore.subscribe(update);
-          update(sourceStore.snapshot());
+          await update(sourceStore.snapshot());
         }
-        if (instance && typeof instance.destroy === "function" && root.addEventListener) {
+        if ((sourceStore || instance && typeof instance.destroy === "function") && root.addEventListener) {
           node.__vizDestroy = function () {
             if (node.__vizUnsubscribe) node.__vizUnsubscribe();
-            instance.destroy();
+            if (instance && instance.destroy) instance.destroy();
           };
           root.addEventListener("pagehide", node.__vizDestroy, {once: true});
         }
-        node.dataset.vizReady = "true";
+        if (node.dataset.vizReady !== "failed") node.dataset.vizReady = "true";
       } catch (error) {
         // A missing kind module and a malformed config both land here; either
         // way the readable fallback stays on screen instead of a blank stage.

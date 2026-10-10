@@ -1,7 +1,43 @@
 {
-  "version": "1.1",
-  "note": "可选组件登记表。只登记「随课程内容决定」的能力；theme 与无库可视化 kind 属于默认包，不在此表。这些组件不进入默认课程包，由 scripts/install_optional.py 按需复制到 <course>/assets/optional/<name>/ 或 <course>/assets/visualizations/。组件自带 JS/CSS/README；需要第三方库时在 vendor 字段登记文件和 sha256。",
+  "version": "2.0",
+  "note": "由 catalog.json 生成。这里只登记 optional；默认资源由初始化复制。",
   "components": {
+    "chart": {
+      "label": "数据图表：曲线、柱状、散点、曲面、热图",
+      "files": [
+        "visualizations/kinds/chart.js"
+      ],
+      "vendor": "visualizations/vendor/manifest.json",
+      "vendor_kinds": [
+        "chart"
+      ],
+      "docs": "../../references/render.md",
+      "wiring": "安装后在内核之后引入 kinds/chart.js",
+      "degrade": "正文与静态后备在无脚本和打印时可读"
+    },
+    "spatial": {
+      "label": "空间与几何画布",
+      "files": [
+        "visualizations/kinds/spatial.js"
+      ],
+      "vendor": "visualizations/vendor/manifest.json",
+      "vendor_kinds": [
+        "spatial"
+      ],
+      "docs": "../../references/render.md",
+      "wiring": "安装后在内核之后引入 kinds/spatial.js",
+      "degrade": "正文与静态后备在无脚本和打印时可读"
+    },
+    "theme": {
+      "label": "主题切换器（换肤层）",
+      "files": [
+        "theme/theme.js",
+        "theme/theme.css"
+      ],
+      "docs": "theme/README.md",
+      "wiring": "head 在 course.css 之后引入 theme.css，正文末尾引入 theme.js；用 html[data-theme] 或脚本的切换按钮选择主题",
+      "degrade": "脚本缺失时按系统偏好生效；打印强制浅色"
+    },
     "code-highlight": {
       "label": "代码块语法着色",
       "files": [
@@ -15,36 +51,26 @@
       "wiring": "head 引入 code-highlight.css，正文末尾依次引入 theme.js（挑官方主题）与 code-highlight.js（上色）；脚本自动处理所有 .code-block pre code",
       "degrade": "脚本缺失或禁用 JavaScript 时保留单色原文；语言不在内置清单时不着色；打印强制还原为可复制文本"
     },
-    "theme": {
-      "label": "主题切换器（换肤层）",
-      "files": ["theme/theme.js", "theme/theme.css"],
-      "docs": "theme/README.md",
-      "wiring": "head 在 course.css 之后引入 theme.css，正文末尾引入 theme.js；用 html[data-theme] 或脚本的切换按钮选择主题",
-      "degrade": "脚本缺失时按系统偏好生效；打印强制浅色",
-      "note": "换肤本身是通用关注点，但本组件只是「记住选择并套用」的切换器；课程的基线配色已随 course.css 默认存在，不装本组件也能用写死的 data-theme 换肤。"
-    },
-    "chart": {
-      "label": "数据图表（Plotly）",
-      "files": ["visualizations/kinds/chart.js"],
-      "vendor": "visualizations/vendor/manifest.json",
-      "vendor_kinds": ["chart"],
-      "docs": "../../references/render.md",
-      "wiring": "由 install_optional.py --components chart 安装；复制 kinds/chart.js 与 Plotly，页面在内核之后追加 kind 模块 script；模块会从同包 vendor 自动加载 Plotly",
-      "degrade": "Plotly 缺失时回退到内置 SVG 折线"
-    },
-    "spatial": {
-      "label": "几何与空间画布（JSXGraph）",
-      "files": ["visualizations/kinds/spatial.js"],
-      "vendor": "visualizations/vendor/manifest.json",
-      "vendor_kinds": ["spatial"],
-      "docs": "../../references/render.md",
-      "wiring": "由 install_optional.py --components spatial 安装；复制 kinds/spatial.js 与 JSXGraph，页面在内核之后追加 kind 模块 script；模块会从同包 vendor 自动加载 JSXGraph 与 CSS",
-      "degrade": "JSXGraph 缺失时回退到结构说明"
+    "media": {
+      "label": "图片、音频、视频原生控件；图片热点与开放文字标注；标注进入学习记录",
+      "files": [
+        "media/media.js",
+        "media/media.css"
+      ],
+      "docs": "media/README.md",
+      "wiring": "course.css 后加载 media.css；LearnKit、course.js 后加载 media.js；使用 data-media 与 data-media-config",
+      "degrade": "正文与静态后备在无脚本和打印时可读"
     }
   },
   "universal": {
-    "note": "以下能力随 init_course.py 进入默认包，课程无需任何操作；列在这里只为说明界线，不要用 install_optional.py 安装。",
-    "viz_kinds": ["relation", "timeline", "process", "sequence", "table"],
+    "note": "默认资源，无需可选安装。",
+    "viz_kinds": [
+      "relation",
+      "timeline",
+      "process",
+      "sequence",
+      "table"
+    ],
     "files": [
       "visualizations/visualizations.js",
       "visualizations/visualizations.css",

@@ -199,6 +199,41 @@
     };
   }
 
+  function answerView(ctx) {
+    var task = ctx.el, id = task.dataset.questionId;
+    var input = task.querySelector("[data-answer-input]"), button = task.querySelector("[data-answer-check]");
+    var feedback = task.querySelector("[data-role~=answer-feedback]");
+    function normalize(value) {
+      var text = String(value).normalize("NFKC").trim();
+      return task.dataset.caseSensitive === "true" ? text : text.toLocaleLowerCase();
+    }
+    if (!input || !button) return {update: function () {}};
+    input.addEventListener("input", function () { ctx.dispatch({type: EVIDENCE.RAW_ANSWER, id: id, value: input.value}); });
+    button.addEventListener("click", function () {
+      var raw = input.value;
+      if (!raw.trim()) { if (feedback) feedback.textContent = "先填写答案。"; return; }
+      var correct = false;
+      if (task.dataset.answerKind === "numeric") {
+        var value = Number(raw), expected = Number(task.dataset.expected);
+        var tolerance = Number(task.dataset.tolerance || 0);
+        correct = Number.isFinite(value) && Number.isFinite(expected) && Number.isFinite(tolerance) && tolerance >= 0 && Math.abs(value - expected) <= tolerance;
+      } else {
+        var accepted; try { accepted = JSON.parse(task.dataset.accepted || "[]"); } catch (error) { accepted = []; }
+        correct = Array.isArray(accepted) && accepted.some(function (answer) { return typeof answer === "string" && normalize(answer) === normalize(raw); });
+      }
+      ctx.dispatch({type: EVIDENCE.RAW_ANSWER, id: id, value: raw});
+      ctx.dispatch({type: EVIDENCE.ATTEMPT, id: id});
+      ctx.dispatch({type: EVIDENCE.VERDICT, id: id, value: correct ? "correct" : "incorrect"});
+    });
+    return {update: function (el, snapshot) {
+      var q = snapshot.derived.questions[id] || emptyQuestion();
+      if (feedback && q.verdict) {
+        feedback.textContent = q.verdict === "correct" ? task.dataset.correctText || "本题正确。请解释依据。" : task.dataset.incorrectText || "再检查条件与方法。";
+        feedback.dataset.state = q.verdict; feedback.setAttribute("role", "status");
+      }
+    }};
+  }
+
   function hintView(ctx) {
     var button = ctx.el;
     var question = button.closest("[data-question-id]");
@@ -455,6 +490,12 @@
       });
     }
 
+    lesson.querySelectorAll("[data-media]").forEach(function (node) {
+      lines.push("", "### 媒体观察 " + (node.id || "media"),
+        "- 初始化状态: " + (node.dataset.mediaReady || "not-loaded"),
+        "- 热点选择: " + (node.dataset.mediaState || "unknown"));
+    });
+
     var runtimes = lesson.querySelectorAll("[data-learnkit]");
     if (runtimes.length) {
       lines.push("", "## LearnKit 运行时观察（当前状态；不代表完成练习）");
@@ -483,6 +524,7 @@
 
   var VIEWS = [
     [".quiz[data-question-id]", quizView],
+    ['[data-answer-kind="numeric"], [data-answer-kind="fill"]', answerView],
     ["[data-question-id]", independenceView],
     ["[data-hint]", hintView],
     ['[data-role~="teaching-target"]', teachingTargetView],

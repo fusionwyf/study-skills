@@ -27,12 +27,14 @@
     if (self && self.src) return self.src.replace(/[^/]*$/, "");
     var scripts = document.querySelectorAll("script[src]");
     for (var i = scripts.length - 1; i >= 0; i--) {
-      if (/code-highlight-theme\.js$/.test(scripts[i].getAttribute("src") || "")) {
+      if (/code-highlight\/theme\.js$/.test(scripts[i].getAttribute("src") || "")) {
         return scripts[i].src.replace(/[^/]*$/, "");
       }
     }
     return "";
   }
+
+  var stylesheetBase = baseDir();
 
   function preferredSurface() {
     var html = document.documentElement;
@@ -52,7 +54,7 @@
       link.id = STYLE_ID;
       document.head.appendChild(link);
     }
-    var href = baseDir() + file;
+    var href = stylesheetBase + file;
     if (link.getAttribute("href") !== href) link.setAttribute("href", href);
     document.documentElement.style.colorScheme = preferredSurface();
     return file;

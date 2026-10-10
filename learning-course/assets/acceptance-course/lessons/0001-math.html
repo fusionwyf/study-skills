@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>数学推导与核对</title>
+    <link rel="stylesheet" href="../assets/course.css" />
+    <link rel="stylesheet" href="../assets/visualizations/visualizations.css" />
+    <link rel="stylesheet" href="../assets/optional/media/media.css" />
+  </head>
+  <body>
+    <div class="course-shell">
+      <header class="course-header">
+        <h1>数学推导与核对</h1>
+        <a href="../index.html">课件目录</a>
+      </header>
+      <main
+        class="lesson"
+        data-course-id="acceptance-course"
+        data-lesson-id="0001"
+        data-objective="math"
+        data-evidence="practice"
+        data-retrieval="required"
+        data-feedback="required"
+        data-source-status="not-needed"
+        data-answer-status="provided"
+      >
+        <section data-role="objective">
+          <h2>学习成果</h2>
+          <p>独立推导平方函数的导数，并核对矩阵作用于二维向量</p>
+        </section>
+        <section>
+          <h2>平方函数的局部变化率</h2>
+          <p>
+            f(x)=x²。差商 [(x+h)²−x²]/h = 2x+h（h≠0）。当 h 趋于 0 时，导数为
+            2x。有限采样用于核对，不能代替极限推导。
+          </p>
+        </section>
+        <section
+          class="visualization"
+          id="difference-table"
+          data-visualization="table"
+        >
+          <h2>差商趋近导数</h2>
+          <div data-viz-fallback>
+            <p>x=2，h=1、0.1、0.01 时，差商分别为 5、4.1、4.01；极限为 4。</p>
+          </div>
+          <div
+            class="viz-host"
+            id="difference-table-host"
+            data-viz-host
+            hidden
+          ></div>
+          <p data-viz-status role="status"></p>
+          <script type="application/json" data-viz-config>
+            {
+              "model": "difference-table",
+              "domain": "正文给定范围",
+              "precision": "精确规则或 binary64 数值",
+              "columns": [
+                { "key": "h", "label": "h" },
+                { "key": "q", "label": "x=2 的差商" }
+              ],
+              "rows": [
+                { "h": 1, "q": 5 },
+                { "h": 0.1, "q": 4.1 },
+                { "h": 0.01, "q": 4.01 }
+              ]
+            }
+          </script>
+        </section>
+        <section
+          data-role="evidence"
+          data-question-id="derivative"
+          data-answer-kind="numeric"
+          data-expected="6"
+          data-tolerance="0"
+        >
+          <h2>f(x)=x² 在 x=3 的导数是多少？</h2>
+          <label for="derivative-a">你的答案</label
+          ><input
+            id="derivative-a"
+            data-answer-input
+            type="number"
+            step="any"
+          /><button type="button" data-answer-check>检查</button>
+          <p data-role="answer-feedback">作答后核对。本题只检查当前答案。</p>
+        </section>
+        <section
+          class="visualization"
+          id="linear-transform"
+          data-visualization="spatial"
+        >
+          <h2>向量与二维线性变换</h2>
+          <div data-viz-fallback>
+            <p>
+              A=[[1,1],[0,1]]。v=(1,0) 时 Av=(1,0)，v=(1,1) 时
+              Av=(2,1)。按行核对。
+            </p>
+          </div>
+          <div
+            class="viz-host"
+            id="linear-transform-host"
+            data-viz-host
+            hidden
+          ></div>
+          <div data-viz-controls hidden>
+            <label for="linear-transform-x">向量 x</label
+            ><input
+              id="linear-transform-x"
+              type="number"
+              value="1"
+              min="-5"
+              max="5"
+              step=".5"
+            /><label for="linear-transform-y">向量 y</label
+            ><input
+              id="linear-transform-y"
+              type="number"
+              value="0"
+              min="-5"
+              max="5"
+              step=".5"
+            />
+          </div>
+          <p data-viz-status role="status"></p>
+          <script type="application/json" data-viz-config>
+            {
+              "model": "linear-transform",
+              "domain": "正文给定范围",
+              "precision": "精确规则或 binary64 数值",
+              "matrix": [
+                [1, 1],
+                [0, 1]
+              ],
+              "vector": [1, 0]
+            }
+          </script>
+        </section>
+        <section data-role="retrieval">
+          <h2>合卷检索</h2>
+          <p>不看上文，推导 x=4 时平方函数的导数；说明有限差商与极限的区别。</p>
+        </section>
+        <section class="reflection" data-role="learner-feedback">
+          <label for="reflection">哪里仍不确定？</label
+          ><textarea id="reflection"></textarea
+          ><button type="button" data-copy-feedback>复制学习记录</button
+          ><span data-copy-feedback-status role="status"></span>
+        </section>
+      </main>
+    </div>
+    <script src="../assets/learnkit/learnkit.js"></script>
+    <script src="../assets/course.js"></script>
+    <script src="../assets/visualizations/visualizations.js"></script>
+    <script src="../assets/visualizations/kinds/list.js"></script>
+    <script src="../assets/visualizations/kinds/sequence.js"></script>
+    <script src="../assets/visualizations/kinds/table.js"></script>
+    <script src="../assets/visualizations/kinds/spatial.js"></script>
+    <script src="../assets/optional/media/media.js"></script>
+  </body>
+</html>

@@ -3,30 +3,92 @@
   "$id": "https://learnkit.local/schema/lesson-spec.json",
   "title": "LearnKit LessonSpec",
   "type": "object",
-  "required": ["version", "title", "sections"],
+  "required": [
+    "version",
+    "title",
+    "sections"
+  ],
   "properties": {
-    "version": {"type": "string", "pattern": "^1\\."},
-    "title": {"type": "string", "minLength": 1},
-    "description": {"type": "string"},
-    "theme": {"type": "string"},
+    "version": {
+      "type": "string",
+      "pattern": "^1\\."
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string"
+    },
+    "theme": {
+      "type": "string"
+    },
     "sections": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "type", "title"],
+        "required": [
+          "id",
+          "type",
+          "title"
+        ],
         "properties": {
-          "id": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"},
-          "type": {"enum": ["explain", "sequence", "explore", "construct", "compare", "predict", "practice"]},
-          "title": {"type": "string", "minLength": 1},
-          "blocks": {"type": "array"},
-          "model": {"type": "string"},
-          "controls": {"type": "array"},
-          "views": {"type": "array"},
-          "exercise": {"type": "object"}
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "type": {
+            "enum": [
+              "explain",
+              "sequence",
+              "explore",
+              "construct",
+              "compare",
+              "predict",
+              "practice"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "blocks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "type",
+                "content"
+              ],
+              "properties": {
+                "type": {
+                  "const": "html"
+                },
+                "content": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "model": {
+            "type": "string"
+          },
+          "controls": {
+            "type": "array"
+          },
+          "views": {
+            "type": "array"
+          },
+          "exercise": {
+            "type": "object"
+          }
         },
         "additionalProperties": true
-      }
+      },
+      "minItems": 1
     }
   },
-  "additionalProperties": true
+  "additionalProperties": true,
+  "description": "Planning-only format; runtime does not generate a page. Use HTML + data-*."
 }

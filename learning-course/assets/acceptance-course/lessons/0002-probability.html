@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>概率参数实验</title>
+    <link rel="stylesheet" href="../assets/course.css" />
+    <link rel="stylesheet" href="../assets/visualizations/visualizations.css" />
+    <link rel="stylesheet" href="../assets/optional/media/media.css" />
+  </head>
+  <body>
+    <div class="course-shell">
+      <header class="course-header">
+        <h1>概率参数实验</h1>
+        <a href="../index.html">课件目录</a>
+      </header>
+      <main
+        class="lesson"
+        data-course-id="acceptance-course"
+        data-lesson-id="0002"
+        data-objective="probability"
+        data-evidence="practice"
+        data-retrieval="required"
+        data-feedback="required"
+        data-source-status="not-needed"
+        data-answer-status="provided"
+      >
+        <section data-role="objective">
+          <h2>学习成果</h2>
+          <p>解释参数与分类图表的联动，并核对概率归一化</p>
+        </section>
+        <section>
+          <h2>伯努利试验</h2>
+          <p>
+            一次试验只有成功或失败，P(成功)=p，P(失败)=1−p。相加为 1。改变 p
+            并解释图形如何变化。
+          </p>
+        </section>
+        <section id="prob-model" data-learnkit="explore">
+          <div data-lk-host></div>
+          <div data-lk-controls>
+            <label for="p-value">成功概率 p</label
+            ><input
+              id="p-value"
+              data-lk-bind="params.p"
+              type="range"
+              min="0"
+              max="1"
+              step=".1"
+              value=".3"
+            />
+          </div>
+          <p data-lk-view="status"></p>
+          <script type="application/json" data-lk-config>
+            {
+              "model": {
+                "name": "bernoulli",
+                "description": "0≤p≤1，二项结果概率"
+              },
+              "params": { "p": 0.3 }
+            }
+          </script>
+        </section>
+        <section
+          class="visualization"
+          id="probability-chart"
+          data-visualization="chart"
+          data-viz-source="#prob-model"
+        >
+          <h2>成功与失败的概率</h2>
+          <div data-viz-fallback>
+            <p>p=0.3 时成功/失败概率为 0.3/0.7；p=0.8 时为 0.8/0.2。</p>
+          </div>
+          <div
+            class="viz-host"
+            id="probability-chart-host"
+            data-viz-host
+            hidden
+          ></div>
+          <p data-viz-status role="status"></p>
+          <script type="application/json" data-viz-config>
+            {
+              "model": "probability-chart",
+              "domain": "正文给定范围",
+              "precision": "精确规则或 binary64 数值",
+              "traces": [
+                { "type": "bar", "x": ["成功", "失败"], "y": [0.3, 0.7] }
+              ]
+            }
+          </script>
+        </section>
+        <section
+          data-role="evidence"
+          data-question-id="failure"
+          data-answer-kind="numeric"
+          data-expected="0.2"
+          data-tolerance="1e-06"
+        >
+          <h2>成功概率为 0.8，失败概率是多少？</h2>
+          <label for="failure-a">你的答案</label
+          ><input
+            id="failure-a"
+            data-answer-input
+            type="number"
+            step="any"
+          /><button type="button" data-answer-check>检查</button>
+          <p data-role="answer-feedback">作答后核对。本题只检查当前答案。</p>
+        </section>
+        <section data-role="retrieval">
+          <h2>合卷检索</h2>
+          <p>不看图表，写出 p=0.65 时成功与失败的概率，并解释为何两者之和为 1。</p>
+        </section>
+        <section class="reflection" data-role="learner-feedback">
+          <label for="reflection">哪里仍不确定？</label
+          ><textarea id="reflection"></textarea
+          ><button type="button" data-copy-feedback>复制学习记录</button
+          ><span data-copy-feedback-status role="status"></span>
+        </section>
+      </main>
+    </div>
+    <script src="../assets/learnkit/learnkit.js"></script>
+    <script src="../assets/course.js"></script>
+    <script>
+      LearnKit.registerModel("bernoulli", {
+        initialState: function () {
+          return { params: { p: 0.3 } };
+        },
+        reduce: function (state, action) {
+          return action.type === "SET_PARAMETER"
+            ? { params: { p: Math.max(0, Math.min(1, Number(action.value))) } }
+            : state;
+        },
+        derive: function (state) {
+          var p = state.params.p;
+          return {
+            summary: "成功 " + p + "，失败 " + (1 - p),
+            visualizations: {
+              "probability-chart": {
+                traces: [{ type: "bar", x: ["成功", "失败"], y: [p, 1 - p] }],
+              },
+            },
+          };
+        },
+      });
+    </script>
+    <script src="../assets/visualizations/visualizations.js"></script>
+    <script src="../assets/visualizations/kinds/list.js"></script>
+    <script src="../assets/visualizations/kinds/sequence.js"></script>
+    <script src="../assets/visualizations/kinds/table.js"></script>
+    <script src="../assets/visualizations/kinds/chart.js"></script>
+    <script src="../assets/optional/media/media.js"></script>
+  </body>
+</html>

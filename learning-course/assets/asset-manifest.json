@@ -1,7 +1,13 @@
 {
   "version": 1,
   "visualizations": {
-    "universal_kinds": ["relation", "timeline", "process", "sequence", "table"],
+    "universal_kinds": [
+      "relation",
+      "timeline",
+      "process",
+      "sequence",
+      "table"
+    ],
     "optional_kinds": []
   },
   "components": []

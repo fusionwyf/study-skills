@@ -79,14 +79,13 @@ def main() -> int:
     # a course asks for them.
     visualization_dir = Path(__file__).resolve().parents[1] / "assets" / "visualizations"
     visualization_target = course_dir / "assets" / "visualizations"
-    universal_files = [
-        "visualizations.js",
-        "visualizations.css",
-        "adapters.json",
-        "kinds/list.js",
-        "kinds/sequence.js",
-        "kinds/table.js",
-    ]
+    catalog = json.loads((visualization_dir.parent / "catalog.json").read_text(encoding="utf-8"))
+    write_text(course_dir / "assets/catalog.json", json.dumps(catalog, ensure_ascii=False, indent=2) + "\n", args.force)
+    universal_files = list(dict.fromkeys(
+        filename.removeprefix("visualizations/")
+        for spec in catalog["assets"].values() if spec["delivery"] == "default"
+        for filename in spec["files"] if filename.startswith("visualizations/")
+    ))
     for filename in universal_files:
         target = visualization_target / filename
         if target.exists() and not args.force:

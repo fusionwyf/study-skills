@@ -1,0 +1,39 @@
+[data-media] img,
+[data-media] video {
+  max-width: 100%;
+  height: auto;
+}
+[data-media] audio {
+  width: 100%;
+}
+[data-media-frame] {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+}
+[data-media-frame] img {
+  display: block;
+  width: 100%;
+}
+.media-hotspot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  border: 2px solid white;
+  border-radius: 50%;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+  background: #3157d5;
+  color: white;
+  cursor: pointer;
+}
+.media-hotspot:focus-visible {
+  outline: 3px solid #b42318;
+}
+@media print {
+  .media-hotspot {
+    display: none;
+  }
+  [data-media-fallback] {
+    display: block !important;
+  }
+}

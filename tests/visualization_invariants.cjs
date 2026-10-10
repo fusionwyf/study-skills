@@ -61,4 +61,10 @@ assert.throws(() => validateConfig("spatial", {...base, matrix: [[1e308, 1e308],
 assert.throws(() => validateConfig("relation", {...base, nodes: [{id: "a"}], edges: [{from: "a"}]}));
 assert.throws(() => validateConfig("process", {...base, nodes: [{id: "a"}], edges: [{from: "a", to: ""}]}));
 validateConfig("chart", {...base, traces: [{type: "scatter", x: [0, 1, 2], y: [0, null, 2]}]});
+assert.throws(() => validateConfig("relation", {...base, nodes: [{id:"a"}], edges: [{from:"a",to:"missing"}]}));
+validateConfig("chart", {...base, traces: [{type:"bar",x:["A","B"],y:[-1,2]}]});
+delete globalThis.document; // Planning validation runs without a browser DOM.
+const learnkit = require("../learning-course/assets/learnkit/learnkit.js");
+assert.ok(learnkit.validateLessonSpec({version:"1.0",title:"t",sections:[{id:"s",type:"practice",title:"s",blocks:[{type:"multiple-choice"}]}]}).length, "unimplemented blocks cannot pass planning validation");
+assert.deepEqual(learnkit.validateLessonSpec({version:"1.0",title:"t",sections:[{id:"s",type:"explain",title:"s",blocks:[{type:"html",content:"<p>Text</p>"}]}]}),[]);
 console.log("Module registry, algebra, trace invariants, counters, domain gaps and invalid-data checks passed");

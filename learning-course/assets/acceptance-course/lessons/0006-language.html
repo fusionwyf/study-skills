@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>听辨媒体与填空</title>
+    <link rel="stylesheet" href="../assets/course.css" />
+    <link rel="stylesheet" href="../assets/visualizations/visualizations.css" />
+    <link rel="stylesheet" href="../assets/optional/media/media.css" />
+  </head>
+  <body>
+    <div class="course-shell">
+      <header class="course-header">
+        <h1>听辨媒体与填空</h1>
+        <a href="../index.html">课件目录</a>
+      </header>
+      <main
+        class="lesson"
+        data-course-id="acceptance-course"
+        data-lesson-id="0006"
+        data-objective="language"
+        data-evidence="practice"
+        data-retrieval="required"
+        data-feedback="required"
+        data-source-status="not-needed"
+        data-answer-status="provided"
+      >
+        <section data-role="objective">
+          <h2>学习成果</h2>
+          <p>验证音频、文字稿、填空回答与学习记录流程</p>
+        </section>
+        <section>
+          <h2>听出时间与物品</h2>
+          <p>
+            听一段原创英语短句，先作答，再打开文字稿。音频由 Microsoft Zira
+            Desktop 合成，供教学流程验收，不代表真实口音与自然会话训练。
+          </p>
+          <figure
+            id="listening-media"
+            data-media
+            data-media-question="listening-answer"
+          >
+            <audio
+              controls
+              preload="metadata"
+              src="../reference/listening.wav"
+            ></audio>
+            <figcaption data-media-fallback>
+              播放失败或打印时，展开下方文字稿完成阅读理解；此时回答不作为独立听力证据。
+            </figcaption>
+            <details data-media-transcript>
+              <summary>文字稿（作答后查看）</summary>
+              <p>
+                Please meet me at the library at three o'clock. Bring your blue
+                notebook.
+              </p>
+            </details>
+            <p class="print-only">
+              文字稿：Please meet me at the library at three o'clock. Bring your
+              blue notebook.
+            </p>
+          </figure>
+        </section>
+        <section
+          data-role="evidence"
+          data-question-id="listening-answer"
+          data-answer-kind="fill"
+          data-accepted='["3","three","three o&#39;clock","3:00"]'
+          data-correct-text="Three o'clock。请再用自己的话复述地点与携带物品。"
+        >
+          <h2>What time should you meet?</h2>
+          <label for="listen-a">Your answer</label
+          ><input id="listen-a" data-answer-input type="text" /><button
+            type="button"
+            data-answer-check
+          >
+            检查
+          </button>
+          <p data-role="answer-feedback">
+            先听并作答，检查后再展开文字稿核对；查看文字稿会记录为辅助作答。
+          </p>
+        </section>
+        <section
+          data-role="evidence"
+          data-question-id="listen-retell"
+          data-answer-kind="open"
+        >
+          <label for="listen-retell-a">用英文复述地点与物品，不查看文字稿</label
+          ><textarea id="listen-retell-a"></textarea>
+        </section>
+        <section data-role="retrieval">
+          <h2>合卷检索</h2>
+          <p>收起文字稿，重新播放音频；不用原句复述时间、地点与物品，再说明你如何核对。</p>
+        </section>
+        <section class="reflection" data-role="learner-feedback">
+          <label for="reflection">哪里仍不确定？</label
+          ><textarea id="reflection"></textarea
+          ><button type="button" data-copy-feedback>复制学习记录</button
+          ><span data-copy-feedback-status role="status"></span>
+        </section>
+      </main>
+    </div>
+    <script src="../assets/learnkit/learnkit.js"></script>
+    <script src="../assets/course.js"></script>
+    <script src="../assets/visualizations/visualizations.js"></script>
+    <script src="../assets/visualizations/kinds/list.js"></script>
+    <script src="../assets/visualizations/kinds/sequence.js"></script>
+    <script src="../assets/visualizations/kinds/table.js"></script>
+    <script src="../assets/optional/media/media.js"></script>
+  </body>
+</html>

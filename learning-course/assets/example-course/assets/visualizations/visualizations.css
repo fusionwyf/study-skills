@@ -39,3 +39,13 @@
   .viz-code .is-current { outline: none; background: transparent; }
   .viz-fallback { display: block !important; }
 }
+
+[data-visualization="relation"] .viz-host, [data-visualization="process"] .viz-host, [data-visualization="timeline"] .viz-host { height: auto; overflow: visible; }
+.viz-host > svg { width: 100%; height: auto; }
+.viz-host svg [role="button"] { cursor: pointer; }
+.viz-host svg [role="button"]:focus { outline: 3px solid #3157d5; }
+.viz-list button { font: inherit; color: inherit; background: transparent; border: 0; padding: .25rem; text-align: left; font-weight: bold; cursor: pointer; }
+.viz-timeline { display: block; border-left: 3px solid #3157d5; padding-left: 1rem; }
+.viz-timeline li { position: relative; margin-bottom: 1rem; }
+.viz-timeline li::before { content: ""; position: absolute; left: -1.45rem; top: 1rem; width: .6rem; height: .6rem; border-radius: 50%; background: #3157d5; }
+.viz-date { display: block; font-weight: bold; color: #475569; }

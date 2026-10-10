@@ -81,7 +81,7 @@
 
 ### LearnKit 模式映射
 
-分步讲解用 `sequence`，参数变化用 `explore`，直接操作用 `construct`，并列证据用 `compare`，预测后验证用 `predict`。每课只设一个主模式；`PredictionExercise` 可嵌入其余模式。
+分步讲解用 `sequence`，参数变化用 `explore`，直接操作用 `construct`，并列证据用 `compare`，预测后验证用 `predict`。每课只设一个主模式；预测题可使用开放回答与先作答再揭示结构嵌入其余模式；它不是已实现的 LessonSpec renderer。
 
 ### 跨模式通用规则
 
@@ -100,6 +100,16 @@
 有标准答案的问答使用 `.quiz`、`.quiz-option`、`.quiz-feedback`；即时判定只报告该题结果，不推断 mastery。开放题使用输入框或文本域，保留原始答案。
 
 提示控件使用 `data-hint`，使反馈导出可记录是否使用提示。答案、解释和错误原因必须在 DOM 中可访问，不能只靠颜色表达。
+
+### 数字与填空回答
+
+用 `data-role="evidence"`、唯一 `data-question-id`，并设 `data-answer-kind="numeric|fill"`。容器包含有 label 的 `data-answer-input`、`data-answer-check` 按钮和 `data-role="answer-feedback"`。numeric 使用有限 `data-expected` 与非负绝对 `data-tolerance`；fill 使用 `data-accepted='["答案","别名"]'`，默认 NFKC、去首尾空格、忽略大小写，可用 `data-case-sensitive="true"`。这是有限答案判定，不用于语义评分。
+
+检查前保留原话，检查次数、答案与提示进入同一证据 store。即时结果不升级 mastery。示例见数学/听辨验收课件。
+
+### 媒体与图片标注
+
+需要图片热点时安装 `media` 并读取组件 README。音视频使用原生 controls 与可读文字稿，视频对白另提供字幕 track。热点标注配合开放文本回答，选择热点只是观察记录。未提供或未验证的专业媒体必须在课件中说明，不能用示意媒体声称完成真实听力训练。
 
 ### 学习者教 AI
 

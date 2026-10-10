@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>材料分析与时间轴</title>
+    <link rel="stylesheet" href="../assets/course.css" />
+    <link rel="stylesheet" href="../assets/visualizations/visualizations.css" />
+    <link rel="stylesheet" href="../assets/optional/media/media.css" />
+  </head>
+  <body>
+    <div class="course-shell">
+      <header class="course-header">
+        <h1>材料分析与时间轴</h1>
+        <a href="../index.html">课件目录</a>
+      </header>
+      <main
+        class="lesson"
+        data-course-id="acceptance-course"
+        data-lesson-id="0004"
+        data-objective="history"
+        data-evidence="practice"
+        data-retrieval="required"
+        data-feedback="required"
+        data-source-status="not-needed"
+        data-answer-status="provided"
+      >
+        <section data-role="objective">
+          <h2>学习成果</h2>
+          <p>区分材料、解释和局限，构造有依据的论证</p>
+        </section>
+        <section>
+          <h2>模拟史料：一座虚构城镇的供水讨论</h2>
+          <p>
+            以下材料为原创教学模拟，不是历史事实。阶段一：居民请愿“缺水影响生活”；阶段二：管理者方案“预算有限，先修主干管”；阶段三：会议记录“优先保障公共取水点”。区分原话、解释和价值判断。
+          </p>
+        </section>
+        <section
+          class="visualization"
+          id="town-timeline"
+          data-visualization="timeline"
+        >
+          <h2>事件与阶段</h2>
+          <div data-viz-fallback>
+            <ol>
+              <li>阶段一：居民请愿</li>
+              <li>阶段二：管理者方案</li>
+              <li>阶段三：会议决定</li>
+            </ol>
+          </div>
+          <div
+            class="viz-host"
+            id="town-timeline-host"
+            data-viz-host
+            hidden
+          ></div>
+          <p data-viz-status role="status"></p>
+          <script type="application/json" data-viz-config>
+            {
+              "model": "town-timeline",
+              "domain": "正文给定范围",
+              "precision": "精确规则或 binary64 数值",
+              "events": [
+                {
+                  "id": "petition",
+                  "title": "居民请愿",
+                  "date": "阶段一",
+                  "description": "提出缺水问题"
+                },
+                {
+                  "id": "proposal",
+                  "title": "管理者方案",
+                  "date": "阶段二",
+                  "description": "提出预算约束"
+                },
+                {
+                  "id": "meeting",
+                  "title": "会议决定",
+                  "date": "阶段三",
+                  "description": "优先公共取水点"
+                }
+              ]
+            }
+          </script>
+        </section>
+        <section
+          class="visualization"
+          id="argument-graph"
+          data-visualization="relation"
+        >
+          <h2>证据、主张与局限</h2>
+          <div data-viz-fallback>
+            <p>会议记录支持“优先取水点”；缺少实施结果，不能推断措施有效。</p>
+          </div>
+          <div
+            class="viz-host"
+            id="argument-graph-host"
+            data-viz-host
+            hidden
+          ></div>
+          <p data-viz-status role="status"></p>
+          <script type="application/json" data-viz-config>
+            {
+              "model": "argument-graph",
+              "domain": "正文给定范围",
+              "precision": "精确规则或 binary64 数值",
+              "nodes": [
+                { "id": "claim", "label": "先修公共取水点" },
+                { "id": "evidence", "label": "会议记录" },
+                { "id": "limit", "label": "缺少实际效果资料" }
+              ],
+              "edges": [
+                { "from": "evidence", "to": "claim", "label": "支持" },
+                { "from": "limit", "to": "claim", "label": "限制" }
+              ]
+            }
+          </script>
+        </section>
+        <section
+          data-role="evidence"
+          data-question-id="historical-argument"
+          data-answer-kind="open"
+        >
+          <h2>写出主张—证据—推理，并说明一项证据局限</h2>
+          <label for="historical-argument-a">你的解释</label
+          ><textarea id="historical-argument-a"></textarea>
+          <p data-role="answer-feedback">
+            核对依据、适用条件、过程与结果；原始解释由 agent 评估。
+          </p>
+        </section>
+        <section data-role="retrieval">
+          <h2>合卷检索</h2>
+          <p>不看材料，区分已记录的决策和推断的实施效果；再说出一种能补足局限的材料。</p>
+        </section>
+        <section class="reflection" data-role="learner-feedback">
+          <label for="reflection">哪里仍不确定？</label
+          ><textarea id="reflection"></textarea
+          ><button type="button" data-copy-feedback>复制学习记录</button
+          ><span data-copy-feedback-status role="status"></span>
+        </section>
+      </main>
+    </div>
+    <script src="../assets/learnkit/learnkit.js"></script>
+    <script src="../assets/course.js"></script>
+    <script src="../assets/visualizations/visualizations.js"></script>
+    <script src="../assets/visualizations/kinds/list.js"></script>
+    <script src="../assets/visualizations/kinds/sequence.js"></script>
+    <script src="../assets/visualizations/kinds/table.js"></script>
+    <script src="../assets/optional/media/media.js"></script>
+  </body>
+</html>

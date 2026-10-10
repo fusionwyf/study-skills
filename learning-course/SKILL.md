@@ -67,7 +67,8 @@ disable-model-invocation: true
 
    `--course-dir`、`--title`、`--goal` 均为必填；`--diagnostic` 只在第 2 步判定起点需要诊断时传入。目标目录已存在时脚本拒绝覆盖，除非显式加 `--force`。
 4. 在 `PLAN.md` 中维护课程路线和边界。它不是可重新生成文件。
-5. 选择适合本主题的教学模式，生成一个具有可验证学习成果和 evidence opportunity 的 HTML 课件。
+5. 读取 `references/lesson.md` 与 `references/assets.md`，按课程目标从 `assets/catalog.json` 选择已实现能力；有公式、图形或动态模型时读取 `references/render.md`。以 HTML + data-* 为制作入口，生成一个具有可验证学习成果和 evidence opportunity 的 HTML 课件。
+   把学习者要求的深度、视觉风格、交互与验收标准写入课程 `PLAN.md`；不足的能力按 assets 协议选择静态表达或课程专用扩展。
    `assets/course-template/lesson.html` 是示例态模板：复制后必须替换其中硬编码的 `data-course-id` 与 `data-objective`（模板值为 `example-course` / `example-objective`），并确保该 objective 已写入 `course.yaml` 的 `objectives`。否则 validator 会报 `lesson references unknown objective`。
 6. 将 phase 设为 `awaiting_evidence`，重新生成索引并验证课程包。
 
@@ -80,7 +81,7 @@ disable-model-invocation: true
 3. 优先处理到期复习和学习者明确提出的问题。
 4. 根据 evidence 强度决定保持难度、补前置、增加变式、推进或设为 `uncertain`。
    若有 incoming 交接、已有跨包交接待返回，或 finalized evidence 表明需要独立的有界补课包，读取 `../shared/references/learning-handoff.md` 并按对应分支处理。incoming 补课获得约定的返回证据时执行协议的返回分支；课程内可补的前置仍按本流程教学。
-5. 生成下一课后进入 `awaiting_evidence`。不要提前创建不存在的反馈。
+5. 制作下一课时复用 `PLAN.md` 的制作约定，按 `references/assets.md` 检查资产选择与接线；生成下一课后进入 `awaiting_evidence`。不要提前创建不存在的反馈。
 
 完成条件：所有新 mastery 都可追溯到 finalized record；下一项动作是到期复习、针对性补救、有界补课交接或一节引用已定义 objective 的新课；状态与索引已经验证。
 
@@ -122,10 +123,11 @@ HTML 的“复制学习记录”按钮只汇总原始答案、检查次数、提
 
 ## 参考路由
 
-课程侧只有四个参考文档，按任务读取：
+课程侧参考文档按任务读取：
 
 - `references/state.md`：创建、更新、续学或恢复课程状态；诊断与综合评估的挂载规则。诊断执行、练习梯度、证据升级和错误干预的细则见 `../shared/references/`。
 - `references/lesson.md`：创建或修改 HTML 课件组件、选择学科教学模式、设计认知层级。
+- `references/assets.md`：制作或修改课件时选择资源、按需安装、领域扩展和验收。
 - `references/render.md`：公式、图表、交互可视化等运行时渲染（LearnKit、KaTeX、可视化适配器、可选组件与主题）。
 - `references/export.md`：导出或审查 PDF。
 
@@ -141,19 +143,20 @@ HTML 的“复制学习记录”按钮只汇总原始答案、检查次数、提
 
 ## 可选组件
 
-组件分两层，界线是「是否随课程内容决定」：
+按交付方式引入资源；职责分类另见 catalog 的 role：
 
-- **通用**：交互式测验与反馈、无库可视化 kind（`relation`、`timeline`、`process`、`sequence`、`table`）都已随默认包就绪，课程无需任何操作。
-- **随内容决定**：代码着色、主题切换器、`chart`、`spatial` 默认不在包里，需要时按需安装，装之前不要在课件里引用：
+- **默认**：交互式测验与反馈、无库可视化 kind（`relation`、`timeline`、`process`、`sequence`、`table`）随初始化复制；页面按模板加载用到的模块。
+- **按需安装**：代码着色、主题切换器、媒体标注、`chart`、`spatial` 默认不在包里，需要时安装并在课件引入：
 
 ```text
 python scripts/install_optional.py <course-dir> --components code-highlight theme
 python scripts/install_optional.py <course-dir> --components chart spatial
+python scripts/install_optional.py <course-dir> --components media
 ```
 
 装 `chart` / `spatial` 后，安装脚本会把组件登记到课程的 `assets/asset-manifest.json`；课件仍需加载对应 kind 模块。模块会从同一课程包的 `visualizations/vendor/` 自动加载已校验的本地 vendor，缺失时保留 fallback。
 
-可选组件清单、依赖和降级行为见 `assets/optional/manifest.json`；每个组件目录内自带 README。课程实际安装状态以课程包自己的 `assets/asset-manifest.json` 为准，能力说明仍见 `assets/learnkit/components.json`。
+能力与依赖以 `assets/catalog.json` 为准；`assets/optional/manifest.json` 是生成的安装目录投影；每个组件目录内自带 README。课程实际安装状态以课程包自己的 `assets/asset-manifest.json` 为准，能力说明仍见 `assets/learnkit/components.json`。
 
 ## 验证
 
@@ -165,4 +168,4 @@ python scripts/validate_course.py <course-dir> --strict-schema --pedagogical
 python -X utf8 ../shared/scripts/quick_validate.py <skill-dir>
 ```
 
-validator 只认显式 schema 和 `data-*` 契约，不使用关键词猜测。只有需要打印且模型具备视觉能力，或学习者明确报告视觉问题时才进行视觉检查。
+validator 只认显式 schema 和 `data-*` 契约，不使用关键词猜测。首次使用新的组件、动态模型或布局时，按 assets 协议实际打开页面检查初始化、交互、窄屏与无脚本/打印后备；不能完成时报告未验证。纯内容微调可复用已验证的组件行为。
