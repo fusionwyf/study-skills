@@ -316,7 +316,8 @@
       "example": "optional/theme/README.md",
       "fallback": "脚本缺失时按系统偏好生效；打印强制浅色",
       "docs": "optional/theme/README.md",
-      "wiring": "head 在 course.css 之后引入 theme.css，正文末尾引入 theme.js；用 html[data-theme] 或脚本的切换按钮选择主题"
+      "wiring": "head 在 course.css 之后引入 theme.css，正文末尾引入 theme.js；用 html[data-theme] 或脚本的切换按钮选择主题",
+      "recommended_when": "新课程初始化已安装切换器；课程自定义文件为 assets/theme.css 与 assets/theme.js"
     },
     "code-highlight": {
       "role": "rendering",
@@ -326,8 +327,6 @@
         "optional/code-highlight/code-highlight.js",
         "optional/code-highlight/code-highlight.css",
         "optional/code-highlight/theme.js",
-        "optional/code-highlight/github.min.css",
-        "optional/code-highlight/github-dark.min.css",
         "optional/code-highlight/README.md"
       ],
       "dependencies": [],
@@ -335,16 +334,17 @@
         "代码块语法着色"
       ],
       "limitations": [
-        "按组件 README 接线"
+        "代码块出现时默认启用；额外语言可加载官方语法包"
       ],
       "example": "optional/code-highlight/README.md",
       "fallback": "脚本缺失或禁用 JavaScript 时保留单色原文；语言不在内置清单时不着色；打印强制还原为可复制文本",
       "docs": "optional/code-highlight/README.md",
       "wiring": "head 引入 code-highlight.css，正文末尾依次引入 theme.js（挑官方主题）与 code-highlight.js（上色）；脚本自动处理所有 .code-block pre code",
       "network": {
-        "default": "CDN highlight.js 11.12.0",
-        "offline": "预置同版本引擎并先注册 window.hljs"
-      }
+        "default": "highlight.js 11.12.0 官方 CDN 引擎与主题 CSS",
+        "offline": "预置同版本引擎和官方主题；先注册 window.hljs，在 COURSE_CODE_THEMES 指定本地样式"
+      },
+      "recommended_when": "出现代码示例时安装并加载；新课程初始化已安装"
     },
     "media": {
       "role": "common",
@@ -464,6 +464,40 @@
         "renderer": "registered extension",
         "tier": "extension"
       }
+    },
+    "course-theme": {
+      "role": "common",
+      "delivery": "default",
+      "status": "implemented",
+      "files": [
+        "course-template/theme.css",
+        "course-template/theme.js"
+      ],
+      "targets": {
+        "course-template/theme.css": "theme.css",
+        "course-template/theme.js": "theme.js"
+      },
+      "dependencies": [],
+      "supports": [
+        "课程自定义主题、布局、官方高亮主题选择与公式设置"
+      ],
+      "limitations": [
+        "修改课程副本；theme.css 最后加载，theme.js 在主题切换器与渲染器之前加载"
+      ],
+      "example": "course-template/lesson.html",
+      "fallback": "纯 CSS 主题与打印浅色样式"
     }
+  },
+  "third_party_policy": {
+    "preference": "成熟第三方库优先；按教学内容选库并用薄适配层连接 LearnKit 与证据记录",
+    "network": "允许固定版本 CDN；只在用户要求离线时预置本地引擎",
+    "selection": [
+      "代码语法高亮：highlight.js / Prism",
+      "数学公式：KaTeX / MathJax",
+      "数据图表：Plotly / ECharts / Chart.js",
+      "关系、流程、时间轴：Mermaid / Cytoscape / vis-timeline",
+      "几何、图像标注：JSXGraph / Fabric.js / Konva"
+    ],
+    "custom_code": "课程模型、教学交互与库的接线可自定义；库已覆盖的引擎功能复用库，静态后备保持简洁"
   }
 }

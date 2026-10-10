@@ -1,0 +1,98 @@
+/*
+ * Optional component: theme layer.
+ *
+ * course.css is a neutral baseline. This file turns every visual decision in it
+ * into an overridable token, so a course can brand itself without editing
+ * course.css and without touching a single component class name.
+ *
+ * Two ways to apply a theme:
+ *   1. Static: put `data-theme="<name>"` on <html>, then define
+ *      `[data-theme="<name>"] { --course-accent: ...; }` in your own stylesheet.
+ *   2. Dynamic: use the switcher below (see theme.js) or set the attribute
+ *      yourself; the token values are pure CSS custom properties.
+ *
+ * Load this file AFTER course.css.
+ */
+
+/*
+ * --- Tokens course.css currently hardcodes -------------------------------
+ * Declaring them here with their baseline values changes nothing visually, but
+ * makes them overridable. A themed course only needs to redefine what it cares
+ * about.
+ */
+:root {
+  /* Colour on the code surface (currently fixed in .code-language / .copy-code) */
+  --course-code-muted: #b9c5e5;
+  --course-code-border: #65749d;
+  --course-code-hover: #2a3550;
+
+  /* Step counter badge */
+  --course-step-badge-bg: var(--course-accent);
+  --course-step-badge-text: #ffffff;
+
+  /* Imported visualization surface (visualizations.css equivalent) */
+  --course-viz-border: #ccd3df;
+  --course-viz-surface: #f8fafc;
+  --course-viz-highlight: #e9eefc;
+  --course-viz-sorted-bg: #e8f4ee;
+  --course-viz-sorted-border: #157347;
+  --course-viz-active-border: #3157d5;
+  --course-viz-muted-border: #8c96a6;
+  --course-viz-head-bg: #f0f3f8;
+}
+
+/*
+ * --- Theme surface declaration -------------------------------------------
+ * `data-theme-surface` tells optional components which way the theme leans. The
+ * code block reads it to choose a matching official highlight.js theme (see
+ * code-highlight/theme.js), so this file only needs to move the *code surface*
+ * tokens with it; the token colours are the theme's job.
+ *
+ * Anything other than "light" keeps the dark-friendly defaults from course.css.
+ */
+html[data-theme-surface="light"] .code-block {
+  --course-code-bg: #f6f8fa;
+  --course-code-text: #1f2328;
+  --course-code-muted: #57606a;
+  --course-code-border: #d0d7de;
+  --course-code-hover: #eaeef2;
+}
+
+/* --- Switcher (rendered by theme.js) ------------------------------------- */
+
+.theme-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.theme-switch select {
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--course-border);
+  border-radius: 0.45rem;
+  background: var(--course-surface);
+  color: var(--course-text);
+  font: inherit;
+}
+
+.theme-switch label { color: var(--course-text-muted); }
+
+/*
+ * Printing always uses the flattened light palette from course.css, so drop the
+ * switcher and ignore any theme tokens that would darken the page.
+ */
+@media print {
+  .theme-switch { display: none !important; }
+  html[data-theme] { color-scheme: light; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-switch * { transition: none !important; }
+}
+
+/* Respect an explicit low-contrast / high-contrast preference for the switcher. */
+@media (prefers-contrast: more) {
+  .theme-switch select { border-width: 2px; border-color: var(--course-text); }
+}

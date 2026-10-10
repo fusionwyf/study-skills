@@ -1,0 +1,92 @@
+/* Course-owned theme: customize this file; keep shared runtimes intact.
+ * Load after course.css, component CSS and third-party stylesheets. */
+:root {
+  --course-accent: #2563eb;
+  --course-accent-strong: #1d4ed8;
+  --course-max: 68rem;
+  --course-leading: 1.75;
+  --course-font: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+}
+
+html[data-theme="course"] {
+  --course-bg: #f6f8fc;
+  --course-surface: #ffffff;
+  --course-surface-muted: #eef2f8;
+  --course-text: #17243a;
+  --course-text-muted: #52627a;
+  --course-border: #cdd7e6;
+  --course-code-bg: #f6f8fa;
+  --course-code-text: #1f2328;
+  --course-code-muted: #52627a;
+}
+
+html[data-theme="ink"] {
+  --course-bg: #101827;
+  --course-surface: #182338;
+  --course-surface-muted: #213149;
+  --course-text: #e6edf7;
+  --course-text-muted: #b8c7dc;
+  --course-border: #465975;
+  --course-accent: #93b8ff;
+  --course-accent-strong: #b7d0ff;
+  --course-code-bg: #0d1117;
+  --course-code-text: #e6edf3;
+  --course-code-muted: #b8c7dc;
+  --course-viz-border: #465975;
+  --course-viz-surface: #182338;
+  --course-viz-head-bg: #213149;
+  --course-viz-highlight: #29446b;
+}
+
+/* Course-specific layout and third-party container adjustments go here. */
+.visualization {
+  background: var(--course-surface);
+  color: var(--course-text);
+  border-color: var(--course-border);
+}
+.viz-list li, .viz-table th {
+  background: var(--course-surface-muted);
+}
+.viz-code .is-current {
+  background: var(--course-viz-highlight, #e9eefc);
+}
+.viz-date {
+  color: var(--course-text-muted);
+}
+/* Graphs use their own light palette; preserve readable labels on dark pages. */
+.viz-host > svg, .viz-array .is-sorted {
+  background: #f8fafc;
+  color: #1d2433;
+}
+.lesson [data-answer-input],
+.lesson textarea {
+  max-width: 100%;
+}
+.lesson > [data-question-id] > label {
+  display: block;
+}
+.lesson > [data-question-id] > textarea {
+  width: 100%;
+  min-height: 6rem;
+}
+
+/* A course theme must stay readable on paper, including dark screen themes. */
+@media print {
+  html[data-theme] {
+    --course-bg: #fff;
+    --course-surface: #fff;
+    --course-surface-muted: #f4f4f4;
+    --course-text: #000;
+    --course-text-muted: #333;
+    --course-border: #aaa;
+    --course-accent: #222;
+    --course-accent-strong: #000;
+    --course-code-bg: #f4f4f4;
+    --course-code-text: #000;
+    --course-code-muted: #333;
+    --course-viz-surface: #fff;
+    --course-viz-head-bg: #eee;
+    --course-viz-border: #aaa;
+    --course-viz-highlight: #eee;
+  }
+}

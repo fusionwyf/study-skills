@@ -43,9 +43,7 @@
       "files": [
         "code-highlight/code-highlight.js",
         "code-highlight/code-highlight.css",
-        "code-highlight/theme.js",
-        "code-highlight/github.min.css",
-        "code-highlight/github-dark.min.css"
+        "code-highlight/theme.js"
       ],
       "docs": "code-highlight/README.md",
       "wiring": "head 引入 code-highlight.css，正文末尾依次引入 theme.js（挑官方主题）与 code-highlight.js（上色）；脚本自动处理所有 .code-block pre code",

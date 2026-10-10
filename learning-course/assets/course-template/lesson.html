@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="course" data-theme-surface="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,6 +7,10 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <link rel="stylesheet" href="../assets/course.css">
   <link rel="stylesheet" href="../assets/visualizations/visualizations.css">
+  <link rel="stylesheet" href="../assets/optional/theme/theme.css">
+  <link rel="stylesheet" href="../assets/optional/code-highlight/code-highlight.css">
+  <link rel="stylesheet" href="../assets/theme.css">
+  <script src="../assets/theme.js"></script>
 </head>
 <body>
   <div class="course-shell">
@@ -16,6 +20,7 @@
       <p class="course-subtitle">视觉层可以按主题重设计；保留下面的语义结构和交互行为。</p>
       <div class="course-meta"><span>预计 25–35 分钟</span><span data-role="prerequisite">前置：填写前置知识</span></div>
       <nav class="course-nav" aria-label="课程导航"><a href="../index.html">课程首页</a></nav>
+      <div data-theme-switch></div>
     </header>
 
     <div class="course-main">
@@ -152,6 +157,9 @@ print(check_result(3))</code></pre></div>
   </div>
   <script src="../assets/learnkit/learnkit.js"></script>
   <script src="../assets/course.js"></script>
+  <script src="../assets/optional/theme/theme.js"></script>
+  <script src="../assets/optional/code-highlight/theme.js"></script>
+  <script src="../assets/optional/code-highlight/code-highlight.js"></script>
   <!-- 可视化内核 + 通用 kind（relation/timeline/process、sequence、table）。
        这三支模块不带第三方库，随 init_course.py 复制。chart 与 spatial 需要
        第三方库，用 install_optional.py 装好后，在本区块末尾追加它们各自的
@@ -166,14 +174,16 @@ print(check_result(3))</code></pre></div>
   <script>
     // KaTeX auto-render: 公式直接写 \(...\) 与 \[...\]，无需逐条标注。
     document.addEventListener("DOMContentLoaded", function () {
+      window.__COURSE_MATH_READY__ = false;
       if (!window.renderMathInElement) return;
-      renderMathInElement(document.body, {
+      renderMathInElement(document.body, Object.assign({
         delimiters: [
           {left: "\\(", right: "\\)", display: false},
           {left: "\\[", right: "\\]", display: true}
         ],
         throwOnError: false
-      });
+      }, window.COURSE_MATH_OPTIONS || {}));
+      window.__COURSE_MATH_READY__ = !document.querySelector('.katex-error');
     });
   </script>
 </body>

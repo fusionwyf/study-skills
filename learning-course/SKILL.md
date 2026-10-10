@@ -51,7 +51,7 @@ disable-model-invocation: true
 
 保留完整目录骨架。课号使用四位连续数字，slug 使用安全的 dash-case。创建前检查现有文件，避免覆盖已有课程。
 
-`assets/visualizations/` 默认就存在：内核加 `relation`、`timeline`、`process`、`sequence`、`table` 这五个无第三方库的 kind 随包复制，课程直接写容器就能用。`chart` 与 `spatial` 需要 Plotly / JSXGraph，属于「随课程内容决定」的可选 kind，用 `install_optional.py` 装后才可用。`assets/optional/` 只在装了对应组件后存在。
+`assets/visualizations/` 默认包含内核与五个简单 HTML/SVG kind，按模板加载后使用；复杂表达优先选第三方库。chart/spatial 安装 Plotly/JSXGraph 后使用。新课程还安装 code-highlight/theme 适配层，第三方引擎与官方高亮主题按内容从 CDN 引入。
 
 ## Create
 
@@ -69,6 +69,7 @@ disable-model-invocation: true
 4. 在 `PLAN.md` 中维护课程路线和边界。它不是可重新生成文件。
 5. 读取 `references/lesson.md` 与 `references/assets.md`，按课程目标从 `assets/catalog.json` 选择已实现能力；有公式、图形或动态模型时读取 `references/render.md`。以 HTML + data-* 为制作入口，生成一个具有可验证学习成果和 evidence opportunity 的 HTML 课件。
    把学习者要求的深度、视觉风格、交互与验收标准写入课程 `PLAN.md`；不足的能力按 assets 协议选择静态表达或课程专用扩展。
+   成熟第三方库优先，允许固定版本 CDN；出现代码启用 highlight.js，出现公式启用 KaTeX。其他组件先按 assets 协议选库，再写课程模型和接线。视觉定制写入 `assets/theme.css`，主题与渲染设置写入 `assets/theme.js`。
    `assets/course-template/lesson.html` 是示例态模板：复制后必须替换其中硬编码的 `data-course-id` 与 `data-objective`（模板值为 `example-course` / `example-objective`），并确保该 objective 已写入 `course.yaml` 的 `objectives`。否则 validator 会报 `lesson references unknown objective`。
 6. 将 phase 设为 `awaiting_evidence`，重新生成索引并验证课程包。
 
@@ -146,7 +147,7 @@ HTML 的“复制学习记录”按钮只汇总原始答案、检查次数、提
 按交付方式引入资源；职责分类另见 catalog 的 role：
 
 - **默认**：交互式测验与反馈、无库可视化 kind（`relation`、`timeline`、`process`、`sequence`、`table`）随初始化复制；页面按模板加载用到的模块。
-- **按需安装**：代码着色、主题切换器、媒体标注、`chart`、`spatial` 默认不在包里，需要时安装并在课件引入：
+- **按需引入**：新课程已安装代码着色与主题切换器适配层；代码课件默认加载高亮。媒体标注、`chart`、`spatial` 按内容安装。已有课程可补装：
 
 ```text
 python scripts/install_optional.py <course-dir> --components code-highlight theme

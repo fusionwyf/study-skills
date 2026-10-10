@@ -1,4 +1,5 @@
 async (page) => {
+  const baseURL = new URL(page.url()).origin;
   const results = [];
   const browser = page.context().browser();
   const context = await browser.newContext({
@@ -15,7 +16,7 @@ async (page) => {
       "0005-design",
       "0006-language",
     ]) {
-      await offline.goto("http://127.0.0.1:8766/lessons/" + name + ".html");
+      await offline.goto(baseURL + "/lessons/" + name + ".html");
       const text = await offline.locator("main").innerText();
       if (text.length < 100) throw new Error("blank no-script " + name);
       const fallbacks = offline.locator(
@@ -36,7 +37,7 @@ async (page) => {
     await context.close();
   }
   await page.route("**/vendor/**", (route) => route.abort());
-  await page.goto("http://127.0.0.1:8766/lessons/0002-probability.html");
+  await page.goto(baseURL + "/lessons/0002-probability.html");
   await page.waitForFunction(
     () => window.__COURSE_VISUALIZATIONS_READY__ === true,
   );
@@ -50,7 +51,7 @@ async (page) => {
         document.getElementById("probability-chart").dataset.visualState,
       ).traces[0].y[0] === 0,
   );
-  await page.goto("http://127.0.0.1:8766/lessons/0001-math.html");
+  await page.goto(baseURL + "/lessons/0001-math.html");
   await page.waitForFunction(
     () => window.__COURSE_VISUALIZATIONS_READY__ === true,
   );
@@ -65,5 +66,13 @@ async (page) => {
   )
     throw new Error("spatial fallback numeric edit");
   await page.unroute("**/vendor/**");
-  return { lessons: results, missingVendor: { chart: true, spatial: true } };
+  await page.route("**/cdn.jsdelivr.net/**", route => route.abort());
+  await page.goto(baseURL + "/lessons/0003-algorithm.html");
+  await page.waitForFunction(() => window.__COURSE_CODE_HIGHLIGHT_READY__ === false);
+  if (!(await page.locator('.code-block code').textContent()).includes('for i in range')) throw new Error('CDN failure lost code source');
+  await page.goto(baseURL + "/lessons/0001-math.html");
+  await page.waitForFunction(() => window.__COURSE_MATH_READY__ === false);
+  if (await page.locator('.katex').count() || !(await page.locator('.formula').textContent()).includes('\\frac')) throw new Error('CDN failure lost formula source');
+  await page.unroute("**/cdn.jsdelivr.net/**");
+  return { lessons: results, missingVendor: { chart: true, spatial: true }, missingCDN: {codeSource: true, mathSource: true} };
 }

@@ -60,7 +60,7 @@ class AssetTests(unittest.TestCase):
             root = Path(tmp)
             self.init(root)
             target = root / "assets/optional/theme/theme.css"
-            target.parent.mkdir(parents=True)
+            target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text("user modified")
             before = {
                 p.relative_to(root): p.read_bytes()
@@ -82,8 +82,21 @@ class AssetTests(unittest.TestCase):
             self.init(root)
             css = root / "assets/course.css"
             css.write_text("custom course theme")
+            theme = root / "assets/theme.css"
+            theme.write_text(":root { --course-accent: purple; }")
             install(root, ["media"])
             self.assertEqual(css.read_text(), "custom course theme")
+            self.assertEqual(theme.read_text(), ":root { --course-accent: purple; }")
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "learning-course/scripts/build_index.py"),
+                    str(root),
+                ],
+                check=True,
+                capture_output=True,
+            )
+            self.assertIn("assets/theme.css", (root / "index.html").read_text())
 
     def test_mid_write_failure_rolls_back(self):
         with tempfile.TemporaryDirectory() as tmp:

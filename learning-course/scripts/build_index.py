@@ -82,14 +82,16 @@ def render_markdown(meta: dict[str, str], lessons: list[dict[str, str]]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def render_html(meta: dict[str, str], lessons: list[dict[str, str]]) -> str:
+def render_html(meta: dict[str, str], lessons: list[dict[str, str]], include_theme: bool = False) -> str:
+    theme_link = '<link rel="stylesheet" href="assets/theme.css">' if include_theme else ''
+    theme_attributes = ' data-theme="course" data-theme-surface="light"' if include_theme else ''
     items = []
     for item in lessons:
         items.append(f'<li><a href="lessons/{html.escape(item["file"])}">第 {item["number"]} 课：{html.escape(item["title"])}</a><small>{html.escape(item["objective"])}</small></li>')
     if not items: items.append("<li>尚未生成第一课。</li>")
     return f'''<!doctype html>
-<html lang="zh-CN">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{html.escape(meta["title"])}</title><link rel="stylesheet" href="assets/course.css"></head>
+<html lang="zh-CN"{theme_attributes}>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{html.escape(meta["title"])}</title><link rel="stylesheet" href="assets/course.css">{theme_link}</head>
 <body><div class="course-shell"><header class="course-header"><p class="course-kicker">课程入口</p><h1 class="course-title">{html.escape(meta["title"])}</h1><p class="course-subtitle">状态：{html.escape(meta["status"])} · 阶段：{html.escape(meta["phase"])}</p></header><main><div class="card"><h2>课程目录</h2><ol>{''.join(items)}</ol></div></main></div></body></html>'''
 
 
@@ -102,7 +104,7 @@ def main() -> int:
     if not root.is_dir(): raise SystemExit(f"course directory does not exist: {root}")
     meta = read_course_meta(root)
     lessons = collect_lessons(root)
-    outputs = {root / "INDEX.md": render_markdown(meta, lessons), root / "index.html": render_html(meta, lessons)}
+    outputs = {root / "INDEX.md": render_markdown(meta, lessons), root / "index.html": render_html(meta, lessons, (root / "assets/theme.css").is_file())}
     if args.dry_run:
         for path, content in outputs.items(): print(f"--- {path} ---\n{content}")
     else:

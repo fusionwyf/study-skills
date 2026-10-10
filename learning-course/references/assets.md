@@ -21,7 +21,15 @@
 
 课程 `asset-manifest.json` 是安装事实，不是能力目录；`components.json`、`optional/manifest.json`、`adapters.json` 是目录投影。目录维护后运行 `sync_asset_catalog.py`，用 `--check` 检测漂移。模板副本同步后进行 byte-identity 回归。
 
-静态 HTML/SVG 足够表达目标时直接使用，并保留可访问的说明。运行时组件只能调用已实现接口；planned 与 extension-required 名称必须先实现。LessonSpec 只校验规划，当前不生成整页。
+### 第三方库优先
+
+制作组件前先查成熟库：代码用 highlight.js/Prism，公式用 KaTeX/MathJax，图表用 Plotly/ECharts/Chart.js，复杂流程与关系图用 Mermaid/Cytoscape，时间轴用 vis-timeline，几何用 JSXGraph，画布与标注可用 Fabric.js/Konva。这些是选库提示，catalog 不是第三方库白名单；按真实需求选择并核对库的接口。
+
+优先复用库已实现的解析、排版、布局、绘制与交互能力；课程自写部分负责领域模型、教学动作、状态与证据接线。原生 HTML 足够的表格/媒体控件仍用原生能力；内置简单 SVG 用于简图和降级，复杂图形优先选成熟图库。
+
+允许固定版本 CDN，版本匹配 JS/CSS/插件与语言包；普通在线课件无需先打包全部第三方库。把实际选用的库、版本、CDN/本地方式及对应课件记入 PLAN.md。明确离线要求时再准备本地依赖。运行验收必须看到真实 token 高亮、排版后的公式或布局后的图形，原文可读仅证明降级有效。
+
+出现代码默认启用高亮，出现公式默认启用数学渲染。运行时组件调用实际实现的接口；planned 与 extension-required 名称通过第三方库与课程适配层实现后使用。LessonSpec 只校验规划，当前不生成整页。
 
 ## 引入
 
@@ -31,7 +39,9 @@
 
 安装与页面引入是独立步骤；没有引用的资源不会自动生成组件。CSS 顺序为基线 → 可视化/按需样式 → 课程覆盖。动态模型的数据绑定见 render.md。
 
-完全离线：chart/spatial 使用已校验的本地 vendor；KaTeX 本地包含同版本 JS/CSS/fonts，highlight.js 先注册本地 window.hljs；音视频、图片与字幕也留在包内。安装器当前不自动下载这些外部资源；agent 需准备、替换引入并实际断网验证。无法实现时报告具体限制。
+新课程包含 `assets/theme.css` 与 `assets/theme.js`，并安装 code-highlight/theme 适配层；模板已接线。theme.css 最后加载，agent 在课程副本中自定义 token、布局与第三方容器。theme.js 在主题切换器和渲染器之前加载，可登记 COURSE_THEMES、COURSE_CODE_THEMES（官方主题名或固定版本 URL）、COURSE_MATH_OPTIONS（如 macros）。创建与续课复用这两个文件，不改共享适配器以实现课程配色。页面只有需要的内容才加载对应引擎。
+
+完全离线：chart/spatial 使用已校验的本地 vendor；KaTeX 本地包含同版本 JS/CSS/fonts，highlight.js 先注册本地 window.hljs，并在 COURSE_CODE_THEMES 指定本地官方主题 CSS；音视频、图片与字幕也留在包内。安装器当前不自动下载这些外部资源；agent 需准备、替换引入并实际断网验证。无法实现时报告具体限制。
 
 ## 专用扩展
 

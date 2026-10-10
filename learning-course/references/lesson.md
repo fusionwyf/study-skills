@@ -137,7 +137,7 @@ JavaScript 等本轮非空回答后保存原话、锁定文本域，再显示下
 
 使用 `.code-block`、语言标记和 `<pre><code>`。说明输入、输出和运行条件。复制按钮是渐进增强，禁用 JavaScript 时代码仍可读。
 
-默认不给代码上色。需要 token 着色时装 `code-highlight` 可选组件，语言取自这里的 `.code-language` 标记；接线与配色见 `render.md`。
+出现代码默认启用 highlight.js；新课程已安装 code-highlight，已有课程补装。语言取自 `.code-language` 或 `language-*` 标记；缺少语法时选官方语言包。接线与官方主题选择见 `render.md`，验收时检查实际生成 token 样式。
 
 ### 图形与图解
 
@@ -173,7 +173,7 @@ JavaScript 等本轮非空回答后保存原话、锁定文本域，再显示下
 
 ### 视觉与主题
 
-`course.css` 是中性基线，全部视觉决策都是 `--course-*` token。改 token 即可换肤，**不需要改动组件类名或 `data-*` 标记**。需要完整换肤层（含主题切换器）时装 `theme` 可选组件，见 `render.md`。
+`course.css` 是共享基线；课程自己的 `assets/theme.css` 最后加载，用于 token、布局与第三方组件外观。`assets/theme.js` 登记主题与渲染设置；新课程已安装主题切换器。agent 根据用户视觉约定修改课程副本并在续课复用，保留语义类名与 data-* 契约。
 
 ## 四、Bloom 认知层级
 

@@ -175,7 +175,8 @@ class VisualizationTests(unittest.TestCase):
         sources = {
             "course.css": SKILL / "assets/course-template/course.css",
             "course.js": SKILL / "assets/course-template/course.js",
-            "asset-manifest.json": SKILL / "assets/asset-manifest.json",
+            "theme.css": SKILL / "assets/course-template/theme.css",
+            "theme.js": SKILL / "assets/course-template/theme.js",
             "catalog.json": SKILL / "assets/catalog.json",
             "learnkit/components.json": SKILL / "assets/learnkit/components.json",
             "learnkit/learnkit.js": SKILL / "assets/learnkit/learnkit.js",
@@ -191,6 +192,8 @@ class VisualizationTests(unittest.TestCase):
             self.assertTrue((EXAMPLE / "assets" / relative).is_file(), f"example-course is missing {relative}")
             self.assertEqual((EXAMPLE / "assets" / relative).read_bytes(), source.read_bytes(),
                              f"example-course/assets/{relative} drifted from its source")
+        state = json.loads((EXAMPLE / "assets/asset-manifest.json").read_text())
+        self.assertEqual(state["components"], ["code-highlight", "theme"])
 
     def test_example_lesson_loads_the_universal_visualization_modules(self):
         """The P0 regression: a lesson template that never loads the kit renders nothing."""

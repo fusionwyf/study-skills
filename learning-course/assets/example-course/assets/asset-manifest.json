@@ -10,5 +10,8 @@
     ],
     "optional_kinds": []
   },
-  "components": []
+  "components": [
+    "code-highlight",
+    "theme"
+  ]
 }

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="course" data-theme-surface="light">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -7,12 +7,16 @@
     <link rel="stylesheet" href="../assets/course.css" />
     <link rel="stylesheet" href="../assets/visualizations/visualizations.css" />
     <link rel="stylesheet" href="../assets/optional/media/media.css" />
+    <link rel="stylesheet" href="../assets/optional/theme/theme.css" />
+    <link rel="stylesheet" href="../assets/theme.css" />
+    <script src="../assets/theme.js"></script>
   </head>
   <body>
     <div class="course-shell">
       <header class="course-header">
         <h1>听辨媒体与填空</h1>
         <a href="../index.html">课件目录</a>
+        <div data-theme-switch></div>
       </header>
       <main
         class="lesson"
@@ -90,7 +94,9 @@
         </section>
         <section data-role="retrieval">
           <h2>合卷检索</h2>
-          <p>收起文字稿，重新播放音频；不用原句复述时间、地点与物品，再说明你如何核对。</p>
+          <p>
+            收起文字稿，重新播放音频；不用原句复述时间、地点与物品，再说明你如何核对。
+          </p>
         </section>
         <section class="reflection" data-role="learner-feedback">
           <label for="reflection">哪里仍不确定？</label
@@ -107,5 +113,6 @@
     <script src="../assets/visualizations/kinds/sequence.js"></script>
     <script src="../assets/visualizations/kinds/table.js"></script>
     <script src="../assets/optional/media/media.js"></script>
+    <script src="../assets/optional/theme/theme.js"></script>
   </body>
 </html>

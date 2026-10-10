@@ -48,7 +48,7 @@ def main() -> int:
     for name in ("lessons", "assets", "reference", "records", "exports"):
         (course_dir / name).mkdir(parents=True, exist_ok=True)
 
-    for filename in ("course.css", "course.js"):
+    for filename in ("course.css", "course.js", "theme.css", "theme.js"):
         target = course_dir / "assets" / filename
         if target.exists() and not args.force:
             raise FileExistsError(f"Refusing to overwrite existing file: {target}")
@@ -121,6 +121,10 @@ review_queue: []
 last_feedback: null
 """
     write_text(course_dir / "course.yaml", course_yaml, args.force)
+    # The starter lesson contains code and a theme switcher; install their
+    # maintained adapters once. Third-party engines are loaded on demand.
+    from install_optional import install
+    install(course_dir, ["code-highlight", "theme"], force=args.force)
 
     plan = f"""# {args.title}
 
@@ -140,6 +144,12 @@ last_feedback: null
 
 待设计。路线可以根据后续学习证据调整。
 
+## 课件制作约定
+
+- 视觉主题：在 `assets/theme.css` 自定义配色、字体、布局，在 `assets/theme.js` 登记主题与第三方渲染设置；页面最后加载 theme.css。
+- 第三方库：按内容优先选成熟库；代码启用 highlight.js，公式启用 KaTeX，其他组件先查合适的库再写课程接线。
+- 依赖记录：在这里记录库名、固定版本、CDN/本地加载方式与对应课件；离线要求另行注明。
+
 ## 学习记录约定
 
 学习者原始反馈和 Agent 的证据判断保存在 `records/`。
@@ -149,8 +159,8 @@ last_feedback: null
 
     title = html.escape(args.title)
     index = f"""<!doctype html>
-<html lang=\"{html.escape(args.language)}\">
-<head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>{title}</title><link rel=\"stylesheet\" href=\"assets/course.css\"></head>
+<html lang=\"{html.escape(args.language)}\" data-theme=\"course\" data-theme-surface=\"light\">
+<head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>{title}</title><link rel=\"stylesheet\" href=\"assets/course.css\"><link rel=\"stylesheet\" href=\"assets/theme.css\"></head>
 <body><div class=\"course-shell\"><header class=\"course-header\"><p class=\"course-kicker\">课程入口</p><h1 class=\"course-title\">{title}</h1><p class=\"course-subtitle\">{html.escape(args.goal)}</p></header><main><div class=\"card\"><h2>开始学习</h2><p>课程完成后，新的课件会出现在 <code>lessons/</code>，学习反馈请发给老师或 Agent。</p><p>当前尚未生成第一课。</p></div></main></div></body></html>"""
     write_text(course_dir / "index.html", index, args.force)
     print(course_dir)

@@ -157,6 +157,7 @@ function main() {
   check("theme link injected", link !== null && link.rel === "stylesheet");
   check("light surface loads the light theme", /github\.min\.css$/.test(link.getAttribute("href")),
     link.getAttribute("href"));
+  check("default official theme uses a pinned CDN", link.href.startsWith("https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.12.0/build/styles/"));
   check("surface exposed on the API", hdom.window.CourseCodeTheme.surface() === "light");
 
   hdom = mount(new JSDOM('<!doctype html><html data-theme-surface="dark"><body></body></html>',
@@ -180,6 +181,13 @@ function main() {
     /github\.min\.css$/.test(hdom.window.document.getElementById("course-code-theme").getAttribute("href")));
   check("re-sync keeps a single theme link",
     hdom.window.document.querySelectorAll("link#course-code-theme").length === 1);
+  hdom.window.COURSE_CODE_THEMES = {light: "atom-one-light", dark: "https://cdn.example.test/themes/nord.css"};
+  link = hdom.window.document.getElementById("course-code-theme");
+  hdom.window.CourseCodeTheme.sync();
+  check("course configuration selects a pinned official CDN theme", /cdn-release@11\.12\.0\/build\/styles\/atom-one-light.min.css$/.test(link.href));
+  hdom.window.document.documentElement.dataset.themeSurface = "dark";
+  hdom.window.CourseCodeTheme.sync();
+  check("course configuration accepts its own stylesheet URL", link.href === "https://cdn.example.test/themes/nord.css");
 
   // 8d. The stylesheet no longer reimplements the token palette.
   const css = fs.readFileSync(HL_CSS, "utf8");

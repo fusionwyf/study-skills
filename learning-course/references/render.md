@@ -6,6 +6,8 @@
 
 职责与交付方式分别记录在 `assets/catalog.json`：common 管基础交互与证据，rendering 管通用呈现，specialized 管领域模型。default/optional/external/extension 说明如何交付。选资源与扩展流程见 `assets.md`。
 
+遵守 assets.md 的第三方库优先策略：代码与公式默认开启成熟渲染引擎，复杂图形先选择现成库再接入课程模型。允许固定版本 CDN；课程主题在 assets/theme.css 自定义，官方高亮主题和数学选项在 assets/theme.js 配置。
+
 数据流：页面 HTML/JSON → `registerModel` 的 reduce/derive → 状态订阅 → 通用 view/可视化 adapter → DOM。数学公式单独由 KaTeX auto-render 处理。
 
 LearnKit 的 `registerModel` 管领域模型；`registerRenderer` 是专用 stage 的渲染钩子；CourseVisualizations 的 `registerKind` 管图形适配器。扩展放在课程 `assets/extensions/`，登记课程 registry 与 module，按依赖顺序加载。
@@ -158,16 +160,16 @@ python scripts/install_optional.py <course-dir> --components chart spatial
 
 ### 代码着色
 
-代码块默认只有等宽字体和底色，**没有任何 token 着色**。需要着色时装 `code-highlight`：它从 CDN 引入 highlight.js 11.12.0 的默认构建（约 126KB，内置 36 种语言，含 C、Python、bash、SQL、Rust、Go、Java），一行 `highlightAll()` 扫描全文的 `.code-block pre code`。
+含代码的课件默认加载 `code-highlight`：新课程初始化已安装适配层，它从 CDN 引入 highlight.js 11.12.0 的默认构建（约 126KB），扫描 `.code-block pre code` 并生成真正的 token 着色。已有课程先补装组件。课程没有代码时省略高亮脚本。
 
-**配色直接用官方主题，不手写色表**。组件按课程表面自动挑一套并随包复制，离线也能用：
+**配色直接用 CDN 官方主题，不手写色表**。引擎与主题均固定为 11.12.0，组件按课程表面自动挑选：
 
 | 课程表面 | 官方主题 |
 |---|---|
 | `data-theme-surface="light"` | `github.min.css` |
 | 其它 / 未声明且系统为深色 | `github-dark.min.css` |
 
-官方主题会硬塞 `code.hljs` 的背景和 padding，`code-highlight.css` 用更高优先级把它们收回课程自己管，所以**token 颜色来自官方主题、底色和留白来自 `course.css`**。换主题只改 `theme.js` 的 `LIGHT`/`DARK` 常量；用 `theme` 组件的切换器换肤时靠 `course:themechange` 事件自动跟随。
+官方主题的 token 颜色与课程的代码容器分开。agent 在课程 `assets/theme.css` 设定底色和布局，在课程 `assets/theme.js` 用 `COURSE_CODE_THEMES` 选择官方主题名或固定版本 URL；theme 切换器通过 `course:themechange` 联动。选择的新主题也应搭配合适的代码底色，实际检查对比度。
 
 语言取自 `.code-language` 标签或 `code` 的 `language-*` class。组件不维护语言表，直接问引擎 `hljs.getLanguage()`；**它不认识的语言退化为不着色原文，不发额外请求，也不会被猜成别的语言**。完全离线时把同版本引擎放进包内并先用 `window.hljs` 注册即可。
 
@@ -175,7 +177,7 @@ python scripts/install_optional.py <course-dir> --components chart spatial
 
 ### 主题
 
-`course.css` 里所有视觉决策都是 `--course-*` token。装 `theme` 组件后，这些 token 变成可整体覆盖的换肤层，**组件类名和 `data-*` 契约完全不动**：
+新课程自带可编辑的 `assets/theme.css` 与 `assets/theme.js`，初始化时安装 theme 切换器。course.css 保留共享基线，课程 CSS 最后加载；创建时按学习者的视觉要求定制，续课保持一致：
 
 ```css
 [data-theme="warm"] {
@@ -184,7 +186,7 @@ python scripts/install_optional.py <course-dir> --components chart spatial
 }
 ```
 
-本组件**不提供任何配色方案**——主题就是课程自己的 CSS。要给代码块声明明暗表面时在 `<html>` 上加 `data-theme-surface="light"`。需要切换器时提供 `window.COURSE_THEMES` 列表和 `<div data-theme-switch>`；只有一个主题时不生成切换器。不起脚本、只写死 `<html data-theme="...">` 也能换肤。
+共享切换器不包含课程配色；课程模板给出 course/ink 两套起始主题，agent 可替换。`assets/theme.js` 提供 COURSE_THEMES、COURSE_CODE_THEMES、COURSE_MATH_OPTIONS；页面 head 加载它，正文提供 `<div data-theme-switch>`。只有一个主题时不生成切换器。静态页面写 `<html data-theme="course" data-theme-surface="light">` 后也可应用主题。
 
 完整 token 清单、切换器配置和降级行为见 `assets/optional/theme/README.md`。
 
@@ -210,4 +212,4 @@ python scripts/validate_course.py <course-dir> --strict-schema --pedagogical
 
 - `LearnKit.validateLessonSpec(spec)` 只校验规划结构。交付前检查页面实际 ready 标记、操作结果与学习记录，结构校验不能替代运行验证。
 - `assets/catalog.json` 是能力、文件和交付方式的权威来源；`scripts/sync_asset_catalog.py` 生成兼容登记表。`assets/visualizations/adapters.json` 是课程运行时的适配器投影，每个条目用 `tier`（`universal`/`optional`）标明它属于哪一层、用 `module` 标明实现在哪个文件；`scripts/validate_course.py` 用它检查容器契约。完整示例见 `assets/visualizations/demo.html`。
-- 打印或导出前等待 `document.fonts.ready` 与 `window.__COURSE_VISUALIZATIONS_READY__ === true`，然后检查每个容器的 `data-viz-ready="true"`；失败时以 fallback 作为可读结果。KaTeX 公式会在 `DOMContentLoaded` 后的同步扫描中渲染完，等待字体就绪即可覆盖。装了代码着色时可选等待 `window.__COURSE_CODE_HIGHLIGHT_READY__`；为 `false` 说明 CDN 不可达，此时按无色原文打印即可。
+- 打印或导出前等待 `document.fonts.ready` 与 `window.__COURSE_VISUALIZATIONS_READY__ === true`，然后检查每个容器的 `data-viz-ready="true"`；失败时以 fallback 作为可读结果。使用公式时检查 `.katex` 已生成且无 `.katex-error`；使用代码高亮时检查 `window.__COURSE_CODE_HIGHLIGHT_READY__ === true`，并确认官方主题已加载、token 实际着色。主题切换后也需等待新样式生效。CDN 加载失败时按公式或代码原文交付可读降级，并在验证记录中区分“正常渲染通过”与“降级通过”。
