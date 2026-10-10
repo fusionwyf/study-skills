@@ -135,13 +135,15 @@ JavaScript 等本轮非空回答后保存原话、锁定文本域，再显示下
 
 ### 代码
 
-使用 `.code-block`、语言标记和 `<pre><code>`。说明输入、输出和运行条件。复制按钮是渐进增强，禁用 JavaScript 时代码仍可读。
+使用 `.code-block`、`.code-language` 语言标记和 `<pre><code>`，不手写裸 `<pre><code>`。说明输入、输出和运行条件。复制按钮是渐进增强，禁用 JavaScript 时代码仍可读。
 
-出现代码默认启用 highlight.js；新课程已安装 code-highlight，已有课程补装。语言取自 `.code-language` 或 `language-*` 标记；缺少语法时选官方语言包。接线与官方主题选择见 `render.md`，验收时检查实际生成 token 样式。
+出现代码必须加载 code-highlight 并用 highlight.js 着色；新课程已安装，已有课程补装。语言取自 `.code-language` 或 `language-*` 标记；缺少语法时选官方语言包。接线与官方主题选择见 `render.md`，验收时检查实际生成 token 样式。
 
 ### 图形与图解
 
-按任务选择 `chart`、`relation`、`timeline`、`process`、`spatial`、`sequence`、`table`。概念关系图可使用带 `<title>`、`<desc>` 和文字摘要的 SVG；数学曲线、曲面、坐标几何、实验数据和算法状态应从计算模型和真实数据生成。详细契约见 `render.md`。
+流程图、状态图、时序图、类图、甘特图和饼图使用 Mermaid（`<pre class="mermaid">`），不手写内联 SVG 替代 Mermaid 能表达的图形。安装 mermaid 组件后在 body 末尾引入 `mermaid.js`（type=module）。
+
+数据驱动的数值图表用 `chart`（Plotly），概念关系用 `relation`，历史/轨迹用 `timeline`，几何用 `spatial`（JSXGraph），推导步骤用 `sequence`，结构化数据用 `table`。数学曲线、曲面、坐标几何和实验数据应从计算模型和真实数据生成。详细契约见 `render.md`。
 
 ### 步骤与提示
 

@@ -6,7 +6,7 @@
 
 职责与交付方式分别记录在 `assets/catalog.json`：common 管基础交互与证据，rendering 管通用呈现，specialized 管领域模型。default/optional/external/extension 说明如何交付。选资源与扩展流程见 `assets.md`。
 
-遵守 assets.md 的第三方库优先策略：代码与公式默认开启成熟渲染引擎，复杂图形先选择现成库再接入课程模型。允许固定版本 CDN；课程主题在 assets/theme.css 自定义，官方高亮主题和数学选项在 assets/theme.js 配置。
+遵守 assets.md 的第三方库路由规则：代码、公式和流程图分别使用 highlight.js、KaTeX 和 Mermaid，复杂图形先选择现成库再接入课程模型。允许固定版本 CDN；课程主题在 assets/theme.css 自定义，官方高亮主题和数学选项在 assets/theme.js 配置。
 
 数据流：页面 HTML/JSON → `registerModel` 的 reduce/derive → 状态订阅 → 通用 view/可视化 adapter → DOM。数学公式单独由 KaTeX auto-render 处理。
 
@@ -190,7 +190,45 @@ python scripts/install_optional.py <course-dir> --components chart spatial
 
 完整 token 清单、切换器配置和降级行为见 `assets/optional/theme/README.md`。
 
-## 五、生成检查与验证
+## 五、Mermaid 图形
+
+流程图、状态图、时序图、类图、甘特图和饼图使用 Mermaid 文本语法，不手写内联 SVG。组件从 CDN 以 ESM 方式加载 Mermaid 11.x，主题自动跟随课程表面（light→default、dark→dark）。
+
+安装：
+
+```text
+python scripts/install_optional.py <course-dir> --components mermaid
+```
+
+页面引入：
+
+```html
+<link rel="stylesheet" href="../assets/optional/mermaid/mermaid.css">
+<!-- body 末尾，在可视化 kinds 之后、KaTeX 之前 -->
+<script type="module" src="../assets/optional/mermaid/mermaid.js"></script>
+```
+
+课件写法——用 `<pre class="mermaid">` 包裹 Mermaid 文本语法：
+
+```html
+<pre class="mermaid">
+flowchart TD
+    A[用户程序] --> B[trap 指令]
+    B --> C[内核态切换]
+    C --> D[异常处理程序]
+    D --> E{是否可恢复?}
+    E -->|是| F[返回用户态]
+    E -->|否| G[进程终止]
+</pre>
+```
+
+支持的图类型：`flowchart`、`stateDiagram-v2`、`sequenceDiagram`、`classDiagram`、`gantt`、`pie`。主题可通过 `window.COURSE_MERMAID_THEME` 覆盖。`securityLevel: "strict"` 禁止执行 Mermaid 内的 JS。
+
+降级行为：CDN 失败时 `<pre>` 内的文本定义仍可读；无脚本时同样可读。验收时检查 `window.__COURSE_MERMAID_READY__ === true`，并确认 SVG 已实际生成。
+
+细节见 `assets/optional/mermaid/README.md`。
+
+## 六、生成检查与验证
 
 生成前先选一个可验证学习成果和一个主模式；生成后检查：
 
@@ -212,4 +250,4 @@ python scripts/validate_course.py <course-dir> --strict-schema --pedagogical
 
 - `LearnKit.validateLessonSpec(spec)` 只校验规划结构。交付前检查页面实际 ready 标记、操作结果与学习记录，结构校验不能替代运行验证。
 - `assets/catalog.json` 是能力、文件和交付方式的权威来源；`scripts/sync_asset_catalog.py` 生成兼容登记表。`assets/visualizations/adapters.json` 是课程运行时的适配器投影，每个条目用 `tier`（`universal`/`optional`）标明它属于哪一层、用 `module` 标明实现在哪个文件；`scripts/validate_course.py` 用它检查容器契约。完整示例见 `assets/visualizations/demo.html`。
-- 打印或导出前等待 `document.fonts.ready` 与 `window.__COURSE_VISUALIZATIONS_READY__ === true`，然后检查每个容器的 `data-viz-ready="true"`；失败时以 fallback 作为可读结果。使用公式时检查 `.katex` 已生成且无 `.katex-error`；使用代码高亮时检查 `window.__COURSE_CODE_HIGHLIGHT_READY__ === true`，并确认官方主题已加载、token 实际着色。主题切换后也需等待新样式生效。CDN 加载失败时按公式或代码原文交付可读降级，并在验证记录中区分“正常渲染通过”与“降级通过”。
+- 打印或导出前等待 `document.fonts.ready` 与 `window.__COURSE_VISUALIZATIONS_READY__ === true`，然后检查每个容器的 `data-viz-ready=”true”`；失败时以 fallback 作为可读结果。使用公式时检查 `.katex` 已生成且无 `.katex-error`；使用代码高亮时检查 `window.__COURSE_CODE_HIGHLIGHT_READY__ === true`，并确认官方主题已加载、token 实际着色；使用 Mermaid 时检查 `window.__COURSE_MERMAID_READY__ === true`，并确认 SVG 已生成。主题切换后也需等待新样式生效。CDN 加载失败时按公式、代码或 Mermaid 原文交付可读降级，并在验证记录中区分”正常渲染通过”与”降级通过”。

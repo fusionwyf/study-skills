@@ -1,0 +1,16 @@
+.mermaid {
+  margin: 1.2rem 0;
+  padding: 1rem;
+  background: var(--course-surface, #fff);
+  border: 1px solid var(--course-line, #e2e8f0);
+  border-radius: var(--course-radius, 6px);
+  overflow-x: auto;
+  text-align: center;
+}
+.mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+@media print {
+  .mermaid { border-color: #999; }
+}

@@ -23,19 +23,30 @@
 
 ### 第三方库优先
 
-制作组件前先查成熟库：代码用 highlight.js/Prism，公式用 KaTeX/MathJax，图表用 Plotly/ECharts/Chart.js，复杂流程与关系图用 Mermaid/Cytoscape，时间轴用 vis-timeline，几何用 JSXGraph，画布与标注可用 Fabric.js/Konva。这些是选库提示，catalog 不是第三方库白名单；按真实需求选择并核对库的接口。
+制作组件前先查成熟库，按以下路由选择——这些是硬规则，不是建议：
 
-优先复用库已实现的解析、排版、布局、绘制与交互能力；课程自写部分负责领域模型、教学动作、状态与证据接线。原生 HTML 足够的表格/媒体控件仍用原生能力；内置简单 SVG 用于简图和降级，复杂图形优先选成熟图库。
+| 内容类型 | 必须使用 | 禁止 |
+|---|---|---|
+| 代码块 | `.code-block` + `.code-language` + `<pre><code>` + highlight.js 着色 | 裸 `<pre><code>` 无 wrapper、手写着色 |
+| 流程图、状态图、时序图、类图、甘特图、饼图 | Mermaid（`<pre class="mermaid">`） | 手写内联 SVG 替代 Mermaid 能表达的图形 |
+| 数学公式 | KaTeX（`\(...\)` 与 `\[...\]`） | 手写公式图片或纯文本近似 |
+| 2D 数据图表（折线、柱状、散点、饼图） | Chart.js（优先）或 Plotly | 手写 SVG/Canvas 画图表 |
+| 3D 曲面、热图、等高线 | Plotly | — |
+| 几何构造、数轴、坐标变换 | JSXGraph | 手写 SVG 几何 |
+| 复杂关系图（非 Mermaid 能覆盖） | Cytoscape | — |
+| 时间轴（数据驱动） | vis-timeline | — |
+
+优先复用库已实现的解析、排版、布局、绘制与交互能力；课程自写部分负责领域模型、教学动作、状态与证据接线。原生 HTML 足够的表格/媒体控件仍用原生能力；内置简单 SVG 仅用于简图示意和降级后备，不作为正式图形方案。
 
 允许固定版本 CDN，版本匹配 JS/CSS/插件与语言包；普通在线课件无需先打包全部第三方库。把实际选用的库、版本、CDN/本地方式及对应课件记入 PLAN.md。明确离线要求时再准备本地依赖。运行验收必须看到真实 token 高亮、排版后的公式或布局后的图形，原文可读仅证明降级有效。
 
-出现代码默认启用高亮，出现公式默认启用数学渲染。运行时组件调用实际实现的接口；planned 与 extension-required 名称通过第三方库与课程适配层实现后使用。LessonSpec 只校验规划，当前不生成整页。
+出现代码默认启用高亮，出现公式默认启用数学渲染，出现流程/状态/时序图默认启用 Mermaid。运行时组件调用实际实现的接口；planned 与 extension-required 名称通过第三方库与课程适配层实现后使用。LessonSpec 只校验规划，当前不生成整页。
 
 ## 引入
 
 从 skill 目录运行 `python scripts/install_optional.py <course-dir> --components <names>`。安装器解析目录依赖、读取与合并 manifest、校验全部 vendor 文件、检查冲突，之后写入；失败回滚。已修改文件受保护，只有确实需要替换时使用 --force。
 
-页面顺序：LearnKit → course.js → 课程领域模型注册 → 可视化内核 → 用到的 kinds；media 在 course.js 之后。依赖链不使用 async，不混用前置 defer 与后置立即执行。chart/spatial 从同课程 vendor 加载。code-highlight 先引入主题选择脚本，再引入着色脚本。
+页面顺序：LearnKit → course.js → 课程领域模型注册 → 可视化内核 → 用到的 kinds；media 在 course.js 之后。依赖链不使用 async，不混用前置 defer 与后置立即执行。chart/spatial 从同课程 vendor 加载。code-highlight 先引入主题选择脚本，再引入着色脚本。mermaid 用 `<script type="module">` 在 body 末尾引入，ESM 加载 CDN。
 
 安装与页面引入是独立步骤；没有引用的资源不会自动生成组件。CSS 顺序为基线 → 可视化/按需样式 → 课程覆盖。动态模型的数据绑定见 render.md。
 

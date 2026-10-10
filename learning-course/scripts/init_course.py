@@ -121,10 +121,10 @@ review_queue: []
 last_feedback: null
 """
     write_text(course_dir / "course.yaml", course_yaml, args.force)
-    # The starter lesson contains code and a theme switcher; install their
-    # maintained adapters once. Third-party engines are loaded on demand.
+    # The starter lesson contains code, a theme switcher, and a Mermaid diagram;
+    # install their maintained adapters once. Third-party engines are loaded on demand.
     from install_optional import install
-    install(course_dir, ["code-highlight", "theme"], force=args.force)
+    install(course_dir, ["code-highlight", "theme", "mermaid"], force=args.force)
 
     plan = f"""# {args.title}
 

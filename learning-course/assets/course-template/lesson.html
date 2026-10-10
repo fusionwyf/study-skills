@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="../assets/visualizations/visualizations.css">
   <link rel="stylesheet" href="../assets/optional/theme/theme.css">
   <link rel="stylesheet" href="../assets/optional/code-highlight/code-highlight.css">
+  <link rel="stylesheet" href="../assets/optional/mermaid/mermaid.css">
   <link rel="stylesheet" href="../assets/theme.css">
   <script src="../assets/theme.js"></script>
 </head>
@@ -64,6 +65,19 @@
 
 print(check_result(3))</code></pre></div>
           <p>说明输入、输出、运行环境和一个常见失败方式。</p>
+        </section>
+
+        <section aria-labelledby="diagram-title">
+          <h2 id="diagram-title">流程图或状态图（适用时）</h2>
+          <p>用 Mermaid 文本语法定义图形，不手写 SVG。</p>
+          <pre class="mermaid">
+flowchart TD
+    A[输入] --> B{条件判断}
+    B -->|满足| C[执行操作]
+    B -->|不满足| D[报错或跳过]
+    C --> E[输出结果]
+          </pre>
+          <p>支持 flowchart、stateDiagram-v2、sequenceDiagram、classDiagram、gantt、pie。</p>
         </section>
 
         <section aria-labelledby="steps-title" data-steps-scope>
@@ -169,6 +183,9 @@ print(check_result(3))</code></pre></div>
   <script src="../assets/visualizations/kinds/list.js"></script>
   <script src="../assets/visualizations/kinds/sequence.js"></script>
   <script src="../assets/visualizations/kinds/table.js"></script>
+  <!-- Mermaid 流程图/状态图/时序图（type=module，自带 defer）。
+       没有 .mermaid 容器时不渲染。 -->
+  <script type="module" src="../assets/optional/mermaid/mermaid.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
   <script>

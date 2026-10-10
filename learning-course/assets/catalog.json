@@ -346,6 +346,32 @@
       },
       "recommended_when": "出现代码示例时安装并加载；新课程初始化已安装"
     },
+    "mermaid": {
+      "role": "rendering",
+      "delivery": "optional",
+      "status": "implemented",
+      "files": [
+        "optional/mermaid/mermaid.js",
+        "optional/mermaid/mermaid.css",
+        "optional/mermaid/README.md"
+      ],
+      "dependencies": [],
+      "supports": [
+        "流程图、状态图、时序图、类图、甘特图、饼图"
+      ],
+      "limitations": [
+        "Mermaid 文本语法定义图形；不支持自定义 SVG 级别的精细像素控制"
+      ],
+      "example": "optional/mermaid/README.md",
+      "fallback": "CDN 失败或无脚本时 pre 内文本定义仍可读",
+      "docs": "optional/mermaid/README.md",
+      "wiring": "head 引入 mermaid.css，body 末尾引入 mermaid.js（type=module）；用 <pre class=\"mermaid\"> 写图定义",
+      "network": {
+        "default": "CDN Mermaid 11 ESM",
+        "offline": "assets/vendor/mermaid/，替换 import 地址"
+      },
+      "recommended_when": "课件含流程图、状态图、时序图时安装并加载；不手写 SVG 替代 Mermaid 能表达的图形"
+    },
     "media": {
       "role": "common",
       "delivery": "optional",

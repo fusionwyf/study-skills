@@ -49,6 +49,16 @@
       "wiring": "head 引入 code-highlight.css，正文末尾依次引入 theme.js（挑官方主题）与 code-highlight.js（上色）；脚本自动处理所有 .code-block pre code",
       "degrade": "脚本缺失或禁用 JavaScript 时保留单色原文；语言不在内置清单时不着色；打印强制还原为可复制文本"
     },
+    "mermaid": {
+      "label": "流程图、状态图、时序图、类图、甘特图、饼图",
+      "files": [
+        "mermaid/mermaid.js",
+        "mermaid/mermaid.css"
+      ],
+      "docs": "mermaid/README.md",
+      "wiring": "head 引入 mermaid.css，body 末尾引入 mermaid.js（type=module）；用 <pre class=\"mermaid\"> 写图定义",
+      "degrade": "CDN 失败或无脚本时 pre 内文本定义仍可读"
+    },
     "media": {
       "label": "图片、音频、视频原生控件；图片热点与开放文字标注；标注进入学习记录",
       "files": [
