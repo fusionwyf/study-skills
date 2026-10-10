@@ -1,0 +1,23 @@
+{
+  "id": "viz.kinds.spatial",
+  "layer": 5,
+  "version": "2.0.0",
+  "requires": ["viz.core"],
+  "presence": "opt-in",
+  "detect": {
+    "selectors": ["[data-visualization=\"spatial\"]", "[data-visualization=\"geometry\"]"]
+  },
+  "provides": {
+    "js": ["spatial.js"],
+    "kinds": ["spatial", "geometry"]
+  },
+  "vendor": [
+    {
+      "id": "jsxgraph",
+      "version": "1.8.0",
+      "cdn": "https://cdn.jsdelivr.net/npm/jsxgraph@1.8.0/distrib/jsxgraphcore.js",
+      "local": "vendor/jsxgraph/jsxgraphcore.js"
+    }
+  ],
+  "ready": "kit:viz.kinds.spatial:ready"
+}

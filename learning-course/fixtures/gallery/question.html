@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="course">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gallery · Unified Question Component (Course Kit v2)</title>
+  <link rel="stylesheet" href="../acceptance/assets/kit/kit.css">
+  <link rel="stylesheet" href="../acceptance/assets/course/theme.css">
+</head>
+<body>
+<div class="kit-page">
+  <main class="kit-main" data-course-id="gallery" data-lesson-id="0001-question" data-objective="gallery-question" data-evidence="practice" data-cognitive-level="apply" data-retrieval="required" data-feedback="required" data-source-status="verified" data-answer-status="provided">
+    <header class="course-header">
+      <p class="course-kicker">Course Kit v2 · Component Gallery</p>
+      <h1>Unified Question Component (L4)</h1>
+      <p>Demonstrates all 6 question kinds (choice, multi, numeric, fill, open, dialogue) with automatic assistance detection, triple feedback, hints, and learning record integration.</p>
+    </header>
+
+    <div data-question-summary></div>
+
+    <section id="sec-choice">
+      <h2>1. Choice Question (Single Select)</h2>
+      <div class="question" data-question-id="q-choice" data-kind="choice" data-max-attempts="2">
+        <div data-stem><p>在物理推导中，第一步应优先确认什么？</p></div>
+        <ol data-options>
+          <li data-option>直接套用最熟悉的公式<span data-why>不核对前提容易在限定条件外误用公式。</span></li>
+          <li data-option data-correct>确认研究对象与适用条件<span data-why>只有在系统受力与守恒条件明确后，对应方程才成立。</span></li>
+          <li data-option>先估算最终数值大小<span data-why>数值估算有助于检验结果，但不构成推导的起点。</span></li>
+        </ol>
+        <ol data-hints>
+          <li>思考：物理定律并不是在所有边界条件下都无条件成立的。</li>
+          <li>提示：守恒定律的成立依赖于特定的系统隔离条件。</li>
+        </ol>
+        <div data-explain><p>物理推导必须先明确研究对象、参考系以及守恒条件是否满足，再列方程求解。</p></div>
+      </div>
+    </section>
+
+    <section id="sec-multi">
+      <h2>2. Multi-Select Question</h2>
+      <div class="question" data-question-id="q-multi" data-kind="multi" data-max-attempts="2">
+        <div data-stem><p>下列哪些属于降低过拟合的有效手段？（多选）</p></div>
+        <ol data-options>
+          <li data-option data-correct>增加训练样本多样性<span data-why>增加样本能提高模型的泛化能力。</span></li>
+          <li data-option>无限增加网络参数量<span data-why>参数量过大通常会加剧过拟合。</span></li>
+          <li data-option data-correct>引入 L2 正则化权重衰减<span data-why>约束模型权重幅度，限制自由度。</span></li>
+          <li data-option data-correct>结合验证集实施 Early Stopping<span data-why>在验证损失开始反弹前提前终止迭代。</span></li>
+        </ol>
+        <ol data-hints><li>一共有 3 项有效措施。</li></ol>
+        <div data-explain><p>过拟合的本质是模型容量相对真实分布过大，因此从数据扩增、参数约束、训练控制三方面入手。</p></div>
+      </div>
+    </section>
+
+    <section id="sec-numeric">
+      <h2>3. Numeric Question</h2>
+      <div class="question" data-question-id="q-numeric" data-kind="numeric" data-expected="9.8" data-tolerance="0.05" data-unit="m/s²" data-max-attempts="2">
+        <div data-stem><p>标准重力加速度近似取值是多少？</p></div>
+        <ol data-hints><li>通常工程计算取 9.8 左右。</li></ol>
+        <div data-explain><p>标准重力加速度标称值为 9.80665 m/s²，此处允许 0.05 容差，即 9.8 m/s²。</p></div>
+      </div>
+    </section>
+
+    <section id="sec-fill">
+      <h2>4. Fill-in-the-blank Question</h2>
+      <div class="question" data-question-id="q-fill" data-kind="fill" data-accepted='["欧姆定律", "Ohm定律", "Ohm\x27s law"]' data-max-attempts="2">
+        <div data-stem><p>电压与电流的比值等于电阻，这一物理规律被称为：</p></div>
+        <ol data-hints><li>以德国物理学家乔治·西蒙·欧姆的名字命名。</li></ol>
+        <div data-explain><p>由乔治·西蒙·欧姆发现，公式为 I = U / R。</p></div>
+      </div>
+    </section>
+
+    <section id="sec-open">
+      <h2>5. Open-ended Question</h2>
+      <div class="question" data-question-id="q-open" data-kind="open" data-min-length="15">
+        <div data-stem><p>简述在实验中记录系统误差与随机误差的核心区别。</p></div>
+        <ol data-hints><li>思考：哪一种误差可以通过重复测量取平均值减小？</li></ol>
+        <div data-rubric><p>参考要点：系统误差具有确定规律或单向偏移，无法通过简单平均消除；随机误差具有对称与统计分布特征，多次测量均值可收敛。字数不少于 15 字。</p></div>
+      </div>
+    </section>
+
+    <section id="sec-dialogue">
+      <h2>6. Dialogue Practice Question</h2>
+      <div class="question" data-question-id="q-dialogue" data-kind="dialogue">
+        <div data-stem><p>费曼技巧演练：通过递进问答向初学者解释熵增原理。</p></div>
+        <div class="q-turn" data-prompt="第一步：用日常生活的比喻解释什么是熵？" data-expected="例如房间不收拾自然变乱、墨水在水中散开。"></div>
+        <div class="q-turn" data-prompt="第二步：为什么系统自发演化总是向着混乱度增大的方向？" data-expected="微观状态数更大，混乱状态的概率压倒性地高于有序状态。"></div>
+        <div data-explain><p>完成两轮解释即达成对话证据采集。</p></div>
+      </div>
+    </section>
+  </main>
+</div>
+<script src="../acceptance/assets/kit/kit.js"></script>
+</body>
+</html>

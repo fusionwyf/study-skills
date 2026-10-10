@@ -1,0 +1,107 @@
+@layer content {
+  .kit-block {
+    position: relative;
+    margin: 1.5rem 0;
+    padding: 0;
+    border: 1px solid var(--code-border);
+    border-radius: var(--radius);
+    background: var(--code-bg);
+    overflow: hidden;
+  }
+
+  .kit-block__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.8rem;
+    color: var(--code-label);
+    border-bottom: 1px solid var(--c-border);
+    background: var(--c-surface-2);
+  }
+
+  .kit-block__title {
+    font-weight: 600;
+    font-family: var(--font-mono);
+  }
+
+  .kit-block__label {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.85rem;
+    font-size: 0.75rem;
+    font-family: var(--font-mono);
+    color: var(--code-label);
+    pointer-events: none;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    user-select: none;
+    z-index: 2;
+  }
+
+  .kit-block.has-header .kit-block__label {
+    position: static;
+  }
+
+  .kit-block__actions {
+    position: absolute;
+    top: 0.4rem;
+    right: 0.6rem;
+    display: flex;
+    gap: 0.4rem;
+    opacity: 0;
+    transition: opacity 0.15s ease-in-out;
+    z-index: 3;
+  }
+
+  .kit-block:hover .kit-block__actions,
+  .kit-block:focus-within .kit-block__actions {
+    opacity: 1;
+  }
+
+  .kit-block.has-header .kit-block__actions {
+    position: static;
+    opacity: 1;
+  }
+
+  .kit-block__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.55rem;
+    font-size: 0.75rem;
+    font-family: var(--font-body);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-sm);
+    background: var(--c-surface);
+    color: var(--c-text-2);
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+  }
+
+  .kit-block__btn:hover {
+    background: var(--c-surface-2);
+    color: var(--c-accent-strong);
+    border-color: var(--c-accent);
+  }
+
+  .kit-block__body {
+    overflow-x: auto;
+    padding: 0.85rem 1rem;
+  }
+
+  .kit-block.is-folded .kit-block__body {
+    max-height: 8rem;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .kit-block.is-folded .kit-block__body::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 4rem;
+    background: linear-gradient(to bottom, transparent, var(--code-bg));
+    pointer-events: none;
+  }
+}

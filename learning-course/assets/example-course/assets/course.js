@@ -163,38 +163,199 @@
     var id = el.dataset.questionId;
     var submit = el.querySelector("[data-quiz-submit]");
     var feedback = el.querySelector(".quiz-feedback");
+    var actions = el.querySelector(".quiz-actions");
+    var inputs = Array.prototype.slice.call(el.querySelectorAll('input[type="radio"], input[type="checkbox"]'));
 
-    function paintFeedback(q) {
-      if (!feedback || !q.verdict) return;
-      feedback.dataset.state = q.verdict;
-      feedback.textContent = q.verdict === "correct"
-        ? (el.dataset.correctText || "正确。请说明判断依据。")
-        : (el.dataset.incorrectText || "再检查题目条件和规则边界。");
-      feedback.setAttribute("role", "status");
+    // Setup Hint Button & Hint Panel if not present
+    var hintBtn = el.querySelector("[data-hint]");
+    var hintPanel = null;
+    var hintText = el.dataset.hintText || el.dataset.hint || el.dataset.incorrectText || "";
+
+    if (!hintBtn && hintText) {
+      if (!actions) {
+        actions = document.createElement("div");
+        actions.className = "quiz-actions";
+        el.appendChild(actions);
+      }
+      hintBtn = document.createElement("button");
+      hintBtn.type = "button";
+      hintBtn.className = "button button-hint";
+      hintBtn.setAttribute("data-hint", "");
+      hintBtn.textContent = "💡 查看提示";
+      actions.appendChild(hintBtn);
+
+      hintPanel = document.createElement("div");
+      hintPanel.className = "quiz-hint-panel";
+      hintPanel.hidden = true;
+      hintPanel.innerHTML = '<span class="quiz-hint-title">💡 提示：</span><span class="quiz-hint-content">' + hintText + '</span>';
+      actions.parentNode.insertBefore(hintPanel, actions.nextSibling);
+    } else if (hintBtn) {
+      var targetId = hintBtn.getAttribute("aria-controls");
+      hintPanel = targetId ? document.getElementById(targetId) : el.querySelector(".quiz-hint-panel, [data-hint-panel]");
+    }
+
+    if (hintBtn) {
+      hintBtn.addEventListener("click", function () {
+        if (hintPanel) hintPanel.hidden = false;
+        hintBtn.disabled = true;
+        hintBtn.classList.add("is-active");
+        hintBtn.textContent = "💡 已查看提示";
+        ctx.dispatch({type: EVIDENCE.HINT, id: id});
+        ctx.dispatch({type: EVIDENCE.OBSERVED_ASSISTANCE, id: id, value: "with_hints"});
+        ctx.dispatch({type: EVIDENCE.INDEPENDENCE, id: id, value: "with_hints"});
+        if (window.renderMathInElement && hintPanel) {
+          try {
+            window.renderMathInElement(hintPanel, {
+              delimiters: [{left: "\\(", right: "\\)", display: false}, {left: "\\[", right: "\\]", display: true}],
+              throwOnError: false
+            });
+          } catch (e) {}
+        }
+      });
+    }
+
+    function lockAndReveal(q) {
+      inputs.forEach(function (input) {
+        input.disabled = true;
+      });
+      el.classList.add("is-locked");
+
+      if (submit) {
+        submit.disabled = true;
+        submit.textContent = "已完成";
+      }
+      if (hintBtn) {
+        hintBtn.disabled = true;
+      }
+
+      el.querySelectorAll(".opt-why").forEach(function (why) {
+        why.hidden = false;
+      });
+      el.querySelectorAll(".quiz-explanation, [data-quiz-explanation]").forEach(function (exp) {
+        exp.hidden = false;
+      });
+
+      inputs.forEach(function (input) {
+        var label = input.closest(".quiz-option");
+        if (!label) return;
+        var isCorrect = input.dataset.correct === "true";
+        var isChecked = input.checked;
+
+        if (isCorrect) {
+          label.classList.add("is-correct");
+          if (!label.querySelector(".opt-status")) {
+            var badge = document.createElement("span");
+            badge.className = "opt-status is-correct";
+            badge.textContent = isChecked ? "✓ 你的选择（正确）" : "✓ 正确答案";
+            label.appendChild(badge);
+          }
+        } else if (isChecked) {
+          label.classList.add("is-incorrect");
+          if (!label.querySelector(".opt-status")) {
+            var badge = document.createElement("span");
+            badge.className = "opt-status is-incorrect";
+            badge.textContent = "✗ 你的选择";
+            label.appendChild(badge);
+          }
+        }
+      });
+
+      if (feedback && q.verdict) {
+        feedback.dataset.state = q.verdict;
+        feedback.setAttribute("role", "status");
+
+        var isCorrect = q.verdict === "correct";
+        var correctInputs = inputs.filter(function (input) { return input.dataset.correct === "true"; });
+        var correctLabels = correctInputs.map(function (input) {
+          var l = input.closest("label");
+          if (!l) return "";
+          var span = l.querySelector("span");
+          return span ? span.textContent.trim() : l.textContent.trim();
+        }).filter(Boolean);
+
+        var solution = el.dataset.correctText || el.dataset.explanation || "";
+
+        var html = [];
+        html.push('<div class="quiz-feedback-box">');
+        html.push('  <div class="quiz-verdict ' + (isCorrect ? 'is-correct' : 'is-incorrect') + '">');
+        html.push('    <span>' + (isCorrect ? '✓ 回答正确！' : '✗ 回答错误。') + '</span>');
+        if (q.hintUsed) {
+          html.push('    <span class="evidence-tag is-with-hints">💡 使用提示（with_hints）</span>');
+        } else {
+          html.push('    <span class="evidence-tag is-independent">⚡ 独立完成（independent）</span>');
+        }
+        html.push('  </div>');
+
+        if (!isCorrect && correctLabels.length) {
+          html.push('  <div class="feedback-correct-answer"><strong>正确答案：</strong>' + correctLabels.join("；") + '</div>');
+        }
+
+        if (solution) {
+          html.push('  <div class="feedback-solution"><strong>【详细解析】</strong>' + solution + '</div>');
+        }
+        html.push('</div>');
+
+        feedback.innerHTML = html.join("");
+
+        if (window.renderMathInElement) {
+          try {
+            window.renderMathInElement(feedback, {
+              delimiters: [{left: "\\(", right: "\\)", display: false}, {left: "\\[", right: "\\]", display: true}],
+              throwOnError: false
+            });
+          } catch (e) {}
+        }
+      }
     }
 
     if (submit) {
       submit.addEventListener("click", function () {
-        var inputs = Array.prototype.slice.call(el.querySelectorAll('input[type="radio"], input[type="checkbox"]'));
         var selected = inputs.filter(function (input) { return input.checked; });
         if (!selected.length) {
-          if (feedback) { feedback.textContent = "先选择一个答案，再检查。"; feedback.dataset.state = ""; }
+          if (feedback) {
+            feedback.innerHTML = '<span class="quiz-prompt-warn" style="color: var(--course-warning); font-weight: 600;">先选择一个答案，再提交。</span>';
+            feedback.dataset.state = "";
+          }
           return;
         }
+
         var correctInputs = inputs.filter(function (input) { return input.dataset.correct === "true"; });
         var correct = selected.length === correctInputs.length &&
           selected.every(function (input) { return input.dataset.correct === "true"; });
+
+        var selectedLabelsList = selected.map(function (input) {
+          var l = input.closest("label");
+          return l ? l.textContent.trim() : input.value;
+        });
+
+        var q = ctx.getQuestions()[id] || emptyQuestion();
+        var hintUsed = q.hintUsed;
+        var independenceVal = hintUsed ? "with_hints" : "independent";
+        var assistanceVal = hintUsed ? "with_hints" : "none";
+
+        ctx.dispatch({type: EVIDENCE.RAW_ANSWER, id: id, value: selectedLabelsList.join("；")});
         ctx.dispatch({type: EVIDENCE.ATTEMPT, id: id});
+        ctx.dispatch({type: EVIDENCE.INDEPENDENCE, id: id, value: independenceVal});
+        ctx.dispatch({type: EVIDENCE.OBSERVED_ASSISTANCE, id: id, value: assistanceVal});
         ctx.dispatch({type: EVIDENCE.VERDICT, id: id, value: correct ? "correct" : "incorrect"});
       });
     }
+
     return {
       update: function (el, snapshot) {
         var q = snapshot.derived.questions[id] || emptyQuestion();
         el.dataset.attempts = String(q.attempts);
         el.dataset.hintUsed = q.hintUsed ? "true" : "false";
         el.dataset.independence = q.independence || "";
-        paintFeedback(q);
+        if (q.hintUsed && hintBtn) {
+          hintBtn.disabled = true;
+          hintBtn.classList.add("is-active");
+          hintBtn.textContent = "💡 已查看提示";
+          if (hintPanel) hintPanel.hidden = false;
+        }
+        if (q.verdict) {
+          lockAndReveal(q);
+        }
       }
     };
   }
@@ -328,19 +489,8 @@
   function independenceView(ctx) {
     var question = ctx.el;
     var id = question.dataset.questionId;
-    if (!id || question.querySelector("[data-independence]")) return {update: function () {}};
-    var label = document.createElement("label");
-    label.className = "assistance-report";
-    label.textContent = "这次作答用了哪些帮助？ ";
-    var select = document.createElement("select");
-    select.setAttribute("data-independence", "");
-    [["", "尚未说明"], ["independent", "独立完成，没有 AI 提示"],
-     ["with_hints", "用过提示，自己完成"], ["ai_guided", "AI 引导了关键步骤"]].forEach(function (entry) {
-      var option = document.createElement("option");
-      option.value = entry[0];
-      option.textContent = entry[1];
-      select.appendChild(option);
-    });
+    var select = question.querySelector("select[data-independence]");
+    if (!id || !select) return {update: function () {}};
     select.addEventListener("change", function () {
       var q = ctx.getQuestions()[id];
       var observed = q && q.observedAssistance;
@@ -350,8 +500,6 @@
       select.value = value;
       ctx.dispatch({type: EVIDENCE.INDEPENDENCE, id: id, value: value});
     });
-    label.appendChild(select);
-    question.appendChild(label);
     return {
       update: function (el, snapshot) {
         var q = snapshot.derived.questions[id];
@@ -400,18 +548,72 @@
     var toc = ctx.el;
     var lesson = document.querySelector(".lesson");
     if (!lesson) return {update: function () {}};
-    var list = document.createElement("ol");
-    lesson.querySelectorAll("h2, h3").forEach(function (heading) {
+    toc.innerHTML = "";
+
+    var header = document.createElement("div");
+    header.className = "toc-header";
+    var title = document.createElement("p");
+    title.className = "toc-title";
+    title.textContent = "本课目录";
+    header.appendChild(title);
+    toc.appendChild(header);
+
+    var scrollBox = document.createElement("div");
+    scrollBox.className = "toc-scroll";
+
+    var list = document.createElement("ul");
+    list.className = "toc-list";
+
+    var headings = Array.prototype.slice.call(lesson.querySelectorAll("h2, h3"));
+    var items = [];
+
+    headings.forEach(function (heading) {
       if (!heading.id) heading.id = slugify(heading.textContent);
       var item = document.createElement("li");
-      if (heading.tagName.toLowerCase() === "h3") item.style.marginLeft = "0.75rem";
+      var isH3 = heading.tagName.toLowerCase() === "h3";
+      item.className = "toc-item" + (isH3 ? " is-h3" : " is-h2");
+
       var link = document.createElement("a");
+      link.className = "toc-link";
       link.href = "#" + heading.id;
       link.textContent = heading.textContent;
+
+      link.addEventListener("click", function (event) {
+        event.preventDefault();
+        heading.scrollIntoView({ behavior: "smooth", block: "start" });
+        if (window.history && history.pushState) {
+          history.pushState(null, "", "#" + heading.id);
+        }
+      });
+
       item.appendChild(link);
       list.appendChild(item);
+      items.push({ heading: heading, link: link, item: item });
     });
-    toc.appendChild(list);
+
+    scrollBox.appendChild(list);
+    toc.appendChild(scrollBox);
+
+    if (window.IntersectionObserver && items.length) {
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            var currentId = entry.target.id;
+            items.forEach(function (it) {
+              if (it.heading.id === currentId) {
+                it.link.classList.add("is-active");
+                it.item.scrollIntoView({ block: "nearest", behavior: "smooth" });
+              } else {
+                it.link.classList.remove("is-active");
+              }
+            });
+          }
+        });
+      }, { rootMargin: "0px 0px -75% 0px", threshold: 0 });
+
+      headings.forEach(function (h) { observer.observe(h); });
+    }
+
     return {update: function () {}};
   }
 
@@ -453,6 +655,21 @@
       var result = node && node.dataset.answerKind === "open"
         ? "not-applicable"
         : (q.verdict || "not-checked");
+
+      var independence = q.independence;
+      if (!independence) {
+        if (q.hintUsed) independence = "with_hints";
+        else if (q.attempts > 0) independence = "independent";
+        else independence = "unknown";
+      }
+
+      var observed = q.observedAssistance;
+      if (!observed) {
+        if (q.hintUsed) observed = "with_hints (使用了页面提示)";
+        else if (q.attempts > 0) observed = "未观察到外部辅助，独立完成";
+        else observed = "未作答";
+      }
+
       lines.push(
         "",
         "### " + id,
@@ -460,8 +677,8 @@
         "- 原始答案: " + multiline(answer),
         "- 检查次数: " + q.attempts,
         "- 使用提示: " + (q.hintUsed ? "是" : "否"),
-        "- 辅助情况（学习者自述）: " + (q.independence || "unknown"),
-        "- 页面观察到的帮助: " + (q.observedAssistance || "未观察到；不代表没有外部帮助"),
+        "- 辅助情况（学习者自述）: " + independence,
+        "- 页面观察到的帮助: " + observed,
         "- 已查看对照要点: " + (q.answerViewed ? "是（作答后）" : "否"),
         "- 即时判定: " + result
       );

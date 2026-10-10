@@ -1,0 +1,39 @@
+@layer content {
+  .callout {
+    margin: 1.25rem 0;
+    padding: 0.85rem 1.15rem;
+    border-left: 4px solid var(--c-accent);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    background: var(--c-accent-bg);
+    color: var(--c-text);
+  }
+
+  .callout[data-callout="note"],
+  .callout[data-callout="info"] {
+    border-left-color: var(--c-accent);
+    background: var(--c-accent-bg);
+  }
+
+  .callout[data-callout="tip"] {
+    border-left-color: var(--c-success);
+    background: var(--c-success-bg);
+  }
+
+  .callout[data-callout="warning"] {
+    border-left-color: var(--c-warn);
+    background: var(--c-warn-bg);
+  }
+
+  .callout[data-callout="danger"] {
+    border-left-color: var(--c-danger);
+    background: var(--c-danger-bg);
+  }
+
+  .callout__title {
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "id": "foundation",
+  "layer": 1,
+  "version": "2.0.0",
+  "requires": ["core"],
+  "presence": "core",
+  "provides": {
+    "css": [
+      "tokens.css",
+      "themes/course.css",
+      "themes/ink.css",
+      "themes/paper.css",
+      "base.css",
+      "layout.css",
+      "print.css"
+    ],
+    "js": [
+      "theme-engine.js"
+    ]
+  },
+  "ready": "kit:foundation:ready",
+  "tokens": [
+    "--c-bg", "--c-surface", "--c-surface-2", "--c-text", "--c-text-2",
+    "--c-border", "--c-accent", "--c-accent-strong", "--c-success",
+    "--c-warn", "--c-danger", "--radius", "--shadow", "--font-body",
+    "--font-mono", "--leading", "--measure", "--code-bg", "--code-fg",
+    "--code-border", "--code-label", "--math-fg", "--toc-w", "--toc-top",
+    "--series-1", "--series-2", "--series-3", "--series-4",
+    "--series-5", "--series-6", "--series-7", "--series-8"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "id": "content.math",
+  "layer": 2,
+  "version": "2.0.0",
+  "requires": ["core", "foundation", "content._block"],
+  "presence": "auto",
+  "detect": {
+    "selectors": [".formula", "[data-math]"],
+    "regex": ["\\\\\\(", "\\$\\$", "\\\\\\["]
+  },
+  "provides": {
+    "css": ["math.css"],
+    "js": ["math.js"]
+  },
+  "vendor": [
+    {
+      "id": "katex",
+      "version": "0.16.11",
+      "cdn": "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js",
+      "local": "vendor/katex/katex.min.js"
+    }
+  ],
+  "ready": "kit:content.math:ready",
+  "tokens": ["--math-fg"]
+}

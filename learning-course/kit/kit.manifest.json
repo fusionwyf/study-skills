@@ -1,0 +1,677 @@
+{
+  "kit": "2.0.0",
+  "layers": [
+    "reset",
+    "tokens",
+    "base",
+    "content",
+    "shell",
+    "learning",
+    "viz",
+    "theme",
+    "course"
+  ],
+  "order": [
+    "core",
+    "foundation",
+    "content._block",
+    "content.callout",
+    "content.code",
+    "content.diagram",
+    "content.math",
+    "content.media",
+    "content.table",
+    "shell.nav",
+    "shell.progress",
+    "shell.theme-switcher",
+    "shell.toc",
+    "learning.records",
+    "learning.question",
+    "learning.step",
+    "viz.core",
+    "viz.kinds.chart",
+    "viz.kinds.list",
+    "viz.kinds.sequence",
+    "viz.kinds.spatial",
+    "viz.kinds.table"
+  ],
+  "modules": {
+    "core": {
+      "id": "core",
+      "layer": 0,
+      "version": "2.0.0",
+      "requires": [],
+      "presence": "core",
+      "provides": {
+        "js": [
+          "bus.js",
+          "config.js",
+          "util.js",
+          "store.js",
+          "loader.js",
+          "ready.js",
+          "registry.js"
+        ]
+      },
+      "ready": "kit:core:ready"
+    },
+    "foundation": {
+      "id": "foundation",
+      "layer": 1,
+      "version": "2.0.0",
+      "requires": [
+        "core"
+      ],
+      "presence": "core",
+      "provides": {
+        "css": [
+          "tokens.css",
+          "themes/course.css",
+          "themes/ink.css",
+          "themes/paper.css",
+          "base.css",
+          "layout.css",
+          "print.css"
+        ],
+        "js": [
+          "theme-engine.js"
+        ]
+      },
+      "ready": "kit:foundation:ready",
+      "tokens": [
+        "--c-bg",
+        "--c-surface",
+        "--c-surface-2",
+        "--c-text",
+        "--c-text-2",
+        "--c-border",
+        "--c-accent",
+        "--c-accent-strong",
+        "--c-success",
+        "--c-warn",
+        "--c-danger",
+        "--radius",
+        "--shadow",
+        "--font-body",
+        "--font-mono",
+        "--leading",
+        "--measure",
+        "--code-bg",
+        "--code-fg",
+        "--code-border",
+        "--code-label",
+        "--math-fg",
+        "--toc-w",
+        "--toc-top",
+        "--series-1",
+        "--series-2",
+        "--series-3",
+        "--series-4",
+        "--series-5",
+        "--series-6",
+        "--series-7",
+        "--series-8"
+      ]
+    },
+    "viz.core": {
+      "id": "viz.core",
+      "layer": 5,
+      "version": "2.0.0",
+      "requires": [
+        "core",
+        "foundation"
+      ],
+      "presence": "auto",
+      "detect": {
+        "selectors": [
+          "[data-visualization]",
+          ".visualization"
+        ]
+      },
+      "provides": {
+        "css": [
+          "visualizations.css"
+        ],
+        "js": [
+          "visualizations.js"
+        ],
+        "selectors": [
+          "[data-visualization]",
+          ".visualization"
+        ]
+      },
+      "ready": "kit:viz.core:ready"
+    },
+    "viz.kinds.chart": {
+      "id": "viz.kinds.chart",
+      "layer": 5,
+      "version": "2.0.0",
+      "requires": [
+        "viz.core"
+      ],
+      "presence": "opt-in",
+      "detect": {
+        "selectors": [
+          "[data-visualization=\"chart\"]"
+        ]
+      },
+      "provides": {
+        "js": [
+          "chart.js"
+        ],
+        "kinds": [
+          "chart"
+        ]
+      },
+      "vendor": [
+        {
+          "id": "plotly",
+          "version": "3.0.1",
+          "cdn": "https://cdn.jsdelivr.net/npm/plotly.js-dist-min@3.0.1/plotly.min.js",
+          "local": "vendor/plotly.js-dist-min/plotly.min.js"
+        }
+      ],
+      "ready": "kit:viz.kinds.chart:ready"
+    },
+    "viz.kinds.list": {
+      "id": "viz.kinds.list",
+      "layer": 5,
+      "version": "2.0.0",
+      "requires": [
+        "viz.core"
+      ],
+      "presence": "auto",
+      "detect": {
+        "selectors": [
+          "[data-visualization=\"relation\"]",
+          "[data-visualization=\"timeline\"]",
+          "[data-visualization=\"process\"]"
+        ]
+      },
+      "provides": {
+        "js": [
+          "list.js"
+        ],
+        "kinds": [
+          "relation",
+          "timeline",
+          "process"
+        ]
+      },
+      "ready": "kit:viz.kinds.list:ready"
+    },
+    "viz.kinds.sequence": {
+      "id": "viz.kinds.sequence",
+      "layer": 5,
+      "version": "2.0.0",
+      "requires": [
+        "viz.core"
+      ],
+      "presence": "auto",
+      "detect": {
+        "selectors": [
+          "[data-visualization=\"sequence\"]"
+        ]
+      },
+      "provides": {
+        "js": [
+          "sequence.js"
+        ],
+        "kinds": [
+          "sequence"
+        ]
+      },
+      "ready": "kit:viz.kinds.sequence:ready"
+    },
+    "viz.kinds.spatial": {
+      "id": "viz.kinds.spatial",
+      "layer": 5,
+      "version": "2.0.0",
+      "requires": [
+        "viz.core"
+      ],
+      "presence": "opt-in",
+      "detect": {
+        "selectors": [
+          "[data-visualization=\"spatial\"]",
+          "[data-visualization=\"geometry\"]"
+        ]
+      },
+      "provides": {
+        "js": [
+          "spatial.js"
+        ],
+        "kinds": [
+          "spatial",
+          "geometry"
+        ]
+      },
+      "vendor": [
+        {
+          "id": "jsxgraph",
+          "version": "1.8.0",
+          "cdn": "https://cdn.jsdelivr.net/npm/jsxgraph@1.8.0/distrib/jsxgraphcore.js",
+          "local": "vendor/jsxgraph/jsxgraphcore.js"
+        }
+      ],
+      "ready": "kit:viz.kinds.spatial:ready"
+    },
+    "viz.kinds.table": {
+      "id": "viz.kinds.table",
+      "layer": 5,
+      "version": "2.0.0",
+      "requires": [
+        "viz.core"
+      ],
+      "presence": "auto",
+      "detect": {
+        "selectors": [
+          "[data-visualization=\"table\"]"
+        ]
+      },
+      "provides": {
+        "js": [
+          "table.js"
+        ],
+        "kinds": [
+          "table"
+        ]
+      },
+      "ready": "kit:viz.kinds.table:ready"
+    },
+    "shell.nav": {
+      "id": "shell.nav",
+      "layer": 3,
+      "version": "2.0.0",
+      "requires": [
+        "core",
+        "foundation"
+      ],
+      "presence": "core",
+      "provides": {
+        "css": [
+          "nav.css"
+        ],
+        "js": [
+          "nav.js"
+        ],
+        "selectors": [
+          ".kit-nav",
+          ".course-nav"
+        ]
+      },
+      "ready": "kit:shell.nav:ready"
+    },
+    "shell.progress": {
+      "id": "shell.progress",
+      "layer": 3,
+      "version": "2.0.0",
+      "requires": [
+        "core",
+        "foundation"
+      ],
+      "presence": "core",
+      "provides": {
+        "css": [
+          "progress.css"
+        ],
+        "js": [
+          "progress.js"
+        ]
+      },
+      "ready": "kit:shell.progress:ready"
+    },
+    "shell.theme-switcher": {
+      "id": "shell.theme-switcher",
+      "layer": 3,
+      "version": "2.0.0",
+      "requires": [
+        "core",
+        "foundation"
+      ],
+      "presence": "core",
+      "provides": {
+        "css": [
+          "theme-switcher.css"
+        ],
+        "js": [
+          "theme-switcher.js"
+        ],
+        "selectors": [
+          "[data-theme-switch]"
+        ]
+      },
+      "ready": "kit:shell.theme-switcher:ready"
+    },
+    "shell.toc": {
+      "id": "shell.toc",
+      "layer": 3,
+      "version": "2.0.0",
+      "requires": [
+        "core",
+        "foundation"
+      ],
+      "presence": "core",
+      "provides": {
+        "css": [
+          "toc.css"
+        ],
+        "js": [
+          "toc.js"
+        ],
+        "selectors": [
+          ".kit-toc",
+          "[data-auto-toc]",
+          ".toc"
+        ]
+      },
+      "ready": "kit:shell.toc:ready",
+      "tokens": [
+        "--toc-w",
+        "--toc-top"
+      ]
+    },
+    "learning.question": {
+      "id": "learning.question",
+      "layer": 4,
+      "version": "2.0.0",
+      "requires": [
+        "core",
+        "foundation",
+        "learning.records"
+      ],
+      "presence": "auto",
+      "detect": {
+        "selectors": [
+          ".question",
+          "section[data-question-id]",
+          ".quiz",
+          "[data-answer-kind]",
+          "[data-role~=\"teaching-target\"]",
+          "[data-role~=\"dialogue-practice\"]"
+        ]
+      },
+      "provides": {
+        "css": [
+          "question.css"
+        ],
+        "js": [
+          "question.js"
+        ],
+        "selectors": [
+          ".question",
+          ".quiz",
+          "[data-question-id]"
+        ]
+      },
+      "ready": "kit:learning.question:ready"
+    },
+    "learning.records": {
+      "id": "learning.records",
+      "layer": 4,
+      "version": "2.0.0",
+      "requires": [
+        "core",
+        "foundation"
+      ],
+      "presence": "core",
+      "provides": {
+        "css": [
+          "records.css"
+        ],
+        "js": [
+          "records.js"
+        ]
+      },
+      "ready": "kit:learning.records:ready"
+    },
+    "learning.step": {
+      "id": "learning.step",
+      "layer": 4,
+      "version": "2.0.0",
+      "requires": [
+        "core",
+        "foundation"
+      ],
+      "presence": "auto",
+      "detect": {
+        "selectors": [
+          "[data-step-next]",
+          ".step"
+        ]
+      },
+      "provides": {
+        "css": [
+          "step.css"
+        ],
+        "js": [
+          "step.js"
+        ],
+        "selectors": [
+          "[data-step-next]"
+        ]
+      },
+      "ready": "kit:learning.step:ready"
+    },
+    "content.callout": {
+      "id": "content.callout",
+      "layer": 2,
+      "version": "2.0.0",
+      "requires": [
+        "core",
+        "foundation"
+      ],
+      "presence": "auto",
+      "detect": {
+        "selectors": [
+          ".callout",
+          "aside.callout"
+        ]
+      },
+      "provides": {
+        "css": [
+          "callout.css"
+        ],
+        "js": [
+          "callout.js"
+        ],
+        "selectors": [
+          ".callout"
+        ]
+      },
+      "ready": "kit:content.callout:ready"
+    },
+    "content.code": {
+      "id": "content.code",
+      "layer": 2,
+      "version": "2.0.0",
+      "requires": [
+        "core",
+        "foundation",
+        "content._block"
+      ],
+      "presence": "auto",
+      "detect": {
+        "selectors": [
+          "pre > code",
+          ".code-block"
+        ]
+      },
+      "provides": {
+        "css": [
+          "code.css"
+        ],
+        "js": [
+          "code.js"
+        ],
+        "selectors": [
+          "pre > code",
+          ".code-block"
+        ]
+      },
+      "vendor": [
+        {
+          "id": "hljs",
+          "version": "11.12.0",
+          "cdn": "https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.12.0/build/highlight.min.js",
+          "local": "vendor/hljs/highlight.min.js"
+        }
+      ],
+      "ready": "kit:content.code:ready",
+      "tokens": [
+        "--code-bg",
+        "--code-fg",
+        "--code-border",
+        "--code-label"
+      ]
+    },
+    "content.diagram": {
+      "id": "content.diagram",
+      "layer": 2,
+      "version": "2.0.0",
+      "requires": [
+        "core",
+        "foundation",
+        "content._block"
+      ],
+      "presence": "auto",
+      "detect": {
+        "selectors": [
+          ".mermaid",
+          "pre.mermaid",
+          "div.mermaid"
+        ]
+      },
+      "provides": {
+        "css": [
+          "mermaid.css"
+        ],
+        "js": [
+          "mermaid.js"
+        ]
+      },
+      "vendor": [
+        {
+          "id": "mermaid",
+          "version": "11.4.1",
+          "cdn": "https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js",
+          "local": "vendor/mermaid/mermaid.min.js"
+        }
+      ],
+      "ready": "kit:content.diagram:ready"
+    },
+    "content.math": {
+      "id": "content.math",
+      "layer": 2,
+      "version": "2.0.0",
+      "requires": [
+        "core",
+        "foundation",
+        "content._block"
+      ],
+      "presence": "auto",
+      "detect": {
+        "selectors": [
+          ".formula",
+          "[data-math]"
+        ],
+        "regex": [
+          "\\\\\\(",
+          "\\$\\$",
+          "\\\\\\["
+        ]
+      },
+      "provides": {
+        "css": [
+          "math.css"
+        ],
+        "js": [
+          "math.js"
+        ]
+      },
+      "vendor": [
+        {
+          "id": "katex",
+          "version": "0.16.11",
+          "cdn": "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js",
+          "local": "vendor/katex/katex.min.js"
+        }
+      ],
+      "ready": "kit:content.math:ready",
+      "tokens": [
+        "--math-fg"
+      ]
+    },
+    "content.media": {
+      "id": "content.media",
+      "layer": 2,
+      "version": "2.0.0",
+      "requires": [
+        "core",
+        "foundation"
+      ],
+      "presence": "auto",
+      "detect": {
+        "selectors": [
+          "[data-media]"
+        ]
+      },
+      "provides": {
+        "css": [
+          "media.css"
+        ],
+        "js": [
+          "media.js"
+        ],
+        "selectors": [
+          "[data-media]"
+        ]
+      },
+      "ready": "kit:content.media:ready"
+    },
+    "content.table": {
+      "id": "content.table",
+      "layer": 2,
+      "version": "2.0.0",
+      "requires": [
+        "core",
+        "foundation"
+      ],
+      "presence": "auto",
+      "detect": {
+        "selectors": [
+          "table",
+          "table[data-sortable]"
+        ]
+      },
+      "provides": {
+        "css": [
+          "table.css"
+        ],
+        "js": [
+          "table.js"
+        ]
+      },
+      "ready": "kit:content.table:ready"
+    },
+    "content._block": {
+      "id": "content._block",
+      "layer": 2,
+      "version": "2.0.0",
+      "requires": [
+        "core",
+        "foundation"
+      ],
+      "presence": "core",
+      "provides": {
+        "css": [
+          "block-chrome.css"
+        ],
+        "js": [
+          "block-chrome.js"
+        ]
+      },
+      "ready": "kit:content._block:ready"
+    }
+  }
+}

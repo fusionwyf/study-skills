@@ -1,0 +1,13 @@
+{
+  "id": "shell.nav",
+  "layer": 3,
+  "version": "2.0.0",
+  "requires": ["core", "foundation"],
+  "presence": "core",
+  "provides": {
+    "css": ["nav.css"],
+    "js": ["nav.js"],
+    "selectors": [".kit-nav", ".course-nav"]
+  },
+  "ready": "kit:shell.nav:ready"
+}

@@ -1,0 +1,15 @@
+{
+  "id": "content.table",
+  "layer": 2,
+  "version": "2.0.0",
+  "requires": ["core", "foundation"],
+  "presence": "auto",
+  "detect": {
+    "selectors": ["table", "table[data-sortable]"]
+  },
+  "provides": {
+    "css": ["table.css"],
+    "js": ["table.js"]
+  },
+  "ready": "kit:content.table:ready"
+}

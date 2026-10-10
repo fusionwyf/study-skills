@@ -136,6 +136,11 @@
         "target": "assets/optional/code-highlight",
         "needs": "highlight.js 11.12.0 官方 CDN 引擎与主题 CSS"
       },
+      "mermaid": {
+        "label": "流程图、状态图、时序图、类图、甘特图、饼图",
+        "target": "assets/optional/mermaid",
+        "needs": "CDN Mermaid 11 ESM"
+      },
       "media": {
         "label": "图片、音频、视频原生控件；图片热点与开放文字标注；标注进入学习记录",
         "target": "assets/optional/media",

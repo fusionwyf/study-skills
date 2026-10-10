@@ -1,0 +1,23 @@
+{
+  "id": "viz.kinds.chart",
+  "layer": 5,
+  "version": "2.0.0",
+  "requires": ["viz.core"],
+  "presence": "opt-in",
+  "detect": {
+    "selectors": ["[data-visualization=\"chart\"]"]
+  },
+  "provides": {
+    "js": ["chart.js"],
+    "kinds": ["chart"]
+  },
+  "vendor": [
+    {
+      "id": "plotly",
+      "version": "3.0.1",
+      "cdn": "https://cdn.jsdelivr.net/npm/plotly.js-dist-min@3.0.1/plotly.min.js",
+      "local": "vendor/plotly.js-dist-min/plotly.min.js"
+    }
+  ],
+  "ready": "kit:viz.kinds.chart:ready"
+}

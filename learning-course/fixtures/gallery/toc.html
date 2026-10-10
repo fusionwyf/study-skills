@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="course">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gallery · 3-State TOC & Rail Layout (Course Kit v2)</title>
+  <link rel="stylesheet" href="../acceptance/assets/kit/kit.css">
+  <link rel="stylesheet" href="../acceptance/assets/course/theme.css">
+</head>
+<body>
+<div class="kit-page">
+  <main class="kit-main" data-course-id="gallery" data-lesson-id="0003-toc" data-objective="gallery-toc" data-evidence="practice" data-cognitive-level="apply" data-retrieval="required" data-feedback="required" data-source-status="verified" data-answer-status="provided">
+    <header class="course-header">
+      <p class="course-kicker">Course Kit v2 · Component Gallery</p>
+      <h1>3-State TOC & Responsive Rail Layout (L3 Shell Layer)</h1>
+      <p>Demonstrates container-query responsive TOC: sidebar on desktop (≥1200px), floating popover on tablet (768–1199px), top bar + bottom drawer on mobile (&lt;768px), with rAF scrollspy.</p>
+    </header>
+
+    <section id="h-intro">
+      <h2>1. Introduction to Layout Architecture</h2>
+      <p>Course Kit v2 adopts a 4-column modern container query layout: <code>.kit-page</code>, <code>.kit-main</code>, <code>.kit-rail</code>, and <code>.kit-bleed</code>.</p>
+    </section>
+
+    <section id="h-sidebar">
+      <h2>2. Desktop Sidebar Mode</h2>
+      <p>When the container width is at least 1200px, the table of contents is placed in the right rail as a persistent, sticky sidebar with collapsible sub-sections.</p>
+      <div id="h-sub-sidebar">
+        <h3>2.1 Collapsible Sub-headings</h3>
+        <p>H3 subheadings automatically expand and collapse based on current reading position.</p>
+      </div>
+    </section>
+
+    <section id="h-popover">
+      <h2>3. Tablet Popover Mode</h2>
+      <p>Between 768px and 1199px, the TOC transforms into a non-intrusive floating popover button at the bottom-right of the viewport, preserving reading space.</p>
+    </section>
+
+    <section id="h-drawer">
+      <h2>4. Mobile Drawer Mode</h2>
+      <p>Under 768px, a top summary bar indicates the current section, while clicking opens an accessible bottom drawer with focus trapping and gesture dismissal.</p>
+    </section>
+
+    <section id="h-scrollspy">
+      <h2>5. High-Precision rAF Scrollspy</h2>
+      <p>Scroll position is sampled via <code>requestAnimationFrame</code> without triggering document-level jitter. The TOC container scrolls internally without disturbing the viewport.</p>
+    </section>
+  </main>
+
+  <aside class="kit-rail" aria-label="Table of Contents">
+    <nav class="kit-toc-static">
+      <ul>
+        <li><a href="#h-intro">1. Introduction to Layout Architecture</a></li>
+        <li><a href="#h-sidebar">2. Desktop Sidebar Mode</a>
+          <ul><li><a href="#h-sub-sidebar">2.1 Collapsible Sub-headings</a></li></ul>
+        </li>
+        <li><a href="#h-popover">3. Tablet Popover Mode</a></li>
+        <li><a href="#h-drawer">4. Mobile Drawer Mode</a></li>
+        <li><a href="#h-scrollspy">5. High-Precision rAF Scrollspy</a></li>
+      </ul>
+    </nav>
+  </aside>
+</div>
+<script src="../acceptance/assets/kit/kit.js"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "id": "shell.progress",
+  "layer": 3,
+  "version": "2.0.0",
+  "requires": ["core", "foundation"],
+  "presence": "core",
+  "provides": {
+    "css": ["progress.css"],
+    "js": ["progress.js"]
+  },
+  "ready": "kit:shell.progress:ready"
+}

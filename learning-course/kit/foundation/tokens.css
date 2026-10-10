@@ -1,0 +1,41 @@
+@layer tokens {
+  :root {
+    /* ---- Base layout & geometry tokens ---- */
+    --radius: 0.6rem;
+    --radius-sm: 0.35rem;
+    --radius-pill: 9999px;
+    --measure: 46rem;
+    --measure-wide: 64rem;
+    --rail-w: 16rem;
+    --toc-w: 15rem;
+    --toc-top: 1.5rem;
+    --leading: 1.7;
+
+    /* ---- Font stacks ---- */
+    --font-body: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+
+    /* ---- Component default mapping ---- */
+    --code-bg: var(--c-surface-2);
+    --code-fg: var(--c-text);
+    --code-border: var(--c-border);
+    --code-label: var(--c-text-2);
+
+    --math-fg: var(--c-text);
+
+    --viz-bg: var(--c-surface);
+    --viz-border: var(--c-border);
+    --viz-text: var(--c-text);
+    --viz-muted: var(--c-text-2);
+
+    /* ---- Chart & diagram data series tokens ---- */
+    --series-1: #2563eb;
+    --series-2: #059669;
+    --series-3: #d97706;
+    --series-4: #dc2626;
+    --series-5: #7c3aed;
+    --series-6: #0891b2;
+    --series-7: #ea580c;
+    --series-8: #4b5563;
+  }
+}

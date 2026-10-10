@@ -2,6 +2,41 @@
 
 All notable changes to this project are documented in this file.
 
+## [2.0.0] - 2026-10-11
+
+Course Kit v2 major refactoring: single asset source in `kit/`, L0–L5 architectural layering, unified block chrome, token-driven theming, responsive 3-state TOC, unified Question component with automated assistance detection, and CLI toolchain.
+
+### Added
+
+- **Single Asset Source (`kit/`) & Toolchain (`kit.py`):**
+  - Consolidated all runtime, foundation, content, shell, learning, and visualization code into `kit/` (L0-L5 layers), eliminating duplicated asset bundles across `acceptance-course` and `example-course`.
+  - Implemented `kit/build/kit.py` CLI supporting `build`, `sync`, `check`, `add`, and `list` commands.
+  - Courses now bundle a single IIFE `assets/kit/kit.js` and `@layer` stylesheet `assets/kit/kit.css` locked with `kit.lock.json`.
+- **L1 Design Token & Theme Engine (`foundation/`):**
+  - Three-tier token architecture: primitive, semantic, and component tokens across 8 color series (`--series-1...8`), radii, typography, and measurements. Zero literal hex colors in component CSS.
+  - Built-in `course`, `ink` (dark), and `paper` themes with automatic `color-scheme` adaptation.
+  - Dynamic `theme-engine.js` managing `localStorage` persistence, OS preference tracking, `kit:themechange` event dispatch, and flicker-free highlight.js stylesheet swapping.
+- **L2 Unified Block Chrome (`content/_block/`):**
+  - Shared outer frame (`.kit-block`) providing label badges, action slots (copy source, fold), and state attributes (`data-kit-state`).
+  - Integrated across code blocks, display math, Mermaid diagrams, data tables, callouts, and media.
+  - Authors write semantic HTML (`<pre><code class="language-...">`, `\[...\]`, `<pre class="mermaid">`, `<aside class="callout">`); runtime enhances them with Obsidian-style UI.
+- **L3 Responsive 3-State TOC (`shell/toc/`):**
+  - Responsive layout: sticky sidebar on wide screens (>=1200px), floating popover on medium screens (768–1199px), and accessible modal drawer on small screens (<768px).
+  - High-performance rAF-throttled scrollspy tracking the active heading.
+  - TOC auto-scroll constrained to the TOC container (`scrollTop`), eliminating unexpected full-page jumps.
+  - Static fallback `<nav class="kit-toc">` pre-generated during `kit sync` for no-script and print readability.
+- **L4 Unified Question Component (`learning/question/`):**
+  - Unified component supporting 6 question kinds: `choice` (single choice), `multi` (multiple choice), `numeric` (numeric with tolerance), `fill` (text fill-in), `open` (open correction/response), and `dialogue` (multi-turn conversation).
+  - Automated assistance detection: eliminates self-reported help dropdowns by automatically detecting hint usage and `data-guidance` levels (`independent`, `with_hints`, `ai_guided`).
+  - Triple visual feedback: color, shape/symbol (✓, ✗, dashed borders), and descriptive text (`data-why`).
+  - Strict preservation of `buildLearningRecord` text output, ensuring byte-identical compatibility with downstream progress tracking.
+- **L5 Visualizations Layer (`viz/`):**
+  - Encapsulated in `@layer viz`, rendering universal kinds (`list`, `sequence`, `table`) with zero external libraries, and opt-in support for `chart` (Plotly) and `spatial` (JSXGraph).
+  - Color palette bound to CSS `--series-*` tokens.
+- **Course Validation & Acceptance:**
+  - `validate_course.py` extended to validate modern Question attributes, stable heading IDs, TOC static fallbacks, and lock file integrity.
+  - Acceptance suite in `fixtures/acceptance` upgraded to Course Kit v2 contracts.
+
 ## [Unreleased]
 
 ### Added

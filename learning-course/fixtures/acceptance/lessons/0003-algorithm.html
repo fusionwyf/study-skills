@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="course">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>算法回放与流程</title>
+    <link rel="stylesheet" href="../assets/kit/kit.css" />
+    <link rel="stylesheet" href="../assets/course/theme.css" />
+    <script defer src="../assets/kit/kit.js"></script>
+  </head>
+  <body class="kit-page">
+    <div class="kit-main">
+      <header class="course-header">
+        <h1>算法回放与流程</h1>
+        <a href="../index.html">课件目录</a>
+        <div data-theme-switcher></div>
+      </header>
+      <main
+        class="lesson"
+        id="lesson-content"
+        data-course-id="acceptance-course"
+        data-lesson-id="0003"
+        data-objective="algorithm"
+        data-evidence="practice"
+        data-retrieval="required"
+        data-feedback="required"
+        data-source-status="not-needed"
+        data-answer-status="provided"
+      >
+        <section data-role="objective">
+          <h2   id="学习成果">学习成果</h2>
+          <p>检查执行轨迹的不变量，并独立完成变式</p>
+        </section>
+        <section>
+          <h2   id="一次完整的选择排序">一次完整的选择排序</h2>
+          <p>
+            输入 [3,1,2]。第一轮找到最小值 1，与首项交换，得到
+            [1,3,2]；第二轮交换 3 与 2，得到
+            [1,2,3]。每轮前缀有序，元素多重集保持不变。
+          </p>
+          <pre><code class="language-python">for i in range(len(a)-1):
+    m = min(range(i,len(a)), key=lambda j:a[j])
+    a[i], a[m] = a[m], a[i]</code></pre>
+        </section>
+        <section
+          class="visualization"
+          id="sort-steps"
+          data-visualization="sequence"
+        >
+          <h2   id="逐轮执行轨迹">逐轮执行轨迹</h2>
+          <div data-viz-fallback>
+            <ol>
+              <li>[3,1,2]</li>
+              <li>[1,3,2]；首项已就位</li>
+              <li>[1,2,3]；排序完成</li>
+            </ol>
+          </div>
+          <div class="viz-host" id="sort-steps-host" data-viz-host hidden></div>
+          <div data-viz-controls hidden>
+            <label for="sort-steps-step">步骤</label
+            ><input
+              id="sort-steps-step"
+              type="range"
+              min="0"
+              value="0"
+            /><button data-viz-prev type="button">上一步</button
+            ><button data-viz-next type="button">下一步</button>
+          </div>
+          <p data-viz-status role="status"></p>
+          <script type="application/json" data-viz-config>
+            {
+              "model": "sort-steps",
+              "domain": "正文给定范围",
+              "precision": "精确规则或 binary64 数值",
+              "steps": [
+                { "title": "初始", "values": [3, 1, 2] },
+                { "title": "第一轮", "values": [1, 3, 2], "sorted": 1 },
+                { "title": "第二轮", "values": [1, 2, 3], "sorted": 3 }
+              ]
+            }
+          </script>
+        </section>
+        <section
+          class="visualization"
+          id="sort-flow"
+          data-visualization="process"
+        >
+          <h2   id="选择排序的循环流程">选择排序的循环流程</h2>
+          <div data-viz-fallback>
+            <p>寻找最小值 → 交换位置 → 检查前缀；有未排序项时重复。</p>
+          </div>
+          <div class="viz-host" id="sort-flow-host" data-viz-host hidden></div>
+          <p data-viz-status role="status"></p>
+          <script type="application/json" data-viz-config>
+            {
+              "model": "sort-flow",
+              "domain": "正文给定范围",
+              "precision": "精确规则或 binary64 数值",
+              "nodes": [
+                { "id": "find", "label": "寻找最小值" },
+                { "id": "swap", "label": "交换位置" },
+                { "id": "check", "label": "检查前缀" }
+              ],
+              "edges": [
+                { "from": "find", "to": "swap" },
+                { "from": "swap", "to": "check" },
+                { "from": "check", "to": "find", "label": "剩余未排序项" }
+              ]
+            }
+          </script>
+        </section>
+        <section
+          class="question"
+          data-role="evidence"
+          data-question-id="sort-transfer"
+          data-kind="open"
+        >
+          <div data-stem><h2   id="对-231-独立写出各轮结果并解释不变量">对 [2,3,1] 独立写出各轮结果，并解释不变量</h2></div>
+          <div data-key>
+            <ul>
+              <li>第一轮：从 [2,3,1] 中找到最小值 1，与首项 2 交换，得到 [1,3,2]，此时前缀 [1] 有序。</li>
+              <li>第二轮：在剩余部分 [3,2] 中找到最小值 2，与 3 交换，得到 [1,2,3]，此时前缀 [1,2,3] 有序，排序完成。</li>
+              <li>不变量：每轮迭代后，已处理前缀保持单调递增有序，且整个数组的多重集元素保持不变。</li>
+            </ul>
+          </div>
+        </section>
+        <section data-role="retrieval">
+          <h2   id="合卷检索">合卷检索</h2>
+          <p>
+            不用上文，将 [4,2,3,1] 的每轮交换写出来，解释前缀有序与多重集不变。
+          </p>
+        </section>
+        <section class="reflection" data-role="learner-feedback">
+          <h2   id="学习反馈">学习反馈</h2>
+          <label for="reflection">哪里仍不确定？</label
+          ><textarea id="reflection"></textarea
+          ><button type="button" data-copy-feedback>复制学习记录</button
+          ><span data-copy-feedback-status role="status"></span>
+        </section>
+      </main>
+    </div>
+    <aside class="kit-rail">
+      <nav class="kit-toc" aria-label="本课目录" data-kit-toc>
+  <div class="toc-header"><p class="toc-title">本课目录</p></div>
+  <div class="toc-scroll">
+    <ul class="toc-list">
+      <li class="toc-item is-h2"><a class="toc-link" href="#学习成果">学习成果</a></li>
+      <li class="toc-item is-h2"><a class="toc-link" href="#一次完整的选择排序">一次完整的选择排序</a></li>
+      <li class="toc-item is-h2"><a class="toc-link" href="#逐轮执行轨迹">逐轮执行轨迹</a></li>
+      <li class="toc-item is-h2"><a class="toc-link" href="#选择排序的循环流程">选择排序的循环流程</a></li>
+      <li class="toc-item is-h2"><a class="toc-link" href="#对-231-独立写出各轮结果并解释不变量">对 [2,3,1] 独立写出各轮结果，并解释不变量</a></li>
+      <li class="toc-item is-h2"><a class="toc-link" href="#合卷检索">合卷检索</a></li>
+      <li class="toc-item is-h2"><a class="toc-link" href="#学习反馈">学习反馈</a></li>
+    </ul>
+  </div>
+</nav>
+    </aside>
+  </body>
+</html>

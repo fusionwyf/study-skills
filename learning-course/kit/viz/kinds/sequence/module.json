@@ -1,0 +1,15 @@
+{
+  "id": "viz.kinds.sequence",
+  "layer": 5,
+  "version": "2.0.0",
+  "requires": ["viz.core"],
+  "presence": "auto",
+  "detect": {
+    "selectors": ["[data-visualization=\"sequence\"]"]
+  },
+  "provides": {
+    "js": ["sequence.js"],
+    "kinds": ["sequence"]
+  },
+  "ready": "kit:viz.kinds.sequence:ready"
+}

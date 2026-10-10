@@ -1,0 +1,32 @@
+@layer theme {
+  :root,
+  html[data-theme="course"],
+  html:not([data-theme]) {
+    color-scheme: light;
+    --c-bg: #f6f8fc;
+    --c-surface: #ffffff;
+    --c-surface-2: #eef2f8;
+    --c-text: #17243a;
+    --c-text-2: #52627a;
+    --c-border: #cdd7e6;
+    --c-accent: #2563eb;
+    --c-accent-strong: #1d4ed8;
+    --c-success: #15803d;
+    --c-warn: #b45309;
+    --c-danger: #b91c1c;
+    --c-success-bg: #e8f6ee;
+    --c-warn-bg: #fdf3e3;
+    --c-danger-bg: #fdecec;
+    --c-accent-bg: #e8effe;
+    --shadow: 0 1px 2px rgba(20, 35, 60, 0.06), 0 4px 14px rgba(20, 35, 60, 0.05);
+
+    --series-1: #2563eb;
+    --series-2: #059669;
+    --series-3: #d97706;
+    --series-4: #dc2626;
+    --series-5: #7c3aed;
+    --series-6: #0891b2;
+    --series-7: #ea580c;
+    --series-8: #4b5563;
+  }
+}

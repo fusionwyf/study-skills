@@ -28,11 +28,14 @@ def prepare(destination):
         check=True,
     )
     install(destination, ["chart", "spatial", "media"])
-    source = SKILL / "assets/acceptance-course"
+    source = SKILL / "fixtures/acceptance" if (SKILL / "fixtures/acceptance").exists() else SKILL / "assets/acceptance-course"
     for filename in ["course.yaml", "PLAN.md", "VALIDATION.md"]:
         shutil.copy2(source / filename, destination / filename)
     for folder in ["lessons", "reference"]:
         shutil.copytree(source / folder, destination / folder, dirs_exist_ok=True)
+    kit_py = SKILL / "kit/build/kit.py"
+    if kit_py.is_file():
+        subprocess.run([sys.executable, str(kit_py), "sync", str(destination)], check=True)
     subprocess.run(
         [sys.executable, str(SKILL / "scripts/build_index.py"), str(destination)],
         check=True,

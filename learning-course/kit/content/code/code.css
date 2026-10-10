@@ -1,0 +1,52 @@
+@layer content {
+  .kit-block[data-kind="code"] pre {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    line-height: 1.55;
+    tab-size: 2;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .kit-block[data-kind="code"] pre.has-wrap {
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  .kit-block[data-kind="code"] code {
+    font-family: inherit;
+    font-size: inherit;
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    color: var(--code-fg);
+  }
+
+  /* Override official hljs background so it stays cohesive with kit-block */
+  .kit-block[data-kind="code"] .hljs {
+    background: transparent !important;
+    padding: 0 !important;
+  }
+
+  /* Line numbers */
+  .kit-code-lineno {
+    display: inline-block;
+    width: 2.2em;
+    margin-right: 0.8em;
+    text-align: right;
+    color: var(--code-label);
+    user-select: none;
+    opacity: 0.6;
+  }
+
+  /* Highlighted line */
+  .kit-code-line.is-highlighted {
+    background: var(--c-accent-bg);
+    display: block;
+    margin: 0 -1rem;
+    padding: 0 1rem;
+  }
+}

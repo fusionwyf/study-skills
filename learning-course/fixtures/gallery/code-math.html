@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="course">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gallery · Code & Math Components (Course Kit v2)</title>
+  <link rel="stylesheet" href="../acceptance/assets/kit/kit.css">
+  <link rel="stylesheet" href="../acceptance/assets/course/theme.css">
+</head>
+<body>
+<div class="kit-page">
+  <main class="kit-main" data-course-id="gallery" data-lesson-id="0002-code-math" data-objective="gallery-code-math" data-evidence="practice" data-cognitive-level="apply" data-retrieval="required" data-feedback="required" data-source-status="verified" data-answer-status="provided">
+    <header class="course-header">
+      <p class="course-kicker">Course Kit v2 · Component Gallery</p>
+      <h1>Code & Math Blocks (L2 Content Layer)</h1>
+      <p>Demonstrates semantic HTML authoring with Obsidian-style block chrome, auto language labeling, copy action, and KaTeX math auto-rendering.</p>
+    </header>
+
+    <section id="sec-code">
+      <h2>1. Code Blocks with Block Chrome</h2>
+      <p>Authors write clean <code>&lt;pre&gt;&lt;code class="language-py"&gt;</code> without artificial wrappers.</p>
+
+      <pre><code class="language-python">def binary_search(arr: list[int], target: int) -> int:
+    low, high = 0, len(arr) - 1
+    while low <= high:
+        mid = (low + high) // 2
+        if arr[mid] == target:
+            return mid
+        elif arr[mid] < target:
+            low = mid + 1
+        else:
+            high = mid - 1
+    return -1
+</code></pre>
+
+      <p>JavaScript snippet:</p>
+      <pre><code class="language-javascript">export function throttle(fn, delayMs = 100) {
+  let timer = null;
+  return (...args) => {
+    if (timer) return;
+    timer = setTimeout(() => {
+      fn(...args);
+      timer = null;
+    }, delayMs);
+  };
+}
+</code></pre>
+    </section>
+
+    <section id="sec-math">
+      <h2>2. Mathematics Blocks (KaTeX)</h2>
+      <p>Display equation rendered into block chrome:</p>
+      \[
+      \int_{-\infty}^{+\infty} e^{-x^2} \, dx = \sqrt{\pi}
+      \]
+
+      <p>Inline math formulas: \( E = mc^2 \) and Schrödinger equation \( i\hbar \frac{\partial}{\partial t}\Psi = \hat{H}\Psi \).</p>
+
+      <p>Matrix representation:</p>
+      \[
+      A = \begin{pmatrix} a_{11} & a_{12} \\ a_{21} & a_{22} \end{pmatrix}, \quad \det(A) = a_{11}a_{22} - a_{12}a_{21}
+      \]
+    </section>
+
+    <section id="sec-callouts">
+      <h2>3. Callout Blocks</h2>
+      <div class="callout" data-callout="tip">
+        <p class="callout-title">提示 (Tip)</p>
+        <p>所有组件颜色完全由三级 Design Token 驱动，避免硬编码十六进制颜色。</p>
+      </div>
+
+      <div class="callout" data-callout="warning">
+        <p class="callout-title">注意 (Warning)</p>
+        <p>直接编辑 <code>assets/kit/</code> 中的生成物会在 <code>kit check</code> 时报错并提示修改 <code>assets/course/</code>。</p>
+      </div>
+    </section>
+  </main>
+</div>
+<script src="../acceptance/assets/kit/kit.js"></script>
+</body>
+</html>

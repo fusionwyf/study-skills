@@ -40,10 +40,9 @@ disable-model-invocation: true
 ├── INDEX.md
 ├── index.html
 ├── lessons/0001-<slug>.html
-├── assets/              # course.js/css plus learnkit runtime
-│   ├── learnkit/        # state engine and declarative lesson schema
-│   ├── visualizations/  # visualization core + universal kinds; plus any optional one installed
-│   └── optional/        # optional components (code highlighting, theme switcher)
+├── assets/
+│   ├── kit/             # Course Kit v2 生成物 (kit.js, kit.css, kit.lock.json)
+│   └── course/          # 课程专用配置 (config.json, theme.css)
 ├── reference/
 ├── records/
 └── exports/
@@ -51,7 +50,7 @@ disable-model-invocation: true
 
 保留完整目录骨架。课号使用四位连续数字，slug 使用安全的 dash-case。创建前检查现有文件，避免覆盖已有课程。
 
-`assets/visualizations/` 默认包含内核与五个简单 HTML/SVG kind，按模板加载后使用；复杂表达优先选第三方库。chart/spatial 安装 Plotly/JSXGraph 后使用。新课程还安装 code-highlight/theme 适配层，mermaid 按需安装，第三方引擎与官方高亮主题按内容从 CDN 引入。
+Course Kit v2 将所有教学资产统一维护在 `kit/`（L0 运行时、L1 基础设施与主题、L2 块外壳、L3 页面骨架与 TOC、L4 题目与记录、L5 可视化）。课程包通过 `python kit/build/kit.py sync <course-dir>` 自动扫描课件，按需将 auto 与 opt-in 模块打包为单文件 `assets/kit/kit.js` 与 `assets/kit/kit.css`，并写入 `kit.lock.json`。
 
 ## Create
 
@@ -67,10 +66,10 @@ disable-model-invocation: true
 
    `--course-dir`、`--title`、`--goal` 均为必填；`--diagnostic` 只在第 2 步判定起点需要诊断时传入。目标目录已存在时脚本拒绝覆盖，除非显式加 `--force`。
 4. 在 `PLAN.md` 中维护课程路线和边界。它不是可重新生成文件。
-5. 读取 `references/lesson.md` 与 `references/assets.md`，按课程目标从 `assets/catalog.json` 选择已实现能力；有公式、图形或动态模型时读取 `references/render.md`。以 HTML + data-* 为制作入口，生成一个具有可验证学习成果和 evidence opportunity 的 HTML 课件。
+5. 读取 `references/lesson.md` 与 `references/assets.md`，按课程目标从 `assets/catalog.json` 选择已实现能力；有公式、图形或动态模型时读取 `references/render.md`。以原生语义 HTML + data-* 契约为制作入口，生成一个具有可验证学习成果和 evidence opportunity 的 HTML 课件。
    把学习者要求的深度、视觉风格、交互与验收标准写入课程 `PLAN.md`；不足的能力按 assets 协议选择静态表达或课程专用扩展。
-   成熟第三方库优先，允许固定版本 CDN；出现代码必须使用 `.code-block` wrapper 并启用 highlight.js，出现公式启用 KaTeX，出现流程图/状态图/时序图必须使用 Mermaid（`<pre class="mermaid">`），不手写 SVG 替代 Mermaid 能表达的图形。其他组件先按 assets 协议选库，再写课程模型和接线。视觉定制写入 `assets/theme.css`，主题与渲染设置写入 `assets/theme.js`。
-   `assets/course-template/lesson.html` 是示例态模板：复制后必须替换其中硬编码的 `data-course-id` 与 `data-objective`（模板值为 `example-course` / `example-objective`），并确保该 objective 已写入 `course.yaml` 的 `objectives`。否则 validator 会报 `lesson references unknown objective`。
+   成熟第三方库优先，允许固定版本 CDN；代码使用原生 `<pre><code class="language-...">`（由 Kit 块外壳与 highlight.js 渲染），公式使用 KaTeX 语法（`\(...\)` / `\[...\]`），流程图/状态图/时序图使用 Mermaid（`<pre class="mermaid">`），不手写 SVG 替代 Mermaid 能表达的图形。题目统一使用 `<section class="question" data-kind="...">` 题块。视觉定制写入 `assets/course/theme.css`，主题与第三方配置写入 `assets/course/config.json`。
+   `templates/lesson.html` 是标准课件模板：复制后必须替换其中占位的 `data-course-id` 与 `data-objective`，并确保该 objective 已写入 `course.yaml` 的 `objectives`。
 6. 将 phase 设为 `awaiting_evidence`，重新生成索引并验证课程包。
 
 完成条件：成功标准和 objective 已写入状态，第一课文件存在且引用已定义 objective，phase 为 `awaiting_evidence`，两条验证命令均通过。
@@ -128,7 +127,7 @@ HTML 的“复制学习记录”按钮只汇总原始答案、检查次数、提
 
 - `references/state.md`：创建、更新、续学或恢复课程状态；诊断与综合评估的挂载规则。诊断执行、练习梯度、证据升级和错误干预的细则见 `../shared/references/`。
 - `references/lesson.md`：创建或修改 HTML 课件组件、选择学科教学模式、设计认知层级。
-- `references/assets.md`：制作或修改课件时选择资源、按需安装、领域扩展和验收。
+- `references/assets.md`：制作或修改课件时选择资源、模块同步、领域扩展和验收。
 - `references/render.md`：公式、图表、交互可视化等运行时渲染（LearnKit、KaTeX、可视化适配器、可选组件与主题）。
 - `references/export.md`：导出或审查 PDF。
 
@@ -140,30 +139,30 @@ HTML 的“复制学习记录”按钮只汇总原始答案、检查次数、提
 - 诊断流程与错误分类：读取 `../shared/references/diagnostic-protocol.md`。
 - 练习梯度与证据升级：读取 `../shared/references/transfer-rubric.md`。
 
-`assets/example-course/` 只用于模板调试或 validator 烟雾测试，日常 create/continue 不读取。
+`fixtures/acceptance/` 用于资产与交互验收测试，日常 create/continue 不读取。
 
-## 可选组件
+## 模块管理与可选组件
 
-按交付方式引入资源；职责分类另见 catalog 的 role：
+Course Kit v2 采用 `core / auto / opt-in` 三态模块管理：
 
-- **默认**：交互式测验与反馈、无库可视化 kind（`relation`、`timeline`、`process`、`sequence`、`table`）随初始化复制；页面按模板加载用到的模块。
-- **按需引入**：新课程已安装代码着色、主题切换器和 Mermaid 适配层；代码课件默认加载高亮，流程图/状态图/时序图使用 Mermaid。媒体标注、`chart`、`spatial` 按内容安装。已有课程可补装：
+- **core**（L0 核心、L1 基础与主题引擎、L4 记录模型）随 `kit.js` 默认包含。
+- **auto**（`content.code`、`content.math`、`content.diagram`、`shell.toc`、`learning.question`、`viz.core` 及通用可视化 kind 等）：`kit sync` 扫描课件 HTML 自动识别并纳入打包，无需作者手动安装。
+- **opt-in**（图表 `viz.kinds.chart`、空间几何 `viz.kinds.spatial` 等重型依赖）：按需添加：
 
 ```text
-python scripts/install_optional.py <course-dir> --components code-highlight theme mermaid
-python scripts/install_optional.py <course-dir> --components chart spatial
-python scripts/install_optional.py <course-dir> --components media
+python kit/build/kit.py add <course-dir> viz.kinds.chart
+python kit/build/kit.py add <course-dir> viz.kinds.spatial
 ```
 
-装 `chart` / `spatial` 后，安装脚本会把组件登记到课程的 `assets/asset-manifest.json`；课件仍需加载对应 kind 模块。模块会从同一课程包的 `visualizations/vendor/` 自动加载已校验的本地 vendor，缺失时保留 fallback。
-
-能力与依赖以 `assets/catalog.json` 为准；`assets/optional/manifest.json` 是生成的安装目录投影；每个组件目录内自带 README。课程实际安装状态以课程包自己的 `assets/asset-manifest.json` 为准，能力说明仍见 `assets/learnkit/components.json`。
+模块列表与能力说明可通过 `python kit/build/kit.py list` 查询。
+`python kit/build/kit.py check <course-dir>` 用于校验课程 `kit.lock.json` 的模块与文件哈希完整性。
 
 ## 验证
 
 生成或修改课程后运行：
 
 ```text
+python kit/build/kit.py check <course-dir>
 python scripts/build_index.py <course-dir>
 python scripts/validate_course.py <course-dir> --strict-schema --pedagogical
 python -X utf8 ../shared/scripts/quick_validate.py <skill-dir>

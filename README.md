@@ -103,9 +103,12 @@ python study/scripts/build_report.py learning-course/assets/example-course
 python shared/scripts/validate_record.py exam-prep/assets/example-exam/records/R0001.md
 ```
 
-Install optional components into a course package only when a lesson needs them:
+Install optional or auto-detected components into a course package via Course Kit CLI (or the compatibility wrapper `install_optional.py`):
 
 ```text
+python learning-course/kit/build/kit.py sync <course-dir>
+python learning-course/kit/build/kit.py add <course-dir> --modules content.diagram viz.chart
+# Or via compatibility wrapper:
 python learning-course/scripts/install_optional.py <course-dir> --components code-highlight theme
 ```
 

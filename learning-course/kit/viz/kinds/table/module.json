@@ -1,0 +1,15 @@
+{
+  "id": "viz.kinds.table",
+  "layer": 5,
+  "version": "2.0.0",
+  "requires": ["viz.core"],
+  "presence": "auto",
+  "detect": {
+    "selectors": ["[data-visualization=\"table\"]"]
+  },
+  "provides": {
+    "js": ["table.js"],
+    "kinds": ["table"]
+  },
+  "ready": "kit:viz.kinds.table:ready"
+}

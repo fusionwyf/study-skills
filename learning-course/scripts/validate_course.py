@@ -429,25 +429,40 @@ def validate_open_components(lesson: Path, body: str, errors: list[str]) -> None
 def validate_visualizations(lesson: Path, body: str, errors: list[str]) -> None:
     course_root = lesson.resolve().parent.parent
     is_course_package = (course_root / "course.yaml").is_file()
+    kit_lock_path = course_root / "assets" / "kit" / "kit.lock.json"
+    is_kit_package = is_course_package and kit_lock_path.is_file()
+
     registry_path = course_root / "assets" / "visualizations" / "adapters.json" if is_course_package else VIZ_REGISTRY_PATH
-    try:
-        registry = json.loads(registry_path.read_text(encoding="utf-8"))
-        if not isinstance(registry, dict) or not isinstance(registry.get("kinds"), dict):
-            raise ValueError("registry kinds must be an object")
-        registry_kinds = registry.get("kinds") or {}
-        kinds = set(registry_kinds.keys())
-    except (OSError, ValueError):
-        if is_course_package:
-            errors.append(f"{lesson.name}: missing or invalid course visualization registry")
-        registry_kinds = {}
-        kinds = {"chart", "relation", "timeline", "process", "spatial", "sequence", "table"}
+    registry_kinds = {}
+    kinds = {"chart", "relation", "timeline", "process", "spatial", "sequence", "table"}
+
+    kit_modules: dict[str, str] = {}
+    if is_kit_package:
+        try:
+            kit_lock = json.loads(kit_lock_path.read_text(encoding="utf-8"))
+            kit_modules = kit_lock.get("modules", {})
+        except Exception:
+            kit_modules = {}
+    else:
+        try:
+            registry = json.loads(registry_path.read_text(encoding="utf-8"))
+            if not isinstance(registry, dict) or not isinstance(registry.get("kinds"), dict):
+                raise ValueError("registry kinds must be an object")
+            registry_kinds = registry.get("kinds") or {}
+            kinds = set(registry_kinds.keys())
+        except (OSError, ValueError):
+            if is_course_package:
+                errors.append(f"{lesson.name}: missing or invalid course visualization registry")
+            registry_kinds = {}
+            kinds = {"chart", "relation", "timeline", "process", "spatial", "sequence", "table"}
+
     parser = ComponentParser()
     parser.feed(body)
     ids = [n["attrs"].get("id") for n in parser.nodes if n["attrs"].get("id")]
     links = {os.path.normpath(link.split("#", 1)[0]).replace("\\", "/") for link in LINK_RE.findall(body)}
     installed_optional: set[str] | None = None
     asset_manifest = course_root / "assets" / "asset-manifest.json"
-    if is_course_package and asset_manifest.is_file():
+    if is_course_package and not is_kit_package and asset_manifest.is_file():
         try:
             manifest = json.loads(asset_manifest.read_text(encoding="utf-8"))
             state = manifest.get("visualizations", {}) if isinstance(manifest, dict) else {}
@@ -459,7 +474,8 @@ def validate_visualizations(lesson: Path, body: str, errors: list[str]) -> None:
             errors.append(f"{lesson.name}: invalid assets/asset-manifest.json")
     if is_course_package and any("data-visualization" in n["attrs"] for n in parser.nodes):
         validate_wiring(lesson, body, errors)
-        if not asset_manifest.is_file(): errors.append(f"{lesson.name}: missing assets/asset-manifest.json")
+        if not is_kit_package and not asset_manifest.is_file():
+            errors.append(f"{lesson.name}: missing assets/asset-manifest.json")
     for node in parser.nodes:
         kind = node["attrs"].get("data-visualization")
         if kind is None:
@@ -469,6 +485,17 @@ def validate_visualizations(lesson: Path, body: str, errors: list[str]) -> None:
         entry = registry_kinds.get(kind) if isinstance(registry_kinds, dict) else None
         if kind not in kinds:
             errors.append(f"{label} unsupported visualization type")
+        elif is_kit_package:
+            universal = {"table", "relation", "timeline", "process", "sequence"}
+            if kind in universal and "viz.core" not in kit_modules and f"viz.kinds.{kind}" not in kit_modules:
+                errors.append(f"{label} requires module viz.core in kit.lock.json")
+            elif kind == "chart" and "viz.kinds.chart" not in kit_modules and "viz.core" not in kit_modules:
+                errors.append(f"{label} requires module viz.kinds.chart in kit.lock.json")
+            elif kind == "spatial" and "viz.kinds.spatial" not in kit_modules and "viz.core" not in kit_modules:
+                errors.append(f"{label} requires module viz.kinds.spatial in kit.lock.json")
+            source = node["attrs"].get("data-viz-source")
+            if source and (not source.startswith("#") or not any(n["attrs"].get("id") == source[1:] and "data-learnkit" in n["attrs"] for n in parser.nodes)):
+                errors.append(f"{label} data-viz-source requires an existing LearnKit id")
         elif is_course_package:
             module = entry.get("module") if isinstance(entry, dict) else None
             tier = entry.get("tier") if isinstance(entry, dict) else None
@@ -479,14 +506,14 @@ def validate_visualizations(lesson: Path, body: str, errors: list[str]) -> None:
                 expected = os.path.relpath(module_path, lesson.parent).replace("\\", "/")
                 if not module_path.is_file():
                     errors.append(f"{label} implementation module is missing: {module}")
-                if os.path.normpath(expected) not in links:
+                if os.path.normpath(expected).replace("\\", "/") not in links:
                     errors.append(f"{label} lesson does not load {expected}")
             if tier == "optional" and installed_optional is not None and kind not in installed_optional:
                 errors.append(f"{label} optional kind is not installed in asset-manifest.json")
             if tier == "extension" and (not isinstance(module, str) or not module):
                 errors.append(f"{label} extension kind requires an explicit module registration")
             css = os.path.relpath(course_root / "assets" / "visualizations" / "visualizations.css", lesson.parent).replace("\\", "/")
-            if os.path.normpath(css) not in links:
+            if os.path.normpath(css).replace("\\", "/") not in links:
                 errors.append(f"{label} lesson does not load {css}")
             source = node["attrs"].get("data-viz-source")
             if source and (not source.startswith("#") or not any(n["attrs"].get("id") == source[1:] and "data-learnkit" in n["attrs"] for n in parser.nodes)):
@@ -541,15 +568,77 @@ def validate_visualizations(lesson: Path, body: str, errors: list[str]) -> None:
                 errors.append(f"{label} requires previous/next step buttons")
 
 
-def validate_answers_and_media(lesson: Path, body: str, errors: list[str]) -> None:
-    parser = ComponentParser(); parser.feed(body)
+def validate_answers_and_media(lesson: Path, body: str, errors: list[str], warnings: list[str] | None = None) -> None:
+    parser = ComponentParser()
+    parser.feed(body)
     ids = [n['attrs'].get('id') for n in parser.nodes if n['attrs'].get('id')]
     questions = []
+    modern_kinds = {"choice", "multi", "numeric", "fill", "open", "dialogue"}
+
     for node in parser.nodes:
-        attrs = node['attrs']; children = list(descendants(node))
-        if attrs.get('data-question-id'):
-            questions.append(attrs['data-question-id'])
-        if attrs.get('data-answer-kind') in ('numeric', 'fill'):
+        attrs = node['attrs']
+        classes = attrs.get('class', '').split()
+        children = list(descendants(node))
+        is_modern = "question" in classes or attrs.get("data-kind") in modern_kinds
+
+        if is_modern:
+            qid = attrs.get('data-question-id')
+            if not qid:
+                errors.append(f"{lesson.name}: question missing data-question-id")
+            else:
+                questions.append(qid)
+            kind = attrs.get('data-kind')
+            label = f"{lesson.name}: question {qid or 'unnamed'}"
+            if kind not in modern_kinds:
+                errors.append(f"{label} invalid data-kind: {kind}")
+            elif kind == "choice":
+                options = [n for n in children if "data-option" in n["attrs"]]
+                correct = [n for n in options if "data-correct" in n["attrs"]]
+                if not options:
+                    errors.append(f"{label} (choice) missing options with data-option")
+                elif len(correct) != 1:
+                    errors.append(f"{label} (choice) requires exactly 1 correct option, found {len(correct)}")
+            elif kind == "multi":
+                options = [n for n in children if "data-option" in n["attrs"]]
+                correct = [n for n in options if "data-correct" in n["attrs"]]
+                if not options:
+                    errors.append(f"{label} (multi) missing options with data-option")
+                elif len(correct) < 1:
+                    errors.append(f"{label} (multi) requires at least 1 correct option, found {len(correct)}")
+            elif kind == "numeric":
+                try:
+                    import math
+                    expected = float(attrs['data-expected'])
+                    tolerance = float(attrs.get('data-tolerance', '0'))
+                    if not math.isfinite(expected) or not math.isfinite(tolerance) or tolerance < 0:
+                        raise ValueError('invalid expected/tolerance')
+                except (KeyError, ValueError, TypeError):
+                    errors.append(f"{label} (numeric) requires valid expected number and non-negative tolerance")
+            elif kind == "fill":
+                try:
+                    answers = json.loads(attrs.get('data-accepted', ''))
+                    if not isinstance(answers, list) or not answers or not all(isinstance(v, str) and v.strip() for v in answers):
+                        raise ValueError('accepted must be nonempty strings')
+                except (KeyError, ValueError, TypeError):
+                    errors.append(f"{label} (fill) requires data-accepted as JSON array of non-empty strings")
+            elif kind == "dialogue":
+                turn_lists = [n for n in children if 'data-turns' in n['attrs']]
+                turn_items = [n for c in turn_lists for n in c['children'] if n['tag'] == 'li']
+                if len(turn_items) < 2:
+                    errors.append(f"{label} (dialogue) requires at least 2 dialogue turns in <ol data-turns>")
+            elif kind == "open":
+                has_stem = any('data-stem' in n['attrs'] for n in children)
+                has_key_or_explain = any('data-key' in n['attrs'] or 'data-explain' in n['attrs'] for n in children) or any(n['tag'] == 'textarea' for n in children)
+                if not has_stem:
+                    errors.append(f"{label} (open) requires data-stem")
+                if not has_key_or_explain:
+                    errors.append(f"{label} (open) requires data-key or data-explain")
+
+        elif attrs.get('data-answer-kind') in ('numeric', 'fill'):
+            if warnings is not None:
+                warnings.append(f"{lesson.name}: legacy data-answer-kind syntax is deprecated; use <section class=\"question\" data-kind=\"...\">")
+            if attrs.get('data-question-id'):
+                questions.append(attrs['data-question-id'])
             label = f"{lesson.name}: answer {attrs.get('data-question-id')}"
             inputs = [n for n in children if 'data-answer-input' in n['attrs']]
             labels = {n['attrs'].get('for') for n in children if n['tag']=='label'}
@@ -566,6 +655,9 @@ def validate_answers_and_media(lesson: Path, body: str, errors: list[str]) -> No
                     answers = json.loads(attrs['data-accepted'])
                     if not isinstance(answers,list) or not answers or not all(isinstance(v,str) and v.strip() for v in answers): raise ValueError('accepted must be nonempty strings')
             except (KeyError,ValueError,TypeError): errors.append(f'{label} requires valid expected/tolerance or accepted answers')
+        elif attrs.get('data-question-id'):
+            questions.append(attrs['data-question-id'])
+
         if 'data-media' in attrs:
             label = f"{lesson.name}: media {attrs.get('id','')}"
             if not any('data-media-fallback' in n['attrs'] and n['text'].strip() for n in children): errors.append(f'{label} requires readable media fallback/transcript')
@@ -590,13 +682,13 @@ def validate_answers_and_media(lesson: Path, body: str, errors: list[str]) -> No
 
 def validate_pedagogy(lesson: Path, body: str, errors: list[str], warnings: list[str]) -> None:
     validate_open_components(lesson, body, errors)
-    validate_answers_and_media(lesson, body, errors)
+    validate_answers_and_media(lesson, body, errors, warnings)
     validate_visualizations(lesson, body, errors)
     objective = data_value(body, "objective")
     evidence = data_value(body, "evidence")
     if not objective or not has_data_role(body, "objective"):
         errors.append(f"pedagogical check missing learning objective: {lesson.name}")
-    if not evidence or not has_data_role(body, "evidence"):
+    if not evidence or not (has_data_role(body, "evidence") or 'class="question"' in body or 'data-kind=' in body or 'data-question-id=' in body):
         errors.append(f"pedagogical check missing evidence opportunity: {lesson.name}")
 
     cognitive = data_value(body, "cognitive-level")
@@ -614,12 +706,39 @@ def validate_pedagogy(lesson: Path, body: str, errors: list[str], warnings: list
         errors.append(f"retrieval is required but missing: {lesson.name}")
     if values.get("feedback") == "required" and not has_data_role(body, "learner-feedback"):
         errors.append(f"learner feedback is required but missing: {lesson.name}")
-    if values.get("answer-status") == "provided" and not has_data_role(body, "answer-feedback"):
+    if values.get("answer-status") == "provided" and not (has_data_role(body, "answer-feedback") or "data-explain" in body or "data-why" in body or 'class="question"' in body):
         errors.append(f"answer feedback is provided but missing: {lesson.name}")
     if values.get("source-status") in {"verified", "unverified"} and not has_data_role(body, "sources"):
         errors.append(f"sources are declared but missing: {lesson.name}")
     if values.get("source-status") == "unverified":
         warnings.append(f"lesson contains unverified sources: {lesson.name}")
+
+    # Deprecated markup warnings
+    if 'class="code-block"' in body or 'class="code-language"' in body:
+        warnings.append(f"{lesson.name}: legacy .code-block syntax is deprecated; use <pre><code class=\"language-...\">")
+    if 'class="quiz"' in body:
+        warnings.append(f"{lesson.name}: legacy .quiz syntax is deprecated; use <section class=\"question\" data-kind=\"...\">")
+
+    # Structural checks: unique heading IDs and rail TOC fallback
+    parser = ComponentParser()
+    parser.feed(body)
+    heading_ids = []
+    for node in parser.nodes:
+        if node["tag"] in ("h2", "h3"):
+            hid = node["attrs"].get("id")
+            if not hid:
+                errors.append(f"{lesson.name}: {node['tag']} missing id attribute: '{node['text'].strip()}'")
+            elif hid in heading_ids:
+                errors.append(f"{lesson.name}: duplicate heading id '{hid}'")
+            else:
+                heading_ids.append(hid)
+
+    rails = [n for n in parser.nodes if "kit-rail" in n["attrs"].get("class", "").split()]
+    for rail in rails:
+        rail_children = list(descendants(rail))
+        tocs = [n for n in rail_children if "kit-toc" in n["attrs"].get("class", "").split()]
+        if not tocs:
+            errors.append(f"{lesson.name}: aside.kit-rail requires static TOC fallback <nav class=\"kit-toc\">")
 
 
 def main() -> int:

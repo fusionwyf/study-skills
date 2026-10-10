@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="course">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>统一题目块预览 · Course Kit v2</title>
+<style>
+/* ---- tokens(与 architecture.md §5 的语义 token 同名) ---- */
+:root { --radius: .6rem; --font-body: "Microsoft YaHei","PingFang SC",system-ui,sans-serif; --font-mono: ui-monospace,Consolas,monospace; --measure: 46rem; }
+html[data-theme="course"] { color-scheme: light;
+  --c-bg:#f6f8fc; --c-surface:#fff; --c-surface-2:#eef2f8; --c-text:#17243a; --c-text-2:#52627a; --c-border:#cdd7e6;
+  --c-accent:#2563eb; --c-accent-strong:#1d4ed8; --c-success:#15803d; --c-warn:#b45309; --c-danger:#b91c1c;
+  --c-success-bg:#e8f6ee; --c-warn-bg:#fdf3e3; --c-danger-bg:#fdecec; --c-accent-bg:#e8effe; --shadow:0 1px 2px rgba(20,35,60,.06),0 4px 14px rgba(20,35,60,.05); }
+html[data-theme="ink"] { color-scheme: dark;
+  --c-bg:#101827; --c-surface:#182338; --c-surface-2:#213149; --c-text:#e6edf7; --c-text-2:#b8c7dc; --c-border:#465975;
+  --c-accent:#93b8ff; --c-accent-strong:#b7d0ff; --c-success:#6ee7a0; --c-warn:#fbbf6a; --c-danger:#ff9b9b;
+  --c-success-bg:#12301f; --c-warn-bg:#35280f; --c-danger-bg:#3b1a1c; --c-accent-bg:#1c2d52; --shadow:none; }
+
+*,*::before,*::after { box-sizing: border-box; }
+body { margin:0; background:var(--c-bg); color:var(--c-text); font:16px/1.7 var(--font-body); }
+.page { max-width: var(--measure); margin: 0 auto; padding: 1.5rem 1rem 5rem; }
+.bar { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:1rem; }
+.bar h1 { margin:0; font-size:1.25rem; }
+.bar small { color:var(--c-text-2); }
+button { font:inherit; cursor:pointer; }
+:focus-visible { outline:.18rem solid var(--c-accent); outline-offset:.15rem; }
+.btn { display:inline-flex; align-items:center; gap:.4rem; min-height:2.4rem; padding:.45rem .95rem; border:1px solid var(--c-border); border-radius:999px; background:var(--c-surface); color:var(--c-text); }
+.btn:hover:not(:disabled) { border-color:var(--c-accent); color:var(--c-accent-strong); }
+.btn:disabled { opacity:.5; cursor:not-allowed; }
+.btn.primary { background:var(--c-accent); border-color:var(--c-accent); color:#fff; font-weight:650; }
+html[data-theme="ink"] .btn.primary { color:#0b1220; }
+.btn.primary:hover:not(:disabled) { background:var(--c-accent-strong); color:#fff; }
+html[data-theme="ink"] .btn.primary:hover:not(:disabled) { color:#0b1220; }
+.btn.ghost { border-color:transparent; background:transparent; color:var(--c-text-2); }
+
+/* ---- 题组汇总条 ---- */
+.q-summary { position:sticky; top:.5rem; z-index:5; display:flex; flex-wrap:wrap; align-items:center; gap:.5rem 1.2rem; padding:.6rem .9rem; margin-bottom:1.2rem;
+  border:1px solid var(--c-border); border-radius:var(--radius); background:var(--c-surface); box-shadow:var(--shadow); font-size:.9rem; }
+.q-summary progress { flex:1 1 8rem; height:.5rem; accent-color:var(--c-accent); }
+.q-summary b { font-variant-numeric:tabular-nums; }
+
+/* ---- 题目块 ---- */
+.question { --rail:var(--c-border); position:relative; margin:1.3rem 0; padding:1rem 1.15rem 1.1rem 1.4rem; border:1px solid var(--c-border); border-radius:var(--radius);
+  background:var(--c-surface); box-shadow:var(--shadow); overflow:hidden; }
+.question::before { content:""; position:absolute; inset:0 auto 0 0; width:.32rem; background:var(--rail); }
+.question[data-state="correct"]   { --rail:var(--c-success); }
+.question[data-state="incorrect"] { --rail:var(--c-warn); }
+.question[data-state="saved"]     { --rail:var(--c-accent); }
+.q-head { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; margin-bottom:.6rem; font-size:.82rem; }
+.q-no { font-weight:800; color:var(--c-text-2); letter-spacing:.04em; }
+.q-type { padding:.05rem .55rem; border-radius:999px; background:var(--c-surface-2); color:var(--c-text-2); }
+.q-meta { margin-left:auto; color:var(--c-text-2); font-variant-numeric:tabular-nums; }
+.q-state { display:inline-flex; align-items:center; gap:.3rem; padding:.05rem .6rem; border-radius:999px; font-weight:650; background:var(--c-surface-2); color:var(--c-text-2); }
+.question[data-state="correct"]   .q-state { background:var(--c-success-bg); color:var(--c-success); }
+.question[data-state="incorrect"] .q-state { background:var(--c-warn-bg);    color:var(--c-warn); }
+.question[data-state="saved"]     .q-state { background:var(--c-accent-bg);  color:var(--c-accent-strong); }
+.q-stem { font-weight:650; font-size:1.04rem; }
+.q-stem p { margin:.2rem 0; }
+.q-stem code, .q-text code { padding:.05rem .35rem; border-radius:.35rem; background:var(--c-surface-2); font:.9em var(--font-mono); }
+
+.q-options { list-style:none; margin:.8rem 0 0; padding:0; display:grid; gap:.5rem; }
+.q-option label { display:flex; gap:.7rem; align-items:flex-start; padding:.65rem .8rem; border:1px solid var(--c-border); border-radius:.55rem; background:var(--c-surface); cursor:pointer; transition:border-color .12s, background .12s; }
+.q-option label:hover { border-color:var(--c-accent); }
+.q-option input { position:absolute; opacity:0; pointer-events:none; }
+.q-mark { flex:none; display:grid; place-items:center; width:1.55rem; height:1.55rem; border:1.5px solid var(--c-border); border-radius:50%; font-size:.78rem; font-weight:750; color:var(--c-text-2); background:var(--c-surface); }
+[data-kind="multi"] .q-mark { border-radius:.35rem; }
+.q-option input:checked + .q-mark { border-color:var(--c-accent); background:var(--c-accent); color:#fff; }
+html[data-theme="ink"] .q-option input:checked + .q-mark { color:#0b1220; }
+.q-option:has(input:checked) label { border-color:var(--c-accent); background:var(--c-accent-bg); }
+.q-option input:focus-visible + .q-mark { outline:.18rem solid var(--c-accent); outline-offset:.12rem; }
+.q-text { flex:1; min-width:0; }
+.q-why { display:none; margin:.3rem 0 0; font-size:.88rem; color:var(--c-text-2); font-weight:400; }
+/* 判定后:颜色 + 符号 + 文字三重表达 */
+.q-option[data-result] .q-why { display:block; }
+.q-option[data-result="right"] label { border-color:var(--c-success); background:var(--c-success-bg); }
+.q-option[data-result="right"] .q-mark { border-color:var(--c-success); background:var(--c-success); color:#fff; font-size:0; }
+.q-option[data-result="right"] .q-mark::after { content:"✓"; font-size:.9rem; }
+.q-option[data-result="wrong"] label { border-color:var(--c-warn); background:var(--c-warn-bg); }
+.q-option[data-result="wrong"] .q-mark { border-color:var(--c-warn); background:var(--c-warn); color:#fff; font-size:0; }
+.q-option[data-result="wrong"] .q-mark::after { content:"✗"; font-size:.9rem; }
+.q-option[data-result="missed"] label { border:1.5px dashed var(--c-success); }
+.q-option[data-result="missed"] .q-why::before { content:"应选 · "; color:var(--c-success); font-weight:700; }
+.question[data-locked] .q-option label { cursor:default; }
+
+.q-field { display:flex; flex-wrap:wrap; align-items:center; gap:.6rem; margin-top:.8rem; }
+.q-field label.q-label { flex:0 0 100%; font-size:.85rem; color:var(--c-text-2); }
+.q-input, .q-textarea { width:100%; padding:.55rem .75rem; border:1px solid var(--c-border); border-radius:.55rem; background:var(--c-surface); color:var(--c-text); font:inherit; }
+.q-input { width:auto; flex:1 1 10rem; max-width:16rem; font-variant-numeric:tabular-nums; }
+.q-textarea { min-height:6.5rem; resize:vertical; }
+.q-input:focus, .q-textarea:focus { outline:.18rem solid var(--c-accent); outline-offset:.05rem; border-color:var(--c-accent); }
+.q-unit { color:var(--c-text-2); }
+.q-note { flex:0 0 100%; margin:0; font-size:.82rem; color:var(--c-text-2); }
+.q-count { margin-left:auto; font-size:.8rem; color:var(--c-text-2); font-variant-numeric:tabular-nums; }
+.q-input[readonly], .q-textarea[readonly] { background:var(--c-surface-2); }
+
+.q-hints { margin-top:.8rem; display:grid; gap:.45rem; }
+.q-hint { padding:.5rem .8rem; border-left:3px solid var(--c-accent); border-radius:0 .45rem .45rem 0; background:var(--c-accent-bg); font-size:.92rem; }
+.q-hint b { color:var(--c-accent-strong); margin-right:.35rem; }
+
+.q-actions { display:flex; flex-wrap:wrap; gap:.55rem; margin-top:.95rem; }
+.q-feedback { min-height:1.4rem; margin:.8rem 0 0; font-weight:650; }
+.q-feedback[data-tone="correct"]   { color:var(--c-success); }
+.q-feedback[data-tone="incorrect"] { color:var(--c-warn); }
+.q-feedback[data-tone="info"]      { color:var(--c-accent-strong); }
+.q-explain, .q-key { margin-top:.7rem; padding:.75rem .9rem; border:1px solid var(--c-border); border-radius:.55rem; background:var(--c-surface-2); font-size:.94rem; }
+.q-explain > b, .q-key > b { display:block; margin-bottom:.2rem; }
+.q-explain p, .q-key p, .q-key ul { margin:.2rem 0; }
+.q-key ul { padding-left:1.2rem; }
+
+/* 对话:已保存的轮次变成气泡 */
+.q-turns { display:grid; gap:.7rem; margin-top:.8rem; }
+.q-turn { display:grid; gap:.35rem; }
+.q-turn-prompt { font-size:.9rem; font-weight:650; }
+.q-turn[data-done] .q-turn-prompt::before { content:"✓ "; color:var(--c-success); }
+.q-turn[data-done] .q-textarea { min-height:3.2rem; }
+
+/* 作者写法对照 */
+.src { margin-top:.8rem; font-size:.82rem; color:var(--c-text-2); }
+.src summary { cursor:pointer; }
+.src pre { margin:.4rem 0 0; padding:.7rem .85rem; overflow-x:auto; border:1px solid var(--c-border); border-radius:.55rem; background:var(--c-surface-2); color:var(--c-text); font:.8rem/1.55 var(--font-mono); }
+
+h2.sec { margin:2.2rem 0 .2rem; font-size:1.1rem; }
+p.lead { margin:.2rem 0 0; color:var(--c-text-2); font-size:.92rem; }
+[hidden] { display:none !important; }
+@media (max-width:30rem) { .q-actions .btn { flex:1 1 100%; justify-content:center; } .q-meta { margin-left:0; flex:0 0 100%; } }
+@media print { .q-actions, .q-summary, .bar .btn, .src { display:none !important; } .question { break-inside:avoid; box-shadow:none; } .q-option[data-correct] .q-why, .q-explain[hidden], .q-key[hidden] { display:block !important; } }
+@media (prefers-reduced-motion:reduce) { * { transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="bar">
+    <div><h1>统一题目块(Question)</h1><small>六种题型共用同一外壳、状态机、提示、反馈与证据接口</small></div>
+    <button class="btn" id="theme" type="button">切换深色</button>
+  </div>
+
+  <div class="q-summary" id="summary" aria-live="polite">
+    <span>已作答 <b id="s-done">0</b>/<b id="s-total">0</b></span>
+    <progress id="s-bar" max="1" value="0"></progress>
+    <span>正确 <b id="s-ok">0</b></span><span>用过提示 <b id="s-hint">0</b></span>
+  </div>
+
+  <h2 class="sec">1 · 单选 choice</h2>
+  <p class="lead">每个选项可带 <code>data-why</code> 逐项解释;判定后用颜色 + 符号 + 文字三重表达;不会立即暴露答案,两次未答对后才提供"查看答案"。</p>
+  <section class="question" data-question-id="q1" data-kind="choice" data-max-attempts="2">
+    <div data-stem><p>哪一个选项最符合本课的判断规则?</p></div>
+    <ol data-options>
+      <li data-option>只看表面现象,结论越快越好。<span data-why>表面现象不能区分规则的适用条件。</span></li>
+      <li data-option data-correct>先确认条件,再选择规则。<span data-why>规则只在前提成立时有效,所以先验证前提。</span></li>
+      <li data-option>记住结论即可,不必理解。<span data-why>脱离条件的结论在新情境中容易误用。</span></li>
+    </ol>
+    <ol data-hints><li>想一想:规则在什么情况下才成立?</li><li>注意题干里的"最符合"——哪一步在规则之前?</li></ol>
+    <div data-explain><p>判断规则的第一步永远是核对适用条件;结论只是条件成立后的产物。</p></div>
+  </section>
+
+  <h2 class="sec">2 · 多选 multi</h2>
+  <p class="lead">全对才算对;漏选以虚线标出"应选",错选标出"✗"。</p>
+  <section class="question" data-question-id="q2" data-kind="multi" data-max-attempts="2">
+    <div data-stem><p>下列哪些做法能降低模型过拟合的风险?(多选)</p></div>
+    <ol data-options>
+      <li data-option data-correct>增加训练数据<span data-why>更多样本降低对个别样本的记忆。</span></li>
+      <li data-option>无限增加训练轮数<span data-why>训练轮数过多通常加剧过拟合。</span></li>
+      <li data-option data-correct>加入正则化项<span data-why>限制模型复杂度。</span></li>
+      <li data-option data-correct>使用验证集提前停止<span data-why>在验证误差回升前停止训练。</span></li>
+    </ol>
+    <ol data-hints><li>一共有 3 项正确。</li></ol>
+    <div data-explain><p>过拟合的本质是模型容量相对数据过大,三个正确选项分别从数据、约束、训练过程入手。</p></div>
+  </section>
+
+  <h2 class="sec">3 · 数值 numeric</h2>
+  <p class="lead">有限数值判定;误差范围、单位在页面上写明,不靠提示文字暗示答案。</p>
+  <section class="question" data-question-id="q3" data-kind="numeric" data-expected="3.5" data-tolerance="0.05" data-unit="m/s" data-max-attempts="2">
+    <div data-stem><p>一物体 7 m 路程用时 2 s,平均速度是多少?</p></div>
+    <ol data-hints><li>平均速度 = 路程 ÷ 时间。</li></ol>
+    <div data-explain><p><code>7 ÷ 2 = 3.5</code> m/s。</p></div>
+  </section>
+
+  <h2 class="sec">4 · 填空 fill</h2>
+  <section class="question" data-question-id="q4" data-kind="fill" data-accepted='["牛顿第二定律","第二定律","F=ma"]' data-max-attempts="2">
+    <div data-stem><p><code>F = ma</code> 描述的是哪条定律?</p></div>
+    <ol data-hints><li>它建立了力与加速度的关系。</li></ol>
+    <div data-explain><p>牛顿第二定律:合外力等于质量乘以加速度。</p></div>
+  </section>
+
+  <h2 class="sec">5 · 开放纠错 open</h2>
+  <p class="lead">先写后看:保存回答之后才展开对照要点,保留原话。</p>
+  <section class="question" data-question-id="q5" data-kind="open">
+    <div data-stem><p>模拟学生说:"相关就是因果,所以相关性高的变量一定能互相预测原因。"请纠正这个说法,并给出一个反例。</p></div>
+    <div data-key>
+      <ul><li>相关只表示共同变化,不说明方向与机制。</li><li>可能存在混杂变量(如气温同时影响冰淇淋销量与溺水人数)。</li><li>需要对照实验或因果推断设计才能支持因果结论。</li></ul>
+    </div>
+  </section>
+
+  <h2 class="sec">6 · 多轮对话 dialogue</h2>
+  <p class="lead">每轮保存后锁定为气泡,再出现下一轮追问。</p>
+  <section class="question" data-question-id="q6" data-kind="dialogue">
+    <div data-stem><p>请就你在 Q1 中的选择,回答三轮追问。</p></div>
+    <ol data-turns>
+      <li>先解释:你选择这条规则的依据是什么?</li>
+      <li>如果去掉一个前提条件,你的结论还成立吗?给一个反例。</li>
+      <li>换到一个新场景,你会先检查什么,再选择方法?</li>
+    </ol>
+  </section>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var KIND_LABEL = { choice:"单选", multi:"多选", numeric:"数值", fill:"填空", open:"开放", dialogue:"对话" };
+  var STATE_LABEL = { idle:"未作答", correct:"回答正确", incorrect:"再想想", saved:"已保存" };
+  var all = [];
+
+  function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+  function escapeHtml(s) { return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  function norm(v, cs) { var t = String(v).normalize("NFKC").trim(); return cs ? t : t.toLocaleLowerCase(); }
+
+  function enhance(root, index) {
+    var kind = root.dataset.kind, id = root.dataset.questionId;
+    var maxAttempts = Number(root.dataset.maxAttempts || 2);
+    var src = root.outerHTML;
+    var q = { root: root, id: id, kind: kind, attempts: 0, hints: 0, verdict: "", assist: "", raw: null };
+    all.push(q);
+
+    var stem = root.querySelector("[data-stem]"), optsSrc = root.querySelector("[data-options]");
+    var hintsSrc = root.querySelector("[data-hints]"), explainSrc = root.querySelector("[data-explain]");
+    var keySrc = root.querySelector("[data-key]"), turnsSrc = root.querySelector("[data-turns]");
+    var hintTexts = hintsSrc ? Array.prototype.map.call(hintsSrc.children, function (li) { return li.innerHTML; }) : [];
+    var explainHtml = explainSrc ? explainSrc.innerHTML : "";
+    var keyHtml = keySrc ? keySrc.innerHTML : "";
+    root.classList.add("question");
+    root.dataset.state = "idle";
+    root.setAttribute("data-role", "evidence");
+    root.setAttribute("aria-labelledby", id + "-stem");
+
+    var head = el("div", "q-head");
+    head.appendChild(el("span", "q-no", "Q" + (index + 1)));
+    head.appendChild(el("span", "q-type", KIND_LABEL[kind]));
+    var stateChip = el("span", "q-state", STATE_LABEL.idle); head.appendChild(stateChip);
+    var meta = el("span", "q-meta", ""); head.appendChild(meta);
+    stem.classList.add("q-stem"); stem.id = id + "-stem";
+
+    var body = el("div", "q-body"), controls = {};
+    var feedback = el("p", "q-feedback"); feedback.setAttribute("role", "status"); feedback.setAttribute("aria-live", "polite");
+    var hintBox = el("div", "q-hints"); hintBox.setAttribute("aria-live", "polite");
+    var explain = el("div", "q-explain"); explain.hidden = true; explain.innerHTML = "<b>解析</b>" + explainHtml;
+    var key = el("div", "q-key"); key.hidden = true; key.innerHTML = "<b>对照要点</b>" + keyHtml;
+    var actions = el("div", "q-actions");
+    var bHint = el("button", "btn ghost", "需要提示"); bHint.type = "button";
+    var bCheck = el("button", "btn primary", kind === "open" ? "保存并查看对照要点" : kind === "dialogue" ? "保存本轮并继续" : "检查答案"); bCheck.type = "button";
+    var bReveal = el("button", "btn", "查看答案"); bReveal.type = "button"; bReveal.hidden = true;
+    if (hintTexts.length) actions.appendChild(bHint);
+    actions.appendChild(bCheck); actions.appendChild(bReveal);
+
+    /* ---- 种类特有的输入区 ---- */
+    var inputs = [];
+    if (kind === "choice" || kind === "multi") {
+      var ol = el("ol", "q-options");
+      Array.prototype.forEach.call(optsSrc.children, function (li, i) {
+        var whyNode = li.querySelector("[data-why]"), why = whyNode ? whyNode.textContent : "";
+        if (whyNode) whyNode.remove();
+        var item = el("li", "q-option"); if (li.hasAttribute("data-correct")) item.dataset.correct = "true";
+        var lab = el("label"), inp = el("input");
+        inp.type = kind === "multi" ? "checkbox" : "radio"; inp.name = id;
+        var mark = el("span", "q-mark", String.fromCharCode(65 + i));
+        var text = el("span", "q-text"); text.innerHTML = li.innerHTML;
+        var w = el("p", "q-why", why); text.appendChild(w);
+        lab.appendChild(inp); lab.appendChild(mark); lab.appendChild(text); item.appendChild(lab); ol.appendChild(item);
+        inputs.push({ input: inp, item: item });
+        inp.addEventListener("change", function () { q.raw = inputs.filter(function (x) { return x.input.checked; }).map(function (x) { return inputs.indexOf(x); }); });
+      });
+      optsSrc.remove(); body.appendChild(ol);
+    } else if (kind === "numeric" || kind === "fill") {
+      var field = el("div", "q-field"), lab2 = el("label", "q-label", kind === "numeric" ? "你的答案" : "填写答案"); lab2.setAttribute("for", id + "-in");
+      var inp2 = el("input", "q-input"); inp2.id = id + "-in"; inp2.autocomplete = "off";
+      if (kind === "numeric") { inp2.inputMode = "decimal"; }
+      field.appendChild(lab2); field.appendChild(inp2);
+      if (root.dataset.unit) field.appendChild(el("span", "q-unit", root.dataset.unit));
+      if (kind === "numeric") field.appendChild(el("p", "q-note", "允许误差 ±" + (root.dataset.tolerance || 0) + (root.dataset.unit ? " " + root.dataset.unit : "") + "。"));
+      body.appendChild(field); controls.input = inp2;
+      inp2.addEventListener("input", function () { q.raw = inp2.value; });
+      inp2.addEventListener("keydown", function (e) { if (e.key === "Enter") bCheck.click(); });
+    } else if (kind === "open") {
+      var field3 = el("div", "q-field"), lab3 = el("label", "q-label", "写下你的纠正、条件与反例"); lab3.setAttribute("for", id + "-in");
+      var ta = el("textarea", "q-textarea"); ta.id = id + "-in";
+      var cnt = el("span", "q-count", "0 字"); ta.addEventListener("input", function () { cnt.textContent = ta.value.length + " 字"; q.raw = ta.value; });
+      field3.appendChild(lab3); field3.appendChild(ta); field3.appendChild(cnt); body.appendChild(field3); controls.input = ta;
+      keySrc.remove();
+    } else if (kind === "dialogue") {
+      var wrap = el("div", "q-turns"), turns = [];
+      Array.prototype.forEach.call(turnsSrc.children, function (li, i) {
+        var t = el("div", "q-turn"); t.hidden = i > 0;
+        var p = el("label", "q-turn-prompt", li.textContent); p.setAttribute("for", id + "-t" + i);
+        var ta2 = el("textarea", "q-textarea"); ta2.id = id + "-t" + i;
+        t.appendChild(p); t.appendChild(ta2); wrap.appendChild(t); turns.push({ node: t, ta: ta2 });
+      });
+      turnsSrc.remove(); body.appendChild(wrap); controls.turns = turns; controls.cur = 0;
+    }
+    if (hintsSrc) hintsSrc.remove(); if (explainSrc) explainSrc.remove();
+
+    /* ---- 渲染到页面 ---- */
+    root.innerHTML = "";
+    root.appendChild(head); root.appendChild(stem); root.appendChild(body); root.appendChild(hintBox);
+    root.appendChild(actions); root.appendChild(feedback); root.appendChild(explain); root.appendChild(key);
+    var details = el("details", "src"); details.innerHTML = "<summary>查看作者写法</summary><pre></pre>";
+    details.querySelector("pre").textContent = src.replace(/\sdata-state="[^"]*"/, "").replace(/\sdata-role="evidence"/, "").replace(/\saria-labelledby="[^"]*"/, "").replace(/ class="question"/, "").replace(/\n\s*\n/g, "\n");
+    root.appendChild(details);
+
+    /* ---- 公共状态机 ---- */
+    function setState(s, tone, msg) {
+      q.verdict = s; root.dataset.state = s; root.dataset.assistance = q.hints ? "with_hints" : "independent"; stateChip.textContent = STATE_LABEL[s];
+      feedback.textContent = msg || ""; feedback.dataset.tone = tone || "";
+      var parts = []; if (q.attempts) parts.push("第 " + q.attempts + " 次作答");
+      if (q.hints) parts.push("提示 " + q.hints + "/" + hintTexts.length);
+      if (s === "correct" || s === "saved") parts.push(q.hints ? "用过提示" : "独立完成");
+      meta.textContent = parts.join(" · ");
+      updateSummary();
+    }
+    function lock() { root.dataset.locked = ""; actions.querySelectorAll("button").forEach(function (b) { if (b !== bReveal) b.disabled = true; });
+      inputs.forEach(function (x) { x.input.disabled = true; }); if (controls.input) controls.input.readOnly = true; bReveal.hidden = true; }
+
+    bHint.addEventListener("click", function () {
+      if (q.hints >= hintTexts.length) return;
+      var p = el("p", "q-hint"); p.innerHTML = "<b>提示 " + (q.hints + 1) + "</b>" + hintTexts[q.hints]; hintBox.appendChild(p); q.hints++;
+      if (q.hints >= hintTexts.length) { bHint.disabled = true; bHint.textContent = "提示已用完"; } else bHint.textContent = "再来一个提示 (" + q.hints + "/" + hintTexts.length + ")";
+      setState(q.verdict || "idle", feedback.dataset.tone, feedback.textContent);
+    });
+
+    function showAnswerResult(reveal) {
+      inputs.forEach(function (x) {
+        var isRight = x.item.dataset.correct === "true", picked = x.input.checked;
+        if (picked && isRight) x.item.dataset.result = "right";
+        else if (picked && !isRight) x.item.dataset.result = "wrong";
+        else if (!picked && isRight && reveal) x.item.dataset.result = "missed";
+        else delete x.item.dataset.result;
+      });
+    }
+    function judge() {
+      if (kind === "choice" || kind === "multi") {
+        var picked = inputs.filter(function (x) { return x.input.checked; });
+        if (!picked.length) { feedback.textContent = "先选择答案,再检查。"; feedback.dataset.tone = "info"; return null; }
+        var right = inputs.filter(function (x) { return x.item.dataset.correct === "true"; });
+        return picked.length === right.length && picked.every(function (x) { return x.item.dataset.correct === "true"; });
+      }
+      var raw = controls.input.value;
+      if (!raw.trim()) { feedback.textContent = "先填写答案。"; feedback.dataset.tone = "info"; return null; }
+      if (kind === "numeric") {
+        var v = Number(raw), e = Number(root.dataset.expected), t = Number(root.dataset.tolerance || 0);
+        return Number.isFinite(v) && Math.abs(v - e) <= t;
+      }
+      var acc = JSON.parse(root.dataset.accepted || "[]");
+      return acc.some(function (a) { return norm(a, false) === norm(raw, false); });
+    }
+
+    bCheck.addEventListener("click", function () {
+      if (kind === "open") {
+        if (!controls.input.value.trim()) { controls.input.focus(); feedback.textContent = "先写下自己的回答。"; feedback.dataset.tone = "info"; return; }
+        q.attempts = 1; key.hidden = false; controls.input.readOnly = true; bCheck.disabled = true;
+        setState("saved", "info", "回答已保存,请对照要点自查差距。"); return;
+      }
+      if (kind === "dialogue") {
+        var cur = controls.turns[controls.cur];
+        if (!cur.ta.value.trim()) { cur.ta.focus(); feedback.textContent = "先留下自己的回答,再继续。"; feedback.dataset.tone = "info"; return; }
+        cur.ta.readOnly = true; cur.node.dataset.done = ""; q.attempts = controls.cur + 1;
+        if (controls.cur + 1 < controls.turns.length) {
+          controls.cur++; controls.turns[controls.cur].node.hidden = false; controls.turns[controls.cur].ta.focus();
+          if (controls.cur + 1 === controls.turns.length) bCheck.textContent = "保存最后一轮";
+          setState("idle", "info", "上一轮已保留。请回答新的追问。");
+        } else { bCheck.disabled = true; setState("saved", "info", "各轮回答已保留,可复制学习记录给老师评估。"); }
+        meta.textContent = "已完成 " + q.attempts + "/" + controls.turns.length + " 轮" + (q.hints ? " · 提示 " + q.hints : ""); return;
+      }
+      var ok = judge(); if (ok === null) return;
+      q.attempts++;
+      if (ok) { showAnswerResult(true); explain.hidden = false; lock(); setState("correct", "correct", "回答正确。请用一句话说明判断依据。"); }
+      else {
+        showAnswerResult(false); var left = maxAttempts - q.attempts;
+        if (left <= 0) bReveal.hidden = false;
+        bCheck.textContent = "再检查一次";
+        setState("incorrect", "incorrect", left > 0 ? "还不对,再检查题干条件。还可以再试 " + left + " 次。" : "还不对。可以继续尝试,或查看答案与解析。");
+      }
+    });
+    bReveal.addEventListener("click", function () {
+      if (kind === "numeric") { controls.input.value = root.dataset.expected; }
+      if (kind === "fill") { controls.input.value = JSON.parse(root.dataset.accepted)[0]; }
+      showAnswerResult(true); explain.hidden = false; lock();
+      setState("incorrect", "incorrect", "已显示答案。回头想想:当时哪一步判断偏了?"); q.revealed = true;
+    });
+    setState("idle", "", ""); meta.textContent = "";
+  }
+
+  function updateSummary() {
+    var done = all.filter(function (q) { return q.verdict === "correct" || q.verdict === "saved" || (q.verdict === "incorrect" && q.revealed); }).length;
+    document.getElementById("s-done").textContent = done; document.getElementById("s-total").textContent = all.length;
+    document.getElementById("s-bar").value = all.length ? done / all.length : 0;
+    document.getElementById("s-ok").textContent = all.filter(function (q) { return q.verdict === "correct"; }).length;
+    document.getElementById("s-hint").textContent = all.filter(function (q) { return q.hints > 0; }).length;
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll(".page > section[data-question-id]"), enhance);
+  updateSummary();
+
+  var themeBtn = document.getElementById("theme");
+  themeBtn.addEventListener("click", function () {
+    var dark = document.documentElement.dataset.theme === "ink";
+    document.documentElement.dataset.theme = dark ? "course" : "ink";
+    themeBtn.textContent = dark ? "切换深色" : "切换浅色";
+  });
+})();
+</script>
+</body>
+</html>

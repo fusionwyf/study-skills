@@ -1,0 +1,40 @@
+@layer learning {
+  .step.is-hidden {
+    display: none !important;
+  }
+
+  .steps-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  [data-step-next] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.2rem;
+    padding: 0.4rem 0.9rem;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-pill);
+    background: var(--c-surface);
+    color: var(--c-text);
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  }
+
+  [data-step-next]:hover:not(:disabled) {
+    border-color: var(--c-accent);
+    color: var(--c-accent-strong);
+    background: var(--c-accent-bg);
+  }
+
+  [data-step-next]:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}

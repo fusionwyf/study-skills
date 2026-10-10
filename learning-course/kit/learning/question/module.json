@@ -1,0 +1,23 @@
+{
+  "id": "learning.question",
+  "layer": 4,
+  "version": "2.0.0",
+  "requires": ["core", "foundation", "learning.records"],
+  "presence": "auto",
+  "detect": {
+    "selectors": [
+      ".question",
+      "section[data-question-id]",
+      ".quiz",
+      "[data-answer-kind]",
+      "[data-role~=\"teaching-target\"]",
+      "[data-role~=\"dialogue-practice\"]"
+    ]
+  },
+  "provides": {
+    "css": ["question.css"],
+    "js": ["question.js"],
+    "selectors": [".question", ".quiz", "[data-question-id]"]
+  },
+  "ready": "kit:learning.question:ready"
+}

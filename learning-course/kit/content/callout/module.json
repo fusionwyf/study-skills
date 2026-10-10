@@ -1,0 +1,16 @@
+{
+  "id": "content.callout",
+  "layer": 2,
+  "version": "2.0.0",
+  "requires": ["core", "foundation"],
+  "presence": "auto",
+  "detect": {
+    "selectors": [".callout", "aside.callout"]
+  },
+  "provides": {
+    "css": ["callout.css"],
+    "js": ["callout.js"],
+    "selectors": [".callout"]
+  },
+  "ready": "kit:content.callout:ready"
+}

@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="course">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>数学推导与核对</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
+    />
+    <link rel="stylesheet" href="../assets/kit/kit.css" />
+    <link rel="stylesheet" href="../assets/course/theme.css" />
+    <script defer src="../assets/kit/kit.js"></script>
+  </head>
+  <body class="kit-page">
+    <div class="kit-main">
+      <header class="course-header">
+        <h1>数学推导与核对</h1>
+        <a href="../index.html">课件目录</a>
+        <div data-theme-switcher></div>
+      </header>
+      <main
+        class="lesson"
+        id="lesson-content"
+        data-course-id="acceptance-course"
+        data-lesson-id="0001"
+        data-objective="math"
+        data-evidence="practice"
+        data-retrieval="required"
+        data-feedback="required"
+        data-source-status="not-needed"
+        data-answer-status="provided"
+      >
+        <section data-role="objective">
+          <h2   id="学习成果">学习成果</h2>
+          <p>独立推导平方函数的导数，并核对矩阵作用于二维向量</p>
+        </section>
+        <section>
+          <h2   id="平方函数的局部变化率">平方函数的局部变化率</h2>
+          <p>
+            \(f(x)=x^2\)。当 \(h\ne 0\) 时，差商为 \(2x+h\)。令 \(h\to
+            0\)，导数为 \(2x\)。有限采样用于核对，不能代替极限推导。
+          </p>
+          <div class="formula">
+            \[\begin{aligned}
+            \frac{(x+h)^2-x^2}{h} &= 2x+h \\
+            f'(x) &= \lim_{h\to 0}(2x+h)=2x
+            \end{aligned}\]
+          </div>
+        </section>
+        <section
+          class="visualization"
+          id="difference-table"
+          data-visualization="table"
+        >
+          <h2   id="差商趋近导数">差商趋近导数</h2>
+          <div data-viz-fallback>
+            <p>x=2，h=1、0.1、0.01 时，差商分别为 5、4.1、4.01；极限为 4。</p>
+          </div>
+          <div
+            class="viz-host"
+            id="difference-table-host"
+            data-viz-host
+            hidden
+          ></div>
+          <p data-viz-status role="status"></p>
+          <script type="application/json" data-viz-config>
+            {
+              "model": "difference-table",
+              "domain": "正文给定范围",
+              "precision": "精确规则或 binary64 数值",
+              "columns": [
+                { "key": "h", "label": "h" },
+                { "key": "q", "label": "x=2 的差商" }
+              ],
+              "rows": [
+                { "h": 1, "q": 5 },
+                { "h": 0.1, "q": 4.1 },
+                { "h": 0.01, "q": 4.01 }
+              ]
+            }
+          </script>
+        </section>
+        <section
+          class="question"
+          data-role="evidence"
+          data-question-id="derivative"
+          data-kind="numeric"
+          data-expected="6"
+          data-tolerance="0"
+          data-max-attempts="2"
+        >
+          <div data-stem><h2   id="fxx-在-x3-的导数是多少">f(x)=x² 在 x=3 的导数是多少？</h2></div>
+          <ol data-hints>
+            <li>差商极限得出平方函数导数公式为 \(f'(x)=2x\)。</li>
+            <li>将 \(x=3\) 代入 \(f'(x)=2x\) 进行计算。</li>
+          </ol>
+          <div data-explain><p>根据导数公式 \(f'(x)=2x\)，当 \(x=3\) 时，\(f'(3)=2 \times 3 = 6\)。</p></div>
+        </section>
+        <section
+          class="visualization"
+          id="linear-transform"
+          data-visualization="spatial"
+        >
+          <h2   id="向量与二维线性变换">向量与二维线性变换</h2>
+          <div data-viz-fallback>
+            <p>
+              A=[[1,1],[0,1]]。v=(1,0) 时 Av=(1,0)，v=(1,1) 时
+              Av=(2,1)。按行核对。
+            </p>
+          </div>
+          <div
+            class="viz-host"
+            id="linear-transform-host"
+            data-viz-host
+            hidden
+          ></div>
+          <div data-viz-controls hidden>
+            <label for="linear-transform-x">向量 x</label
+            ><input
+              id="linear-transform-x"
+              type="number"
+              value="1"
+              min="-5"
+              max="5"
+              step=".5"
+            /><label for="linear-transform-y">向量 y</label
+            ><input
+              id="linear-transform-y"
+              type="number"
+              value="0"
+              min="-5"
+              max="5"
+              step=".5"
+            />
+          </div>
+          <p data-viz-status role="status"></p>
+          <script type="application/json" data-viz-config>
+            {
+              "model": "linear-transform",
+              "domain": "正文给定范围",
+              "precision": "精确规则或 binary64 数值",
+              "matrix": [
+                [1, 1],
+                [0, 1]
+              ],
+              "vector": [1, 0]
+            }
+          </script>
+        </section>
+        <section data-role="retrieval">
+          <h2   id="合卷检索">合卷检索</h2>
+          <p>不看上文，推导 x=4 时平方函数的导数；说明有限差商与极限的区别。</p>
+        </section>
+        <section class="reflection" data-role="learner-feedback">
+          <h2   id="学习反馈">学习反馈</h2>
+          <label for="reflection">哪里仍不确定？</label
+          ><textarea id="reflection"></textarea
+          ><button type="button" data-copy-feedback>复制学习记录</button
+          ><span data-copy-feedback-status role="status"></span>
+        </section>
+      </main>
+    </div>
+    <aside class="kit-rail">
+      <nav class="kit-toc" aria-label="本课目录" data-kit-toc>
+  <div class="toc-header"><p class="toc-title">本课目录</p></div>
+  <div class="toc-scroll">
+    <ul class="toc-list">
+      <li class="toc-item is-h2"><a class="toc-link" href="#学习成果">学习成果</a></li>
+      <li class="toc-item is-h2"><a class="toc-link" href="#平方函数的局部变化率">平方函数的局部变化率</a></li>
+      <li class="toc-item is-h2"><a class="toc-link" href="#差商趋近导数">差商趋近导数</a></li>
+      <li class="toc-item is-h2"><a class="toc-link" href="#fxx-在-x3-的导数是多少">f(x)=x² 在 x=3 的导数是多少？</a></li>
+      <li class="toc-item is-h2"><a class="toc-link" href="#向量与二维线性变换">向量与二维线性变换</a></li>
+      <li class="toc-item is-h2"><a class="toc-link" href="#合卷检索">合卷检索</a></li>
+      <li class="toc-item is-h2"><a class="toc-link" href="#学习反馈">学习反馈</a></li>
+    </ul>
+  </div>
+</nav>
+    </aside>
+  </body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "id": "shell.theme-switcher",
+  "layer": 3,
+  "version": "2.0.0",
+  "requires": ["core", "foundation"],
+  "presence": "core",
+  "provides": {
+    "css": ["theme-switcher.css"],
+    "js": ["theme-switcher.js"],
+    "selectors": ["[data-theme-switch]"]
+  },
+  "ready": "kit:shell.theme-switcher:ready"
+}

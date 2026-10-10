@@ -30,6 +30,44 @@ def local_path(root, relative):
 
 
 def validate_asset_package(root, errors):
+    kit_lock_path = root / "assets/kit/kit.lock.json"
+    if kit_lock_path.is_file():
+        try:
+            lock = json.loads(kit_lock_path.read_text(encoding="utf-8"))
+            if not isinstance(lock, dict):
+                errors.append("kit.lock.json must be an object")
+                return
+            files = lock.get("files", {})
+            kit_dir = root / "assets/kit"
+            for filename, expected_hash in files.items():
+                target = kit_dir / filename
+                if not target.is_file():
+                    errors.append(f"missing kit file: assets/kit/{filename}")
+                    continue
+                actual_hash = f"sha256-{hashlib.sha256(target.read_bytes()).hexdigest()}"
+                if actual_hash != expected_hash:
+                    errors.append(f"kit file modified: assets/kit/{filename}")
+            # Also validate vendor lock if vendor files are present in the course
+            vendor_lock_path = root / "assets/visualizations/vendor/manifest.json"
+            if vendor_lock_path.is_file():
+                vlock = json.loads(vendor_lock_path.read_text(encoding="utf-8"))
+                if isinstance(vlock, dict):
+                    for dep_name, dependency in vlock.items():
+                        if isinstance(dependency, dict) and "sha256" in dependency:
+                            for relative, checksum in dependency["sha256"].items():
+                                vendor = local_path(root / "assets/visualizations/vendor", relative)
+                                if (
+                                    not vendor.is_file()
+                                    or hashlib.sha256(vendor.read_bytes()).hexdigest() != checksum
+                                ):
+                                    errors.append(
+                                        f"vendor checksum mismatch or missing file: {relative}"
+                                    )
+            return
+        except Exception as exc:
+            errors.append(f"invalid kit.lock.json: {exc}")
+            return
+
     path = root / "assets/asset-manifest.json"
     if not path.is_file():
         return  # Legacy packages are validated per used visualization.
@@ -109,6 +147,18 @@ def validate_wiring(lesson, body, errors):
     scripts = [
         (lesson.parent / a["src"].split("#")[0]).resolve() for a in parsed.scripts
     ]
+
+    kit_script = (root / "assets/kit/kit.js").resolve()
+    if kit_script in scripts:
+        kit_css = (root / "assets/kit/kit.css").resolve()
+        linked = [
+            (lesson.parent / a["href"].split("#")[0]).resolve()
+            for a in parsed.links
+            if a.get("rel") == "stylesheet" and a.get("href")
+        ]
+        if kit_css not in linked:
+            errors.append(f"{lesson.name}: kit.js requires stylesheet assets/kit/kit.css")
+        return
 
     def require(relative):
         target = (root / relative).resolve()
@@ -323,3 +373,25 @@ def validate_data(kind, config):
             or not all(finite(v) for v in config["input"])
         ):
             raise ValueError("sequence input requires 2..32 finite values")
+
+
+def lint_kit_css_tokens(kit_dir: Path, errors: list[str]) -> None:
+    """Component CSS must not contain literal hex colors (P3 lint rule)."""
+    import re
+    hex_re = re.compile(r"#[0-9a-fA-F]{3,8}\b")
+    for folder in ("content", "shell", "learning", "viz"):
+        target_folder = kit_dir / folder
+        if not target_folder.exists():
+            continue
+        for css in target_folder.rglob("*.css"):
+            if "vendor" in css.parts:
+                continue
+            text = css.read_text(encoding="utf-8")
+            for i, line in enumerate(text.splitlines(), 1):
+                clean = re.sub(r"/\*.*?\*/", "", line)
+                matches = hex_re.findall(clean)
+                if matches:
+                    errors.append(
+                        f"{css.name}:{i}: component CSS must use CSS variables instead of literal colors: {matches}"
+                    )
+

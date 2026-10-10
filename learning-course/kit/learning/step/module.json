@@ -1,0 +1,16 @@
+{
+  "id": "learning.step",
+  "layer": 4,
+  "version": "2.0.0",
+  "requires": ["core", "foundation"],
+  "presence": "auto",
+  "detect": {
+    "selectors": ["[data-step-next]", ".step"]
+  },
+  "provides": {
+    "css": ["step.css"],
+    "js": ["step.js"],
+    "selectors": ["[data-step-next]"]
+  },
+  "ready": "kit:learning.step:ready"
+}

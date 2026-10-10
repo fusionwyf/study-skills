@@ -126,6 +126,15 @@ last_feedback: null
     from install_optional import install
     install(course_dir, ["code-highlight", "theme", "mermaid"], force=args.force)
 
+    # Kit v2 sync
+    kit_py = Path(__file__).resolve().parents[1] / "kit" / "build" / "kit.py"
+    if kit_py.is_file():
+        try:
+            import subprocess
+            subprocess.run([sys.executable, str(kit_py), "sync", str(course_dir)], check=True)
+        except Exception:
+            pass
+
     plan = f"""# {args.title}
 
 ## 课程契约

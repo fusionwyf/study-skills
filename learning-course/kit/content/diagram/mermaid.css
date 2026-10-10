@@ -1,0 +1,24 @@
+@layer content {
+  .kit-block[data-kind="diagram"] {
+    background: var(--c-surface);
+    text-align: center;
+  }
+
+  .kit-block[data-kind="diagram"] .kit-block__body {
+    padding: 1.25rem;
+    overflow-x: auto;
+    display: flex;
+    justify-content: center;
+  }
+
+  .kit-block[data-kind="diagram"] svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .mermaid {
+    margin: 1rem 0;
+    overflow-x: auto;
+    font-family: var(--font-body);
+  }
+}

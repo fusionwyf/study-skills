@@ -1,0 +1,30 @@
+@layer theme {
+  html[data-theme="paper"] {
+    color-scheme: light;
+    --c-bg: #fbf9f4;
+    --c-surface: #ffffff;
+    --c-surface-2: #f4eee1;
+    --c-text: #2c251e;
+    --c-text-2: #6d6257;
+    --c-border: #e2d7c5;
+    --c-accent: #92400e;
+    --c-accent-strong: #78350f;
+    --c-success: #166534;
+    --c-warn: #b45309;
+    --c-danger: #991b1b;
+    --c-success-bg: #eef8ee;
+    --c-warn-bg: #fef5e7;
+    --c-danger-bg: #fdf0f0;
+    --c-accent-bg: #fbeed9;
+    --shadow: 0 1px 2px rgba(44, 37, 30, 0.05), 0 4px 12px rgba(44, 37, 30, 0.04);
+
+    --series-1: #92400e;
+    --series-2: #166534;
+    --series-3: #b45309;
+    --series-4: #991b1b;
+    --series-5: #6b21a8;
+    --series-6: #0e7490;
+    --series-7: #c2410c;
+    --series-8: #57534e;
+  }
+}

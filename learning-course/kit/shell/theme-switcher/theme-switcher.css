@@ -1,0 +1,28 @@
+@layer shell {
+  [data-theme-switch] {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .kit-theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.85rem;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-pill);
+    background: var(--c-surface);
+    color: var(--c-text);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+  }
+
+  .kit-theme-toggle:hover {
+    border-color: var(--c-accent);
+    color: var(--c-accent-strong);
+    background: var(--c-surface-2);
+  }
+}

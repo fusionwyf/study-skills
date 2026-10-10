@@ -1,0 +1,25 @@
+{
+  "id": "content.code",
+  "layer": 2,
+  "version": "2.0.0",
+  "requires": ["core", "foundation", "content._block"],
+  "presence": "auto",
+  "detect": {
+    "selectors": ["pre > code", ".code-block"]
+  },
+  "provides": {
+    "css": ["code.css"],
+    "js": ["code.js"],
+    "selectors": ["pre > code", ".code-block"]
+  },
+  "vendor": [
+    {
+      "id": "hljs",
+      "version": "11.12.0",
+      "cdn": "https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.12.0/build/highlight.min.js",
+      "local": "vendor/hljs/highlight.min.js"
+    }
+  ],
+  "ready": "kit:content.code:ready",
+  "tokens": ["--code-bg", "--code-fg", "--code-border", "--code-label"]
+}

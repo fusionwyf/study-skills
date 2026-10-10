@@ -136,7 +136,7 @@ def main():
             if path.read_text(encoding="utf-8") != text:
                 mismatches.append(relative)
         else:
-            path.write_text(text, encoding="utf-8")
+            path.write_text(text, encoding="utf-8", newline="\n")
     if mismatches:
         print("Registry drift: " + ", ".join(mismatches))
         return 1

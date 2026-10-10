@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="course">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>听辨媒体与填空</title>
+    <link rel="stylesheet" href="../assets/kit/kit.css" />
+    <link rel="stylesheet" href="../assets/course/theme.css" />
+    <script defer src="../assets/kit/kit.js"></script>
+  </head>
+  <body class="kit-page">
+    <div class="kit-main">
+      <header class="course-header">
+        <h1>听辨媒体与填空</h1>
+        <a href="../index.html">课件目录</a>
+        <div data-theme-switcher></div>
+      </header>
+      <main
+        class="lesson"
+        id="lesson-content"
+        data-course-id="acceptance-course"
+        data-lesson-id="0006"
+        data-objective="language"
+        data-evidence="practice"
+        data-retrieval="required"
+        data-feedback="required"
+        data-source-status="not-needed"
+        data-answer-status="provided"
+      >
+        <section data-role="objective">
+          <h2   id="学习成果">学习成果</h2>
+          <p>验证音频、文字稿、填空回答与学习记录流程</p>
+        </section>
+        <section>
+          <h2   id="听出时间与物品">听出时间与物品</h2>
+          <p>
+            听一段原创英语短句，先作答，再打开文字稿。音频由 Microsoft Zira
+            Desktop 合成，供教学流程验收，不代表真实口音与自然会话训练。
+          </p>
+          <figure
+            id="listening-media"
+            data-media
+            data-media-question="listening-answer"
+          >
+            <audio
+              controls
+              preload="metadata"
+              src="../reference/listening.wav"
+            ></audio>
+            <figcaption data-media-fallback>
+              播放失败或打印时，展开下方文字稿完成阅读理解；此时回答不作为独立听力证据。
+            </figcaption>
+            <details data-media-transcript>
+              <summary>文字稿（作答后查看）</summary>
+              <p>
+                Please meet me at the library at three o'clock. Bring your blue
+                notebook.
+              </p>
+            </details>
+            <p class="print-only">
+              文字稿：Please meet me at the library at three o'clock. Bring your
+              blue notebook.
+            </p>
+          </figure>
+        </section>
+        <section
+          class="question"
+          data-role="evidence"
+          data-question-id="listening-answer"
+          data-kind="fill"
+          data-accepted='["3","three","three o&#39;clock","3:00"]'
+          data-max-attempts="2"
+        >
+          <div data-stem><h2   id="what-time-should-you-meet">What time should you meet?</h2></div>
+          <ol data-hints>
+            <li>仔细听对话中在 "at the library at..." 之后说的时间。</li>
+            <li>音频中的原话是 "Please meet me at the library at three o'clock."</li>
+          </ol>
+          <div data-explain><p>Three o'clock。音频原文为："Please meet me at the library at three o'clock. Bring your blue notebook."</p></div>
+        </section>
+        <section
+          class="question"
+          data-role="evidence"
+          data-question-id="listen-retell"
+          data-kind="open"
+        >
+          <div data-stem><h2   id="用英文复述地点与物品">用英文复述地点与物品，不查看文字稿</h2></div>
+          <div data-key>
+            <ul>
+              <li>Location: at the library.</li>
+              <li>Item: blue notebook.</li>
+            </ul>
+          </div>
+        </section>
+        <section data-role="retrieval">
+          <h2   id="合卷检索">合卷检索</h2>
+          <p>
+            收起文字稿，重新播放音频；不用原句复述时间、地点与物品，再说明你如何核对。
+          </p>
+        </section>
+        <section class="reflection" data-role="learner-feedback">
+          <h2   id="学习反馈">学习反馈</h2>
+          <label for="reflection">哪里仍不确定？</label
+          ><textarea id="reflection"></textarea
+          ><button type="button" data-copy-feedback>复制学习记录</button
+          ><span data-copy-feedback-status role="status"></span>
+        </section>
+      </main>
+    </div>
+    <aside class="kit-rail">
+      <nav class="kit-toc" aria-label="本课目录" data-kit-toc>
+  <div class="toc-header"><p class="toc-title">本课目录</p></div>
+  <div class="toc-scroll">
+    <ul class="toc-list">
+      <li class="toc-item is-h2"><a class="toc-link" href="#学习成果">学习成果</a></li>
+      <li class="toc-item is-h2"><a class="toc-link" href="#听出时间与物品">听出时间与物品</a></li>
+      <li class="toc-item is-h2"><a class="toc-link" href="#what-time-should-you-meet">What time should you meet?</a></li>
+      <li class="toc-item is-h2"><a class="toc-link" href="#用英文复述地点与物品">用英文复述地点与物品，不查看文字稿</a></li>
+      <li class="toc-item is-h2"><a class="toc-link" href="#合卷检索">合卷检索</a></li>
+      <li class="toc-item is-h2"><a class="toc-link" href="#学习反馈">学习反馈</a></li>
+    </ul>
+  </div>
+</nav>
+    </aside>
+  </body>
+</html>

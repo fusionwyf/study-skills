@@ -1,0 +1,23 @@
+{
+  "id": "content.diagram",
+  "layer": 2,
+  "version": "2.0.0",
+  "requires": ["core", "foundation", "content._block"],
+  "presence": "auto",
+  "detect": {
+    "selectors": [".mermaid", "pre.mermaid", "div.mermaid"]
+  },
+  "provides": {
+    "css": ["mermaid.css"],
+    "js": ["mermaid.js"]
+  },
+  "vendor": [
+    {
+      "id": "mermaid",
+      "version": "11.4.1",
+      "cdn": "https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js",
+      "local": "vendor/mermaid/mermaid.min.js"
+    }
+  ],
+  "ready": "kit:content.diagram:ready"
+}

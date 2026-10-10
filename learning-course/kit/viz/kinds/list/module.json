@@ -1,0 +1,19 @@
+{
+  "id": "viz.kinds.list",
+  "layer": 5,
+  "version": "2.0.0",
+  "requires": ["viz.core"],
+  "presence": "auto",
+  "detect": {
+    "selectors": [
+      "[data-visualization=\"relation\"]",
+      "[data-visualization=\"timeline\"]",
+      "[data-visualization=\"process\"]"
+    ]
+  },
+  "provides": {
+    "js": ["list.js"],
+    "kinds": ["relation", "timeline", "process"]
+  },
+  "ready": "kit:viz.kinds.list:ready"
+}

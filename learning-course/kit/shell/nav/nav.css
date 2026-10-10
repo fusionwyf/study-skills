@@ -1,0 +1,35 @@
+@layer shell {
+  .kit-nav,
+  .course-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: 2rem 0;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--c-border);
+  }
+
+  .kit-nav a,
+  .course-nav a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-pill);
+    background: var(--c-surface);
+    color: var(--c-text);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: border-color 0.12s, color 0.12s, background 0.12s;
+  }
+
+  .kit-nav a:hover,
+  .course-nav a:hover {
+    border-color: var(--c-accent);
+    color: var(--c-accent-strong);
+    background: var(--c-surface-2);
+  }
+}

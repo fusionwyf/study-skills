@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="course">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gallery · Diagram Component (Course Kit v2)</title>
+  <link rel="stylesheet" href="../acceptance/assets/kit/kit.css">
+  <link rel="stylesheet" href="../acceptance/assets/course/theme.css">
+</head>
+<body>
+<div class="kit-page">
+  <main class="kit-main" data-course-id="gallery" data-lesson-id="0004-diagram" data-objective="gallery-diagram" data-evidence="practice" data-cognitive-level="apply" data-retrieval="required" data-feedback="required" data-source-status="verified" data-answer-status="provided">
+    <header class="course-header">
+      <p class="course-kicker">Course Kit v2 · Component Gallery</p>
+      <h1>Diagram Component (L2 Content Layer)</h1>
+      <p>Demonstrates semantic Mermaid diagrams wrapped in L2 block chrome with dynamic theme variables linked to Design Tokens.</p>
+    </header>
+
+    <section id="sec-flow">
+      <h2>1. Flowchart Architecture</h2>
+      <pre class="mermaid">
+flowchart TD
+    A[Course Content HTML] --> B{Kit Sync CLI}
+    B -->|Bundles| C[assets/kit/kit.js]
+    B -->|Generates| D[assets/kit/kit.css]
+    B -->|Locks Hashes| E[assets/kit/kit.lock.json]
+    C --> F[LearnKit Runtime]
+    D --> F
+      </pre>
+    </section>
+
+    <section id="sec-state">
+      <h2>2. State Machine Diagram</h2>
+      <pre class="mermaid">
+stateDiagram-v2
+    [*] --> Unanswered
+    Unanswered --> HintUsed: Click Hint (Observed Assistance)
+    HintUsed --> Submitted: Submit Answer
+    Unanswered --> Submitted: Submit Answer (Independent)
+    Submitted --> Correct: Verification Pass
+    Submitted --> Incorrect: Verification Fail
+    Incorrect --> Submitted: Retry (&lt;= Max Attempts)
+    Incorrect --> Revealed: Show Answer (Attempts Exceeded)
+    Correct --> [*]
+    Revealed --> [*]
+      </pre>
+    </section>
+  </main>
+</div>
+<script src="../acceptance/assets/kit/kit.js"></script>
+</body>
+</html>

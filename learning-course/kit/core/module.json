@@ -1,0 +1,19 @@
+{
+  "id": "core",
+  "layer": 0,
+  "version": "2.0.0",
+  "requires": [],
+  "presence": "core",
+  "provides": {
+    "js": [
+      "bus.js",
+      "config.js",
+      "util.js",
+      "store.js",
+      "loader.js",
+      "ready.js",
+      "registry.js"
+    ]
+  },
+  "ready": "kit:core:ready"
+}

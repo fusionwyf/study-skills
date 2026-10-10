@@ -12,3 +12,5 @@ tests/.cache/
 
 # Scratch space for local end-to-end runs (headless browser profiles, throwaway courses)
 .tmp-*/
+.claude/
+

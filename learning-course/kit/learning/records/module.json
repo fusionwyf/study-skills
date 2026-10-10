@@ -1,0 +1,12 @@
+{
+  "id": "learning.records",
+  "layer": 4,
+  "version": "2.0.0",
+  "requires": ["core", "foundation"],
+  "presence": "core",
+  "provides": {
+    "css": ["records.css"],
+    "js": ["records.js"]
+  },
+  "ready": "kit:learning.records:ready"
+}

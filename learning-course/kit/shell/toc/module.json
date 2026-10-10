@@ -1,0 +1,14 @@
+{
+  "id": "shell.toc",
+  "layer": 3,
+  "version": "2.0.0",
+  "requires": ["core", "foundation"],
+  "presence": "core",
+  "provides": {
+    "css": ["toc.css"],
+    "js": ["toc.js"],
+    "selectors": [".kit-toc", "[data-auto-toc]", ".toc"]
+  },
+  "ready": "kit:shell.toc:ready",
+  "tokens": ["--toc-w", "--toc-top"]
+}

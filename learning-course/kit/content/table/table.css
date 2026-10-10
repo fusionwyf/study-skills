@@ -1,0 +1,43 @@
+@layer content {
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.2rem 0;
+    font-size: 0.95rem;
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  th, td {
+    padding: 0.65rem 0.9rem;
+    text-align: left;
+    border-bottom: 1px solid var(--c-border);
+  }
+
+  th {
+    background: var(--c-surface-2);
+    font-weight: 600;
+    color: var(--c-text);
+  }
+
+  table[data-sticky-head] th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+
+  table[data-sortable] th {
+    cursor: pointer;
+    user-select: none;
+  }
+
+  table[data-sortable] th:hover {
+    background: var(--c-accent-bg);
+  }
+
+  tbody tr:hover {
+    background: var(--c-surface-2);
+  }
+}

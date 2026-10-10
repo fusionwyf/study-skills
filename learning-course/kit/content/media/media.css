@@ -1,0 +1,49 @@
+@layer content {
+  [data-media] img,
+  [data-media] video {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius);
+  }
+
+  [data-media] audio {
+    width: 100%;
+  }
+
+  [data-media-frame] {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  [data-media-frame] img {
+    display: block;
+    width: 100%;
+  }
+
+  .media-hotspot {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    border: 2px solid var(--c-surface);
+    border-radius: 50%;
+    min-width: 2.5rem;
+    min-height: 2.5rem;
+    background: var(--c-accent);
+    color: var(--c-surface);
+    cursor: pointer;
+    font-weight: 700;
+  }
+
+  .media-hotspot:focus-visible {
+    outline: 3px solid var(--c-accent-strong);
+  }
+}
+
+@media print {
+  .media-hotspot {
+    display: none !important;
+  }
+  [data-media-fallback] {
+    display: block !important;
+  }
+}

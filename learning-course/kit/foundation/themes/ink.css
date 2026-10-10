@@ -1,0 +1,30 @@
+@layer theme {
+  html[data-theme="ink"] {
+    color-scheme: dark;
+    --c-bg: #101827;
+    --c-surface: #182338;
+    --c-surface-2: #213149;
+    --c-text: #e6edf7;
+    --c-text-2: #b8c7dc;
+    --c-border: #465975;
+    --c-accent: #93b8ff;
+    --c-accent-strong: #b7d0ff;
+    --c-success: #6ee7a0;
+    --c-warn: #fbbf6a;
+    --c-danger: #ff9b9b;
+    --c-success-bg: #12301f;
+    --c-warn-bg: #35280f;
+    --c-danger-bg: #3b1a1c;
+    --c-accent-bg: #1c2d52;
+    --shadow: none;
+
+    --series-1: #93b8ff;
+    --series-2: #6ee7a0;
+    --series-3: #fbbf6a;
+    --series-4: #ff9b9b;
+    --series-5: #c4b5fd;
+    --series-6: #67e8f9;
+    --series-7: #fdba74;
+    --series-8: #9ca3af;
+  }
+}
