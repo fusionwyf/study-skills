@@ -57,7 +57,13 @@ def main() -> int:
         "--dump-dom", source_url
     ]
     dump_res = subprocess.run(dump_cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
-    if dump_res.returncode == 0 and dump_res.stdout:
+    if dump_res.returncode != 0 or not (dump_res.stdout and dump_res.stdout.strip()):
+        err_msg = (dump_res.stderr or "").strip() or f"Pre-flight exited with code {dump_res.returncode} and produced no DOM output."
+        if not args.allow_failed:
+            raise SystemExit(f"Export blocked: Pre-flight DOM check failed ({err_msg}). Use --allow-failed to force export.")
+        else:
+            print(f"WARNING: Pre-flight DOM check failed ({err_msg}). Continuing due to --allow-failed.", file=sys.stderr)
+    else:
         dom_text = dump_res.stdout
         is_settled = ('data-kit-status="settled"' in dom_text or
                       "data-kit-status='settled'" in dom_text or
@@ -66,7 +72,7 @@ def main() -> int:
         if not is_settled:
             msg = f"Render timeout / not settled: page did not settle within {args.wait_ms}ms (missing data-kit-status='settled')."
             if not args.allow_failed:
-                raise SystemExit(msg)
+                raise SystemExit(f"Export blocked: {msg} Use --allow-failed to force export.")
             else:
                 print(f"WARNING: {msg} Continuing due to --allow-failed.", file=sys.stderr)
 

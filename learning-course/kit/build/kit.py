@@ -17,6 +17,7 @@ import os
 import re
 import shutil
 import sys
+import tempfile
 from html.parser import HTMLParser
 from pathlib import Path
 
@@ -390,7 +391,9 @@ def normalize_html_content(html_text):
             "id": hid,
             "title": plain_title
         })
-        return f"<{tag} {attrs}>{inner}</{tag}>"
+        attrs_clean = attrs.strip()
+        attr_part = f" {attrs_clean}" if attrs_clean else ""
+        return f"<{tag}{attr_part}>{inner}</{tag}>"
 
     # Match h2 and h3
     pattern = re.compile(r"<(h[23])(\s+[^>]*)?>(.*?)</\1>", re.DOTALL | re.IGNORECASE)
@@ -531,7 +534,7 @@ def bundle_kit(active_modules, output_dir, course_config=None, vendor_mode="cdn"
                     t_content = tf.read_text(encoding="utf-8")
                     css_parts.append(f"/* ---- Foundation Theme: {tf.name} ---- */\n{t_content}\n")
 
-    # Collect course extensions
+    # Collect and validate course extensions
     extensions = []
     if course_config and "extensions" in course_config and isinstance(course_config["extensions"], list):
         extensions.extend(course_config["extensions"])
@@ -542,15 +545,31 @@ def bundle_kit(active_modules, output_dir, course_config=None, vendor_mode="cdn"
                 extra = json.loads(ext_file.read_text(encoding="utf-8"))
                 if isinstance(extra, list):
                     extensions.extend(extra)
-            except Exception:
-                pass
+            except Exception as e:
+                raise ValueError(f"Failed to read extensions.json: {e}")
 
+    ext_module_ids = []
     for ext in extensions:
-        ext_id = ext.get("id", "custom-extension")
+        if not isinstance(ext, dict):
+            raise ValueError(f"Invalid extension entry: {ext}")
+        ext_id = ext.get("id")
+        if not ext_id:
+            raise ValueError(f"Extension declaration must contain an 'id': {ext}")
+        for req in ext.get("requires", []):
+            if req not in active_modules and req not in modules:
+                raise ValueError(f"Course extension '{ext_id}' requires module '{req}', which is missing.")
         if "css" in ext and course_dir:
             c_file = Path(course_dir) / "assets" / "course" / ext["css"]
-            if c_file.exists():
-                css_parts.append(f"/* ---- Course Extension CSS: {ext_id} ---- */\n{c_file.read_text(encoding='utf-8')}\n")
+            if not c_file.exists():
+                raise ValueError(f"Course extension '{ext_id}' specifies CSS file '{ext['css']}' that does not exist in {Path(course_dir) / 'assets' / 'course'}.")
+            css_parts.append(f"/* ---- Course Extension CSS: {ext_id} ---- */\n{c_file.read_text(encoding='utf-8')}\n")
+        if "js" in ext and course_dir:
+            j_file = Path(course_dir) / "assets" / "course" / ext["js"]
+            if not j_file.exists():
+                raise ValueError(f"Course extension '{ext_id}' specifies JS file '{ext['js']}' that does not exist in {Path(course_dir) / 'assets' / 'course'}.")
+        mod_name = ext.get("module", ext_id)
+        if mod_name not in ext_module_ids:
+            ext_module_ids.append(mod_name)
 
     kit_css_content = "\n".join(css_parts)
 
@@ -613,8 +632,13 @@ def bundle_kit(active_modules, output_dir, course_config=None, vendor_mode="cdn"
             }
 
     # Collect JS
+    active_runtime_ids = list(ordered_ids)
+    for em in ext_module_ids:
+        if em not in active_runtime_ids:
+            active_runtime_ids.append(em)
+
     config_json_str = json.dumps(course_config or {}, ensure_ascii=False)
-    active_mods_str = json.dumps(ordered_ids, ensure_ascii=False)
+    active_mods_str = json.dumps(active_runtime_ids, ensure_ascii=False)
     vendors_str = json.dumps(active_vendors, ensure_ascii=False)
     extensions_str = json.dumps(extensions, ensure_ascii=False)
     nav_str = json.dumps(nav_data, ensure_ascii=False) if nav_data else "null"
@@ -639,11 +663,10 @@ def bundle_kit(active_modules, output_dir, course_config=None, vendor_mode="cdn"
                 js_parts.append(f"\n  /* ---- Module: {mod_id} ({js_rel}) ---- */\n  (function () {{\n{js_content}\n  }})();\n")
 
     for ext in extensions:
-        ext_id = ext.get("id", "custom-extension")
+        ext_id = ext.get("id")
         if "js" in ext and course_dir:
             j_file = Path(course_dir) / "assets" / "course" / ext["js"]
-            if j_file.exists():
-                js_parts.append(f"\n  /* ---- Course Extension: {ext_id} ---- */\n  (function () {{\n{j_file.read_text(encoding='utf-8')}\n  }})();\n")
+            js_parts.append(f"\n  /* ---- Course Extension: {ext_id} ---- */\n  (function () {{\n{j_file.read_text(encoding='utf-8')}\n  }})();\n")
 
     js_parts.append("\n})(typeof window !== 'undefined' ? window : globalThis);\n")
     kit_js_content = "".join(js_parts)
@@ -751,24 +774,44 @@ def sync_course(course_dir):
         return False
 
     kit_output_dir = cpath / "assets" / "kit"
-    try:
-        files_hashes, ordered_ids, vendor_hashes = bundle_kit(
-            active_modules, kit_output_dir, course_config=course_config, vendor_mode=vendor_mode, course_dir=cpath
-        )
-    except Exception as e:
-        print(f"Error bundling kit: {e}", file=sys.stderr)
-        return False
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        tmp_kit_dir = Path(tmp_dir) / "kit"
+        try:
+            files_hashes, ordered_ids, vendor_hashes = bundle_kit(
+                active_modules, tmp_kit_dir, course_config=course_config, vendor_mode=vendor_mode, course_dir=cpath
+            )
+        except Exception as e:
+            print(f"Error bundling kit: {e}", file=sys.stderr)
+            return False
 
-    # Step 4: Write kit.lock.json
-    lock_data = {
-        "kit": KIT_VERSION,
-        "modules": {m: manifest["modules"][m]["version"] for m in ordered_ids if m in manifest["modules"]},
-        "reasons": reasons,
-        "files": files_hashes,
-        "vendor": vendor_hashes
-    }
-    lock_file = kit_output_dir / "kit.lock.json"
-    lock_file.write_text(json.dumps(lock_data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
+        # Step 4: Write kit.lock.json in tmp_kit_dir
+        lock_data = {
+            "kit": KIT_VERSION,
+            "modules": {m: manifest["modules"][m]["version"] for m in ordered_ids if m in manifest["modules"]},
+            "reasons": reasons,
+            "files": files_hashes,
+            "vendor": vendor_hashes
+        }
+        lock_file = tmp_kit_dir / "kit.lock.json"
+        lock_file.write_text(json.dumps(lock_data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
+
+        # Step 5: Atomic replacement with rollback
+        backup_dir = Path(tmp_dir) / "backup"
+        had_previous = kit_output_dir.exists()
+        if had_previous:
+            shutil.copytree(kit_output_dir, backup_dir)
+
+        try:
+            if kit_output_dir.exists():
+                shutil.rmtree(kit_output_dir)
+            shutil.copytree(tmp_kit_dir, kit_output_dir)
+        except Exception as swap_err:
+            print(f"Error committing kit files: {swap_err}. Rolling back...", file=sys.stderr)
+            if had_previous and backup_dir.exists():
+                if kit_output_dir.exists():
+                    shutil.rmtree(kit_output_dir)
+                shutil.copytree(backup_dir, kit_output_dir)
+            return False
 
     print(f"Sync complete for {cpath.name}: {len(ordered_ids)} modules bundled into assets/kit/.")
     return True
@@ -837,6 +880,43 @@ def check_course(course_dir):
                     f"Error: Module '{mod_id}' requires '{req}', which is missing from {lock_file}!",
                     file=sys.stderr
                 )
+                return False
+
+    # Check course extensions if declared
+    course_cfg = cpath / "assets" / "course" / "config.json"
+    chk_extensions = []
+    if course_cfg.exists():
+        try:
+            c_data = json.loads(course_cfg.read_text(encoding="utf-8"))
+            if isinstance(c_data.get("extensions"), list):
+                chk_extensions.extend(c_data["extensions"])
+        except Exception:
+            pass
+    course_exts = cpath / "assets" / "course" / "extensions.json"
+    if course_exts.exists():
+        try:
+            e_data = json.loads(course_exts.read_text(encoding="utf-8"))
+            if isinstance(e_data, list):
+                chk_extensions.extend(e_data)
+        except Exception:
+            pass
+
+    for ext in chk_extensions:
+        if not isinstance(ext, dict) or not ext.get("id"):
+            print("Error: Declared extension missing 'id' attribute.", file=sys.stderr)
+            return False
+        ext_id = ext["id"]
+        if "js" in ext:
+            if not (cpath / "assets" / "course" / ext["js"]).exists():
+                print(f"Error: Declared extension '{ext_id}' JS file '{ext['js']}' is missing.", file=sys.stderr)
+                return False
+        if "css" in ext:
+            if not (cpath / "assets" / "course" / ext["css"]).exists():
+                print(f"Error: Declared extension '{ext_id}' CSS file '{ext['css']}' is missing.", file=sys.stderr)
+                return False
+        for req in ext.get("requires", []):
+            if req not in modules_lock and req not in manifest_modules:
+                print(f"Error: Declared extension '{ext_id}' requires missing module '{req}'.", file=sys.stderr)
                 return False
 
     # Check that modules required by lesson content are present in modules_lock

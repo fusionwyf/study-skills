@@ -9,6 +9,8 @@
   CourseKit.__COURSE_CONFIG__ = {"theme": "course", "vendor": {"mode": "cdn"}, "code": {"themes": {"light": "github", "dark": "github-dark"}}, "modules": []};
   CourseKit.__ACTIVE_MODULES__ = ["core", "foundation", "content._block", "content.callout", "content.code", "shell.nav", "shell.progress", "shell.theme-switcher", "shell.toc", "learning.records", "learning.step"];
   CourseKit.VENDORS = {"hljs": {"id": "hljs", "version": "11.12.0", "js": {"cdn": "https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.12.0/build/highlight.min.js", "local": "../assets/kit/vendor/hljs/highlight.min.js"}}};
+  CourseKit.__EXTENSIONS__ = [];
+  CourseKit.__NAV_DATA__ = {"lessons": [{"number": "0001", "title": "什么是变量", "objective": "variables-and-assignment", "file": "0001-example.html", "prev": null, "next": null}], "home": "../index.html"};
 
   /* ---- Module: core (bus.js) ---- */
   (function () {
@@ -907,39 +909,31 @@
       return Promise.reject(new Error("Unknown vendor id: " + vendorId));
     }
 
-    var mode = (kit.config && kit.config.vendor && kit.config.vendor.mode) || "cdn";
+    var mode = (kit.config && kit.config.vendor && kit.config.vendor.mode) ||
+               (kit.config && kit.config.vendor_mode) || "cdn";
     var useLocal = mode === "local";
 
-    var promise;
-    if (vendorId === "hljs") {
-      var jsUrl = useLocal ? (vendor.js && vendor.js.local) : (vendor.js && vendor.js.cdn);
-      promise = loadScript(jsUrl, null, useLocal);
-    } else if (vendorId === "katex") {
-      var cssUrl = useLocal ? (vendor.css && vendor.css.local) : (vendor.css && vendor.css.cdn);
-      var katexJsUrl = useLocal ? (vendor.js && vendor.js.local) : (vendor.js && vendor.js.cdn);
-      var autoRenderUrl = useLocal ? (vendor.autoRender && vendor.autoRender.local) : (vendor.autoRender && vendor.autoRender.cdn);
-      promise = loadStyle(cssUrl, null, useLocal).then(function () {
-        return loadScript(katexJsUrl, null, useLocal);
-      }).then(function () {
-        if (autoRenderUrl) {
-          return loadScript(autoRenderUrl, null, useLocal);
-        }
-      });
-    } else if (vendorId === "mermaid") {
-      var mermaidUrl = useLocal ? (vendor.js && vendor.js.local) : (vendor.js && vendor.js.cdn);
-      promise = loadScript(mermaidUrl, null, useLocal);
-    } else if (vendorId === "plotly") {
-      var plotlyUrl = useLocal ? (vendor.js && vendor.js.local) : (vendor.js && vendor.js.cdn);
-      promise = loadScript(plotlyUrl, null, useLocal);
-    } else if (vendorId === "jsxgraph") {
-      var jsxCss = useLocal ? (vendor.css && vendor.css.local) : (vendor.css && vendor.css.cdn);
-      var jsxJs = useLocal ? (vendor.js && vendor.js.local) : (vendor.js && vendor.js.cdn);
-      promise = loadStyle(jsxCss, null, useLocal).then(function () {
-        return loadScript(jsxJs, null, useLocal);
-      });
-    } else {
-      promise = Promise.resolve();
+    function getUrl(item) {
+      if (!item) return null;
+      if (typeof item === "string") return item;
+      return useLocal ? item.local : item.cdn;
     }
+
+    var styles = vendor.css ? (Array.isArray(vendor.css) ? vendor.css : [vendor.css]) : [];
+    var scripts = vendor.js ? (Array.isArray(vendor.js) ? vendor.js : [vendor.js]) : [];
+    if (vendor.autoRender) scripts.push(vendor.autoRender);
+
+    var promise = Promise.all(styles.map(function (s) {
+      var url = getUrl(s);
+      return url ? loadStyle(url, null, useLocal) : Promise.resolve();
+    })).then(function () {
+      return scripts.reduce(function (seq, sc) {
+        return seq.then(function () {
+          var url = getUrl(sc);
+          return url ? loadScript(url, null, useLocal) : Promise.resolve();
+        });
+      }, Promise.resolve());
+    });
 
     loadingPromises[vendorId] = promise;
     return promise;
@@ -1100,10 +1094,12 @@
     }
   }
 
+  var allInitialized = false;
+
   kit.registerModule = function (id, mod) {
     modules[id] = mod;
-    // Standalone fallback: If not bundled with __ACTIVE_MODULES__, initialize immediately
-    if (!Array.isArray(kit.__ACTIVE_MODULES__)) {
+    // Standalone fallback or dynamic registration after initAll has already run:
+    if (!Array.isArray(kit.__ACTIVE_MODULES__) || allInitialized) {
       initModule(id);
     }
   };
@@ -1117,11 +1113,18 @@
   };
 
   async function initAll() {
-    var order = Array.isArray(kit.__ACTIVE_MODULES__) ? kit.__ACTIVE_MODULES__ : Object.keys(modules);
+    var order = Array.isArray(kit.__ACTIVE_MODULES__) ? kit.__ACTIVE_MODULES__.slice() : [];
+    // Ensure all registered modules (e.g. course extensions) not in __ACTIVE_MODULES__ are also executed
+    Object.keys(modules).forEach(function (id) {
+      if (order.indexOf(id) === -1) {
+        order.push(id);
+      }
+    });
     for (var i = 0; i < order.length; i++) {
       var id = order[i];
       await initModule(id);
     }
+    allInitialized = true;
   }
 
   kit.initAll = initAll;
@@ -1177,7 +1180,8 @@
 
     var themeName = scheme === "dark" ? (codeThemes.dark || "github-dark") : (codeThemes.light || "github");
     var isUrl = themeName.indexOf("/") !== -1 || themeName.indexOf(".css") !== -1;
-    var targetUrl = isUrl ? themeName : "https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.12.0/build/styles/" + themeName + ".min.css";
+    var isLocal = (kit.config && (kit.config.vendor_mode === "local" || (kit.config.vendor && kit.config.vendor.mode === "local")));
+    var targetUrl = isUrl ? themeName : (isLocal ? "../assets/kit/vendor/hljs/styles/" + themeName + ".min.css" : "https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.12.0/build/styles/" + themeName + ".min.css");
 
     var link = document.getElementById("kit-hljs-theme");
     if (!link) {
@@ -1551,7 +1555,88 @@
   function initNav() {
     if (typeof document === "undefined") return;
 
-    var navEls = document.querySelectorAll("nav.kit-nav, [data-kit-nav]");
+    var navEls = Array.prototype.slice.call(document.querySelectorAll("nav.kit-nav, nav.course-nav, [data-kit-nav]"));
+    var lessonEl = document.querySelector(".lesson");
+    var currentLessonId = lessonEl ? lessonEl.dataset.lessonId : null;
+
+    var navData = (kit.config && kit.config.navigation) || kit.__NAV_DATA__ || root.__NAV_DATA__;
+
+    if (navData && Array.isArray(navData.lessons) && navEls.length) {
+      var currentLesson = null;
+      var curPath = (typeof window !== "undefined" && window.location && window.location.pathname) ? window.location.pathname.split("/").pop() : "";
+      for (var i = 0; i < navData.lessons.length; i++) {
+        var it = navData.lessons[i];
+        if (currentLessonId && (it.number === currentLessonId || String(Number(it.number)) === String(Number(currentLessonId)))) {
+          currentLesson = it;
+          break;
+        }
+        if (curPath && it.file && (it.file === curPath || it.file.endsWith("/" + curPath))) {
+          currentLesson = it;
+          break;
+        }
+      }
+
+      navEls.forEach(function (nav) {
+        if (currentLesson) {
+          var homeLink = nav.querySelector('[data-nav-home], a[href*="index.html"]');
+          var prevLink = nav.querySelector('[data-nav-prev], a[rel="prev"]');
+          var nextLink = nav.querySelector('[data-nav-next], a[rel="next"]');
+
+          if (!prevLink && currentLesson.prev) {
+            var aPrev = document.createElement("a");
+            aPrev.href = currentLesson.prev.file;
+            aPrev.rel = "prev";
+            aPrev.dataset.navPrev = "";
+            aPrev.className = "nav-prev";
+            aPrev.textContent = "← 上一课";
+            if (homeLink) nav.insertBefore(aPrev, homeLink);
+            else nav.insertBefore(aPrev, nav.firstChild);
+          }
+
+          if (!nextLink && currentLesson.next) {
+            var aNext = document.createElement("a");
+            aNext.href = currentLesson.next.file;
+            aNext.rel = "next";
+            aNext.dataset.navNext = "";
+            aNext.className = "nav-next";
+            aNext.textContent = "下一课 →";
+            if (homeLink && homeLink.nextSibling) nav.insertBefore(aNext, homeLink.nextSibling);
+            else nav.appendChild(aNext);
+          }
+        }
+
+        var listContainer = nav.querySelector("[data-nav-lessons]");
+        if (!listContainer) {
+          var details = document.createElement("details");
+          details.className = "kit-nav-details";
+          var summary = document.createElement("summary");
+          summary.textContent = "课时目录";
+          details.appendChild(summary);
+          listContainer = document.createElement("div");
+          listContainer.dataset.navLessons = "";
+          details.appendChild(listContainer);
+          nav.appendChild(details);
+        }
+
+        if (listContainer && !listContainer.children.length) {
+          var ol = document.createElement("ol");
+          ol.className = "kit-nav-list";
+          navData.lessons.forEach(function (item) {
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = item.file;
+            a.textContent = "第 " + item.number + " 课：" + item.title;
+            if (currentLessonId && (item.number === currentLessonId || String(Number(item.number)) === String(Number(currentLessonId)))) {
+              li.className = "is-current";
+              a.setAttribute("aria-current", "page");
+            }
+            li.appendChild(a);
+            ol.appendChild(li);
+          });
+          listContainer.appendChild(ol);
+        }
+      });
+    }
 
     // Keyboard navigation shortcuts: [ for prev, ] for next
     document.addEventListener("keydown", function (e) {
@@ -2158,7 +2243,11 @@
     window.addEventListener("afterprint", function () { document.documentElement.classList.remove("is-printing"); });
   }
 
+  var recordsInitialized = false;
+
   function initRecords() {
+    if (recordsInitialized) return;
+    recordsInitialized = true;
     if (typeof document === "undefined") return;
     var lesson = document.querySelector(".lesson");
     if (!lesson) {
@@ -2173,6 +2262,9 @@
     }
 
     Array.prototype.slice.call(document.querySelectorAll("[data-copy-feedback]")).forEach(function (button) {
+      if (button.dataset.kitBound === "true") return;
+      button.dataset.kitBound = "true";
+
       button.addEventListener("click", function () {
         var status = lesson.querySelector("[data-copy-feedback-status]");
         var record = buildLearningRecord(lesson, store ? store.getState() : {});
@@ -2203,7 +2295,8 @@
     kit.registerModule("learning.records", kit.records);
   }
 
-  if (typeof document !== "undefined") {
+  // Standalone fallback: only listen to DOMContentLoaded if not managed by kit registry
+  if (!kit.registerModule && typeof document !== "undefined") {
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initRecords);
     else initRecords();
   }

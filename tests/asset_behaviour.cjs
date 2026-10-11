@@ -25,6 +25,12 @@ function resolveAsset(file) {
     candidates.unshift(path.join(skill, "kit/viz/kinds/chart/chart.js"));
     candidates.unshift(path.join(skill, "fixtures/example-course/assets/visualizations/kinds/chart.js"));
   }
+  if (file === "optional/media/media.js" || file.includes("media.js")) {
+    candidates.unshift(path.join(skill, "kit/content/media/media.js"));
+  }
+  if (file === "visualizations/kinds/list.js" || file.includes("kinds/list")) {
+    candidates.unshift(path.join(skill, "kit/viz/kinds/list/list.js"));
+  }
   for (const c of candidates) {
     if (fs.existsSync(c)) return c;
   }

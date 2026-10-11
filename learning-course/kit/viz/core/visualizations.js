@@ -107,81 +107,83 @@
   root.CourseVisualizations = api;
   kit.viz = api;
 
-  var vizInitialized = false;
+  var initPromise = null;
 
-  async function init() {
-    if (!document) return;
-    if (vizInitialized) return;
-    vizInitialized = true;
-    var nodes = Array.prototype.slice.call(document.querySelectorAll("[data-visualization]"));
-    await Promise.all(nodes.map(async function (node) {
-      if (node.dataset.kitEnhanced === "true") return;
-      node.dataset.kitEnhanced = "true";
-      try {
-        node.dataset.kitState = "pending";
-        var configNode = find(node, "[data-viz-config]");
-        if (!configNode) throw new Error("缺少 data-viz-config");
-        var kind = node.dataset.visualization, config = validateConfig(kind, JSON.parse(configNode.textContent));
-        var sourceStore = null;
-        if (node.dataset.vizSource) {
-          var source = document.querySelector(node.dataset.vizSource);
-          sourceStore = source && source.__learnkitStore;
-          if (!sourceStore) throw new Error("data-viz-source 未找到 LearnKit 状态源：" + node.dataset.vizSource);
-        }
-        var instance = await adapters[kind].render(node, config, { sourceStore: sourceStore });
-        var instanceUpdate = instance && typeof instance.update === "function" ? instance.update : adapters[kind].update;
-        if (sourceStore && typeof instanceUpdate !== "function") throw new Error("此适配器不支持 data-viz-source 动态更新");
-        if (sourceStore) {
-          var revision = 0;
-          var update = function (snapshot) {
-            var current = ++revision;
-            function failed(error) {
-              if (current !== revision) return;
-              node.dataset.vizReady = "failed";
-              node.dataset.kitState = "failed";
-              var host = find(node, "[data-viz-host]"); if (host) host.hidden = true;
-              status(node, error.message);
-            }
-            try {
-              var result = instanceUpdate(node, config, snapshot, instance);
-              if (result && typeof result.then === "function") {
-                node.dataset.vizReady = "pending";
-                node.dataset.kitState = "pending";
-                return Promise.resolve(result).then(function () {
-                  if (current === revision) {
-                    node.dataset.vizReady = "true";
-                    node.dataset.kitState = "ready";
-                  }
-                }, failed);
+  function init() {
+    if (!document) return Promise.resolve();
+    if (initPromise) return initPromise;
+    initPromise = (async function () {
+      var nodes = Array.prototype.slice.call(document.querySelectorAll("[data-visualization]"));
+      await Promise.all(nodes.map(async function (node) {
+        if (node.dataset.kitEnhanced === "true") return;
+        node.dataset.kitEnhanced = "true";
+        try {
+          node.dataset.kitState = "pending";
+          var configNode = find(node, "[data-viz-config]");
+          if (!configNode) throw new Error("缺少 data-viz-config");
+          var kind = node.dataset.visualization, config = validateConfig(kind, JSON.parse(configNode.textContent));
+          var sourceStore = null;
+          if (node.dataset.vizSource) {
+            var source = document.querySelector(node.dataset.vizSource);
+            sourceStore = source && source.__learnkitStore;
+            if (!sourceStore) throw new Error("data-viz-source 未找到 LearnKit 状态源：" + node.dataset.vizSource);
+          }
+          var instance = await adapters[kind].render(node, config, { sourceStore: sourceStore });
+          var instanceUpdate = instance && typeof instance.update === "function" ? instance.update : adapters[kind].update;
+          if (sourceStore && typeof instanceUpdate !== "function") throw new Error("此适配器不支持 data-viz-source 动态更新");
+          if (sourceStore) {
+            var revision = 0;
+            var update = function (snapshot) {
+              var current = ++revision;
+              function failed(error) {
+                if (current !== revision) return;
+                node.dataset.vizReady = "failed";
+                node.dataset.kitState = "failed";
+                var host = find(node, "[data-viz-host]"); if (host) host.hidden = true;
+                status(node, error.message);
               }
-              node.dataset.vizReady = "true";
-              node.dataset.kitState = "ready";
-            } catch (error) { failed(error); }
-          };
-          node.__vizUnsubscribe = sourceStore.subscribe(update);
-          await update(sourceStore.snapshot());
+              try {
+                var result = instanceUpdate(node, config, snapshot, instance);
+                if (result && typeof result.then === "function") {
+                  node.dataset.vizReady = "pending";
+                  node.dataset.kitState = "pending";
+                  return Promise.resolve(result).then(function () {
+                    if (current === revision) {
+                      node.dataset.vizReady = "true";
+                      node.dataset.kitState = "ready";
+                    }
+                  }, failed);
+                }
+                node.dataset.vizReady = "true";
+                node.dataset.kitState = "ready";
+              } catch (error) { failed(error); }
+            };
+            node.__vizUnsubscribe = sourceStore.subscribe(update);
+            await update(sourceStore.snapshot());
+          }
+          if ((sourceStore || instance && typeof instance.destroy === "function") && root.addEventListener) {
+            node.__vizDestroy = function () {
+              if (node.__vizUnsubscribe) node.__vizUnsubscribe();
+              if (instance && instance.destroy) instance.destroy();
+            };
+            root.addEventListener("pagehide", node.__vizDestroy, { once: true });
+          }
+          if (node.dataset.vizReady !== "failed") {
+            node.dataset.vizReady = "true";
+            node.dataset.kitState = "ready";
+          }
+        } catch (error) {
+          node.dataset.vizReady = "failed";
+          node.dataset.kitState = "failed";
+          var host = find(node, "[data-viz-host]"), controls = find(node, "[data-viz-controls]");
+          if (host) host.hidden = true;
+          if (controls) controls.hidden = true;
+          status(node, error.message);
         }
-        if ((sourceStore || instance && typeof instance.destroy === "function") && root.addEventListener) {
-          node.__vizDestroy = function () {
-            if (node.__vizUnsubscribe) node.__vizUnsubscribe();
-            if (instance && instance.destroy) instance.destroy();
-          };
-          root.addEventListener("pagehide", node.__vizDestroy, { once: true });
-        }
-        if (node.dataset.vizReady !== "failed") {
-          node.dataset.vizReady = "true";
-          node.dataset.kitState = "ready";
-        }
-      } catch (error) {
-        node.dataset.vizReady = "failed";
-        node.dataset.kitState = "failed";
-        var host = find(node, "[data-viz-host]"), controls = find(node, "[data-viz-controls]");
-        if (host) host.hidden = true;
-        if (controls) controls.hidden = true;
-        status(node, error.message);
-      }
-    }));
-    root.__COURSE_VISUALIZATIONS_READY__ = true;
+      }));
+      root.__COURSE_VISUALIZATIONS_READY__ = true;
+    })();
+    return initPromise;
   }
 
   api.init = init;
@@ -190,15 +192,15 @@
     kit.registerModule("viz.core", api);
   }
 
-  // Fallback trigger in isolated / test harness environments where registry is not running
-  if (typeof setTimeout === "function" && typeof document !== "undefined") {
+  // Fallback trigger ONLY in isolated / test harness environments where registry coordinator is absent
+  if (!kit.registerModule && !kit.registry && typeof setTimeout === "function" && typeof document !== "undefined") {
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", function () {
-        if (!vizInitialized) init();
+        init();
       }, { once: true });
     } else {
       setTimeout(function () {
-        if (!vizInitialized) init();
+        init();
       }, 0);
     }
   }

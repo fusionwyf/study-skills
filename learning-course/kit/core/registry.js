@@ -36,10 +36,12 @@
     }
   }
 
+  var allInitialized = false;
+
   kit.registerModule = function (id, mod) {
     modules[id] = mod;
-    // Standalone fallback: If not bundled with __ACTIVE_MODULES__, initialize immediately
-    if (!Array.isArray(kit.__ACTIVE_MODULES__)) {
+    // Standalone fallback or dynamic registration after initAll has already run:
+    if (!Array.isArray(kit.__ACTIVE_MODULES__) || allInitialized) {
       initModule(id);
     }
   };
@@ -53,11 +55,18 @@
   };
 
   async function initAll() {
-    var order = Array.isArray(kit.__ACTIVE_MODULES__) ? kit.__ACTIVE_MODULES__ : Object.keys(modules);
+    var order = Array.isArray(kit.__ACTIVE_MODULES__) ? kit.__ACTIVE_MODULES__.slice() : [];
+    // Ensure all registered modules (e.g. course extensions) not in __ACTIVE_MODULES__ are also executed
+    Object.keys(modules).forEach(function (id) {
+      if (order.indexOf(id) === -1) {
+        order.push(id);
+      }
+    });
     for (var i = 0; i < order.length; i++) {
       var id = order[i];
       await initModule(id);
     }
+    allInitialized = true;
   }
 
   kit.initAll = initAll;
