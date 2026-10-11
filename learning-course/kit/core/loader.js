@@ -124,39 +124,31 @@
       return Promise.reject(new Error("Unknown vendor id: " + vendorId));
     }
 
-    var mode = (kit.config && kit.config.vendor && kit.config.vendor.mode) || "cdn";
+    var mode = (kit.config && kit.config.vendor && kit.config.vendor.mode) ||
+               (kit.config && kit.config.vendor_mode) || "cdn";
     var useLocal = mode === "local";
 
-    var promise;
-    if (vendorId === "hljs") {
-      var jsUrl = useLocal ? (vendor.js && vendor.js.local) : (vendor.js && vendor.js.cdn);
-      promise = loadScript(jsUrl, null, useLocal);
-    } else if (vendorId === "katex") {
-      var cssUrl = useLocal ? (vendor.css && vendor.css.local) : (vendor.css && vendor.css.cdn);
-      var katexJsUrl = useLocal ? (vendor.js && vendor.js.local) : (vendor.js && vendor.js.cdn);
-      var autoRenderUrl = useLocal ? (vendor.autoRender && vendor.autoRender.local) : (vendor.autoRender && vendor.autoRender.cdn);
-      promise = loadStyle(cssUrl, null, useLocal).then(function () {
-        return loadScript(katexJsUrl, null, useLocal);
-      }).then(function () {
-        if (autoRenderUrl) {
-          return loadScript(autoRenderUrl, null, useLocal);
-        }
-      });
-    } else if (vendorId === "mermaid") {
-      var mermaidUrl = useLocal ? (vendor.js && vendor.js.local) : (vendor.js && vendor.js.cdn);
-      promise = loadScript(mermaidUrl, null, useLocal);
-    } else if (vendorId === "plotly") {
-      var plotlyUrl = useLocal ? (vendor.js && vendor.js.local) : (vendor.js && vendor.js.cdn);
-      promise = loadScript(plotlyUrl, null, useLocal);
-    } else if (vendorId === "jsxgraph") {
-      var jsxCss = useLocal ? (vendor.css && vendor.css.local) : (vendor.css && vendor.css.cdn);
-      var jsxJs = useLocal ? (vendor.js && vendor.js.local) : (vendor.js && vendor.js.cdn);
-      promise = loadStyle(jsxCss, null, useLocal).then(function () {
-        return loadScript(jsxJs, null, useLocal);
-      });
-    } else {
-      promise = Promise.resolve();
+    function getUrl(item) {
+      if (!item) return null;
+      if (typeof item === "string") return item;
+      return useLocal ? item.local : item.cdn;
     }
+
+    var styles = vendor.css ? (Array.isArray(vendor.css) ? vendor.css : [vendor.css]) : [];
+    var scripts = vendor.js ? (Array.isArray(vendor.js) ? vendor.js : [vendor.js]) : [];
+    if (vendor.autoRender) scripts.push(vendor.autoRender);
+
+    var promise = Promise.all(styles.map(function (s) {
+      var url = getUrl(s);
+      return url ? loadStyle(url, null, useLocal) : Promise.resolve();
+    })).then(function () {
+      return scripts.reduce(function (seq, sc) {
+        return seq.then(function () {
+          var url = getUrl(sc);
+          return url ? loadScript(url, null, useLocal) : Promise.resolve();
+        });
+      }, Promise.resolve());
+    });
 
     loadingPromises[vendorId] = promise;
     return promise;

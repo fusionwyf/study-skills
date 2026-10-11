@@ -426,6 +426,35 @@ def validate_open_components(lesson: Path, body: str, errors: list[str]) -> None
         errors.append(f"{lesson.name}: duplicate open-practice question ids")
 
 
+def get_extended_capabilities(course_root: Path) -> tuple[set[str], set[str]]:
+    q_kinds: set[str] = set()
+    v_kinds: set[str] = set()
+    config_file = course_root / "assets" / "course" / "config.json"
+    exts: list[dict[str, Any]] = []
+    if config_file.exists():
+        try:
+            cfg = json.loads(config_file.read_text(encoding="utf-8"))
+            if isinstance(cfg.get("extensions"), list):
+                exts.extend(cfg["extensions"])
+        except Exception:
+            pass
+    ext_file = course_root / "assets" / "course" / "extensions.json"
+    if ext_file.exists():
+        try:
+            extra = json.loads(ext_file.read_text(encoding="utf-8"))
+            if isinstance(extra, list):
+                exts.extend(extra)
+        except Exception:
+            pass
+    for ext in exts:
+        provides = ext.get("provides", {})
+        for qk in provides.get("questionKinds", []):
+            q_kinds.add(qk)
+        for vk in provides.get("vizKinds", []):
+            v_kinds.add(vk)
+    return q_kinds, v_kinds
+
+
 def validate_visualizations(lesson: Path, body: str, errors: list[str]) -> None:
     course_root = lesson.resolve().parent.parent
     is_course_package = (course_root / "course.yaml").is_file()
@@ -434,7 +463,8 @@ def validate_visualizations(lesson: Path, body: str, errors: list[str]) -> None:
 
     registry_path = course_root / "assets" / "visualizations" / "adapters.json" if is_course_package else VIZ_REGISTRY_PATH
     registry_kinds = {}
-    kinds = {"chart", "relation", "timeline", "process", "spatial", "sequence", "table"}
+    ext_q_kinds, ext_v_kinds = get_extended_capabilities(course_root)
+    kinds = {"chart", "relation", "timeline", "process", "spatial", "sequence", "table"} | ext_v_kinds
 
     kit_modules: dict[str, str] = {}
     if is_kit_package:
@@ -575,7 +605,9 @@ def validate_answers_and_media(lesson: Path, body: str, errors: list[str], warni
     parser.feed(body)
     ids = [n['attrs'].get('id') for n in parser.nodes if n['attrs'].get('id')]
     questions = []
-    modern_kinds = {"choice", "multi", "numeric", "fill", "open", "dialogue"}
+    course_root = lesson.resolve().parent.parent
+    ext_q_kinds, _ = get_extended_capabilities(course_root)
+    modern_kinds = {"choice", "multi", "numeric", "fill", "open", "dialogue"} | ext_q_kinds
 
     for node in parser.nodes:
         attrs = node['attrs']
@@ -593,6 +625,8 @@ def validate_answers_and_media(lesson: Path, body: str, errors: list[str], warni
             label = f"{lesson.name}: question {qid or 'unnamed'}"
             if kind not in modern_kinds:
                 errors.append(f"{label} invalid data-kind: {kind}")
+            elif kind in ext_q_kinds:
+                pass  # Registered extension question kind
             elif kind == "choice":
                 options = [n for n in children if "data-option" in n["attrs"]]
                 correct = [n for n in options if "data-correct" in n["attrs"]]

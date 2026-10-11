@@ -238,7 +238,11 @@
     window.addEventListener("afterprint", function () { document.documentElement.classList.remove("is-printing"); });
   }
 
+  var recordsInitialized = false;
+
   function initRecords() {
+    if (recordsInitialized) return;
+    recordsInitialized = true;
     if (typeof document === "undefined") return;
     var lesson = document.querySelector(".lesson");
     if (!lesson) {
@@ -253,6 +257,9 @@
     }
 
     Array.prototype.slice.call(document.querySelectorAll("[data-copy-feedback]")).forEach(function (button) {
+      if (button.dataset.kitBound === "true") return;
+      button.dataset.kitBound = "true";
+
       button.addEventListener("click", function () {
         var status = lesson.querySelector("[data-copy-feedback-status]");
         var record = buildLearningRecord(lesson, store ? store.getState() : {});
@@ -283,7 +290,8 @@
     kit.registerModule("learning.records", kit.records);
   }
 
-  if (typeof document !== "undefined") {
+  // Standalone fallback: only listen to DOMContentLoaded if not managed by kit registry
+  if (!kit.registerModule && typeof document !== "undefined") {
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initRecords);
     else initRecords();
   }

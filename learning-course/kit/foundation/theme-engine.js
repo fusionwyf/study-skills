@@ -36,7 +36,8 @@
 
     var themeName = scheme === "dark" ? (codeThemes.dark || "github-dark") : (codeThemes.light || "github");
     var isUrl = themeName.indexOf("/") !== -1 || themeName.indexOf(".css") !== -1;
-    var targetUrl = isUrl ? themeName : "https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.12.0/build/styles/" + themeName + ".min.css";
+    var isLocal = (kit.config && (kit.config.vendor_mode === "local" || (kit.config.vendor && kit.config.vendor.mode === "local")));
+    var targetUrl = isUrl ? themeName : (isLocal ? "../assets/kit/vendor/hljs/styles/" + themeName + ".min.css" : "https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.12.0/build/styles/" + themeName + ".min.css");
 
     var link = document.getElementById("kit-hljs-theme");
     if (!link) {

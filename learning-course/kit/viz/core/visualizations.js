@@ -107,10 +107,16 @@
   root.CourseVisualizations = api;
   kit.viz = api;
 
+  var vizInitialized = false;
+
   async function init() {
     if (!document) return;
+    if (vizInitialized) return;
+    vizInitialized = true;
     var nodes = Array.prototype.slice.call(document.querySelectorAll("[data-visualization]"));
     await Promise.all(nodes.map(async function (node) {
+      if (node.dataset.kitEnhanced === "true") return;
+      node.dataset.kitEnhanced = "true";
       try {
         node.dataset.kitState = "pending";
         var configNode = find(node, "[data-viz-config]");
@@ -182,5 +188,18 @@
 
   if (kit.registerModule) {
     kit.registerModule("viz.core", api);
+  }
+
+  // Fallback trigger in isolated / test harness environments where registry is not running
+  if (typeof setTimeout === "function" && typeof document !== "undefined") {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", function () {
+        if (!vizInitialized) init();
+      }, { once: true });
+    } else {
+      setTimeout(function () {
+        if (!vizInitialized) init();
+      }, 0);
+    }
   }
 })(typeof window !== "undefined" ? window : globalThis);

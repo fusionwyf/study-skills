@@ -56,10 +56,14 @@ Course Kit v2 将所有模块拓扑排序并拼接为单文件产物：
 无论是向 Kit 库新增共享模块，还是为单门课程编写专用交互模型，均遵循以下规范：
 
 ### 1. 课程级专用扩展（Course Extensions）
-- 存放于 `assets/course/extensions/`。
-- 动态模型使用 `kit.store.registerModel(name, { initialState, reduce, derive })` 注册。
-- 画布或定制渲染器使用 `kit.store.registerRenderer(name, fn)` 或 `kit.viz.registerKind(name, adapter)`。
-- 必须实现 `validate` 与 `render`；若支持 `data-viz-source` 动态参数订阅，必须实现 `update`；持有持久 DOM 或动画计时器时实现 `destroy`。
+- 存放于 `assets/course/` 或 `assets/course/extensions/`，并在 `assets/course/config.json` 的 `extensions` 数组或 `assets/course/extensions.json` 中声明。
+- **三类接口职责分明**：
+  1. **模型（Model）**：负责业务状态与数据规约，实现 `initialState()`、`reduce(state, action)` 与 `derive(state)`。注册接口：`kit.store.registerModel(name, modelSpec)`。不涉及 DOM 渲染。
+  2. **渲染器（Renderer）**：负责纯数据衍生视图绘制，实现 `function(node, derivedState)`。注册接口：`kit.store.registerRenderer(name, fn)`。
+  3. **适配器（Kind）**：负责特定可视化类型或题目类型：
+     - **可视化 Kind**：必须实现 `validate(config)` 与 `render(node, config, ctx)`；支持 `data-viz-source` 动态更新时实现可选的 `update(node, config, snapshot, instance)`；持有持久 DOM 或动画计时器时实现可选的 `destroy()`。注册接口：`kit.viz.registerKind(name, adapter)`。
+     - **题型 Kind**：实现 `mount(ctx)`、`judge(ctx)` 或 `submit(ctx)`、`getRawAnswer(ctx)`、`reveal(ctx)`、`lock(ctx)`。注册接口：`kit.question.registerKind(name, adapter)`。
+- **构建集成**：`kit sync` 扫描声明的扩展并自动打包 JS/CSS，并将其能力登记供 `validate_course.py` 校验识别，无需手动修改全局核心代码。
 
 ### 2. Kit 全局模块扩展（Kit Modular Extensions）
 若要向 `kit/` 添加可复用的全新组件（如新动效、新可视化类型）：

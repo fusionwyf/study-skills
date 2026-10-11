@@ -466,6 +466,9 @@
   /* ---- Modern Question Enhancer (Architecture §7.4) ---- */
 
   function enhanceModernQuestion(rootEl, index, store) {
+    if (rootEl.dataset.kitEnhanced === "true") return;
+    rootEl.dataset.kitEnhanced = "true";
+
     var kind = rootEl.dataset.kind || "choice";
     var id = rootEl.dataset.questionId || ("q" + (index + 1));
     var maxAttempts = Number(rootEl.dataset.maxAttempts || 2);
@@ -706,7 +709,11 @@
 
   /* ---- Main Init ---- */
 
+  var questionsInitialized = false;
+
   function initQuestions() {
+    if (questionsInitialized) return;
+    questionsInitialized = true;
     if (typeof document === "undefined") return;
     var lesson = document.querySelector(".lesson") || document.body;
     var store = lesson.__evidenceStore;
@@ -743,7 +750,8 @@
     kit.registerModule("learning.question", kit.question);
   }
 
-  if (typeof document !== "undefined") {
+  // Standalone fallback: only listen to DOMContentLoaded if not managed by kit registry
+  if (!kit.registerModule && typeof document !== "undefined") {
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initQuestions);
     else initQuestions();
   }

@@ -7,6 +7,30 @@ const base = { model: "m", domain: "d", precision: "p" };
 function viz(id, kind, config, source = "") {
   return `<section id="${id}" data-visualization="${kind}" ${source ? `data-viz-source="#${source}"` : ""}><div data-viz-fallback>可读模型与核对点</div><div id="${id}-host" data-viz-host hidden></div><p data-viz-status role="status"></p><script type="application/json" data-viz-config>${JSON.stringify({ ...base, ...config })}</script></section>`;
 }
+function resolveAsset(file) {
+  const candidates = [
+    path.join(skill, "fixtures/example-course/assets", file),
+    path.join(skill, "fixtures/example-course/assets", file.replace("course-template/", "")),
+    path.join(skill, "assets", file),
+    path.join(skill, "kit", file),
+  ];
+  if (file === "course-template/course.js") {
+    candidates.unshift(path.join(skill, "fixtures/example-course/assets/course.js"));
+  }
+  if (file === "visualizations/visualizations.js") {
+    candidates.unshift(path.join(skill, "kit/viz/core/visualizations.js"));
+    candidates.unshift(path.join(skill, "fixtures/example-course/assets/visualizations/visualizations.js"));
+  }
+  if (file === "visualizations/kinds/chart.js") {
+    candidates.unshift(path.join(skill, "kit/viz/kinds/chart/chart.js"));
+    candidates.unshift(path.join(skill, "fixtures/example-course/assets/visualizations/kinds/chart.js"));
+  }
+  for (const c of candidates) {
+    if (fs.existsSync(c)) return c;
+  }
+  return path.join(skill, "assets", file);
+}
+
 function dom(body, files) {
   const d = new JSDOM(`<html><body>${body}</body></html>`, {
     runScripts: "outside-only",
@@ -14,7 +38,7 @@ function dom(body, files) {
     url: "https://course.local/lessons/0001-demo.html",
   });
   for (const file of files)
-    d.window.eval(fs.readFileSync(path.join(skill, "assets", file), "utf8"));
+    d.window.eval(fs.readFileSync(resolveAsset(file), "utf8"));
   return d;
 }
 const wait = () => new Promise((r) => setTimeout(r, 40));

@@ -133,6 +133,12 @@ def parse_selector(sel):
     raise ValueError(f"Unsupported selector in module detection rule: '{sel}'")
 
 
+VOID_ELEMENTS = {
+    "area", "base", "br", "col", "embed", "hr", "img", "input",
+    "link", "meta", "param", "source", "track", "wbr"
+}
+
+
 class HTMLModuleDetector(HTMLParser):
     def __init__(self, auto_rules):
         super().__init__()
@@ -146,12 +152,12 @@ class HTMLModuleDetector(HTMLParser):
         classes = set(attrs_dict.get("class", "").split())
         parent_tag = self.stack[-1]["tag"] if self.stack else None
 
-        if tag.lower() in ("pre", "code", "script", "style") or "data-math-ignore" in attrs_dict:
-            self.ignore_math_depth += 1
-
-        self.stack.append({"tag": tag.lower(), "attrs": attrs_dict, "classes": classes})
-
         tag_lower = tag.lower()
+        if tag_lower not in VOID_ELEMENTS:
+            if tag_lower in ("pre", "code", "script", "style") or "data-math-ignore" in attrs_dict:
+                self.ignore_math_depth += 1
+            self.stack.append({"tag": tag_lower, "attrs": attrs_dict, "classes": classes})
+
         for mod_id, rule in self.auto_rules.items():
             if mod_id in self.matched:
                 continue
@@ -175,10 +181,19 @@ class HTMLModuleDetector(HTMLParser):
                     self.matched[mod_id] = sel["raw"]
 
     def handle_endtag(self, tag):
-        if self.stack:
-            elem = self.stack.pop()
-            if elem["tag"] in ("pre", "code", "script", "style") or "data-math-ignore" in elem["attrs"]:
-                self.ignore_math_depth = max(0, self.ignore_math_depth - 1)
+        tag_lower = tag.lower()
+        if tag_lower in VOID_ELEMENTS:
+            return
+        idx = -1
+        for i in range(len(self.stack) - 1, -1, -1):
+            if self.stack[i]["tag"] == tag_lower:
+                idx = i
+                break
+        if idx != -1:
+            while len(self.stack) > idx:
+                elem = self.stack.pop()
+                if elem["tag"] in ("pre", "code", "script", "style") or "data-math-ignore" in elem["attrs"]:
+                    self.ignore_math_depth = max(0, self.ignore_math_depth - 1)
 
     def handle_data(self, data):
         if self.ignore_math_depth == 0:
@@ -431,8 +446,7 @@ def detect_modules_for_course(course_dir, manifest):
             opt_in_modules = raw_mods
         except Exception as e:
             raise ValueError(f"Failed to read course config.json: {e}")
-
-    modules_desc = manifest["modules"]
+    modules_desc = manifest.get("modules", manifest) if isinstance(manifest, dict) else {}
 
     # Unknown opt-in modules must fail explicitly
     for mod_id in opt_in_modules:
@@ -491,10 +505,9 @@ def detect_modules_for_course(course_dir, manifest):
     return active_modules, reasons
 
 
-def bundle_kit(active_modules, output_dir, course_config=None, vendor_mode="cdn"):
+def bundle_kit(active_modules, output_dir, course_config=None, vendor_mode="cdn", course_dir=None):
     """Bundles kit.js and kit.css for the active modules and copies local vendor files if local mode."""
     output_path = Path(output_dir)
-    output_path.mkdir(parents=True, exist_ok=True)
 
     modules = load_module_descriptors()
     ordered_ids = [m for m in topological_sort(modules) if m in active_modules]
@@ -518,13 +531,31 @@ def bundle_kit(active_modules, output_dir, course_config=None, vendor_mode="cdn"
                     t_content = tf.read_text(encoding="utf-8")
                     css_parts.append(f"/* ---- Foundation Theme: {tf.name} ---- */\n{t_content}\n")
 
-    kit_css_path = output_path / "kit.css"
-    kit_css_content = "\n".join(css_parts)
-    kit_css_path.write_text(kit_css_content, encoding="utf-8", newline="\n")
+    # Collect course extensions
+    extensions = []
+    if course_config and "extensions" in course_config and isinstance(course_config["extensions"], list):
+        extensions.extend(course_config["extensions"])
+    if course_dir:
+        ext_file = Path(course_dir) / "assets" / "course" / "extensions.json"
+        if ext_file.exists():
+            try:
+                extra = json.loads(ext_file.read_text(encoding="utf-8"))
+                if isinstance(extra, list):
+                    extensions.extend(extra)
+            except Exception:
+                pass
 
-    # Collect active vendor registry and offline copy
+    for ext in extensions:
+        ext_id = ext.get("id", "custom-extension")
+        if "css" in ext and course_dir:
+            c_file = Path(course_dir) / "assets" / "course" / ext["css"]
+            if c_file.exists():
+                css_parts.append(f"/* ---- Course Extension CSS: {ext_id} ---- */\n{c_file.read_text(encoding='utf-8')}\n")
+
+    kit_css_content = "\n".join(css_parts)
+
+    # Collect active vendor registry
     active_vendors = {}
-    vendor_hashes = {}
     for mod_id in ordered_ids:
         mod = modules[mod_id]
         for v in mod.get("vendor", []):
@@ -532,43 +563,70 @@ def bundle_kit(active_modules, output_dir, course_config=None, vendor_mode="cdn"
             if vid and vid in UNIFIED_VENDORS:
                 active_vendors[vid] = UNIFIED_VENDORS[vid]
 
+    # Pre-validation for local offline mode BEFORE touching output files
+    pkg_map = {
+        "plotly": "plotly.js-dist-min",
+        "jsxgraph": "jsxgraph",
+        "hljs": "hljs",
+        "katex": "katex",
+        "mermaid": "mermaid",
+    }
     if vendor_mode == "local" and active_vendors:
-        vendor_output_dir = output_path / "vendor"
-        vendor_output_dir.mkdir(parents=True, exist_ok=True)
-        pkg_map = {
-            "plotly": "plotly.js-dist-min",
-            "jsxgraph": "jsxgraph"
-        }
         for vid in active_vendors:
             pkg_name = pkg_map.get(vid, vid)
             src_pkg = KIT_ROOT / "vendor" / pkg_name
             if not src_pkg.exists() or not any(src_pkg.iterdir()):
-                if vid in ("plotly", "jsxgraph"):
-                    raise ValueError(
-                        f"Offline vendor package '{pkg_name}' for '{vid}' missing in kit/vendor/."
-                    )
-            else:
-                dst_pkg = vendor_output_dir / pkg_name
-                if dst_pkg.exists():
-                    shutil.rmtree(dst_pkg)
-                shutil.copytree(src_pkg, dst_pkg)
-                for f in dst_pkg.rglob("*"):
-                    if f.is_file():
-                        rel = str(f.relative_to(output_path)).replace("\\", "/")
-                        h = hashlib.sha256(f.read_bytes()).hexdigest()
-                        vendor_hashes[rel] = f"sha256-{h}"
+                raise ValueError(
+                    f"Offline vendor package '{pkg_name}' for '{vid}' missing in kit/vendor/."
+                )
+
+    # Navigation data from lessons if available
+    nav_data = None
+    if course_dir:
+        lessons_dir = Path(course_dir) / "lessons"
+        if lessons_dir.is_dir():
+            html_files = sorted(lessons_dir.glob("*.html"))
+            items = []
+            for i, hf in enumerate(html_files):
+                try:
+                    c_text = hf.read_text(encoding="utf-8")
+                    num_m = re.search(r'data-lesson-id="([^"]+)"', c_text)
+                    t_m = re.search(r'<title>([^<]+)</title>', c_text)
+                    obj_m = re.search(r'data-objective="([^"]+)"', c_text)
+                    num = num_m.group(1) if num_m else f"{i+1:04d}"
+                    raw_title = t_m.group(1).strip() if t_m else hf.stem
+                    title_clean = re.sub(r"^第\s*\d+\s*课[｜·\s-]*", "", raw_title)
+                    items.append({
+                        "number": num,
+                        "title": title_clean,
+                        "objective": obj_m.group(1) if obj_m else "",
+                        "file": hf.name,
+                    })
+                except Exception:
+                    pass
+            for i, it in enumerate(items):
+                it["prev"] = {"number": items[i - 1]["number"], "file": items[i - 1]["file"]} if i > 0 else None
+                it["next"] = {"number": items[i + 1]["number"], "file": items[i + 1]["file"]} if i < len(items) - 1 else None
+            nav_data = {
+                "lessons": items,
+                "home": "../index.html"
+            }
 
     # Collect JS
     config_json_str = json.dumps(course_config or {}, ensure_ascii=False)
     active_mods_str = json.dumps(ordered_ids, ensure_ascii=False)
     vendors_str = json.dumps(active_vendors, ensure_ascii=False)
+    extensions_str = json.dumps(extensions, ensure_ascii=False)
+    nav_str = json.dumps(nav_data, ensure_ascii=False) if nav_data else "null"
 
     js_parts = [
         "/**\n * Course Kit v2 Bundled Runtime\n * Built by kit.py. Do not edit directly.\n */\n",
         '(function (global) {\n  "use strict";\n  var CourseKit = global.CourseKit = global.CourseKit || {};\n  global.kit = global.kit || CourseKit;\n',
         f'  CourseKit.__COURSE_CONFIG__ = {config_json_str};\n',
         f'  CourseKit.__ACTIVE_MODULES__ = {active_mods_str};\n',
-        f'  CourseKit.VENDORS = {vendors_str};\n'
+        f'  CourseKit.VENDORS = {vendors_str};\n',
+        f'  CourseKit.__EXTENSIONS__ = {extensions_str};\n',
+        f'  CourseKit.__NAV_DATA__ = {nav_str};\n'
     ]
 
     for mod_id in ordered_ids:
@@ -580,13 +638,41 @@ def bundle_kit(active_modules, output_dir, course_config=None, vendor_mode="cdn"
                 js_content = js_file.read_text(encoding="utf-8")
                 js_parts.append(f"\n  /* ---- Module: {mod_id} ({js_rel}) ---- */\n  (function () {{\n{js_content}\n  }})();\n")
 
+    for ext in extensions:
+        ext_id = ext.get("id", "custom-extension")
+        if "js" in ext and course_dir:
+            j_file = Path(course_dir) / "assets" / "course" / ext["js"]
+            if j_file.exists():
+                js_parts.append(f"\n  /* ---- Course Extension: {ext_id} ---- */\n  (function () {{\n{j_file.read_text(encoding='utf-8')}\n  }})();\n")
+
     js_parts.append("\n})(typeof window !== 'undefined' ? window : globalThis);\n")
+    kit_js_content = "".join(js_parts)
+
+    # All validations passed; write outputs atomically
+    output_path.mkdir(parents=True, exist_ok=True)
+    kit_css_path = output_path / "kit.css"
+    kit_css_path.write_text(kit_css_content, encoding="utf-8", newline="\n")
 
     kit_js_path = output_path / "kit.js"
-    kit_js_content = "".join(js_parts)
     kit_js_path.write_text(kit_js_content, encoding="utf-8", newline="\n")
 
-    # Compute hashes
+    vendor_hashes = {}
+    if vendor_mode == "local" and active_vendors:
+        vendor_output_dir = output_path / "vendor"
+        vendor_output_dir.mkdir(parents=True, exist_ok=True)
+        for vid in active_vendors:
+            pkg_name = pkg_map.get(vid, vid)
+            src_pkg = KIT_ROOT / "vendor" / pkg_name
+            dst_pkg = vendor_output_dir / pkg_name
+            if dst_pkg.exists():
+                shutil.rmtree(dst_pkg)
+            shutil.copytree(src_pkg, dst_pkg)
+            for f in dst_pkg.rglob("*"):
+                if f.is_file():
+                    rel = str(f.relative_to(output_path)).replace("\\", "/")
+                    h = hashlib.sha256(f.read_bytes()).hexdigest()
+                    vendor_hashes[rel] = f"sha256-{h}"
+
     css_sha256 = hashlib.sha256(kit_css_content.encode("utf-8")).hexdigest()
     js_sha256 = hashlib.sha256(kit_js_content.encode("utf-8")).hexdigest()
 
@@ -667,7 +753,7 @@ def sync_course(course_dir):
     kit_output_dir = cpath / "assets" / "kit"
     try:
         files_hashes, ordered_ids, vendor_hashes = bundle_kit(
-            active_modules, kit_output_dir, course_config=course_config, vendor_mode=vendor_mode
+            active_modules, kit_output_dir, course_config=course_config, vendor_mode=vendor_mode, course_dir=cpath
         )
     except Exception as e:
         print(f"Error bundling kit: {e}", file=sys.stderr)
@@ -727,18 +813,24 @@ def check_course(course_dir):
             print(f"Error: Required bundled output '{req_f}' missing from {lock_file}.", file=sys.stderr)
             return False
 
-    # Check dependency closure against manifest
     manifest_file = KIT_ROOT / "kit.manifest.json"
+    manifest_data = {}
     manifest_modules = {}
     if manifest_file.exists():
         try:
-            m_data = json.loads(manifest_file.read_text(encoding="utf-8"))
-            manifest_modules = m_data.get("modules", {})
+            manifest_data = json.loads(manifest_file.read_text(encoding="utf-8"))
+            manifest_modules = manifest_data.get("modules", {})
         except Exception:
             pass
 
     for mod_id in modules_lock:
-        desc = manifest_modules.get(mod_id, {})
+        if mod_id not in manifest_modules:
+            print(
+                f"Error: Unknown module '{mod_id}' in {lock_file} not found in kit.manifest.json!",
+                file=sys.stderr
+            )
+            return False
+        desc = manifest_modules[mod_id]
         for req in desc.get("requires", []):
             if req not in modules_lock:
                 print(
@@ -746,6 +838,16 @@ def check_course(course_dir):
                     file=sys.stderr
                 )
                 return False
+
+    # Check that modules required by lesson content are present in modules_lock
+    needed_modules, _ = detect_modules_for_course(cpath, manifest_data)
+    for need_id in needed_modules:
+        if need_id not in modules_lock:
+            print(
+                f"Error: Module '{need_id}' is required by lesson content but missing in {lock_file}! Run 'kit sync' to update.",
+                file=sys.stderr
+            )
+            return False
 
     all_ok = True
 

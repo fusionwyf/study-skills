@@ -102,10 +102,40 @@ def render_html(meta: dict[str, str], lessons: list[dict[str, str]], include_the
 <body><div class="course-shell"><header class="course-header"><p class="course-kicker">课程入口</p><h1 class="course-title">{html.escape(meta["title"])}</h1><p class="course-subtitle">状态：{html.escape(meta["status"])} · 阶段：{html.escape(meta["phase"])}</p></header><main><div class="card"><h2>课程目录</h2><ol>{''.join(items)}</ol></div></main></div></body></html>'''
 
 
+import json
+
+
+def write_navigation_data(root: Path, lessons: list[dict[str, str]]) -> Path | None:
+    if not (root / "course.yaml").is_file():
+        return None
+    nav_dir = root / "assets" / "course"
+    nav_dir.mkdir(parents=True, exist_ok=True)
+    items = []
+    for i, item in enumerate(lessons):
+        prev_item = lessons[i - 1] if i > 0 else None
+        next_item = lessons[i + 1] if i < len(lessons) - 1 else None
+        items.append({
+            "number": item["number"],
+            "title": item["title"],
+            "objective": item["objective"],
+            "file": item["file"],
+            "prev": {"number": prev_item["number"], "file": prev_item["file"]} if prev_item else None,
+            "next": {"number": next_item["number"], "file": next_item["file"]} if next_item else None,
+        })
+    nav_data = {
+        "lessons": items,
+        "home": "../index.html"
+    }
+    nav_file = nav_dir / "nav.json"
+    nav_file.write_text(json.dumps(nav_data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
+    return nav_file
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("course_dir")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--nav", action="store_true", help="Generate assets/course/nav.json navigation manifest")
     args = parser.parse_args()
     root = Path(args.course_dir).expanduser().resolve()
     if not root.is_dir(): raise SystemExit(f"course directory does not exist: {root}")
@@ -119,6 +149,10 @@ def main() -> int:
         for path, content in outputs.items(): path.write_text(content, encoding="utf-8", newline="\n")
         print(root / "INDEX.md")
         print(root / "index.html")
+        if args.nav:
+            nav_p = write_navigation_data(root, lessons)
+            if nav_p:
+                print(nav_p)
     return 0
 
 

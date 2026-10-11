@@ -138,7 +138,7 @@
 
 #### 判定与辅助行为规则：
 - **三重视觉反馈**：颜色 + 符号（✓ / ✗ / 虚线框）+ 文字，满足无障碍对比度。
-- **自动辅助判定**：取消自述下拉控件。点击提示自动记录 `with_hints`；带 `data-guidance="ai_guided"` 的提示记录为 `ai_guided`；未用提示且答对记录为 `independent`。记录输出保持逐字节等价性。
+- **可观察辅助行为**：页面只客观记录用户在页内的辅助行为（点击提示记录为 `with_hints`；带 `data-guidance="ai_guided"` 的提示记录为 `ai_guided`；点击查看答案记录为 `answer_revealed`；未用页内提示记录为 `none (未在页内使用提示；外部辅助不可观测)`）。**严禁将未用提示自动断言为 `independent`**。独立性属于定稿评估（finalized evaluation），由 Agent 根据完整证据链或学习者自述在定稿记录中确认，严格遵守共享契约 `../shared/references/record-contract.md`。
 - **揭示保护**：未答对时隐藏答案，达到 `data-max-attempts`（默认 2）后提供“查看答案”按钮。
 
 #### ⚠️ 旧写法移除与迁移说明（已于 v2.3.0 正式移除，不再生效）：
@@ -146,7 +146,7 @@
 - 旧版 `[data-answer-input]` / `[data-answer-check]` ➔ 迁移为 `data-kind="numeric"` 或 `data-kind="fill"`
 - 旧版 `[data-role~="teaching-target"]` ➔ 迁移为 `data-kind="open"`
 - 旧版 `[data-role~="dialogue-practice"]` ➔ 迁移为 `data-kind="dialogue"`
-- 旧版 `<select data-independence>` ➔ 移除自述下拉，已改为提示按钮自动判定
+- 旧版 `<select data-independence>` ➔ 移除页内自述下拉；独立性由定稿评估确认，页面只记录客观辅助行为
 - 自动迁移：运行 `python kit/build/migrate_questions.py <course-dir> --apply`。
 
 ### 2. 代码块（Code Block）

@@ -5,8 +5,10 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 
@@ -16,10 +18,10 @@ def find_browser(explicit: str | None) -> str | None:
         os.environ.get("COURSE_BROWSER"),
         shutil.which("chrome"), shutil.which("chromium"), shutil.which("chromium-browser"),
         shutil.which("msedge"),
-        r"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-        r"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
-        r"C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
-        r"C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+        r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+        r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+        r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
         "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
         "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
     ]
@@ -34,7 +36,7 @@ def main() -> int:
     parser.add_argument("output", help="Destination PDF file")
     parser.add_argument("--mode", choices=("student", "review"), default="student")
     parser.add_argument("--browser", help="Chromium-family browser executable")
-    parser.add_argument("--wait-ms", type=int, default=1800, help="Virtual time budget for client-side rendering")
+    parser.add_argument("--wait-ms", type=int, default=2500, help="Virtual time budget for client-side rendering")
     parser.add_argument("--allow-failed", action="store_true", help="Allow exporting PDF even if some visual components failed")
     args = parser.parse_args()
 
@@ -46,9 +48,49 @@ def main() -> int:
     output.parent.mkdir(parents=True, exist_ok=True)
 
     # Keep the source in its original directory so relative CSS, JS, fonts and images work.
-    # course.js reads the export query parameter and applies the print mode without mutating HTML.
     source_url = source.as_uri() + f"?export={args.mode}"
-    command = [browser, "--headless=new", "--disable-gpu", "--no-pdf-header-footer", f"--virtual-time-budget={args.wait_ms}", f"--print-to-pdf={output}", source_url]
+
+    # Step 1: Pre-flight check via --dump-dom to ensure kit settled and no rendering failures
+    dump_cmd = [
+        browser, "--headless=new", "--disable-gpu",
+        f"--virtual-time-budget={args.wait_ms}",
+        "--dump-dom", source_url
+    ]
+    dump_res = subprocess.run(dump_cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
+    if dump_res.returncode == 0 and dump_res.stdout:
+        dom_text = dump_res.stdout
+        is_settled = ('data-kit-status="settled"' in dom_text or
+                      "data-kit-status='settled'" in dom_text or
+                      'data-course-ready="true"' in dom_text or
+                      "data-course-ready='true'" in dom_text)
+        if not is_settled:
+            msg = f"Render timeout / not settled: page did not settle within {args.wait_ms}ms (missing data-kit-status='settled')."
+            if not args.allow_failed:
+                raise SystemExit(msg)
+            else:
+                print(f"WARNING: {msg} Continuing due to --allow-failed.", file=sys.stderr)
+
+        failed_patterns = [
+            r'data-kit-state=["\']failed["\']',
+            r'data-viz-ready=["\']failed["\']',
+            r'data-kit-ready=["\']false["\']',
+            r'class=["\'][^"\']*\bkit-degraded\b[^"\']*["\']'
+        ]
+        has_failures = any(re.search(pat, dom_text) for pat in failed_patterns)
+        if has_failures:
+            if not args.allow_failed:
+                raise SystemExit(
+                    "Export blocked: one or more visual components failed rendering. Use --allow-failed to force export."
+                )
+            else:
+                print("WARNING: Exporting with failed components (--allow-failed is enabled).", file=sys.stderr)
+
+    # Step 2: Render to PDF
+    command = [
+        browser, "--headless=new", "--disable-gpu", "--no-pdf-header-footer",
+        f"--virtual-time-budget={args.wait_ms}",
+        f"--print-to-pdf={output}", source_url
+    ]
     result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", errors="replace")
     if result.returncode != 0: raise SystemExit(result.stderr.strip() or "Browser PDF export failed")
     if not output.is_file() or output.stat().st_size == 0: raise SystemExit("Browser returned without a usable PDF")
