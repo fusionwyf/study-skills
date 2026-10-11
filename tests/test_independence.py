@@ -42,7 +42,7 @@ class IndependenceTests(unittest.TestCase):
 
     def course(self, name="course"):
         target = self.root / name
-        shutil.copytree(ROOT / "learning-course/assets/example-course", target)
+        shutil.copytree(ROOT / "learning-course/fixtures/example-course", target)
         return target
 
     def test_mastery_update_matrix_refuses_insufficient_or_unknown_independence_without_writes(self):

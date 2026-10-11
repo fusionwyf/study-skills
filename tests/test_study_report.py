@@ -13,7 +13,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 BUILD_REPORT = ROOT / "study" / "scripts" / "build_report.py"
-EXAMPLE_COURSE = ROOT / "learning-course" / "assets" / "example-course"
+EXAMPLE_COURSE = ROOT / "learning-course" / "fixtures" / "example-course"
 EXAMPLE_EXAM = ROOT / "exam-prep" / "assets" / "example-exam"
 
 SECTION_TITLES = ("当前目标", "证据覆盖率", "已确认能力", "仍不确定能力", "最近错误模式", "到期复习", "风险", "下一步建议")

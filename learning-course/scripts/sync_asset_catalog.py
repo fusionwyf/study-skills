@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate compatibility registries from assets/catalog.json; --check detects drift."""
+"""Generate compatibility registries from kit/catalog.json; --check detects drift."""
 
 import argparse
 import json
@@ -9,11 +9,11 @@ SKILL = Path(__file__).resolve().parents[1]
 
 
 def projections():
-    assets = json.loads((SKILL / "assets/catalog.json").read_text(encoding="utf-8"))[
+    assets = json.loads((SKILL / "kit/catalog.json").read_text(encoding="utf-8"))[
         "assets"
     ]
     adapters = json.loads(
-        (SKILL / "assets/visualizations/adapters.json").read_text(encoding="utf-8")
+        (SKILL / "kit/viz/adapters.json").read_text(encoding="utf-8")
     )
     adapters["note"] = (
         "由 scripts/sync_asset_catalog.py 从 catalog.json 生成；修改能力、模块和交付方式请编辑 catalog.json。"
@@ -83,12 +83,12 @@ def projections():
                 "degrade": spec["fallback"],
             }
     components = json.loads(
-        (SKILL / "assets/learnkit/components.json").read_text(encoding="utf-8")
+        (SKILL / "fixtures/example-course/assets/learnkit/components.json").read_text(encoding="utf-8")
     )
     components["note"] = (
         "catalog.json 的能力索引；HTML + data-* 为制作入口，LessonSpec 不生成整页。planned 名称不是可用 renderer。"
     )
-    components["catalogue"] = "assets/catalog.json"
+    components["catalogue"] = "kit/catalog.json"
     components["kinds"].update(implemented=list(kinds), vendor_backed=optional)
     for key, names in [("universal", defaults), ("optional", optional)]:
         components["kinds"][key]["kinds"] = names
@@ -117,10 +117,7 @@ def projections():
         "components": [],
     }
     return {
-        "assets/visualizations/adapters.json": adapters,
-        "assets/optional/manifest.json": manifest,
-        "assets/learnkit/components.json": components,
-        "assets/asset-manifest.json": state,
+        "kit/viz/adapters.json": adapters,
     }
 
 

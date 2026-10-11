@@ -1162,17 +1162,5 @@
       "example": "course-template/lesson.html",
       "fallback": "纯 CSS 主题与打印浅色样式"
     }
-  },
-  "entrypoint": "HTML + data-*；LessonSpec 用于规划，不负责生成整页",
-  "roles": {
-    "common": "通用页面、输入、状态与证据",
-    "rendering": "数据到文字/图像的通用呈现",
-    "specialized": "领域模型与图元，优先留在课程 assets/extensions/"
-  },
-  "delivery": [
-    "default",
-    "optional",
-    "external",
-    "extension"
-  ]
+  }
 }

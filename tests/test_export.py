@@ -34,7 +34,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 BUILD_INDEX = ROOT / "learning-course" / "scripts" / "build_index.py"
 EXPORT_PDF = ROOT / "learning-course" / "scripts" / "export_pdf.py"
-EXAMPLE_COURSE = ROOT / "learning-course" / "assets" / "example-course"
+EXAMPLE_COURSE = ROOT / "learning-course" / "fixtures" / "example-course"
 
 
 def _load_export_pdf_module():

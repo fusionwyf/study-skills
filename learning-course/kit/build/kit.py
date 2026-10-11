@@ -101,7 +101,7 @@ def build_manifest():
     manifest_file.write_text(json.dumps(manifest_data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
     print(f"Generated {manifest_file} with {len(modules)} modules.")
 
-    catalog_file = SKILL_ROOT / "assets" / "catalog.json"
+    catalog_file = KIT_ROOT / "catalog.json"
     catalog_data = {
         "version": KIT_VERSION,
         "note": "由 kit build 自动生成，请勿手动修改。模块定义见 kit/**/module.json。",
@@ -121,9 +121,8 @@ def build_manifest():
         except Exception:
             pass
 
-    if catalog_file.parent.exists():
-        catalog_file.write_text(json.dumps(catalog_data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
-        print(f"Updated {catalog_file}.")
+    catalog_file.write_text(json.dumps(catalog_data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
+    print(f"Updated {catalog_file}.")
 
     return manifest_data
 

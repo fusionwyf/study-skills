@@ -66,7 +66,7 @@ Course Kit v2 将所有教学资产统一维护在 `kit/`（L0 运行时、L1 �
 
    `--course-dir`、`--title`、`--goal` 均为必填；`--diagnostic` 只在第 2 步判定起点需要诊断时传入。目标目录已存在时脚本拒绝覆盖，除非显式加 `--force`。
 4. 在 `PLAN.md` 中维护课程路线和边界。它不是可重新生成文件。
-5. 读取 `references/lesson.md` 与 `references/assets.md`，按课程目标从 `assets/catalog.json` 选择已实现能力；有公式、图形或动态模型时读取 `references/render.md`。以原生语义 HTML + data-* 契约为制作入口，生成一个具有可验证学习成果和 evidence opportunity 的 HTML 课件。
+5. 读取 `references/lesson.md` 与 `references/assets.md`，按课程目标从 `kit/catalog.json` 选择已实现能力；有公式、图形或动态模型时读取 `references/render.md`。以原生语义 HTML + data-* 契约为制作入口，生成一个具有可验证学习成果和 evidence opportunity 的 HTML 课件。
    把学习者要求的深度、视觉风格、交互与验收标准写入课程 `PLAN.md`；不足的能力按 assets 协议选择静态表达或课程专用扩展。
    成熟第三方库优先，允许固定版本 CDN；代码使用原生 `<pre><code class="language-...">`（由 Kit 块外壳与 highlight.js 渲染），公式使用 KaTeX 语法（`\(...\)` / `\[...\]`），流程图/状态图/时序图使用 Mermaid（`<pre class="mermaid">`），不手写 SVG 替代 Mermaid 能表达的图形。题目统一使用 `<section class="question" data-kind="...">` 题块。视觉定制写入 `assets/course/theme.css`，主题与第三方配置写入 `assets/course/config.json`。
    `templates/lesson.html` 是标准课件模板：复制后必须替换其中占位的 `data-course-id` 与 `data-objective`，并确保该 objective 已写入 `course.yaml` 的 `objectives`。

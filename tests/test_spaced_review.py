@@ -63,7 +63,7 @@ class SpacedReviewTestCase(unittest.TestCase):
 
     def copy_course(self, name: str = "course") -> Path:
         target = self.root / name
-        shutil.copytree(ROOT / "learning-course" / "assets" / "example-course", target)
+        shutil.copytree(ROOT / "learning-course" / "fixtures" / "example-course", target)
         return target
 
     def copy_exam(self, name: str = "exam") -> Path:

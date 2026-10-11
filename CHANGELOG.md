@@ -6,17 +6,22 @@ All notable changes to this project are documented in this file.
 
 ### Removed (BREAKING CHANGE)
 
-- **Legacy Acceptance Course Directory Removed:**
-  - Completely removed obsolete `learning-course/assets/acceptance-course/` directory (eliminating ~6MB of redundant duplicated assets).
+- **Legacy Assets Directory Completely Eliminated:**
+  - Completely removed obsolete root `learning-course/assets/` directory (eliminating all redundant asset copies: `acceptance-course/`, `example-course/`, `course-template/`, `learnkit/`, `optional/`, and `visualizations/`).
+  - Test fixture courses relocated cleanly to `learning-course/fixtures/example-course/`.
   - Modern acceptance testing is fully consolidated under `learning-course/fixtures/acceptance/`.
-  - Updated `prepare_acceptance.py` to source fixtures directly from `fixtures/acceptance`.
+  - Module catalog and vendored manifests consolidated to `learning-course/kit/catalog.json` and `learning-course/kit/vendor/`.
+  - Legacy backward-compatibility wrappers (`install_optional.py`, `validate_assets.py`, `sync_asset_catalog.py`, `prepare_acceptance.py`) retargeted to `kit/` and `fixtures/`.
+  - Updated `.gitattributes` to track `learning-course/kit/vendor/**`.
 
 ### Changed
 
 - **Showcase & Test Modernization:**
   - Modernized `fixtures/gallery/viz.html` to consume unified `assets/kit/kit.css` and `assets/kit/kit.js`.
   - Modernized `tests/test_assets.py` to resolve catalog examples to `fixtures/acceptance`.
+  - Retargeted invariant tests (`tests/visualization_invariants.cjs`, `tests/visualization_dom.cjs`) to `kit/viz/`.
   - Expanded `tests/test_open_components.py` to validate modern Kit v2 question kinds (`open`, `dialogue`, `choice`) and `templates/lesson.html`.
+  - Retargeted evidence store and optional component Node tests to `fixtures/example-course`.
 
 ## [2.3.0] - 2026-10-11
 

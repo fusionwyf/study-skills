@@ -12,12 +12,20 @@
  * Needs jsdom from the managed node workspace:
  *   NODE_PATH=<workspace>/node_modules node tests/visualization_dom.cjs
  */
-const {JSDOM} = require("jsdom");
+const WORKSPACE = "C:/Users/wy/.workbuddy/binaries/node/workspace/node_modules";
+function loadJsdom() {
+  try {
+    return require("C:/Users/wy/.workbuddy/binaries/node/workspace/node_modules/jsdom");
+  } catch (error) {
+    return require("jsdom");
+  }
+}
+const {JSDOM} = loadJsdom();
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 
-const KIT = path.resolve(__dirname, "../learning-course/assets/visualizations");
+const KIT = path.resolve(__dirname, "../learning-course/kit/viz");
 
 function section(id, kind, config) {
   return `<section class="visualization" id="${id}" data-visualization="${kind}">
@@ -45,8 +53,16 @@ const body = [
 const dom = new JSDOM(`<!doctype html><html><body>${body}</body></html>`, {runScripts: "outside-only", pretendToBeVisual: true});
 
 // Load exactly what a course page loads, in the same order.
-for (const file of ["visualizations.js", "kinds/list.js", "kinds/sequence.js", "kinds/table.js", "kinds/chart.js", "kinds/spatial.js"]) {
-  dom.window.eval(fs.readFileSync(path.join(KIT, file), "utf8"));
+const files = [
+  path.join(KIT, "core/visualizations.js"),
+  path.join(KIT, "kinds/list/list.js"),
+  path.join(KIT, "kinds/sequence/sequence.js"),
+  path.join(KIT, "kinds/table/table.js"),
+  path.join(KIT, "kinds/chart/chart.js"),
+  path.join(KIT, "kinds/spatial/spatial.js")
+];
+for (const file of files) {
+  dom.window.eval(fs.readFileSync(file, "utf8"));
 }
 const {document} = dom.window;
 

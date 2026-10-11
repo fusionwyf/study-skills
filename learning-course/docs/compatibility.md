@@ -72,12 +72,12 @@ console.warn(
 **策略：** 清理所有与旧写法相关的测试、冗余资产目录与引用路径。
 
 **执行状态：**
-- ✅ **删除旧版验收课件副本**：物理移除 `learning-course/assets/acceptance-course/`（消除 6MB 冗余副本），所有测试与脚本全面切换为 `learning-course/fixtures/acceptance`。
-- ✅ **更新验收脚本**：`prepare_acceptance.py` 移除对 `assets/acceptance-course` 的回退逻辑，直接使用 `fixtures/acceptance`。
-- ✅ **统一 Gallery 接入**：更新 `fixtures/gallery/viz.html`，彻底移除旧版散落样式/脚本链接，统一接入 `assets/kit/kit.css` 与 `kit.js`。
-- ✅ **测试用例现代化对齐**：
-  - 更新 `tests/test_assets.py`，支持 `spec["example"]` 自动解析到现代 `fixtures/acceptance` 目录。
-  - 扩展 `tests/test_open_components.py`，新增对现代统一题目块（open / dialogue）及标准模板 `templates/lesson.html` 的完整结构校验。
+- ✅ **彻底删除旧版 assets 目录**：物理移除 `learning-course/assets/` 整个目录（消除 `acceptance-course/`、`example-course/`、`learnkit/`、`optional/`、`visualizations/` 等全部历史冗余）。
+- ✅ **测试用例与夹具现代化**：
+  - `example-course` 迁移至 `fixtures/example-course`。
+  - `prepare_acceptance.py` 直连 `fixtures/acceptance`。
+  - `fixtures/gallery/viz.html` 接入统一的 `assets/kit/kit.css` 与 `kit.js`。
+  - 更新 `tests/test_assets.py`、`tests/test_visualizations.py`、`tests/test_open_components.py` 及 Node.js 测试套件对齐新路径。
 - ✅ **全量回归验证通过**：全量测试套件（114 项单元测试）100% PASS。
 
 ## 迁移指南

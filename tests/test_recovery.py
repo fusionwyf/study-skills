@@ -61,7 +61,7 @@ class RecoveryTestCase(unittest.TestCase):
 
     def copy_course(self) -> Path:
         target = self.root / "course"
-        shutil.copytree(ROOT / "learning-course" / "assets" / "example-course", target)
+        shutil.copytree(ROOT / "learning-course" / "fixtures" / "example-course", target)
         return target
 
     def copy_exam(self) -> Path:

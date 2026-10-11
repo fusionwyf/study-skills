@@ -17,7 +17,7 @@ REGISTER = ROOT / "shared" / "scripts" / "register_source.py"
 VALIDATE_SOURCES = ROOT / "shared" / "scripts" / "validate_sources.py"
 EXAM_VALIDATE = ROOT / "exam-prep" / "scripts" / "validate_exam.py"
 EXAM_UPDATE = ROOT / "exam-prep" / "scripts" / "update_exam.py"
-EXAMPLE_COURSE = ROOT / "learning-course" / "assets" / "example-course"
+EXAMPLE_COURSE = ROOT / "learning-course" / "fixtures" / "example-course"
 EXAMPLE_EXAM = ROOT / "exam-prep" / "assets" / "example-exam"
 
 

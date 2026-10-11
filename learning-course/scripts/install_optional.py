@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Install optional assets and dependencies from assets/catalog.json without partial writes."""
+"""Install optional assets and dependencies from kit/catalog.json without partial writes."""
 
 from __future__ import annotations
 import argparse
@@ -7,6 +7,8 @@ import hashlib
 import json
 import os
 import shutil
+import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -19,9 +21,48 @@ class InstallError(Exception):
 
 
 def catalogue():
-    return json.loads((SKILL / "assets/catalog.json").read_text(encoding="utf-8"))[
+    return json.loads((SKILL / "kit/catalog.json").read_text(encoding="utf-8"))[
         "assets"
     ]
+
+
+def get_source_file(relative: str) -> Path:
+    if relative.startswith("visualizations/vendor/"):
+        return SKILL / "kit/vendor" / relative.removeprefix("visualizations/vendor/")
+    if relative.startswith("visualizations/kinds/"):
+        kind_name = Path(relative).stem
+        p = SKILL / f"kit/viz/kinds/{kind_name}/{kind_name}.js"
+        if p.is_file():
+            return p
+    if relative == "visualizations/visualizations.js":
+        return SKILL / "kit/viz/core/visualizations.js"
+    if relative == "visualizations/visualizations.css":
+        return SKILL / "kit/viz/core/visualizations.css"
+    if relative == "visualizations/adapters.json":
+        return SKILL / "kit/viz/adapters.json"
+    if relative == "optional/media/media.js":
+        return SKILL / "kit/content/media/media.js"
+    if relative == "optional/media/media.css":
+        return SKILL / "kit/content/media/media.css"
+    if relative == "optional/media/README.md":
+        return SKILL / "kit/content/media/README.md"
+    if relative == "optional/mermaid/mermaid.js":
+        return SKILL / "kit/content/diagram/mermaid.js"
+    if relative == "optional/mermaid/mermaid.css":
+        return SKILL / "kit/content/diagram/mermaid.css"
+    if relative == "optional/mermaid/README.md":
+        return SKILL / "kit/content/diagram/README.md"
+    fixture_path = SKILL / "fixtures/example-course/assets" / relative
+    if fixture_path.is_file():
+        return fixture_path
+    if relative.startswith("course-template/"):
+        target = SKILL / "fixtures/example-course/assets" / Path(relative).name
+        if target.is_file():
+            return target
+        template_target = SKILL / "fixtures/legacy_template.html"
+        if template_target.is_file():
+            return template_target
+    return SKILL / relative
 
 
 def _object(path, default):
@@ -139,7 +180,7 @@ def install(course_dir: Path, components: list[str], force: bool = False) -> lis
         visit(name)
     files = {}
     vendor = {}
-    vendor_source = _object(SKILL / "assets/visualizations/vendor/manifest.json", {})
+    vendor_source = _object(SKILL / "kit/vendor/manifest.json", {})
     for name in selected:
         spec = assets[name]
         for relative in spec["files"]:
@@ -151,7 +192,7 @@ def install(course_dir: Path, components: list[str], force: bool = False) -> lis
                 files["assets/" + destination] = (
                     existing.read_bytes()
                     if spec["delivery"] == "default" and existing.is_file()
-                    else (SKILL / "assets" / relative).read_bytes()
+                    else get_source_file(relative).read_bytes()
                 )
             except OSError as exc:
                 raise InstallError(f"Missing asset {name}: {relative}") from exc
@@ -160,7 +201,7 @@ def install(course_dir: Path, components: list[str], force: bool = False) -> lis
             if not isinstance(dependency, dict):
                 raise InstallError(f"Missing vendor lock: {name}")
             for relative in dependency["files"]:
-                source = SKILL / "assets/visualizations/vendor" / relative
+                source = SKILL / "kit/vendor" / relative
                 try:
                     data = source.read_bytes()
                 except OSError as exc:
@@ -210,6 +251,36 @@ def install(course_dir: Path, components: list[str], force: bool = False) -> lis
         files[lock] = _json_bytes(merged)
         metadata.add(lock)
     _commit(course_dir, files, force, metadata)
+
+    # Kit v2 integration
+    kit_py = SKILL / "kit/build/kit.py"
+    if (course_dir / "assets/kit/kit.lock.json").exists() or (course_dir / "assets/course/config.json").exists():
+        module_map = {
+            "chart": "viz.kinds.chart",
+            "spatial": "viz.kinds.spatial",
+            "media": "content.media",
+            "mermaid": "content.diagram",
+            "code-highlight": "content.code",
+            "theme": "shell.theme-switcher",
+        }
+        config_path = course_dir / "assets/course/config.json"
+        if config_path.is_file():
+            try:
+                cfg = json.loads(config_path.read_text(encoding="utf-8"))
+                mods = cfg.setdefault("modules", [])
+                for comp in optional:
+                    mid = module_map.get(comp)
+                    if mid and mid not in mods:
+                        mods.append(mid)
+                config_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
+            except Exception:
+                pass
+        if kit_py.is_file():
+            try:
+                subprocess.run([sys.executable, str(kit_py), "sync", str(course_dir)], check=True, capture_output=True)
+            except Exception:
+                pass
+
     return notices + [f"{name}：已安装及登记依赖" for name in optional]
 
 

@@ -139,8 +139,8 @@ function boot() {
   globalThis.addEventListener = () => {};
 
   const rootDir = path.resolve(__dirname, "..");
-  eval(fs.readFileSync(path.join(rootDir, "learning-course/assets/learnkit/learnkit.js"), "utf8"));
-  eval(fs.readFileSync(path.join(rootDir, "learning-course/assets/course-template/course.js"), "utf8"));
+  eval(fs.readFileSync(path.join(rootDir, "learning-course/fixtures/example-course/assets/learnkit/learnkit.js"), "utf8"));
+  eval(fs.readFileSync(path.join(rootDir, "learning-course/fixtures/example-course/assets/course.js"), "utf8"));
 
   return { lesson, quiz, feedback, submit, radioWrong, radioRight, hint, hintBody };
 }

@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "learning-course/scripts"))
-from install_optional import install, InstallError
+from install_optional import install, InstallError, get_source_file
 from prepare_acceptance import prepare
 from validate_course import validate_visualizations, validate_answers_and_media
 from validate_assets import validate_asset_package, validate_wiring
@@ -44,16 +44,18 @@ class AssetTests(unittest.TestCase):
             text=True,
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        catalog = json.loads((ROOT / "learning-course/assets/catalog.json").read_text())
+        catalog = json.loads((ROOT / "learning-course/kit/catalog.json").read_text(encoding="utf-8"))
         for name, spec in catalog["assets"].items():
             for relative in spec["files"]:
                 self.assertTrue(
-                    (ROOT / "learning-course/assets" / relative).is_file(),
+                    get_source_file(relative).is_file(),
                     (name, relative),
                 )
-            example_path = (ROOT / "learning-course/assets" / spec["example"]).resolve()
-            if not example_path.is_file() and "acceptance-course" in spec["example"]:
-                example_path = (ROOT / "learning-course" / spec["example"].replace("acceptance-course", "fixtures/acceptance")).resolve()
+            ex = spec["example"]
+            if "acceptance-course" in ex or "example-course" in ex:
+                example_path = (ROOT / "learning-course" / ex.replace("acceptance-course", "fixtures/acceptance").replace("example-course", "fixtures/example-course")).resolve()
+            else:
+                example_path = get_source_file(ex)
             self.assertTrue(example_path.is_file(), name)
 
     def test_late_conflict_leaves_all_assets_and_manifest_unchanged(self):
@@ -152,6 +154,7 @@ class AssetTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             self.init(root)
+            (root / "assets/kit/kit.lock.json").unlink(missing_ok=True)
             lesson = root / "lessons/0001-test.html"
             for state in (
                 [],
@@ -169,7 +172,9 @@ class AssetTests(unittest.TestCase):
                     lesson, '<div data-visualization="chart"></div>', errors
                 )
                 validate_wiring(lesson, "<figure data-media></figure>", errors)
-            (root / "assets/visualizations/adapters.json").write_text("[]")
+            adapt_path = root / "assets/visualizations/adapters.json"
+            adapt_path.parent.mkdir(parents=True, exist_ok=True)
+            adapt_path.write_text("[]")
             errors = []
             validate_visualizations(
                 lesson, '<div data-visualization="chart"></div>', errors

@@ -9,7 +9,7 @@ from validate_course import validate_open_components, validate_answers_and_media
 
 class OpenComponentTests(unittest.TestCase):
     def setUp(self):
-        self.body = (ROOT / "learning-course/assets/course-template/lesson.html").read_text(encoding="utf-8")
+        self.body = (ROOT / "learning-course/fixtures/legacy_template.html").read_text(encoding="utf-8")
         self.modern_template = (ROOT / "learning-course/templates/lesson.html").read_text(encoding="utf-8")
 
     def validate(self, body):
@@ -38,7 +38,7 @@ class OpenComponentTests(unittest.TestCase):
         self.assertTrue(any("data-teaching-key" in e for e in errors))
 
     def test_legacy_lessons_without_optional_components_stay_valid(self):
-        body = (ROOT / "learning-course/assets/example-course/lessons/0001-example.html").read_text(encoding="utf-8")
+        body = (ROOT / "learning-course/fixtures/example-course/lessons/0001-example.html").read_text(encoding="utf-8")
         self.assertEqual(self.validate(body), [])
 
     def test_modern_template_validates_cleanly(self):

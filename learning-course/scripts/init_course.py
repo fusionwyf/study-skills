@@ -8,6 +8,8 @@ import html
 import json
 import re
 import shutil
+import subprocess
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -42,56 +44,15 @@ def main() -> int:
     course_dir = Path(args.course_dir).expanduser().resolve()
     course_id = slugify(course_dir.name)
     now = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
-    template_dir = Path(__file__).resolve().parents[1] / "assets" / "course-template"
-    learnkit_dir = Path(__file__).resolve().parents[1] / "assets" / "learnkit"
-
     for name in ("lessons", "assets", "reference", "records", "exports"):
         (course_dir / name).mkdir(parents=True, exist_ok=True)
 
-    for filename in ("course.css", "course.js", "theme.css", "theme.js"):
-        target = course_dir / "assets" / filename
-        if target.exists() and not args.force:
-            raise FileExistsError(f"Refusing to overwrite existing file: {target}")
-        shutil.copy2(template_dir / filename, target)
-
-    # L1 runtime and the declarative schema are dependency-free, so every new
-    # course gets the same portable foundation. Math rendering comes from the
-    # KaTeX CDN.
-    learnkit_target = course_dir / "assets" / "learnkit"
-    learnkit_target.mkdir(parents=True, exist_ok=True)
-    for filename in ("learnkit.js", "lesson-spec.schema.json", "components.json"):
-        target = learnkit_target / filename
-        if target.exists() and not args.force:
-            raise FileExistsError(f"Refusing to overwrite existing file: {target}")
-        shutil.copy2(learnkit_dir / filename, target)
-
-    asset_manifest = Path(__file__).resolve().parents[1] / "assets" / "asset-manifest.json"
-    asset_manifest_target = course_dir / "assets" / "asset-manifest.json"
-    if asset_manifest_target.exists() and not args.force:
-        raise FileExistsError(f"Refusing to overwrite existing file: {asset_manifest_target}")
-    shutil.copy2(asset_manifest, asset_manifest_target)
-
-    # The universal tier of the visualisation kit. Everything here is plain
-    # HTML/SVG with no third-party library, so a new course can render a
-    # relation graph, a timeline, a process, a step playback and a table out of
-    # the box. The optional kinds (`chart` needs 4.7 MB of Plotly, `spatial`
-    # needs JSXGraph) stay out and are copied by install_optional.py only when
-    # a course asks for them.
-    visualization_dir = Path(__file__).resolve().parents[1] / "assets" / "visualizations"
-    visualization_target = course_dir / "assets" / "visualizations"
-    catalog = json.loads((visualization_dir.parent / "catalog.json").read_text(encoding="utf-8"))
-    write_text(course_dir / "assets/catalog.json", json.dumps(catalog, ensure_ascii=False, indent=2) + "\n", args.force)
-    universal_files = list(dict.fromkeys(
-        filename.removeprefix("visualizations/")
-        for spec in catalog["assets"].values() if spec["delivery"] == "default"
-        for filename in spec["files"] if filename.startswith("visualizations/")
-    ))
-    for filename in universal_files:
-        target = visualization_target / filename
-        if target.exists() and not args.force:
-            raise FileExistsError(f"Refusing to overwrite existing file: {target}")
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(visualization_dir / filename, target)
+    starter_template = Path(__file__).resolve().parents[1] / "templates" / "lesson.html"
+    if starter_template.is_file():
+        lesson_content = starter_template.read_text(encoding="utf-8")
+        lesson_content = lesson_content.replace("example-course", course_id)
+        lesson_content = lesson_content.replace("课程标题", html.escape(args.title))
+        write_text(course_dir / "lessons/0001-lesson.html", lesson_content, args.force)
 
     phase = "diagnostic" if args.diagnostic else "designing"
     diagnostic_status = "pending" if args.diagnostic else "skipped"
@@ -121,19 +82,11 @@ review_queue: []
 last_feedback: null
 """
     write_text(course_dir / "course.yaml", course_yaml, args.force)
-    # The starter lesson contains code, a theme switcher, and a Mermaid diagram;
-    # install their maintained adapters once. Third-party engines are loaded on demand.
-    from install_optional import install
-    install(course_dir, ["code-highlight", "theme", "mermaid"], force=args.force)
-
-    # Kit v2 sync
+    # Kit v2 sync bundles assets/kit/ and assets/course/
     kit_py = Path(__file__).resolve().parents[1] / "kit" / "build" / "kit.py"
     if kit_py.is_file():
-        try:
-            import subprocess
-            subprocess.run([sys.executable, str(kit_py), "sync", str(course_dir)], check=True)
-        except Exception:
-            pass
+        import subprocess
+        subprocess.run([sys.executable, str(kit_py), "sync", str(course_dir)], check=True)
 
     plan = f"""# {args.title}
 

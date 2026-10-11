@@ -200,5 +200,5 @@
       "HelpPanel"
     ]
   },
-  "catalogue": "assets/catalog.json"
+  "catalogue": "kit/catalog.json"
 }

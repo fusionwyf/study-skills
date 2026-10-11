@@ -4,7 +4,7 @@
 
 ## 选择
 
-`kit/` 目录是所有资产的唯一代码源，`assets/catalog.json` 与 `kit/kit.manifest.json` 是模块能力、依赖与接入方式的权威视图。按教学目标选择最小组合。
+`kit/` 目录是所有资产的唯一代码源，`kit/catalog.json` 与 `kit/kit.manifest.json` 是模块能力、依赖与接入方式的权威视图。按教学目标选择最小组合。
 
 模块存在方式（presence）分为三类：
 - **core**：L0 核心运行时（bus/config/store/loader/util）、L1 基础与主题引擎、L4 学习记录模型。随 `kit.js` 默认打包。

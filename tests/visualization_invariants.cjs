@@ -1,8 +1,8 @@
 const assert = require("node:assert/strict");
 const path = require("node:path");
 
-const KIT = "../learning-course/assets/visualizations";
-const core = require(`${KIT}/visualizations.js`);
+const KIT = path.resolve(__dirname, "../learning-course/kit/viz");
+const core = require(path.join(KIT, "core/visualizations.js"));
 
 // The kit is a core plus one module per kind. Under Node there is no `window`,
 // so the core exports its API instead of installing it on a global; wire the
@@ -14,13 +14,13 @@ globalThis.document = {
   createElement: () => ({setAttribute() {}, appendChild() {}, addEventListener() {}, classList: {add() {}}, dataset: {}, style: {}}),
   createElementNS: () => ({setAttribute() {}, appendChild() {}})
 };
-for (const module of ["list", "sequence", "table"]) require(path.join(__dirname, KIT, "kinds", `${module}.js`));
+for (const module of ["list", "sequence", "table"]) require(path.join(KIT, "kinds", module, `${module}.js`));
 
 assert.deepEqual(core.loaded(), ["process", "relation", "sequence", "table", "timeline"], "the universal tier registers exactly the library-free kinds");
 for (const optional of ["chart", "spatial"]) {
   assert.throws(() => core.validateConfig(optional, {model: "m", domain: "d", precision: "p"}), /未知可视化类型/, `${optional} must not be registered until its module is loaded`);
 }
-for (const module of ["chart", "spatial"]) require(path.join(__dirname, KIT, "kinds", `${module}.js`));
+for (const module of ["chart", "spatial"]) require(path.join(KIT, "kinds", module, `${module}.js`));
 assert.deepEqual(core.loaded(), ["chart", "process", "relation", "sequence", "spatial", "table", "timeline"], "loading the optional modules completes the registry");
 
 const {vectorImage, selectionSortTrace, validateConfig} = core;
@@ -64,7 +64,7 @@ validateConfig("chart", {...base, traces: [{type: "scatter", x: [0, 1, 2], y: [0
 assert.throws(() => validateConfig("relation", {...base, nodes: [{id:"a"}], edges: [{from:"a",to:"missing"}]}));
 validateConfig("chart", {...base, traces: [{type:"bar",x:["A","B"],y:[-1,2]}]});
 delete globalThis.document; // Planning validation runs without a browser DOM.
-const learnkit = require("../learning-course/assets/learnkit/learnkit.js");
+const learnkit = require(path.resolve(__dirname, "../learning-course/kit/core/store.js"));
 assert.ok(learnkit.validateLessonSpec({version:"1.0",title:"t",sections:[{id:"s",type:"practice",title:"s",blocks:[{type:"multiple-choice"}]}]}).length, "unimplemented blocks cannot pass planning validation");
 assert.deepEqual(learnkit.validateLessonSpec({version:"1.0",title:"t",sections:[{id:"s",type:"explain",title:"s",blocks:[{type:"html",content:"<p>Text</p>"}]}]}),[]);
 console.log("Module registry, algebra, trace invariants, counters, domain gaps and invalid-data checks passed");

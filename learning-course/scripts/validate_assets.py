@@ -76,7 +76,7 @@ def validate_asset_package(root, errors):
         if not isinstance(state, dict):
             raise ValueError("asset manifest must be an object")
         catalog_path = root / "assets/catalog.json"
-        fallback = Path(__file__).resolve().parents[1] / "assets/catalog.json"
+        fallback = Path(__file__).resolve().parents[1] / "kit/catalog.json"
         catalog = json.loads(
             (catalog_path if catalog_path.exists() else fallback).read_text(
                 encoding="utf-8"
@@ -208,7 +208,7 @@ def validate_wiring(lesson, body, errors):
     if course.resolve() in scripts:
         before("assets/learnkit/learnkit.js", "assets/course.js")
     catalog = json.loads(
-        (Path(__file__).resolve().parents[1] / "assets/catalog.json").read_text(
+        (Path(__file__).resolve().parents[1] / "kit/catalog.json").read_text(
             encoding="utf-8"
         )
     )["assets"]

@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CREATE = ROOT / "shared" / "scripts" / "create_handoff.py"
 COMPLETE = ROOT / "shared" / "scripts" / "complete_handoff.py"
 VALIDATE = ROOT / "shared" / "scripts" / "validate_handoffs.py"
-EXAMPLE_COURSE = ROOT / "learning-course" / "assets" / "example-course"
+EXAMPLE_COURSE = ROOT / "learning-course" / "fixtures" / "example-course"
 EXAMPLE_EXAM = ROOT / "exam-prep" / "assets" / "example-exam"
 
 

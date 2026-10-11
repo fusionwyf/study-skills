@@ -312,7 +312,7 @@ python kit/build/kit.py build
 [Kit] Found 24 modules
 [Kit] Topological order: core → foundation → content._block → content.animation → ...
 [Kit] Writing kit/kit.manifest.json
-[Kit] Updating assets/catalog.json
+[Kit] Updating kit/catalog.json
 ✓ Build complete
 ```
 

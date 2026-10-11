@@ -14,25 +14,9 @@ SKILL = Path(__file__).resolve().parents[1]
 def prepare(destination):
     if destination.exists():
         raise FileExistsError(f"Refusing to overwrite {destination}")
-    subprocess.run(
-        [
-            sys.executable,
-            str(SKILL / "scripts/init_course.py"),
-            "--course-dir",
-            str(destination),
-            "--title",
-            "通用资产验收课件",
-            "--goal",
-            "验证六类教学资产",
-        ],
-        check=True,
-    )
-    install(destination, ["chart", "spatial", "media"])
     source = SKILL / "fixtures/acceptance"
-    for filename in ["course.yaml", "PLAN.md", "VALIDATION.md"]:
-        shutil.copy2(source / filename, destination / filename)
-    for folder in ["lessons", "reference"]:
-        shutil.copytree(source / folder, destination / folder, dirs_exist_ok=True)
+    shutil.copytree(source, destination)
+    install(destination, ["chart", "spatial", "media"])
     kit_py = SKILL / "kit/build/kit.py"
     if kit_py.is_file():
         subprocess.run([sys.executable, str(kit_py), "sync", str(destination)], check=True)

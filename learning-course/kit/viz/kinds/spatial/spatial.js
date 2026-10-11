@@ -169,7 +169,6 @@
 
   var spatialAdapter = {validate: validateSpatial, render: renderSpatial};
   core.registerKind("spatial", spatialAdapter);
-  core.registerKind("geometry", spatialAdapter);
 
   if (kit.ready && kit.ready.markReady) {
     kit.ready.markReady("viz.kinds.spatial");

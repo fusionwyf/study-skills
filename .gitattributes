@@ -1,2 +1,2 @@
 # Preserve the exact upstream bytes used by the dependency checksum manifest.
-learning-course/assets/visualizations/vendor/** -text -whitespace linguist-vendored
+learning-course/kit/vendor/** -text -whitespace linguist-vendored

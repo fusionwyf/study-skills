@@ -24,7 +24,7 @@ STATUSES = {"draft", "active", "paused", "complete"}
 COGNITIVE_LEVELS = {"remember", "understand", "apply", "analyze", "evaluate", "create"}
 EVIDENCE_STRENGTHS = {"weak", "medium", "strong"}
 REPO_ROOT = Path(__file__).resolve().parents[2]
-VIZ_REGISTRY_PATH = Path(__file__).resolve().parents[1] / "assets" / "visualizations" / "adapters.json"
+VIZ_REGISTRY_PATH = Path(__file__).resolve().parents[1] / "kit" / "viz" / "adapters.json"
 RECORD_SCHEMA_PATH = REPO_ROOT / "shared" / "schemas" / "record.schema.yaml"
 SHARED_RECORD_VALIDATOR = REPO_ROOT / "shared" / "scripts" / "validate_record.py"
 if str(SHARED_RECORD_VALIDATOR.parent) not in sys.path:

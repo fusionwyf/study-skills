@@ -29,10 +29,10 @@ function loadJsdom() {
 const { JSDOM } = loadJsdom();
 
 const ROOT = path.resolve(__dirname, "..");
-const HL_SRC = path.join(ROOT, "learning-course/assets/optional/code-highlight/code-highlight.js");
-const HL_CSS = path.join(ROOT, "learning-course/assets/optional/code-highlight/code-highlight.css");
-const HL_THEME_SRC = path.join(ROOT, "learning-course/assets/optional/code-highlight/theme.js");
-const THEME_SRC = path.join(ROOT, "learning-course/assets/optional/theme/theme.js");
+const HL_SRC = path.join(ROOT, "learning-course/fixtures/example-course/assets/optional/code-highlight/code-highlight.js");
+const HL_CSS = path.join(ROOT, "learning-course/fixtures/example-course/assets/optional/code-highlight/code-highlight.css");
+const HL_THEME_SRC = path.join(ROOT, "learning-course/fixtures/example-course/assets/optional/code-highlight/theme.js");
+const THEME_SRC = path.join(ROOT, "learning-course/fixtures/example-course/assets/optional/theme/theme.js");
 
 /*
  * The highlight.js engine is a 126 KB vendor artifact and is never committed.
