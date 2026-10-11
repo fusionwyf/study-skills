@@ -28,7 +28,7 @@ def prepare(destination):
         check=True,
     )
     install(destination, ["chart", "spatial", "media"])
-    source = SKILL / "fixtures/acceptance" if (SKILL / "fixtures/acceptance").exists() else SKILL / "assets/acceptance-course"
+    source = SKILL / "fixtures/acceptance"
     for filename in ["course.yaml", "PLAN.md", "VALIDATION.md"]:
         shutil.copy2(source / filename, destination / filename)
     for folder in ["lessons", "reference"]:

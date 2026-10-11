@@ -2,6 +2,22 @@
 
 All notable changes to this project are documented in this file.
 
+## [3.0.0] - 2026-10-11
+
+### Removed (BREAKING CHANGE)
+
+- **Legacy Acceptance Course Directory Removed:**
+  - Completely removed obsolete `learning-course/assets/acceptance-course/` directory (eliminating ~6MB of redundant duplicated assets).
+  - Modern acceptance testing is fully consolidated under `learning-course/fixtures/acceptance/`.
+  - Updated `prepare_acceptance.py` to source fixtures directly from `fixtures/acceptance`.
+
+### Changed
+
+- **Showcase & Test Modernization:**
+  - Modernized `fixtures/gallery/viz.html` to consume unified `assets/kit/kit.css` and `assets/kit/kit.js`.
+  - Modernized `tests/test_assets.py` to resolve catalog examples to `fixtures/acceptance`.
+  - Expanded `tests/test_open_components.py` to validate modern Kit v2 question kinds (`open`, `dialogue`, `choice`) and `templates/lesson.html`.
+
 ## [2.3.0] - 2026-10-11
 
 ### Removed (BREAKING CHANGE)

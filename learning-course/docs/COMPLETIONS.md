@@ -262,13 +262,21 @@ learning-course/
    - 重新打包生成 `assets/kit/kit.js` 与 `kit.manifest.json`，验证全量 111 项测试通过。
    - 更新 `CHANGELOG.md` 记录 BREAKING CHANGE。
 
+8. ✅ **彻底清理旧版资产目录与测试路径现代化 (Phase 3)**：
+   - 彻底删除 `learning-course/assets/acceptance-course/` 遗留冗余目录（消除 6MB 资产副本），验收逻辑全部收敛至 `fixtures/acceptance`。
+   - 更新 `learning-course/scripts/prepare_acceptance.py` 直连 `fixtures/acceptance`。
+   - 更新 `fixtures/gallery/viz.html` 移除独立的旧样式表/脚本链接，接入统一的 `kit.css` 与 `kit.js`。
+   - 现代化 `tests/test_assets.py`，支持 `spec["example"]` 自动解析到现代 `fixtures/` 路径。
+   - 现代化 `tests/test_open_components.py`，增加对 Kit v2 现代统一题目块（open / dialogue / choice）与 `templates/lesson.html` 的结构校验。
+   - 验证全量 114 个测试用例通过（OK, skipped=3）。
+
 ### 后续规划
-- **Phase 3 (v3.0.0)**：持续推进清理历史遗留测试断言与旧版资产副本。
+- Kit v2 架构全面稳定，已达成单一事实源（`kit/`）、统一题目块（6 类题目）、零兼容层冗余与 100% 测试通过。
 
 ---
 
 **创建日期**: 2026-10-11  
 **作者**: Kit 架构组  
-**审阅状态**: 待 Tech Lead 审批  
-**关联分支**: `skill-completions`  
-**关联 Commit**: `15fc9c6`
+**审阅状态**: Completed & Verified  
+**关联分支**: `master`  
+

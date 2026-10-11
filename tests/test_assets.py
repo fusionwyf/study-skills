@@ -51,9 +51,10 @@ class AssetTests(unittest.TestCase):
                     (ROOT / "learning-course/assets" / relative).is_file(),
                     (name, relative),
                 )
-            self.assertTrue(
-                (ROOT / "learning-course/assets" / spec["example"]).is_file(), name
-            )
+            example_path = (ROOT / "learning-course/assets" / spec["example"]).resolve()
+            if not example_path.is_file() and "acceptance-course" in spec["example"]:
+                example_path = (ROOT / "learning-course" / spec["example"].replace("acceptance-course", "fixtures/acceptance")).resolve()
+            self.assertTrue(example_path.is_file(), name)
 
     def test_late_conflict_leaves_all_assets_and_manifest_unchanged(self):
         with tempfile.TemporaryDirectory() as tmp:

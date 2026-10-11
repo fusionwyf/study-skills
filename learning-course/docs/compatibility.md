@@ -67,14 +67,18 @@ console.warn(
 - ✅ 已从 `module.json` 的 `detect.selectors` 与 `provides.selectors` 移除旧选择器（`.quiz`, `[data-answer-input]`, 等）
 - ✅ 已更新 CHANGELOG.md 标注为 **BREAKING CHANGE**
 
-### Phase 3: v3.0.0 (清理遗留)
+### Phase 3: v3.0.0 (清理遗留资产与现代路径对齐)
 
-**策略：** 清理所有与旧写法相关的测试、文档引用、类型定义。
+**策略：** 清理所有与旧写法相关的测试、冗余资产目录与引用路径。
 
-**清理范围：**
-- 测试用例中的旧写法覆盖（如果仍有）
-- 记录 schema 中已废弃的字段（保留兼容读取，但不生成）
-- 内部注释中的"旧版"、"兼容"说明
+**执行状态：**
+- ✅ **删除旧版验收课件副本**：物理移除 `learning-course/assets/acceptance-course/`（消除 6MB 冗余副本），所有测试与脚本全面切换为 `learning-course/fixtures/acceptance`。
+- ✅ **更新验收脚本**：`prepare_acceptance.py` 移除对 `assets/acceptance-course` 的回退逻辑，直接使用 `fixtures/acceptance`。
+- ✅ **统一 Gallery 接入**：更新 `fixtures/gallery/viz.html`，彻底移除旧版散落样式/脚本链接，统一接入 `assets/kit/kit.css` 与 `kit.js`。
+- ✅ **测试用例现代化对齐**：
+  - 更新 `tests/test_assets.py`，支持 `spec["example"]` 自动解析到现代 `fixtures/acceptance` 目录。
+  - 扩展 `tests/test_open_components.py`，新增对现代统一题目块（open / dialogue）及标准模板 `templates/lesson.html` 的完整结构校验。
+- ✅ **全量回归验证通过**：全量测试套件（114 项单元测试）100% PASS。
 
 ## 迁移指南
 
