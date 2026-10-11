@@ -174,9 +174,10 @@ def export_via_cdp(browser: str, source_url: str, output: Path, wait_ms: int, al
         f"--remote-debugging-port={port}",
         source_url
     ]
-    proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    proc = None
     ws = None
     try:
+        proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         start = time.time()
         ws_url = None
         while time.time() - start < 8.0:
@@ -227,14 +228,17 @@ def export_via_cdp(browser: str, source_url: str, output: Path, wait_ms: int, al
     except (ConnectionError, RuntimeError, OSError) as e:
         return False, str(e)
     finally:
-        if ws:
-            ws.close()
-        proc.terminate()
         try:
-            proc.wait(timeout=2)
-        except Exception:
-            pass
-        if user_data_dir and os.path.exists(user_data_dir):
+            if ws:
+                ws.close()
+            if proc is not None:
+                proc.terminate()
+                try:
+                    proc.wait(timeout=2)
+                except subprocess.TimeoutExpired:
+                    proc.kill()
+                    proc.wait(timeout=2)
+        finally:
             shutil.rmtree(user_data_dir, ignore_errors=True)
 
 

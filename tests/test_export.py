@@ -217,6 +217,27 @@ class ExportSmokeTests(unittest.TestCase):
                 _EXPORT_PDF_MODULE.main()
                 mock_cli.assert_called_once()
 
+    def test_cdp_launch_failure_cleans_up_profile(self) -> None:
+        profiles = []
+
+        def failed_launch(cmd, **kwargs):
+            profile = Path(next(arg.split("=", 1)[1] for arg in cmd if arg.startswith("--user-data-dir=")))
+            self.assertTrue(profile.is_dir())
+            profiles.append(profile)
+            raise PermissionError("browser launch denied")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / "lesson.pdf"
+            with patch.object(_EXPORT_PDF_MODULE.subprocess, "Popen", side_effect=failed_launch):
+                success, error = _EXPORT_PDF_MODULE.export_via_cdp(
+                    "blocked_browser", "file:///lesson.html", output, 500, False
+                )
+            self.assertFalse(success)
+            self.assertIn("browser launch denied", error)
+            self.assertFalse(output.exists())
+        self.assertEqual(len(profiles), 1)
+        self.assertFalse(profiles[0].exists())
+
     def test_export_via_cdp_uses_isolated_user_data_dir(self) -> None:
         import os
         from unittest.mock import MagicMock
