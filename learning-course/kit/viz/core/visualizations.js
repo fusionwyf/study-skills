@@ -126,6 +126,19 @@
           if (node.dataset.vizSource) {
             var source = document.querySelector(node.dataset.vizSource);
             sourceStore = source && source.__learnkitStore;
+            if (!sourceStore && typeof setTimeout === "function") {
+              await new Promise(function (resolve) {
+                var checkCount = 0;
+                var interval = setInterval(function () {
+                  checkCount++;
+                  sourceStore = source && source.__learnkitStore;
+                  if (sourceStore || checkCount >= 10) {
+                    clearInterval(interval);
+                    resolve();
+                  }
+                }, 10);
+              });
+            }
             if (!sourceStore) throw new Error("data-viz-source 未找到 LearnKit 状态源：" + node.dataset.vizSource);
           }
           var instance = await adapters[kind].render(node, config, { sourceStore: sourceStore });

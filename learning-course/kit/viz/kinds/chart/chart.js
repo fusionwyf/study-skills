@@ -189,9 +189,15 @@
     if (!root.Plotly) {
       var needFn = kit.need || (kit.loader && kit.loader.need);
       if (needFn) {
-        await needFn("plotly");
+        try {
+          await needFn("plotly");
+        } catch (e) {
+          // Vendor loading failed or running in headless/offline/test environment; fallback to SVG
+        }
       } else {
-        await h.loadVendor("plotly.js-dist-min/plotly.min.js", "Plotly");
+        try {
+          await h.loadVendor("plotly.js-dist-min/plotly.min.js", "Plotly");
+        } catch (e) {}
       }
     }
     var host = h.find(node, "[data-viz-host]"), current = config, disposed = false;

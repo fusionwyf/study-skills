@@ -253,12 +253,25 @@ class VisualizationTests(unittest.TestCase):
         result = subprocess.run(["node", str(ROOT / "tests/visualization_invariants.cjs")], capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def resolve_jsdom(self) -> Path | None:
+        jsdom = os.environ.get("JSDOM_PATH")
+        if jsdom and Path(jsdom).is_dir():
+            return Path(jsdom)
+        for cand in [
+            Path.home() / ".workbuddy/binaries/node/workspace/node_modules/jsdom",
+            Path("/mnt/c/Users/wy/.workbuddy/binaries/node/workspace/node_modules/jsdom"),
+            Path("C:/Users/wy/.workbuddy/binaries/node/workspace/node_modules/jsdom"),
+        ] + list(Path.home().glob(".hanako/artifacts/server/**/node_modules/jsdom")):
+            if cand.is_dir():
+                return cand
+        return None
+
     @unittest.skipUnless(shutil.which("node"), "Node is required for DOM rendering checks")
     def test_every_kind_renders_in_a_dom_including_the_library_missing_fallbacks(self):
         """Each kind must put something readable on screen, vendor library or not."""
         harness = ROOT / "tests/visualization_dom.cjs"
-        jsdom = Path(os.environ.get("JSDOM_PATH", "/mnt/c/Users/wy/.workbuddy/binaries/node/workspace/node_modules/jsdom" if os.name != "nt" else "C:/Users/wy/.workbuddy/binaries/node/workspace/node_modules/jsdom"))
-        if not jsdom.exists():
+        jsdom = self.resolve_jsdom()
+        if not jsdom or not jsdom.exists():
             self.skipTest("jsdom is required for DOM rendering checks")
         env = dict(os.environ, NODE_PATH=str(jsdom.parent))
         result = subprocess.run(["node", str(harness)], capture_output=True, text=True, env=env)
@@ -274,8 +287,8 @@ class VisualizationTests(unittest.TestCase):
         than fails, so an offline checkout still runs the rest of the suite.
         """
         harness = ROOT / "tests/optional_components.cjs"
-        jsdom = Path(os.environ.get("JSDOM_PATH", "/mnt/c/Users/wy/.workbuddy/binaries/node/workspace/node_modules/jsdom" if os.name != "nt" else "C:/Users/wy/.workbuddy/binaries/node/workspace/node_modules/jsdom"))
-        if not jsdom.exists():
+        jsdom = self.resolve_jsdom()
+        if not jsdom or not jsdom.exists():
             self.skipTest("jsdom is required for DOM behaviour checks")
         engine = fetch_highlight_engine()
         if engine is None:

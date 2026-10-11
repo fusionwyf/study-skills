@@ -233,15 +233,17 @@ class AssetTests(unittest.TestCase):
 
     @unittest.skipUnless(shutil.which("node"), "Node required")
     def test_real_dom_asset_behaviour(self):
-        jsdom = os.environ.get(
-            "JSDOM_PATH",
-            (
-                "/mnt/c/Users/wy/.workbuddy/binaries/node/workspace/node_modules/jsdom"
-                if os.name != "nt"
-                else "C:/Users/wy/.workbuddy/binaries/node/workspace/node_modules/jsdom"
-            ),
-        )
-        if not Path(jsdom).is_dir():
+        jsdom = os.environ.get("JSDOM_PATH")
+        if not jsdom or not Path(jsdom).is_dir():
+            for cand in [
+                Path.home() / ".workbuddy/binaries/node/workspace/node_modules/jsdom",
+                Path("/mnt/c/Users/wy/.workbuddy/binaries/node/workspace/node_modules/jsdom"),
+                Path("C:/Users/wy/.workbuddy/binaries/node/workspace/node_modules/jsdom"),
+            ] + list(Path.home().glob(".hanako/artifacts/server/**/node_modules/jsdom")):
+                if cand.is_dir():
+                    jsdom = str(cand)
+                    break
+        if not jsdom or not Path(jsdom).is_dir():
             self.skipTest("jsdom unavailable")
         env = dict(os.environ, NODE_PATH=str(Path(jsdom).parent))
         result = subprocess.run(
@@ -276,6 +278,89 @@ class AssetTests(unittest.TestCase):
             res = subprocess.run([sys.executable, str(kit_py), "check", str(root)], capture_output=True, text=True, encoding="utf-8", errors="replace")
             self.assertNotEqual(res.returncode, 0)
             self.assertIn("Hash mismatch", (res.stdout or "") + (res.stderr or ""))
+
+    def test_extension_requires_are_bundled_and_locked(self):
+        kit_py = ROOT / "learning-course/kit/build/kit.py"
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.init(root)
+            # Create a simple lesson HTML with NO code blocks
+            lesson = root / "lessons/0001-nocode.html"
+            lesson.write_text("""<!DOCTYPE html>
+<html><head><link rel="stylesheet" href="../assets/kit/kit.css"></head>
+<body class="lesson" data-course-id="c1" data-lesson-id="1" data-objective="obj1">
+  <p>No code block here</p>
+  <script src="../assets/kit/kit.js"></script>
+</body></html>""", encoding="utf-8")
+
+            # Declare course extension requiring content.code
+            cfg_file = root / "assets/course/config.json"
+            cfg = json.loads(cfg_file.read_text(encoding="utf-8"))
+            ext_css = root / "assets/course/ext.css"
+            ext_css.write_text("/* custom ext css */", encoding="utf-8")
+            cfg["extensions"] = [
+                {
+                    "id": "my-code-ext",
+                    "requires": ["content.code"],
+                    "css": "ext.css"
+                }
+            ]
+            cfg_file.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+
+            # Sync course
+            res = subprocess.run([sys.executable, str(kit_py), "sync", str(root)], capture_output=True, text=True, encoding="utf-8", errors="replace")
+            self.assertEqual(res.returncode, 0, (res.stdout or "") + (res.stderr or ""))
+
+            # Verify content.code is included in kit.lock.json
+            lock_file = root / "assets/kit/kit.lock.json"
+            lock_data = json.loads(lock_file.read_text(encoding="utf-8"))
+            self.assertIn("content.code", lock_data["modules"])
+            self.assertIn("extension:my-code-ext", lock_data["reasons"].get("content.code", []))
+
+            # Check passes
+            res = subprocess.run([sys.executable, str(kit_py), "check", str(root)], capture_output=True, text=True, encoding="utf-8", errors="replace")
+            self.assertEqual(res.returncode, 0, (res.stdout or "") + (res.stderr or ""))
+
+            # Remove content.code from lock file -> check must fail
+            del lock_data["modules"]["content.code"]
+            lock_file.write_text(json.dumps(lock_data, indent=2), encoding="utf-8")
+            res = subprocess.run([sys.executable, str(kit_py), "check", str(root)], capture_output=True, text=True, encoding="utf-8", errors="replace")
+            self.assertNotEqual(res.returncode, 0)
+            self.assertIn("content.code", (res.stdout or "") + (res.stderr or ""))
+
+    def test_sync_failure_preserves_courseware_html(self):
+        kit_py = ROOT / "learning-course/kit/build/kit.py"
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.init(root)
+            # Create a lesson HTML with un-normalized content (e.g. un-normalized heading structure)
+            unnormalized_html = """<!DOCTYPE html>
+<html><head></head>
+<body class="lesson" data-course-id="c1" data-lesson-id="1">
+  <h3>Un-normalized Heading</h3>
+</body></html>"""
+            lesson = root / "lessons/0001-unnorm.html"
+            lesson.write_text(unnormalized_html, encoding="utf-8")
+
+            # Declare extension with missing CSS file to intentionally break sync
+            cfg_file = root / "assets/course/config.json"
+            cfg = json.loads(cfg_file.read_text(encoding="utf-8"))
+            cfg["extensions"] = [
+                {
+                    "id": "broken-ext",
+                    "requires": ["content.code"],
+                    "css": "non_existent_file.css"
+                }
+            ]
+            cfg_file.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+
+            # Run sync -> should fail
+            res = subprocess.run([sys.executable, str(kit_py), "sync", str(root)], capture_output=True, text=True, encoding="utf-8", errors="replace")
+            self.assertNotEqual(res.returncode, 0)
+
+            # Assert lesson HTML on disk remains completely unchanged
+            current_html = lesson.read_text(encoding="utf-8")
+            self.assertEqual(current_html, unnormalized_html, "Courseware HTML must not be modified when sync fails")
 
 
 if __name__ == "__main__":

@@ -63,12 +63,28 @@
 
   function loadScript(url, attrs, isLocal) {
     if (typeof document === "undefined") return Promise.resolve();
+    if (typeof navigator !== "undefined" && navigator.userAgent && navigator.userAgent.indexOf("jsdom") >= 0) {
+      return Promise.reject(new Error("External script loading is not supported in JSDOM: " + url));
+    }
     return new Promise(function (resolve, reject) {
+      var timer = null;
+      if (typeof setTimeout === "function") {
+        timer = setTimeout(function () {
+          reject(new Error("Timeout loading script: " + url));
+        }, 5000);
+      }
       var existing = document.querySelector('script[src="' + url + '"]');
       if (existing) {
-        if (existing.dataset.loaded === "true") return resolve();
-        existing.addEventListener("load", function () { resolve(); });
+        if (existing.dataset.loaded === "true") {
+          if (timer) clearTimeout(timer);
+          return resolve();
+        }
+        existing.addEventListener("load", function () {
+          if (timer) clearTimeout(timer);
+          resolve();
+        });
         existing.addEventListener("error", function (e) {
+          if (timer) clearTimeout(timer);
           reject(new Error("Failed to load script: " + url));
         });
         return;
@@ -80,10 +96,12 @@
         Object.keys(attrs).forEach(function (k) { s.setAttribute(k, attrs[k]); });
       }
       s.onload = function () {
+        if (timer) clearTimeout(timer);
         s.dataset.loaded = "true";
         resolve();
       };
       s.onerror = function (e) {
+        if (timer) clearTimeout(timer);
         var msg = isLocal
           ? "Failed to load local vendor script: " + url + ". External network fallback is prohibited in local mode."
           : "Failed to load vendor script: " + url;
@@ -95,17 +113,33 @@
 
   function loadStyle(url, attrs, isLocal) {
     if (typeof document === "undefined") return Promise.resolve();
+    if (typeof navigator !== "undefined" && navigator.userAgent && navigator.userAgent.indexOf("jsdom") >= 0) {
+      return Promise.reject(new Error("External stylesheet loading is not supported in JSDOM: " + url));
+    }
     return new Promise(function (resolve, reject) {
+      var timer = null;
+      if (typeof setTimeout === "function") {
+        timer = setTimeout(function () {
+          reject(new Error("Timeout loading stylesheet: " + url));
+        }, 5000);
+      }
       var existing = document.querySelector('link[href="' + url + '"]');
-      if (existing) return resolve();
+      if (existing) {
+        if (timer) clearTimeout(timer);
+        return resolve();
+      }
       var link = document.createElement("link");
       link.rel = "stylesheet";
       link.href = url;
       if (attrs) {
         Object.keys(attrs).forEach(function (k) { link.setAttribute(k, attrs[k]); });
       }
-      link.onload = function () { resolve(); };
+      link.onload = function () {
+        if (timer) clearTimeout(timer);
+        resolve();
+      };
       link.onerror = function (e) {
+        if (timer) clearTimeout(timer);
         var msg = isLocal
           ? "Failed to load local vendor stylesheet: " + url + ". External network fallback is prohibited in local mode."
           : "Failed to load stylesheet: " + url;

@@ -44,8 +44,7 @@
           throw new Error("图片标注需要带 alt 的 img 与 data-media-frame");
         var task = node.closest("[data-question-id]"),
           field = task && task.querySelector("textarea"),
-          lesson = node.closest(".lesson"),
-          store = lesson && lesson.__evidenceStore;
+          lesson = node.closest(".lesson");
         var questionId = task
           ? task.dataset.questionId
           : node.dataset.mediaQuestion;
@@ -53,9 +52,10 @@
           .querySelectorAll("details[data-media-transcript]")
           .forEach(function (transcript) {
             function recordTranscript() {
-              if (!transcript.open || !store || !questionId) return;
-              store.dispatch({ type: "KEY_VIEWED", id: questionId });
-              store.dispatch({
+              var curStore = (lesson && lesson.__evidenceStore) || (document.querySelector(".lesson") && document.querySelector(".lesson").__evidenceStore);
+              if (!transcript.open || !curStore || !questionId) return;
+              curStore.dispatch({ type: "KEY_VIEWED", id: questionId });
+              curStore.dispatch({
                 type: "OBSERVED_ASSISTANCE",
                 id: questionId,
                 value: "with_hints",
@@ -64,13 +64,16 @@
             transcript.addEventListener("toggle", recordTranscript);
             recordTranscript();
           });
-        if (field && store)
+        if (field)
           field.addEventListener("input", function () {
-            store.dispatch({
-              type: "RAW_ANSWER",
-              id: task.dataset.questionId,
-              value: field.value,
-            });
+            var curStore = (lesson && lesson.__evidenceStore) || (document.querySelector(".lesson") && document.querySelector(".lesson").__evidenceStore);
+            if (curStore) {
+              curStore.dispatch({
+                type: "RAW_ANSWER",
+                id: task.dataset.questionId,
+                value: field.value,
+              });
+            }
           });
         var selected = [];
         hotspots.forEach(function (h, index) {

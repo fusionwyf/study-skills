@@ -9,9 +9,12 @@
 
   function initModule(id) {
     if (initialized[id]) return Promise.resolve();
-    initialized[id] = true;
     var mod = modules[id];
-    if (!mod || typeof mod.init !== "function") {
+    if (!mod) {
+      return Promise.resolve();
+    }
+    initialized[id] = true;
+    if (typeof mod.init !== "function") {
       if (kit.ready && kit.ready.markReady) kit.ready.markReady(id);
       return Promise.resolve();
     }
@@ -71,7 +74,7 @@
 
   kit.initAll = initAll;
 
-  if (typeof document !== "undefined") {
+  if (typeof document !== "undefined" && !Array.isArray(kit.__ACTIVE_MODULES__)) {
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", initAll);
     } else {

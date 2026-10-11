@@ -166,6 +166,24 @@ class ExportSmokeTests(unittest.TestCase):
             sources_before["lessons/0001-example.html"],
         )
 
+    def test_export_pdf_blocks_degraded_rendering(self) -> None:
+        course = self.copy_course()
+        lesson = course / "lessons" / "0001-degraded.html"
+        lesson.write_text("""<!DOCTYPE html>
+<html><head><link rel="stylesheet" href="../assets/kit/kit.css"></head>
+<body class="lesson" data-course-id="c1" data-lesson-id="1" data-kit-status="settled">
+  <div class="formula" data-kit-state="degraded">E = mc^2</div>
+  <script src="../assets/kit/kit.js"></script>
+</body></html>""", encoding="utf-8")
+        pdf_path = course / "exports" / "0001-degraded.pdf"
+        result = run_script(EXPORT_PDF, lesson, pdf_path)
+        self.assertNotEqual(result.returncode, 0)
+        combined = result.stderr + result.stdout
+        self.assertTrue(
+            "Export blocked" in combined or "failed" in combined or "degraded" in combined,
+            combined,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

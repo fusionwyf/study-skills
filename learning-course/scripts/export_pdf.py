@@ -57,14 +57,18 @@ def main() -> int:
         "--dump-dom", source_url
     ]
     dump_res = subprocess.run(dump_cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
+    dom_text = ""
     if dump_res.returncode != 0 or not (dump_res.stdout and dump_res.stdout.strip()):
         err_msg = (dump_res.stderr or "").strip() or f"Pre-flight exited with code {dump_res.returncode} and produced no DOM output."
         if not args.allow_failed:
             raise SystemExit(f"Export blocked: Pre-flight DOM check failed ({err_msg}). Use --allow-failed to force export.")
         else:
             print(f"WARNING: Pre-flight DOM check failed ({err_msg}). Continuing due to --allow-failed.", file=sys.stderr)
+            dom_text = dump_res.stdout or ""
     else:
         dom_text = dump_res.stdout
+
+    if dom_text:
         is_settled = ('data-kit-status="settled"' in dom_text or
                       "data-kit-status='settled'" in dom_text or
                       'data-course-ready="true"' in dom_text or
@@ -77,31 +81,60 @@ def main() -> int:
                 print(f"WARNING: {msg} Continuing due to --allow-failed.", file=sys.stderr)
 
         failed_patterns = [
-            r'data-kit-state=["\']failed["\']',
-            r'data-viz-ready=["\']failed["\']',
-            r'data-kit-ready=["\']false["\']',
-            r'class=["\'][^"\']*\bkit-degraded\b[^"\']*["\']'
+            r'data-kit-state=["\'](?:failed|degraded)["\']',
+            r'data-viz-ready=["\'](?:failed|degraded)["\']',
+            r'data-kit-ready=["\'](?:false|failed|degraded)["\']',
+            r'data-kit-status=["\'](?:failed|degraded)["\']',
+            r'data-kit-degraded=["\']true["\']',
+            r'class=["\'][^"\']*\b(?:kit-degraded|katex-error)\b[^"\']*["\']',
         ]
         has_failures = any(re.search(pat, dom_text) for pat in failed_patterns)
+
+        # Check for unrendered math formulas (formula syntax present but no KaTeX or MathML elements rendered)
+        has_math_source = bool(re.search(r'class=["\'][^"\']*\bformula\b[^"\']*["\']|data-math\b|\\\(|\\\[|\$\$', dom_text))
+        if has_math_source and not re.search(r'class=["\'][^"\']*\bkatex\b[^"\']*["\']|<math\b', dom_text):
+            has_failures = True
+
         if has_failures:
             if not args.allow_failed:
                 raise SystemExit(
-                    "Export blocked: one or more visual components failed rendering. Use --allow-failed to force export."
+                    "Export blocked: one or more visual components failed rendering or degraded. Use --allow-failed to force export."
                 )
             else:
                 print("WARNING: Exporting with failed components (--allow-failed is enabled).", file=sys.stderr)
 
-    # Step 2: Render to PDF
-    command = [
-        browser, "--headless=new", "--disable-gpu", "--no-pdf-header-footer",
-        f"--virtual-time-budget={args.wait_ms}",
-        f"--print-to-pdf={output}", source_url
-    ]
-    result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", errors="replace")
-    if result.returncode != 0: raise SystemExit(result.stderr.strip() or "Browser PDF export failed")
-    if not output.is_file() or output.stat().st_size == 0: raise SystemExit("Browser returned without a usable PDF")
-    print(output)
-    return 0
+    # Step 2: Render to PDF using the pre-flight verified DOM snapshot to guarantee
+    # identical state between pre-flight check and print output.
+    tmp_snapshot = source.parent / f".tmp_{source.stem}_{os.getpid()}_export.html"
+    try:
+        if dom_text.strip():
+            tmp_snapshot.write_text(dom_text, encoding="utf-8")
+            print_target_url = tmp_snapshot.as_uri() + f"?export={args.mode}"
+        else:
+            print_target_url = source_url
+
+        command = [
+            browser, "--headless=new", "--disable-gpu", "--no-pdf-header-footer",
+            f"--virtual-time-budget={args.wait_ms}",
+            f"--print-to-pdf={output}", print_target_url
+        ]
+        result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", errors="replace")
+        if result.returncode != 0:
+            if output.exists():
+                output.unlink()
+            raise SystemExit(result.stderr.strip() or "Browser PDF export failed")
+        if not output.is_file() or output.stat().st_size == 0:
+            if output.exists():
+                output.unlink()
+            raise SystemExit("Browser returned without a usable PDF")
+        print(output)
+        return 0
+    finally:
+        if tmp_snapshot.exists():
+            try:
+                tmp_snapshot.unlink()
+            except Exception:
+                pass
 
 
 if __name__ == "__main__":

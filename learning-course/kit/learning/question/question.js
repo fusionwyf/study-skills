@@ -730,6 +730,61 @@
       enhanceModernQuestion(qEl, i, store);
     });
 
+    // Support legacy answer elements ([data-answer-input] + [data-answer-check])
+    var legacySelector = "[data-question-id]:has([data-answer-input]), section[data-question-id][data-answer-kind]";
+    var legacyEls = Array.prototype.slice.call(document.querySelectorAll(legacySelector));
+    legacyEls.forEach(function (task) {
+      if (task.dataset.kitEnhanced === "true") return;
+      task.dataset.kitEnhanced = "true";
+      var id = task.dataset.questionId;
+      var input = task.querySelector("[data-answer-input]");
+      var button = task.querySelector("[data-answer-check]");
+      var feedback = task.querySelector("[data-role~=answer-feedback]") || task.querySelector("[data-role=answer-feedback]");
+      function normalize(value) {
+        var text = String(value).normalize("NFKC").trim();
+        return task.dataset.caseSensitive === "true" ? text : text.toLocaleLowerCase();
+      }
+      if (input) {
+        input.addEventListener("input", function () {
+          var curStore = (lesson && lesson.__evidenceStore) || store;
+          if (curStore && curStore.dispatch) {
+            curStore.dispatch({ type: EVIDENCE.RAW_ANSWER, id: id, value: input.value });
+          }
+        });
+      }
+      if (button && input) {
+        button.addEventListener("click", function () {
+          var raw = input.value;
+          if (!raw.trim()) {
+            if (feedback) feedback.textContent = "先填写答案。";
+            return;
+          }
+          var correct = false;
+          if (task.dataset.answerKind === "numeric") {
+            var value = Number(raw), expected = Number(task.dataset.expected);
+            var tolerance = Number(task.dataset.tolerance || 0);
+            correct = Number.isFinite(value) && Number.isFinite(expected) && Number.isFinite(tolerance) && tolerance >= 0 && Math.abs(value - expected) <= tolerance;
+          } else {
+            var accepted = [];
+            try { accepted = JSON.parse(task.dataset.accepted || "[]"); } catch (e) { accepted = []; }
+            correct = Array.isArray(accepted) && accepted.some(function (answer) {
+              return typeof answer === "string" && normalize(answer) === normalize(raw);
+            });
+          }
+          var curStore = (lesson && lesson.__evidenceStore) || store;
+          if (curStore && curStore.dispatch) {
+            curStore.dispatch({ type: EVIDENCE.RAW_ANSWER, id: id, value: raw });
+            curStore.dispatch({ type: EVIDENCE.ATTEMPT, id: id });
+            curStore.dispatch({ type: EVIDENCE.VERDICT, id: id, value: correct ? "correct" : "incorrect" });
+          }
+          if (feedback) {
+            feedback.textContent = correct ? (task.dataset.correctText || "本题正确。请解释依据。") : (task.dataset.incorrectText || "再检查条件与方法。");
+            feedback.dataset.state = correct ? "correct" : "incorrect";
+          }
+        });
+      }
+    });
+
     updateSummary();
 
     if (kit.ready && kit.ready.markReady) {

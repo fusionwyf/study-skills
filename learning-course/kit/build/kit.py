@@ -433,7 +433,33 @@ def normalize_html_content(html_text):
     return normalized, headings
 
 
-def detect_modules_for_course(course_dir, manifest):
+def load_course_extensions(course_dir, course_config=None):
+    """Loads course extension declarations from config.json and/or extensions.json."""
+    extensions = []
+    if course_config and "extensions" in course_config and isinstance(course_config["extensions"], list):
+        extensions.extend(course_config["extensions"])
+    if course_dir:
+        cpath = Path(course_dir)
+        cfg_file = cpath / "assets" / "course" / "config.json"
+        if not course_config and cfg_file.exists():
+            try:
+                cfg = json.loads(cfg_file.read_text(encoding="utf-8"))
+                if isinstance(cfg.get("extensions"), list):
+                    extensions.extend(cfg["extensions"])
+            except Exception:
+                pass
+        ext_file = cpath / "assets" / "course" / "extensions.json"
+        if ext_file.exists():
+            try:
+                extra = json.loads(ext_file.read_text(encoding="utf-8"))
+                if isinstance(extra, list):
+                    extensions.extend(extra)
+            except Exception as e:
+                raise ValueError(f"Failed to read extensions.json: {e}")
+    return extensions
+
+
+def detect_modules_for_course(course_dir, manifest, staged_html=None):
     """Scans lesson HTML files and identifies active modules, recording inclusion reasons."""
     lessons_dir = Path(course_dir) / "lessons"
     html_files = list(lessons_dir.glob("*.html")) if lessons_dir.exists() else []
@@ -473,7 +499,24 @@ def detect_modules_for_course(course_dir, manifest):
         active_modules.add(mod_id)
         reasons.setdefault(mod_id, []).append("opt-in:config.json")
 
-    # 3. Detect auto modules from lesson HTMLs
+    # 3. Add modules required by course extensions
+    extensions = load_course_extensions(course_dir)
+    for ext in extensions:
+        if not isinstance(ext, dict):
+            raise ValueError(f"Invalid extension entry: {ext}")
+        ext_id = ext.get("id")
+        if not ext_id:
+            raise ValueError(f"Extension declaration must contain an 'id': {ext}")
+        for req in ext.get("requires", []):
+            if req not in modules_desc:
+                raise ValueError(
+                    f"Course extension '{ext_id}' requires unknown module '{req}'. "
+                    f"Run 'kit list' to view available modules."
+                )
+            active_modules.add(req)
+            reasons.setdefault(req, []).append(f"extension:{ext_id}")
+
+    # 4. Detect auto modules from lesson HTMLs
     auto_rules = {}
     for mod_id, desc in modules_desc.items():
         if desc.get("presence") == "auto":
@@ -482,9 +525,12 @@ def detect_modules_for_course(course_dir, manifest):
             regexes = [re.compile(r) for r in detect.get("regex", [])]
             auto_rules[mod_id] = {"selectors": parsed_sels, "regexes": regexes}
 
+    if staged_html is None:
+        staged_html = {}
+
     for hf in html_files:
         try:
-            content = hf.read_text(encoding="utf-8")
+            content = staged_html[hf] if hf in staged_html else hf.read_text(encoding="utf-8")
             detector = HTMLModuleDetector(auto_rules)
             detector.feed(content)
             for mod_id, match_reason in detector.matched.items():
@@ -493,7 +539,7 @@ def detect_modules_for_course(course_dir, manifest):
         except Exception as e:
             print(f"Warning: Failed scanning {hf.name}: {e}", file=sys.stderr)
 
-    # 4. Resolve transitive requirements
+    # 5. Resolve transitive requirements
     expanded = True
     while expanded:
         expanded = False
@@ -513,7 +559,32 @@ def bundle_kit(active_modules, output_dir, course_config=None, vendor_mode="cdn"
     output_path = Path(output_dir)
 
     modules = load_module_descriptors()
-    ordered_ids = [m for m in topological_sort(modules) if m in active_modules]
+    active_set = set(active_modules)
+
+    # Incorporate extension requirements and their transitive dependencies into active_set
+    extensions = load_course_extensions(course_dir, course_config)
+    for ext in extensions:
+        if not isinstance(ext, dict):
+            raise ValueError(f"Invalid extension entry: {ext}")
+        ext_id = ext.get("id")
+        if not ext_id:
+            raise ValueError(f"Extension declaration must contain an 'id': {ext}")
+        for req in ext.get("requires", []):
+            if req not in modules:
+                raise ValueError(f"Course extension '{ext_id}' requires module '{req}', which is missing from module library.")
+            active_set.add(req)
+
+    expanded = True
+    while expanded:
+        expanded = False
+        for mod_id in list(active_set):
+            desc = modules.get(mod_id, {})
+            for req in desc.get("requires", []):
+                if req in modules and req not in active_set:
+                    active_set.add(req)
+                    expanded = True
+
+    ordered_ids = [m for m in topological_sort(modules) if m in active_set]
 
     # Collect CSS
     css_parts = [LAYER_HEADER]
@@ -534,30 +605,13 @@ def bundle_kit(active_modules, output_dir, course_config=None, vendor_mode="cdn"
                     t_content = tf.read_text(encoding="utf-8")
                     css_parts.append(f"/* ---- Foundation Theme: {tf.name} ---- */\n{t_content}\n")
 
-    # Collect and validate course extensions
-    extensions = []
-    if course_config and "extensions" in course_config and isinstance(course_config["extensions"], list):
-        extensions.extend(course_config["extensions"])
-    if course_dir:
-        ext_file = Path(course_dir) / "assets" / "course" / "extensions.json"
-        if ext_file.exists():
-            try:
-                extra = json.loads(ext_file.read_text(encoding="utf-8"))
-                if isinstance(extra, list):
-                    extensions.extend(extra)
-            except Exception as e:
-                raise ValueError(f"Failed to read extensions.json: {e}")
-
+    # Validate and append course extensions
     ext_module_ids = []
     for ext in extensions:
-        if not isinstance(ext, dict):
-            raise ValueError(f"Invalid extension entry: {ext}")
         ext_id = ext.get("id")
-        if not ext_id:
-            raise ValueError(f"Extension declaration must contain an 'id': {ext}")
         for req in ext.get("requires", []):
-            if req not in active_modules and req not in modules:
-                raise ValueError(f"Course extension '{ext_id}' requires module '{req}', which is missing.")
+            if req not in active_set:
+                raise ValueError(f"Course extension '{ext_id}' requires module '{req}', which is missing from active modules.")
         if "css" in ext and course_dir:
             c_file = Path(course_dir) / "assets" / "course" / ext["css"]
             if not c_file.exists():
@@ -668,6 +722,17 @@ def bundle_kit(active_modules, output_dir, course_config=None, vendor_mode="cdn"
             j_file = Path(course_dir) / "assets" / "course" / ext["js"]
             js_parts.append(f"\n  /* ---- Course Extension: {ext_id} ---- */\n  (function () {{\n{j_file.read_text(encoding='utf-8')}\n  }})();\n")
 
+    js_parts.append(
+        "\n  /* ---- Bundle Initialization ---- */\n"
+        "  if (CourseKit.initAll && typeof document !== 'undefined') {\n"
+        "    if (document.readyState === 'loading') {\n"
+        "      document.addEventListener('DOMContentLoaded', CourseKit.initAll);\n"
+        "    } else {\n"
+        "      CourseKit.initAll();\n"
+        "    }\n"
+        "  }\n"
+    )
+
     js_parts.append("\n})(typeof window !== 'undefined' ? window : globalThis);\n")
     kit_js_content = "".join(js_parts)
 
@@ -721,16 +786,18 @@ def sync_course(course_dir):
         except Exception:
             manifest = build_manifest()
 
-    # Step 1: Normalize lesson HTML
+    # Step 1: Pre-normalize lesson HTML (staged in memory to protect courseware if sync fails)
+    staged_html = {}
+    raw_html_backup = {}
     lessons_dir = cpath / "lessons"
     if lessons_dir.exists():
         for hf in lessons_dir.glob("*.html"):
             try:
                 raw_html = hf.read_text(encoding="utf-8")
+                raw_html_backup[hf] = raw_html
                 norm_html, headings = normalize_html_content(raw_html)
                 if norm_html != raw_html:
-                    hf.write_text(norm_html, encoding="utf-8", newline="\n")
-                    print(f"Normalized {hf.name} ({len(headings)} headings).")
+                    staged_html[hf] = norm_html
             except Exception as e:
                 print(f"Warning: Failed to normalize {hf}: {e}", file=sys.stderr)
 
@@ -768,7 +835,7 @@ def sync_course(course_dir):
 
     # Step 3: Detect active modules and bundle kit
     try:
-        active_modules, reasons = detect_modules_for_course(cpath, manifest)
+        active_modules, reasons = detect_modules_for_course(cpath, manifest, staged_html=staged_html)
     except Exception as e:
         print(f"Error detecting modules for course: {e}", file=sys.stderr)
         return False
@@ -795,18 +862,31 @@ def sync_course(course_dir):
         lock_file = tmp_kit_dir / "kit.lock.json"
         lock_file.write_text(json.dumps(lock_data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
 
-        # Step 5: Atomic replacement with rollback
+        # Step 5: Atomic replacement with rollback protecting both courseware and kit
         backup_dir = Path(tmp_dir) / "backup"
         had_previous = kit_output_dir.exists()
         if had_previous:
             shutil.copytree(kit_output_dir, backup_dir)
 
+        written_html = []
         try:
+            # Commit staged HTML files first
+            for hf, content in staged_html.items():
+                hf.write_text(content, encoding="utf-8", newline="\n")
+                written_html.append(hf)
+                print(f"Normalized {hf.name}.")
+
+            # Commit kit files
             if kit_output_dir.exists():
                 shutil.rmtree(kit_output_dir)
             shutil.copytree(tmp_kit_dir, kit_output_dir)
         except Exception as swap_err:
             print(f"Error committing kit files: {swap_err}. Rolling back...", file=sys.stderr)
+            # Rollback HTML files
+            for hf in written_html:
+                if hf in raw_html_backup:
+                    hf.write_text(raw_html_backup[hf], encoding="utf-8", newline="\n")
+            # Rollback Kit files
             if had_previous and backup_dir.exists():
                 if kit_output_dir.exists():
                     shutil.rmtree(kit_output_dir)
@@ -915,8 +995,8 @@ def check_course(course_dir):
                 print(f"Error: Declared extension '{ext_id}' CSS file '{ext['css']}' is missing.", file=sys.stderr)
                 return False
         for req in ext.get("requires", []):
-            if req not in modules_lock and req not in manifest_modules:
-                print(f"Error: Declared extension '{ext_id}' requires missing module '{req}'.", file=sys.stderr)
+            if req not in modules_lock:
+                print(f"Error: Declared extension '{ext_id}' requires module '{req}', which is missing from {lock_file}! Run 'kit sync' to update.", file=sys.stderr)
                 return False
 
     # Check that modules required by lesson content are present in modules_lock

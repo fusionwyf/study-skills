@@ -1,5 +1,7 @@
 const assert = require("node:assert/strict");
+const cp = require("node:child_process");
 const fs = require("node:fs");
+const os = require("node:os");
 const path = require("node:path");
 const { JSDOM } = require("jsdom");
 const skill = path.resolve(__dirname, "../learning-course");
@@ -7,58 +9,62 @@ const base = { model: "m", domain: "d", precision: "p" };
 function viz(id, kind, config, source = "") {
   return `<section id="${id}" data-visualization="${kind}" ${source ? `data-viz-source="#${source}"` : ""}><div data-viz-fallback>可读模型与核对点</div><div id="${id}-host" data-viz-host hidden></div><p data-viz-status role="status"></p><script type="application/json" data-viz-config>${JSON.stringify({ ...base, ...config })}</script></section>`;
 }
-function resolveAsset(file) {
-  const candidates = [
-    path.join(skill, "fixtures/example-course/assets", file),
-    path.join(skill, "fixtures/example-course/assets", file.replace("course-template/", "")),
-    path.join(skill, "assets", file),
-    path.join(skill, "kit", file),
-  ];
-  if (file === "course-template/course.js") {
-    candidates.unshift(path.join(skill, "fixtures/example-course/assets/course.js"));
-  }
-  if (file === "visualizations/visualizations.js") {
-    candidates.unshift(path.join(skill, "kit/viz/core/visualizations.js"));
-    candidates.unshift(path.join(skill, "fixtures/example-course/assets/visualizations/visualizations.js"));
-  }
-  if (file === "visualizations/kinds/chart.js") {
-    candidates.unshift(path.join(skill, "kit/viz/kinds/chart/chart.js"));
-    candidates.unshift(path.join(skill, "fixtures/example-course/assets/visualizations/kinds/chart.js"));
-  }
-  if (file === "optional/media/media.js" || file.includes("media.js")) {
-    candidates.unshift(path.join(skill, "kit/content/media/media.js"));
-  }
-  if (file === "visualizations/kinds/list.js" || file.includes("kinds/list")) {
-    candidates.unshift(path.join(skill, "kit/viz/kinds/list/list.js"));
-  }
-  for (const c of candidates) {
-    if (fs.existsSync(c)) return c;
-  }
-  return path.join(skill, "assets", file);
+
+// Generate Kit in a temporary course to test real bundled artifact
+const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "kit-beh-test-"));
+let kitJs = "";
+try {
+  const initPy = path.join(skill, "scripts/init_course.py");
+  const kitPy = path.join(skill, "kit/build/kit.py");
+  const py = process.env.PYTHON || (process.platform === "win32" ? "python" : "python3");
+
+  cp.execFileSync(py, [initPy, "--course-dir", tmpDir, "--title", "Test Course", "--goal", "Testing Kit"], { stdio: "pipe" });
+
+  const sampleHtml = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"></head>
+<body>
+<main class="lesson" data-course-id="test" data-lesson-id="0001" data-objective="test">
+  <section data-question-id="numeric" data-answer-kind="numeric" data-expected="0.3" data-tolerance="0.00001"><input data-answer-input></section>
+  <figure data-media><img alt="test"></figure>
+  <div data-visualization="chart"></div>
+  <div data-visualization="relation"></div>
+  <div data-visualization="timeline"></div>
+</main>
+</body>
+</html>`;
+  fs.writeFileSync(path.join(tmpDir, "lessons/0001-test.html"), sampleHtml, "utf8");
+
+  const cfgPath = path.join(tmpDir, "assets/course/config.json");
+  const cfg = JSON.parse(fs.readFileSync(cfgPath, "utf8"));
+  cfg.modules = ["viz.kinds.chart"];
+  fs.writeFileSync(cfgPath, JSON.stringify(cfg, null, 2), "utf8");
+
+  cp.execFileSync(py, [kitPy, "sync", tmpDir], { stdio: "pipe" });
+
+  kitJs = fs.readFileSync(path.join(tmpDir, "assets/kit/kit.js"), "utf8");
+} finally {
+  try {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  } catch (e) {}
 }
 
-function dom(body, files) {
+function dom(body) {
   const d = new JSDOM(`<html><body>${body}</body></html>`, {
     runScripts: "outside-only",
     pretendToBeVisual: true,
     url: "https://course.local/lessons/0001-demo.html",
   });
-  for (const file of files)
-    d.window.eval(fs.readFileSync(resolveAsset(file), "utf8"));
+  d.window.eval(kitJs);
   return d;
 }
-const wait = () => new Promise((r) => setTimeout(r, 40));
+const wait = () => new Promise((r) => setTimeout(r, 60));
 (async () => {
   const d = dom(
     `<main class="lesson" data-course-id="test" data-lesson-id="0001" data-objective="test">
  <section data-question-id="numeric" data-answer-kind="numeric" data-expected="0.3" data-tolerance="0.00001"><label for="n">答案</label><input id="n" data-answer-input><button data-answer-check>检查</button><p data-role="answer-feedback"></p></section>
  <section data-question-id="fill" data-answer-kind="fill" data-accepted='["alpha"]'><label for="f">答案</label><input id="f" data-answer-input><button data-answer-check>检查</button><p data-role="answer-feedback"></p></section>
- <section data-question-id="image-notes"><figure data-media><div data-media-frame><img alt="原创图"></div><figcaption data-media-fallback>热点说明</figcaption><p data-media-status></p><details data-media-transcript><summary>参考</summary>文字稿</details><script data-media-config type="application/json">{"hotspots":[{"id":"a","label":"入口","x":10,"y":50}]}</script></figure><label for="notes">观察</label><textarea id="notes"></textarea></section><button data-copy-feedback>复制</button></main>`,
-    [
-      "learnkit/learnkit.js",
-      "course-template/course.js",
-      "optional/media/media.js",
-    ],
+ <section data-question-id="image-notes"><figure data-media><div data-media-frame><img alt="原创图"></div><figcaption data-media-fallback>热点说明</figcaption><p data-media-status></p><details data-media-transcript><summary>参考</summary>文字稿</details><script data-media-config type="application/json">{"hotspots":[{"id":"a","label":"入口","x":10,"y":50}]}</script></figure><label for="notes">观察</label><textarea id="notes"></textarea></section><button data-copy-feedback>复制</button></main>`
   );
   await wait();
   const w = d.window,
@@ -117,7 +123,6 @@ const wait = () => new Promise((r) => setTimeout(r, 40));
       { traces: [{ type: "bar", x: ["A", "B"], y: [-2, 3] }] },
       "source",
     ) + '<div id="source"></div>',
-    ["visualizations/visualizations.js", "visualizations/kinds/chart.js"],
   );
   const cw = c.window,
     cd = cw.document;
@@ -157,7 +162,6 @@ const wait = () => new Promise((r) => setTimeout(r, 40));
   const p = dom(
     viz("async-chart", "chart", { traces: [{ x: [0], y: [1] }] }, "source") +
       '<div id="source"></div>',
-    ["visualizations/visualizations.js", "visualizations/kinds/chart.js"],
   );
   const pd = p.window.document;
   let refresh,
@@ -213,7 +217,6 @@ const wait = () => new Promise((r) => setTimeout(r, 40));
       edges: [{ from: "a", to: "b" }],
     }) +
       viz("time", "timeline", { events: [{ title: "开始", date: "阶段一" }] }),
-    ["visualizations/visualizations.js", "visualizations/kinds/list.js"],
   );
   await wait();
   assert.equal(g.window.document.querySelectorAll("#graph svg line").length, 1);
