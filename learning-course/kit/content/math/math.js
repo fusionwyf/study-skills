@@ -55,42 +55,42 @@
       });
       enhanceFormulaBlocks();
       root.__COURSE_MATH_READY__ = true;
-      if (kit.ready && kit.ready.markReady) {
-        kit.ready.markReady("content.math");
-      }
     } catch (e) {
       console.error("[kit.math] Render error", e);
-      if (kit.ready && kit.ready.markFailed) {
-        kit.ready.markFailed("content.math", e);
-      }
+      throw e;
     }
   }
 
   function init() {
+    if (typeof document === "undefined") return Promise.resolve();
     if (!hasMathContent()) {
-      if (kit.ready && kit.ready.markReady) {
-        kit.ready.markReady("content.math");
-      }
-      return;
-    }
-
-    if (kit.ready && kit.ready.registerPending) {
-      kit.ready.registerPending("content.math");
+      return Promise.resolve();
     }
 
     if (typeof window.renderMathInElement === "function") {
-      renderMath();
+      try {
+        renderMath();
+        return Promise.resolve();
+      } catch (err) {
+        return Promise.reject(err);
+      }
     } else if (kit.need) {
-      kit.need("katex").then(function () {
+      return kit.need("katex").then(function () {
         renderMath();
       }).catch(function (err) {
-        console.warn("[kit.math] KaTeX not available, degrading to plain text formula", err);
+        console.warn("[kit.math] KaTeX not available, degrading formula blocks", err);
         root.__COURSE_MATH_READY__ = true;
-        if (kit.ready && kit.ready.markReady) {
-          kit.ready.markReady("content.math");
+        document.querySelectorAll(".formula, [data-math]").forEach(function (el) {
+          if (el.closest(".kit-block")) {
+            el.closest(".kit-block").dataset.kitState = "degraded";
+          }
+        });
+        if (kit.ready && kit.ready.markDegraded) {
+          kit.ready.markDegraded("content.math", err);
         }
       });
     }
+    return Promise.resolve();
   }
 
   kit.math = {
@@ -98,11 +98,7 @@
     render: renderMath
   };
 
-  if (typeof document !== "undefined") {
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", init);
-    } else {
-      init();
-    }
+  if (kit.registerModule) {
+    kit.registerModule("content.math", kit.math);
   }
 })(typeof window !== "undefined" ? window : globalThis);

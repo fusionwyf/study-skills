@@ -14,8 +14,8 @@
   "vendor": [
     {
       "id": "jsxgraph",
-      "version": "1.8.0",
-      "cdn": "https://cdn.jsdelivr.net/npm/jsxgraph@1.8.0/distrib/jsxgraphcore.js",
+      "version": "1.14.0",
+      "cdn": "https://cdn.jsdelivr.net/npm/jsxgraph@1.14.0/distrib/jsxgraphcore.js",
       "local": "vendor/jsxgraph/jsxgraphcore.js"
     }
   ],

@@ -1,5 +1,9 @@
 # 兼容层策略与移除计划
 
+> [!NOTE]
+> 本文档为 Course Kit 重构与工程内部归档，仅记录架构设计与演进历史，**不作为 Agent 运行时参考文档**。
+> Agent 创建与维护课程请参考根目录 `SKILL.md` 及 `references/` 目录。
+
 ## 背景
 
 Course Kit v2 重构引入了统一问题组件，将旧版的 6 种分散写法（`.quiz`、`data-answer-*`、`data-teaching-check`、`data-dialogue-turn`、`data-independence` 下拉）合并为单一的 `<section class="question" data-kind="...">`。

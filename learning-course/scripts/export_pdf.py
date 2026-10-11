@@ -35,6 +35,7 @@ def main() -> int:
     parser.add_argument("--mode", choices=("student", "review"), default="student")
     parser.add_argument("--browser", help="Chromium-family browser executable")
     parser.add_argument("--wait-ms", type=int, default=1800, help="Virtual time budget for client-side rendering")
+    parser.add_argument("--allow-failed", action="store_true", help="Allow exporting PDF even if some visual components failed")
     args = parser.parse_args()
 
     source = Path(args.source).expanduser().resolve()

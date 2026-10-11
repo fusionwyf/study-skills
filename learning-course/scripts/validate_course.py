@@ -483,15 +483,17 @@ def validate_visualizations(lesson: Path, body: str, errors: list[str]) -> None:
         label = f"{lesson.name}: visualization {node['attrs'].get('id') or kind}"
         children = list(descendants(node))
         entry = registry_kinds.get(kind) if isinstance(registry_kinds, dict) else None
-        if kind not in kinds:
+        if kind == "core":
+            errors.append(f"{label}: 'core' is an infrastructure module and not a valid visualization kind")
+        elif kind not in kinds:
             errors.append(f"{label} unsupported visualization type")
         elif is_kit_package:
             universal = {"table", "relation", "timeline", "process", "sequence"}
             if kind in universal and "viz.core" not in kit_modules and f"viz.kinds.{kind}" not in kit_modules:
                 errors.append(f"{label} requires module viz.core in kit.lock.json")
-            elif kind == "chart" and "viz.kinds.chart" not in kit_modules and "viz.core" not in kit_modules:
+            elif kind == "chart" and "viz.kinds.chart" not in kit_modules:
                 errors.append(f"{label} requires module viz.kinds.chart in kit.lock.json")
-            elif kind == "spatial" and "viz.kinds.spatial" not in kit_modules and "viz.core" not in kit_modules:
+            elif kind == "spatial" and "viz.kinds.spatial" not in kit_modules:
                 errors.append(f"{label} requires module viz.kinds.spatial in kit.lock.json")
             source = node["attrs"].get("data-viz-source")
             if source and (not source.startswith("#") or not any(n["attrs"].get("id") == source[1:] and "data-learnkit" in n["attrs"] for n in parser.nodes)):

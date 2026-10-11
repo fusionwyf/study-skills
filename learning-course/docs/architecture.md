@@ -1,6 +1,10 @@
 # HTML 课件 assets 架构设计 v2(Course Kit)
 
-状态:设计稿。对应执行计划见 `refactor-plan.md`;两者冲突时以 `refactor-plan.md` 第 2 节"已定决策"为准。
+> [!NOTE]
+> 本文档为 Course Kit 重构与工程内部归档，仅记录架构设计与演进历史，**不作为 Agent 运行时参考文档**。
+> Agent 创建与维护课程请参考根目录 `SKILL.md` 及 `references/` 目录。
+
+状态: 已完全实施（Implemented in v2.3.0 / v3.0.0）。执行记录见 `COMPLETIONS.md`。
 
 ## 0. 现状诊断
 

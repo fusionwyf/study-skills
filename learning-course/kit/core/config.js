@@ -46,6 +46,12 @@
   function readConfig() {
     var cfg = JSON.parse(JSON.stringify(defaults));
 
+    // 1. Course-level config injected at bundle time
+    if (kit.__COURSE_CONFIG__ && typeof kit.__COURSE_CONFIG__ === "object") {
+      deepMerge(cfg, kit.__COURSE_CONFIG__);
+    }
+
+    // 2. Page-level #kit-config override
     if (typeof document !== "undefined") {
       var script = document.getElementById("kit-config");
       if (script && script.textContent) {

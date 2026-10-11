@@ -187,8 +187,9 @@
 
   async function renderChart(node, config) {
     if (!root.Plotly) {
-      if (kit.loader && kit.loader.need) {
-        await kit.loader.need("plotly");
+      var needFn = kit.need || (kit.loader && kit.loader.need);
+      if (needFn) {
+        await needFn("plotly");
       } else {
         await h.loadVendor("plotly.js-dist-min/plotly.min.js", "Plotly");
       }
@@ -256,7 +257,11 @@
 
   core.registerKind("chart", { validate: validateChart, render: renderChart });
 
-  if (kit.ready && kit.ready.markReady) {
-    kit.ready.markReady("viz.kinds.chart");
+  if (kit.registerModule) {
+    kit.registerModule("viz.kinds.chart", {
+      init: function () {
+        return Promise.resolve();
+      }
+    });
   }
 })(typeof window !== "undefined" ? window : globalThis);

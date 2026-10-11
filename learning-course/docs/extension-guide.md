@@ -1,6 +1,10 @@
 # Course Kit v2 扩展组件开发指南
 
-本指南面向需要为 Course Kit 添加自定义模块的开发者（包括 AI Agent）。
+> [!NOTE]
+> 本文档为 Course Kit 重构与工程内部归档，仅记录底层架构设计与详细示例，**不作为 Agent 运行时参考文档**。
+> Agent 学习与生成课程请参考根目录 `SKILL.md` 及 `references/assets.md`。
+
+本指南面向需要为 Course Kit 底层添加自定义模块的工程开发者。
 
 ## 快速开始
 

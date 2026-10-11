@@ -1,6 +1,10 @@
 # learning-course HTML 课件 assets 重构计划(Course Kit v2)
 
-状态:待执行。对应架构设计见同目录 `architecture.md`;两者冲突时以本计划第 2 节"已定决策"为准。
+> [!NOTE]
+> 本文档为 Course Kit 重构与工程内部归档，仅记录架构设计与演进历史，**不作为 Agent 运行时参考文档**。
+> Agent 创建与维护课程请参考根目录 `SKILL.md` 及 `references/` 目录。
+
+状态: 已全部完成（已归档）。执行验收记录见 `COMPLETIONS.md`。
 本文规定:做什么、按什么顺序、改哪些文件、怎样算完成。不含实现代码。
 
 ## 1. 目标与范围

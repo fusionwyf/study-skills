@@ -7,9 +7,9 @@
 `kit/` 目录是所有资产的唯一代码源，`kit/catalog.json` 与 `kit/kit.manifest.json` 是模块能力、依赖与接入方式的权威视图。按教学目标选择最小组合。
 
 模块存在方式（presence）分为三类：
-- **core**：L0 核心运行时（bus/config/store/loader/util）、L1 基础与主题引擎、L4 学习记录模型。随 `kit.js` 默认打包。
-- **auto**：代码块（`content.code`）、数学公式（`content.math`）、Mermaid 图表（`content.diagram`）、表格、目录（`shell.toc`）、题目（`learning.question`）、可视化核心（`viz.core`）及无库 kind。`kit sync` 扫描课件自动识别并打包。
-- **opt-in**：重型第三方库依赖（如 `viz.kinds.chart` 依赖 Plotly、`viz.kinds.spatial` 依赖 JSXGraph）。通过 `kit add` 显式启用。
+- **core**：运行时基础设施 L0（`core`）、视觉与主题引擎 L1（`foundation`）、公共块外壳 L2（`content._block`）、页面骨架与目录 L3（`shell.nav`、`shell.progress`、`shell.theme-switcher`、`shell.toc`）、学习记录模型 L4（`learning.records`）。随 `kit.js` 与 `kit.css` 默认打包。
+- **auto**：代码块（`content.code`）、数学公式（`content.math`）、Mermaid 图表（`content.diagram`）、表格（`content.table`）、媒体（`content.media`）、动画（`content.animation`）、提示块（`content.callout`）、统一题目（`learning.question`）、步骤向导（`learning.step`）、可视化核心（`viz.core`）及无三方库 kind。`kit sync` 扫描课件自动识别并打包。
+- **opt-in**：重型第三方库依赖（如 `viz.kinds.chart` 依赖 Plotly、`viz.kinds.spatial` 依赖 JSXGraph）。通过 `python kit/build/kit.py add <course-dir> <module-id>` 显式启用。
 
 ### 第三方库优先
 
@@ -51,10 +51,23 @@ Course Kit v2 将所有模块拓扑排序并拼接为单文件产物：
 - **内置主题**：`course`、`ink`、`paper`，声明自身 `color-scheme`。
 - **第三方接线**：Chart.js/Plotly/JSXGraph 读取 `--series-*` 变量；highlight.js 官方主题由单个 `<link id="kit-hljs-theme">` 承载，主题切换时由主题引擎无缝切换；Mermaid `themeVariables` 自动响应主题变更派发的 `kit:themechange` 事件。
 
-## 专用扩展
+## 扩展组件开发规范
 
-先写课程资产；模型用 `registerModel`，专用画布用 `registerRenderer` 或 `registerKind`。
-所有扩展实现 `validate`/`render`；使用 `data-viz-source` 时实现 `update`，持有资源时实现 `destroy`。导出参数与步骤为观察记录，掌握评估仍走 records。
+无论是向 Kit 库新增共享模块，还是为单门课程编写专用交互模型，均遵循以下规范：
+
+### 1. 课程级专用扩展（Course Extensions）
+- 存放于 `assets/course/extensions/`。
+- 动态模型使用 `kit.store.registerModel(name, { initialState, reduce, derive })` 注册。
+- 画布或定制渲染器使用 `kit.store.registerRenderer(name, fn)` 或 `kit.viz.registerKind(name, adapter)`。
+- 必须实现 `validate` 与 `render`；若支持 `data-viz-source` 动态参数订阅，必须实现 `update`；持有持久 DOM 或动画计时器时实现 `destroy`。
+
+### 2. Kit 全局模块扩展（Kit Modular Extensions）
+若要向 `kit/` 添加可复用的全新组件（如新动效、新可视化类型）：
+1. **分层归属**：L2（`content/` 内容组件）、L3（`shell/` 框架组件）、L4（`learning/` 交互组件）、L5（`viz/` 可视化组件）。
+2. **模块描述符 `module.json`**：声明 `id`、`layer` (0-5)、`requires`（至少含 `core`）、`presence` (`auto` 或 `opt-in`)、`detect.selectors`（auto 模式下自动感知的 HTML 选择器）、`provides` 与 `ready` 事件名。
+3. **CSS 规则**：样式必须包裹在对应的 `@layer <layer_name> { ... }` 中，全部颜色使用 CSS Token。
+4. **就绪与生命周期**：JS 初始化完成必须调用 `kit.ready.markReady("<module.id>")`。
+5. **构建生效**：运行 `python kit/build/kit.py build` 重新编译 `kit.manifest.json` 与 `catalog.json`，随后在课程中通过 `kit.py sync` 打包。
 
 ## 验收
 

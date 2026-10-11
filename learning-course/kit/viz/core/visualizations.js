@@ -176,13 +176,11 @@
       }
     }));
     root.__COURSE_VISUALIZATIONS_READY__ = true;
-    if (kit.ready && kit.ready.markReady) {
-      kit.ready.markReady("viz.core");
-    }
   }
 
   api.init = init;
 
-  if (document && document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
-  else if (document) init();
+  if (kit.registerModule) {
+    kit.registerModule("viz.core", api);
+  }
 })(typeof window !== "undefined" ? window : globalThis);

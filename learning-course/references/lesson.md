@@ -57,7 +57,7 @@
 
 ## 二、教学模式
 
-根据本课的可验证学习成果选择主模式（详见 `architecture.md` 与 Bloom 认知层级）：
+根据本课的可验证学习成果选择主模式（详见下文教学模式与 Bloom 认知层级）：
 - **概念理解**：预测具体情境 → 现象与反例 → 概念模型 → 易混对比 → 新情境验证。
 - **定量推导**：直觉数值/图形 → 严格定义与前提 → 分步推导 → 同构练习 → 边界变式。
 - **编程与操作**：目标产物 → 最小可工作示例 → 关键决策与排错 → 补全与修改 → 独立迁移。
@@ -147,7 +147,7 @@
 - 旧版 `[data-role~="teaching-target"]` ➔ 迁移为 `data-kind="open"`
 - 旧版 `[data-role~="dialogue-practice"]` ➔ 迁移为 `data-kind="dialogue"`
 - 旧版 `<select data-independence>` ➔ 移除自述下拉，已改为提示按钮自动判定
-- 自动迁移：运行 `python kit/build/migrate_questions.py <course-dir> --apply`。详细策略见 `docs/compatibility.md`。
+- 自动迁移：运行 `python kit/build/migrate_questions.py <course-dir> --apply`。
 
 ### 2. 代码块（Code Block）
 
@@ -213,7 +213,7 @@
 - **预设**：`fadeIn`、`slideUp`、`bounce`。
 - **配置属性**：`data-animate`（预设名称或动画名）、`data-animate-duration`（时长）、`data-animate-delay`（延迟）、`data-animate-easing`（缓动曲线）、`data-animate-trigger="immediate"`（即时播放）。
 - **无障碍**：自动响应 `@media (prefers-reduced-motion: reduce)` 停用动效并展示静态内容。
-- **开发扩展**：自定义扩展模块参考 `docs/extension-guide.md`。
+- **开发扩展**：自定义扩展模块参考 `references/assets.md`。
 
 ## 四、Bloom 认知层级
 

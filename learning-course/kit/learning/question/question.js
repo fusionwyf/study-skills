@@ -70,7 +70,6 @@
     }).length;
     var ok = questionsList.filter(function (q) { return q.verdict === "correct"; }).length;
     var hintCount = questionsList.filter(function (q) { return q.hints > 0; }).length;
-    var ratio = total ? done / total : 0;
 
     summaries.forEach(function (box) {
       var sDone = box.querySelector("#s-done, [data-summary-done]");
@@ -87,6 +86,383 @@
     });
   }
 
+  /* ---- Question Kind Adapters Registry (Architecture §7.4 & P6) ---- */
+
+  var kindAdapters = {};
+
+  function registerKind(kind, adapter) {
+    if (!kind || !adapter) return;
+    kindAdapters[kind] = adapter;
+    if (adapter.label && !KIND_LABEL[kind]) {
+      KIND_LABEL[kind] = adapter.label;
+    }
+  }
+
+  function getKind(kind) {
+    return kindAdapters[kind];
+  }
+
+  /* 1. Choice Adapter */
+  registerKind("choice", {
+    label: "单选",
+    mount: function (ctx) {
+      var optsSrc = ctx.optsSrc;
+      if (!optsSrc) return;
+      var ol = el("ol", "q-options");
+      var inputs = [];
+      Array.prototype.forEach.call(optsSrc.children, function (li, i) {
+        var whyNode = li.querySelector("[data-why]");
+        var why = whyNode ? whyNode.textContent : "";
+        if (whyNode) whyNode.remove();
+
+        var item = el("li", "q-option");
+        if (li.hasAttribute("data-correct")) item.dataset.correct = "true";
+        var lab = el("label");
+        var inp = el("input");
+        inp.type = "radio";
+        inp.name = ctx.id;
+
+        var mark = el("span", "q-mark", String.fromCharCode(65 + i));
+        var text = el("span", "q-text");
+        text.innerHTML = li.innerHTML;
+        var w = el("p", "q-why", why);
+        text.appendChild(w);
+
+        lab.appendChild(inp);
+        lab.appendChild(mark);
+        lab.appendChild(text);
+        item.appendChild(lab);
+        ol.appendChild(item);
+
+        inputs.push({ input: inp, item: item, text: li.textContent.trim() });
+        inp.addEventListener("change", function () {
+          var checkedItems = inputs.filter(function (x) { return x.input.checked; });
+          ctx.q.raw = checkedItems.map(function (x) { return x.text; }).join("；");
+        });
+      });
+      optsSrc.remove();
+      ctx.body.appendChild(ol);
+      ctx.controls.inputs = inputs;
+    },
+    getRawAnswer: function (ctx) {
+      var inputs = ctx.controls.inputs || [];
+      var checkedItems = inputs.filter(function (x) { return x.input.checked; });
+      return checkedItems.map(function (x) { return x.text; }).join("；");
+    },
+    judge: function (ctx) {
+      var inputs = ctx.controls.inputs || [];
+      var picked = inputs.filter(function (x) { return x.input.checked; });
+      if (!picked.length) {
+        ctx.feedback.textContent = "先选择答案，再检查。";
+        ctx.feedback.dataset.tone = "info";
+        return null;
+      }
+      ctx.q.raw = picked.map(function (x) { return x.text; }).join("；");
+      return picked.length === 1 && picked[0].item.dataset.correct === "true";
+    },
+    reveal: function (ctx, isReveal) {
+      var inputs = ctx.controls.inputs || [];
+      inputs.forEach(function (x) {
+        var isRight = x.item.dataset.correct === "true";
+        var picked = x.input.checked;
+        if (picked && isRight) x.item.dataset.result = "right";
+        else if (picked && !isRight) x.item.dataset.result = "wrong";
+        else if (!picked && isRight && isReveal) x.item.dataset.result = "missed";
+        else delete x.item.dataset.result;
+      });
+    },
+    lock: function (ctx) {
+      var inputs = ctx.controls.inputs || [];
+      inputs.forEach(function (x) { x.input.disabled = true; });
+    }
+  });
+
+  /* 2. Multi-Choice Adapter */
+  registerKind("multi", {
+    label: "多选",
+    mount: function (ctx) {
+      var optsSrc = ctx.optsSrc;
+      if (!optsSrc) return;
+      var ol = el("ol", "q-options");
+      var inputs = [];
+      Array.prototype.forEach.call(optsSrc.children, function (li, i) {
+        var whyNode = li.querySelector("[data-why]");
+        var why = whyNode ? whyNode.textContent : "";
+        if (whyNode) whyNode.remove();
+
+        var item = el("li", "q-option");
+        if (li.hasAttribute("data-correct")) item.dataset.correct = "true";
+        var lab = el("label");
+        var inp = el("input");
+        inp.type = "checkbox";
+        inp.name = ctx.id;
+
+        var mark = el("span", "q-mark", String.fromCharCode(65 + i));
+        var text = el("span", "q-text");
+        text.innerHTML = li.innerHTML;
+        var w = el("p", "q-why", why);
+        text.appendChild(w);
+
+        lab.appendChild(inp);
+        lab.appendChild(mark);
+        lab.appendChild(text);
+        item.appendChild(lab);
+        ol.appendChild(item);
+
+        inputs.push({ input: inp, item: item, text: li.textContent.trim() });
+        inp.addEventListener("change", function () {
+          var checkedItems = inputs.filter(function (x) { return x.input.checked; });
+          ctx.q.raw = checkedItems.map(function (x) { return x.text; }).join("；");
+        });
+      });
+      optsSrc.remove();
+      ctx.body.appendChild(ol);
+      ctx.controls.inputs = inputs;
+    },
+    getRawAnswer: function (ctx) {
+      var inputs = ctx.controls.inputs || [];
+      var checkedItems = inputs.filter(function (x) { return x.input.checked; });
+      return checkedItems.map(function (x) { return x.text; }).join("；");
+    },
+    judge: function (ctx) {
+      var inputs = ctx.controls.inputs || [];
+      var picked = inputs.filter(function (x) { return x.input.checked; });
+      if (!picked.length) {
+        ctx.feedback.textContent = "先选择答案，再检查。";
+        ctx.feedback.dataset.tone = "info";
+        return null;
+      }
+      ctx.q.raw = picked.map(function (x) { return x.text; }).join("；");
+      var right = inputs.filter(function (x) { return x.item.dataset.correct === "true"; });
+      return picked.length === right.length && picked.every(function (x) { return x.item.dataset.correct === "true"; });
+    },
+    reveal: function (ctx, isReveal) {
+      var inputs = ctx.controls.inputs || [];
+      inputs.forEach(function (x) {
+        var isRight = x.item.dataset.correct === "true";
+        var picked = x.input.checked;
+        if (picked && isRight) x.item.dataset.result = "right";
+        else if (picked && !isRight) x.item.dataset.result = "wrong";
+        else if (!picked && isRight && isReveal) x.item.dataset.result = "missed";
+        else delete x.item.dataset.result;
+      });
+    },
+    lock: function (ctx) {
+      var inputs = ctx.controls.inputs || [];
+      inputs.forEach(function (x) { x.input.disabled = true; });
+    }
+  });
+
+  /* 3. Numeric Adapter */
+  registerKind("numeric", {
+    label: "数值",
+    mount: function (ctx) {
+      var field = el("div", "q-field");
+      var lab2 = el("label", "q-label", "你的答案");
+      lab2.setAttribute("for", ctx.id + "-in");
+      var inp2 = el("input", "q-input");
+      inp2.id = ctx.id + "-in";
+      inp2.autocomplete = "off";
+      inp2.inputMode = "decimal";
+
+      field.appendChild(lab2);
+      field.appendChild(inp2);
+      if (ctx.rootEl.dataset.unit) field.appendChild(el("span", "q-unit", ctx.rootEl.dataset.unit));
+      field.appendChild(el("p", "q-note", "允许误差 ±" + (ctx.rootEl.dataset.tolerance || 0) +
+        (ctx.rootEl.dataset.unit ? " " + ctx.rootEl.dataset.unit : "") + "。"));
+      ctx.body.appendChild(field);
+      ctx.controls.input = inp2;
+      inp2.addEventListener("input", function () { ctx.q.raw = inp2.value; });
+      inp2.addEventListener("keydown", function (e) { if (e.key === "Enter") ctx.bCheck.click(); });
+    },
+    getRawAnswer: function (ctx) {
+      return ctx.controls.input ? ctx.controls.input.value : "";
+    },
+    judge: function (ctx) {
+      var raw = ctx.controls.input ? ctx.controls.input.value : "";
+      if (!raw.trim()) {
+        ctx.feedback.textContent = "先填写答案。";
+        ctx.feedback.dataset.tone = "info";
+        return null;
+      }
+      ctx.q.raw = raw;
+      var v = Number(raw.trim());
+      var expected = Number(ctx.rootEl.dataset.expected);
+      var tol = Number(ctx.rootEl.dataset.tolerance || 0);
+      return Number.isFinite(v) && Number.isFinite(expected) && Number.isFinite(tol) && tol >= 0 && Math.abs(v - expected) <= tol;
+    },
+    reveal: function (ctx) {
+      if (ctx.controls.input) ctx.controls.input.value = ctx.rootEl.dataset.expected || "";
+    },
+    lock: function (ctx) {
+      if (ctx.controls.input) ctx.controls.input.readOnly = true;
+    }
+  });
+
+  /* 4. Fill Adapter */
+  registerKind("fill", {
+    label: "填空",
+    mount: function (ctx) {
+      var field = el("div", "q-field");
+      var lab2 = el("label", "q-label", "填写答案");
+      lab2.setAttribute("for", ctx.id + "-in");
+      var inp2 = el("input", "q-input");
+      inp2.id = ctx.id + "-in";
+      inp2.autocomplete = "off";
+
+      field.appendChild(lab2);
+      field.appendChild(inp2);
+      if (ctx.rootEl.dataset.unit) field.appendChild(el("span", "q-unit", ctx.rootEl.dataset.unit));
+      ctx.body.appendChild(field);
+      ctx.controls.input = inp2;
+      inp2.addEventListener("input", function () { ctx.q.raw = inp2.value; });
+      inp2.addEventListener("keydown", function (e) { if (e.key === "Enter") ctx.bCheck.click(); });
+    },
+    getRawAnswer: function (ctx) {
+      return ctx.controls.input ? ctx.controls.input.value : "";
+    },
+    judge: function (ctx) {
+      var raw = ctx.controls.input ? ctx.controls.input.value : "";
+      if (!raw.trim()) {
+        ctx.feedback.textContent = "先填写答案。";
+        ctx.feedback.dataset.tone = "info";
+        return null;
+      }
+      ctx.q.raw = raw;
+      var acc = [];
+      try { acc = JSON.parse(ctx.rootEl.dataset.accepted || "[]"); } catch (e) { acc = []; }
+      var cs = ctx.rootEl.dataset.caseSensitive === "true";
+      return Array.isArray(acc) && acc.some(function (a) { return norm(a, cs) === norm(raw, cs); });
+    },
+    reveal: function (ctx) {
+      try {
+        var acc = JSON.parse(ctx.rootEl.dataset.accepted || "[]");
+        if (ctx.controls.input && acc.length) ctx.controls.input.value = acc[0];
+      } catch (e) {}
+    },
+    lock: function (ctx) {
+      if (ctx.controls.input) ctx.controls.input.readOnly = true;
+    }
+  });
+
+  /* 5. Open Question Adapter */
+  registerKind("open", {
+    label: "开放",
+    checkButtonText: "保存并查看对照要点",
+    mount: function (ctx) {
+      var field3 = el("div", "q-field");
+      var lab3 = el("label", "q-label", "写下你的纠正、条件与反例");
+      lab3.setAttribute("for", ctx.id + "-in");
+      var ta = el("textarea", "q-textarea");
+      ta.id = ctx.id + "-in";
+      var cnt = el("span", "q-count", "0 字");
+      ta.addEventListener("input", function () {
+        cnt.textContent = ta.value.length + " 字";
+        ctx.q.raw = ta.value;
+      });
+      field3.appendChild(lab3);
+      field3.appendChild(ta);
+      field3.appendChild(cnt);
+      ctx.body.appendChild(field3);
+      ctx.controls.input = ta;
+      if (ctx.keySrc) ctx.keySrc.remove();
+    },
+    getRawAnswer: function (ctx) {
+      return ctx.controls.input ? ctx.controls.input.value : "";
+    },
+    submit: function (ctx) {
+      var rawText = ctx.controls.input ? ctx.controls.input.value : "";
+      if (!rawText.trim()) {
+        if (ctx.controls.input) ctx.controls.input.focus();
+        ctx.feedback.textContent = "先写下自己的回答。";
+        ctx.feedback.dataset.tone = "info";
+        return;
+      }
+      ctx.q.raw = rawText;
+      ctx.q.attempts = 1;
+      ctx.key.hidden = false;
+      renderMath(ctx.key);
+      if (ctx.controls.input) ctx.controls.input.readOnly = true;
+      ctx.bCheck.disabled = true;
+      ctx.dispatch({ type: EVIDENCE.RAW_ANSWER, id: ctx.id, value: rawText });
+      ctx.dispatch({ type: EVIDENCE.KEY_VIEWED, id: ctx.id });
+      ctx.setState("saved", "info", "回答已保存，请对照要点自查差距。");
+    },
+    lock: function (ctx) {
+      if (ctx.controls.input) ctx.controls.input.readOnly = true;
+    }
+  });
+
+  /* 6. Dialogue Adapter */
+  registerKind("dialogue", {
+    label: "对话",
+    checkButtonText: "保存本轮并继续",
+    mount: function (ctx) {
+      var wrap = el("div", "q-turns");
+      var turns = [];
+      if (ctx.turnsSrc) {
+        Array.prototype.forEach.call(ctx.turnsSrc.children, function (li, i) {
+          var t = el("div", "q-turn");
+          t.hidden = i > 0;
+          var promptText = li.dataset.prompt || li.textContent.trim();
+          var p = el("label", "q-turn-prompt", promptText);
+          p.setAttribute("for", ctx.id + "-t" + i);
+          var ta2 = el("textarea", "q-textarea");
+          ta2.id = ctx.id + "-t" + i;
+          t.appendChild(p);
+          t.appendChild(ta2);
+          wrap.appendChild(t);
+          turns.push({ node: t, ta: ta2, guidance: li.dataset.guidance });
+        });
+        ctx.turnsSrc.remove();
+      }
+      ctx.body.appendChild(wrap);
+      ctx.controls.turns = turns;
+      ctx.controls.cur = 0;
+    },
+    getRawAnswer: function (ctx) {
+      var turns = ctx.controls.turns || [];
+      var cur = turns[ctx.controls.cur];
+      return cur ? cur.ta.value : "";
+    },
+    submit: function (ctx) {
+      var cur = ctx.controls.turns[ctx.controls.cur];
+      if (!cur) return;
+      var val = cur.ta.value;
+      if (!val.trim()) {
+        cur.ta.focus();
+        ctx.feedback.textContent = "先留下自己的回答，再继续。";
+        ctx.feedback.dataset.tone = "info";
+        return;
+      }
+      cur.ta.readOnly = true;
+      cur.node.dataset.done = "";
+      ctx.q.attempts = ctx.controls.cur + 1;
+      var turnId = String(ctx.controls.cur + 1);
+      ctx.dispatch({ type: EVIDENCE.TURN_RAW, id: ctx.id, turn: turnId, value: val });
+      ctx.dispatch({ type: EVIDENCE.TURN_SUBMITTED, id: ctx.id, turn: turnId });
+
+      if (ctx.controls.cur + 1 < ctx.controls.turns.length) {
+        ctx.controls.cur++;
+        var nextTurn = ctx.controls.turns[ctx.controls.cur];
+        nextTurn.node.hidden = false;
+        if (nextTurn.guidance) ctx.setAssistance(nextTurn.guidance);
+        nextTurn.ta.focus();
+        if (ctx.controls.cur + 1 === ctx.controls.turns.length) ctx.bCheck.textContent = "保存最后一轮";
+        ctx.setState("idle", "info", "上一轮已保留。请回答新的追问。");
+      } else {
+        ctx.bCheck.disabled = true;
+        ctx.setState("saved", "info", "各轮回答已保留，可复制学习记录给老师评估。");
+      }
+      ctx.meta.textContent = "已完成 " + ctx.q.attempts + "/" + ctx.controls.turns.length + " 轮" + (ctx.q.hints ? " · 提示 " + ctx.q.hints : "");
+    },
+    lock: function (ctx) {
+      if (ctx.controls.turns) {
+        ctx.controls.turns.forEach(function (t) { t.ta.readOnly = true; });
+      }
+    }
+  });
+
   /* ---- Modern Question Enhancer (Architecture §7.4) ---- */
 
   function enhanceModernQuestion(rootEl, index, store) {
@@ -100,7 +476,7 @@
       attempts: 0,
       hints: 0,
       verdict: "",
-      assist: "independent",
+      observedAssistance: null,
       revealed: false,
       raw: null
     };
@@ -151,12 +527,13 @@
     key.hidden = true;
     key.innerHTML = "<b>对照要点</b>" + keyHtml;
 
+    var adapter = getKind(kind) || getKind("choice");
+
     var actions = el("div", "q-actions");
     var bHint = el("button", "btn ghost", "需要提示");
     bHint.type = "button";
-    var bCheck = el("button", "btn primary",
-      kind === "open" ? "保存并查看对照要点" :
-      kind === "dialogue" ? "保存本轮并继续" : "检查答案");
+    var defaultCheckText = adapter && adapter.checkButtonText ? adapter.checkButtonText : "检查答案";
+    var bCheck = el("button", "btn primary", defaultCheckText);
     bCheck.type = "button";
     var bReveal = el("button", "btn", "查看答案");
     bReveal.type = "button";
@@ -166,100 +543,80 @@
     actions.appendChild(bCheck);
     actions.appendChild(bReveal);
 
-    var inputs = [];
-    if ((kind === "choice" || kind === "multi") && optsSrc) {
-      var ol = el("ol", "q-options");
-      Array.prototype.forEach.call(optsSrc.children, function (li, i) {
-        var whyNode = li.querySelector("[data-why]");
-        var why = whyNode ? whyNode.textContent : "";
-        if (whyNode) whyNode.remove();
+    function dispatch(action) {
+      if (store && store.dispatch) store.dispatch(action);
+    }
 
-        var item = el("li", "q-option");
-        if (li.hasAttribute("data-correct")) item.dataset.correct = "true";
-        var lab = el("label");
-        var inp = el("input");
-        inp.type = kind === "multi" ? "checkbox" : "radio";
-        inp.name = id;
-
-        var mark = el("span", "q-mark", String.fromCharCode(65 + i));
-        var text = el("span", "q-text");
-        text.innerHTML = li.innerHTML;
-        var w = el("p", "q-why", why);
-        text.appendChild(w);
-
-        lab.appendChild(inp);
-        lab.appendChild(mark);
-        lab.appendChild(text);
-        item.appendChild(lab);
-        ol.appendChild(item);
-
-        inputs.push({ input: inp, item: item, text: li.textContent.trim() });
-        inp.addEventListener("change", function () {
-          var checkedItems = inputs.filter(function (x) { return x.input.checked; });
-          q.raw = checkedItems.map(function (x) { return x.text; }).join("；");
-        });
-      });
-      optsSrc.remove();
-      body.appendChild(ol);
-    } else if (kind === "numeric" || kind === "fill") {
-      var field = el("div", "q-field");
-      var lab2 = el("label", "q-label", kind === "numeric" ? "你的答案" : "填写答案");
-      lab2.setAttribute("for", id + "-in");
-      var inp2 = el("input", "q-input");
-      inp2.id = id + "-in";
-      inp2.autocomplete = "off";
-      if (kind === "numeric") inp2.inputMode = "decimal";
-
-      field.appendChild(lab2);
-      field.appendChild(inp2);
-      if (rootEl.dataset.unit) field.appendChild(el("span", "q-unit", rootEl.dataset.unit));
-      if (kind === "numeric") {
-        field.appendChild(el("p", "q-note", "允许误差 ±" + (rootEl.dataset.tolerance || 0) +
-          (rootEl.dataset.unit ? " " + rootEl.dataset.unit : "") + "。"));
+    function setAssistance(level) {
+      if (q.observedAssistance === "ai_guided") return;
+      if (level === "ai_guided" || (q.observedAssistance !== "with_hints" && level === "with_hints")) {
+        q.observedAssistance = level;
       }
-      body.appendChild(field);
-      controls.input = inp2;
-      inp2.addEventListener("input", function () { q.raw = inp2.value; });
-      inp2.addEventListener("keydown", function (e) { if (e.key === "Enter") bCheck.click(); });
-    } else if (kind === "open") {
-      var field3 = el("div", "q-field");
-      var lab3 = el("label", "q-label", "写下你的纠正、条件与反例");
-      lab3.setAttribute("for", id + "-in");
-      var ta = el("textarea", "q-textarea");
-      ta.id = id + "-in";
-      var cnt = el("span", "q-count", "0 字");
-      ta.addEventListener("input", function () {
-        cnt.textContent = ta.value.length + " 字";
-        q.raw = ta.value;
-      });
-      field3.appendChild(lab3);
-      field3.appendChild(ta);
-      field3.appendChild(cnt);
-      body.appendChild(field3);
-      controls.input = ta;
-      if (keySrc) keySrc.remove();
-    } else if (kind === "dialogue") {
-      var wrap = el("div", "q-turns");
-      var turns = [];
-      if (turnsSrc) {
-        Array.prototype.forEach.call(turnsSrc.children, function (li, i) {
-          var t = el("div", "q-turn");
-          t.hidden = i > 0;
-          var promptText = li.dataset.prompt || li.textContent.trim();
-          var p = el("label", "q-turn-prompt", promptText);
-          p.setAttribute("for", id + "-t" + i);
-          var ta2 = el("textarea", "q-textarea");
-          ta2.id = id + "-t" + i;
-          t.appendChild(p);
-          t.appendChild(ta2);
-          wrap.appendChild(t);
-          turns.push({ node: t, ta: ta2, guidance: li.dataset.guidance });
-        });
-        turnsSrc.remove();
+      rootEl.dataset.observedAssistance = q.observedAssistance;
+      dispatch({ type: EVIDENCE.OBSERVED_ASSISTANCE, id: id, value: q.observedAssistance });
+    }
+
+    function setState(s, tone, msg) {
+      q.verdict = s;
+      rootEl.dataset.state = s;
+      rootEl.dataset.attempts = String(q.attempts);
+      rootEl.dataset.hintUsed = q.hints > 0 ? "true" : "false";
+      if (q.observedAssistance) {
+        rootEl.dataset.observedAssistance = q.observedAssistance;
       }
-      body.appendChild(wrap);
-      controls.turns = turns;
-      controls.cur = 0;
+
+      stateChip.textContent = STATE_LABEL[s] || s;
+      feedback.textContent = msg || "";
+      feedback.dataset.tone = tone || "";
+      feedback.dataset.state = s;
+
+      var parts = [];
+      if (q.attempts) parts.push("第 " + q.attempts + " 次作答");
+      if (q.hints) parts.push("提示 " + q.hints + "/" + hintNodes.length);
+      if (s === "correct" || s === "saved") {
+        parts.push(q.hints > 0 ? (q.observedAssistance === "ai_guided" ? "AI引导" : "用过提示") : "未用提示");
+      }
+      meta.textContent = parts.join(" · ");
+      updateSummary();
+    }
+
+    function lock() {
+      rootEl.dataset.locked = "";
+      actions.querySelectorAll("button").forEach(function (b) {
+        if (b !== bReveal) b.disabled = true;
+      });
+      if (adapter && adapter.lock) {
+        adapter.lock(ctx);
+      }
+      bReveal.hidden = true;
+    }
+
+    var ctx = {
+      rootEl: rootEl,
+      id: id,
+      kind: kind,
+      body: body,
+      stem: stem,
+      optsSrc: optsSrc,
+      keySrc: keySrc,
+      turnsSrc: turnsSrc,
+      explain: explain,
+      key: key,
+      q: q,
+      dispatch: dispatch,
+      renderMath: renderMath,
+      bCheck: bCheck,
+      bReveal: bReveal,
+      feedback: feedback,
+      meta: meta,
+      setState: setState,
+      setAssistance: setAssistance,
+      lock: lock,
+      controls: controls
+    };
+
+    if (adapter && adapter.mount) {
+      adapter.mount(ctx);
     }
 
     if (hintsSrc) hintsSrc.remove();
@@ -274,52 +631,6 @@
     rootEl.appendChild(feedback);
     rootEl.appendChild(explain);
     rootEl.appendChild(key);
-
-    function dispatch(action) {
-      if (store && store.dispatch) store.dispatch(action);
-    }
-
-    function setAssistance(level) {
-      if (q.assist === "ai_guided") return;
-      if (level === "ai_guided" || (q.assist !== "with_hints" && level === "with_hints")) {
-        q.assist = level;
-      }
-      rootEl.dataset.assistance = q.assist;
-      dispatch({ type: EVIDENCE.OBSERVED_ASSISTANCE, id: id, value: q.assist });
-      dispatch({ type: EVIDENCE.INDEPENDENCE, id: id, value: q.assist });
-    }
-
-    function setState(s, tone, msg) {
-      q.verdict = s;
-      rootEl.dataset.state = s;
-      rootEl.dataset.attempts = String(q.attempts);
-      rootEl.dataset.hintUsed = q.hints > 0 ? "true" : "false";
-      rootEl.dataset.independence = q.assist;
-
-      stateChip.textContent = STATE_LABEL[s] || s;
-      feedback.textContent = msg || "";
-      feedback.dataset.tone = tone || "";
-      feedback.dataset.state = s;
-
-      var parts = [];
-      if (q.attempts) parts.push("第 " + q.attempts + " 次作答");
-      if (q.hints) parts.push("提示 " + q.hints + "/" + hintNodes.length);
-      if (s === "correct" || s === "saved") {
-        parts.push(q.assist === "independent" ? "独立完成" : q.assist === "ai_guided" ? "AI引导" : "用过提示");
-      }
-      meta.textContent = parts.join(" · ");
-      updateSummary();
-    }
-
-    function lock() {
-      rootEl.dataset.locked = "";
-      actions.querySelectorAll("button").forEach(function (b) {
-        if (b !== bReveal) b.disabled = true;
-      });
-      inputs.forEach(function (x) { x.input.disabled = true; });
-      if (controls.input) controls.input.readOnly = true;
-      bReveal.hidden = true;
-    }
 
     bHint.addEventListener("click", function () {
       if (q.hints >= hintNodes.length) return;
@@ -344,116 +655,31 @@
       setState(q.verdict || "idle", feedback.dataset.tone, feedback.textContent);
     });
 
-    function showAnswerResult(reveal) {
-      inputs.forEach(function (x) {
-        var isRight = x.item.dataset.correct === "true";
-        var picked = x.input.checked;
-        if (picked && isRight) x.item.dataset.result = "right";
-        else if (picked && !isRight) x.item.dataset.result = "wrong";
-        else if (!picked && isRight && reveal) x.item.dataset.result = "missed";
-        else delete x.item.dataset.result;
-      });
-    }
-
-    function judge() {
-      if (kind === "choice" || kind === "multi") {
-        var picked = inputs.filter(function (x) { return x.input.checked; });
-        if (!picked.length) {
-          feedback.textContent = "先选择答案，再检查。";
-          feedback.dataset.tone = "info";
-          return null;
-        }
-        var right = inputs.filter(function (x) { return x.item.dataset.correct === "true"; });
-        var ok = picked.length === right.length && picked.every(function (x) { return x.item.dataset.correct === "true"; });
-        q.raw = picked.map(function (x) { return x.text; }).join("；");
-        return ok;
-      }
-      var raw = controls.input ? controls.input.value : "";
-      if (!raw.trim()) {
-        feedback.textContent = "先填写答案。";
-        feedback.dataset.tone = "info";
-        return null;
-      }
-      q.raw = raw;
-      if (kind === "numeric") {
-        var v = Number(raw);
-        var expected = Number(rootEl.dataset.expected);
-        var tol = Number(rootEl.dataset.tolerance || 0);
-        return Number.isFinite(v) && Number.isFinite(expected) && Number.isFinite(tol) && tol >= 0 && Math.abs(v - expected) <= tol;
-      }
-      var acc = [];
-      try { acc = JSON.parse(rootEl.dataset.accepted || "[]"); } catch (e) { acc = []; }
-      var cs = rootEl.dataset.caseSensitive === "true";
-      return Array.isArray(acc) && acc.some(function (a) { return norm(a, cs) === norm(raw, cs); });
-    }
-
     bCheck.addEventListener("click", function () {
-      if (kind === "open") {
-        var rawText = controls.input ? controls.input.value.trim() : "";
-        if (!rawText) {
-          if (controls.input) controls.input.focus();
-          feedback.textContent = "先写下自己的回答。";
-          feedback.dataset.tone = "info";
-          return;
-        }
-        q.attempts = 1;
-        key.hidden = false;
-        renderMath(key);
-        if (controls.input) controls.input.readOnly = true;
-        bCheck.disabled = true;
-        dispatch({ type: EVIDENCE.RAW_ANSWER, id: id, value: rawText });
-        dispatch({ type: EVIDENCE.KEY_VIEWED, id: id });
-        setState("saved", "info", "回答已保存，请对照要点自查差距。");
-        return;
-      }
-      if (kind === "dialogue") {
-        var cur = controls.turns[controls.cur];
-        var val = cur.ta.value.trim();
-        if (!val) {
-          cur.ta.focus();
-          feedback.textContent = "先留下自己的回答，再继续。";
-          feedback.dataset.tone = "info";
-          return;
-        }
-        cur.ta.readOnly = true;
-        cur.node.dataset.done = "";
-        q.attempts = controls.cur + 1;
-        var turnId = String(controls.cur + 1);
-        dispatch({ type: EVIDENCE.TURN_RAW, id: id, turn: turnId, value: val });
-        dispatch({ type: EVIDENCE.TURN_SUBMITTED, id: id, turn: turnId });
-
-        if (controls.cur + 1 < controls.turns.length) {
-          controls.cur++;
-          var nextTurn = controls.turns[controls.cur];
-          nextTurn.node.hidden = false;
-          if (nextTurn.guidance) setAssistance(nextTurn.guidance);
-          nextTurn.ta.focus();
-          if (controls.cur + 1 === controls.turns.length) bCheck.textContent = "保存最后一轮";
-          setState("idle", "info", "上一轮已保留。请回答新的追问。");
-        } else {
-          bCheck.disabled = true;
-          setState("saved", "info", "各轮回答已保留，可复制学习记录给老师评估。");
-        }
-        meta.textContent = "已完成 " + q.attempts + "/" + controls.turns.length + " 轮" + (q.hints ? " · 提示 " + q.hints : "");
+      if (adapter && adapter.submit) {
+        adapter.submit(ctx);
         return;
       }
 
-      var ok = judge();
+      if (!adapter || !adapter.judge) return;
+      var ok = adapter.judge(ctx);
       if (ok === null) return;
       q.attempts++;
 
-      dispatch({ type: EVIDENCE.RAW_ANSWER, id: id, value: q.raw });
+      var rawAns = adapter.getRawAnswer ? adapter.getRawAnswer(ctx) : q.raw;
+      q.raw = rawAns;
+      dispatch({ type: EVIDENCE.RAW_ANSWER, id: id, value: rawAns });
       dispatch({ type: EVIDENCE.ATTEMPT, id: id });
       dispatch({ type: EVIDENCE.VERDICT, id: id, value: ok ? "correct" : "incorrect" });
 
       if (ok) {
-        showAnswerResult(true);
+        if (adapter.reveal) adapter.reveal(ctx, true);
         explain.hidden = false;
         renderMath(explain);
         lock();
         setState("correct", "correct", "回答正确。请用一句话说明判断依据。");
       } else {
-        showAnswerResult(false);
+        if (adapter.reveal) adapter.reveal(ctx, false);
         var left = maxAttempts - q.attempts;
         if (left <= 0) bReveal.hidden = false;
         bCheck.textContent = "再检查一次";
@@ -464,19 +690,12 @@
     });
 
     bReveal.addEventListener("click", function () {
-      if (kind === "numeric") {
-        if (controls.input) controls.input.value = rootEl.dataset.expected || "";
-      } else if (kind === "fill") {
-        try {
-          var acc = JSON.parse(rootEl.dataset.accepted || "[]");
-          if (controls.input && acc.length) controls.input.value = acc[0];
-        } catch (e) {}
-      }
-      showAnswerResult(true);
+      if (adapter && adapter.reveal) adapter.reveal(ctx, true);
       explain.hidden = false;
       renderMath(explain);
       lock();
       dispatch({ type: EVIDENCE.KEY_VIEWED, id: id });
+      setAssistance("answer_revealed");
       setState("incorrect", "incorrect", "已显示答案。回头想想：当时哪一步判断偏了？");
       q.revealed = true;
     });
@@ -512,10 +731,17 @@
   }
 
   kit.question = {
+    registerKind: registerKind,
+    getKind: getKind,
+    adapters: kindAdapters,
     enhance: enhanceModernQuestion,
     updateSummary: updateSummary,
     init: initQuestions
   };
+
+  if (kit.registerModule) {
+    kit.registerModule("learning.question", kit.question);
+  }
 
   if (typeof document !== "undefined") {
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initQuestions);

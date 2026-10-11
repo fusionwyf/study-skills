@@ -104,11 +104,7 @@
     init: enhance
   };
 
-  if (typeof document !== "undefined") {
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", enhance);
-    } else {
-      enhance();
-    }
+  if (kit.registerModule) {
+    kit.registerModule("content.animation", kit.animation);
   }
 })(typeof window !== "undefined" ? window : globalThis);

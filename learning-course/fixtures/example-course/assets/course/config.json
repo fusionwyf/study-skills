@@ -1,0 +1,13 @@
+{
+  "theme": "course",
+  "vendor": {
+    "mode": "cdn"
+  },
+  "code": {
+    "themes": {
+      "light": "github",
+      "dark": "github-dark"
+    }
+  },
+  "modules": []
+}

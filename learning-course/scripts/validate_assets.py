@@ -37,7 +37,20 @@ def validate_asset_package(root, errors):
             if not isinstance(lock, dict):
                 errors.append("kit.lock.json must be an object")
                 return
-            files = lock.get("files", {})
+            if not lock.get("kit"):
+                errors.append("kit.lock.json missing kit version")
+                return
+            modules = lock.get("modules")
+            if not isinstance(modules, dict) or not modules:
+                errors.append("kit.lock.json must have a non-empty modules object")
+                return
+            files = lock.get("files")
+            if not isinstance(files, dict) or not files:
+                errors.append("kit.lock.json must have a non-empty files object")
+                return
+            for required_file in ("kit.css", "kit.js"):
+                if required_file not in files:
+                    errors.append(f"kit.lock.json missing required file: {required_file}")
             kit_dir = root / "assets/kit"
             for filename, expected_hash in files.items():
                 target = kit_dir / filename
@@ -47,7 +60,16 @@ def validate_asset_package(root, errors):
                 actual_hash = f"sha256-{hashlib.sha256(target.read_bytes()).hexdigest()}"
                 if actual_hash != expected_hash:
                     errors.append(f"kit file modified: assets/kit/{filename}")
-            # Also validate vendor lock if vendor files are present in the course
+            # Validate vendor lock if present in kit.lock.json
+            vendor_lock = lock.get("vendor", {})
+            if isinstance(vendor_lock, dict):
+                for rel_path, expected_hash in vendor_lock.items():
+                    target = kit_dir / rel_path
+                    if not target.is_file():
+                        errors.append(f"missing vendor file: assets/kit/{rel_path}")
+                    elif f"sha256-{hashlib.sha256(target.read_bytes()).hexdigest()}" != expected_hash:
+                        errors.append(f"vendor file modified: assets/kit/{rel_path}")
+            # Also validate legacy vendor lock if vendor files are present in the course
             vendor_lock_path = root / "assets/visualizations/vendor/manifest.json"
             if vendor_lock_path.is_file():
                 vlock = json.loads(vendor_lock_path.read_text(encoding="utf-8"))

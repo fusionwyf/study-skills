@@ -19,34 +19,30 @@
   }
 
   function renderNodes() {
-    if (!root.mermaid) return;
+    if (!root.mermaid) return Promise.resolve();
     try {
       root.mermaid.initialize(getThemeConfig());
     } catch (e) {}
 
-    nodes.forEach(function (item, idx) {
-      var el = item.element;
+    var promises = nodes.map(function (item, idx) {
       var raw = item.raw;
       var block = item.block;
       var id = "mermaid-diagram-" + idx;
 
-      try {
-        root.mermaid.render(id, raw).then(function (res) {
-          block.body.innerHTML = res.svg;
-          block.root.dataset.kitState = "ready";
-        }).catch(function (err) {
-          console.warn("[kit.diagram] Mermaid render error", err);
-          block.body.innerHTML = "<pre>" + kit.util.escapeHtml(raw) + "</pre>";
-          block.label.textContent = "渲染失败";
-          block.root.dataset.kitState = "failed";
-        });
-      } catch (err) {
-        console.warn("[kit.diagram] Mermaid render exception", err);
+      return Promise.resolve().then(function () {
+        return root.mermaid.render(id, raw);
+      }).then(function (res) {
+        block.body.innerHTML = res.svg;
+        block.root.dataset.kitState = "ready";
+      }).catch(function (err) {
+        console.warn("[kit.diagram] Mermaid render error", err);
         block.body.innerHTML = "<pre>" + kit.util.escapeHtml(raw) + "</pre>";
         block.label.textContent = "渲染失败";
         block.root.dataset.kitState = "failed";
-      }
+      });
     });
+
+    return Promise.all(promises);
   }
 
   function enhanceDiagram(el) {
@@ -78,37 +74,36 @@
   }
 
   function init() {
-    if (typeof document === "undefined") return;
+    if (typeof document === "undefined") return Promise.resolve();
     var diagramEls = document.querySelectorAll(".mermaid");
     if (!diagramEls.length) {
-      if (kit.ready && kit.ready.markReady) kit.ready.markReady("content.diagram");
-      return;
-    }
-
-    if (kit.ready && kit.ready.registerPending) {
-      kit.ready.registerPending("content.diagram");
+      return Promise.resolve();
     }
 
     Array.prototype.forEach.call(diagramEls, enhanceDiagram);
-
-    if (root.mermaid) {
-      renderNodes();
-      if (kit.ready && kit.ready.markReady) kit.ready.markReady("content.diagram");
-    } else if (kit.need) {
-      kit.need("mermaid").then(function () {
-        renderNodes();
-        if (kit.ready && kit.ready.markReady) kit.ready.markReady("content.diagram");
-      }).catch(function (err) {
-        console.warn("[kit.diagram] Mermaid load failed", err);
-        if (kit.ready && kit.ready.markFailed) kit.ready.markFailed("content.diagram", err);
-      });
-    }
 
     kit.on("kit:themechange", function () {
       if (root.mermaid && nodes.length) {
         renderNodes();
       }
     });
+
+    if (root.mermaid) {
+      return renderNodes();
+    } else if (kit.need) {
+      return kit.need("mermaid").then(function () {
+        return renderNodes();
+      }).catch(function (err) {
+        console.warn("[kit.diagram] Mermaid load failed", err);
+        nodes.forEach(function (item) {
+          item.block.body.innerHTML = "<pre>" + kit.util.escapeHtml(item.raw) + "</pre>";
+          item.block.label.textContent = "渲染失败";
+          item.block.root.dataset.kitState = "failed";
+        });
+        throw err;
+      });
+    }
+    return Promise.resolve();
   }
 
   kit.diagram = {
@@ -116,11 +111,7 @@
     render: renderNodes
   };
 
-  if (typeof document !== "undefined") {
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", init);
-    } else {
-      init();
-    }
+  if (kit.registerModule) {
+    kit.registerModule("content.diagram", kit.diagram);
   }
 })(typeof window !== "undefined" ? window : globalThis);

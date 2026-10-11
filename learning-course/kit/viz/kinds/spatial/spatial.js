@@ -98,13 +98,14 @@
       currentVector = readVector();
       syncInputs(currentVector);
       if (!root.JXG) {
-        if (kit.loader && kit.loader.need) {
-          await kit.loader.need("jsxgraph");
+        var needFn = kit.need || (kit.loader && kit.loader.need);
+        if (needFn) {
+          await needFn("jsxgraph");
         } else {
           await h.loadVendor("jsxgraph/jsxgraphcore.js", "JXG");
+          if (root.JXG) await h.loadStylesheet("jsxgraph/jsxgraph.css");
         }
       }
-      if (root.JXG) await h.loadStylesheet("jsxgraph/jsxgraph.css");
       if (root.JXG) {
         h.show(node);
         var host = h.find(node, "[data-viz-host]");
@@ -170,7 +171,11 @@
   var spatialAdapter = {validate: validateSpatial, render: renderSpatial};
   core.registerKind("spatial", spatialAdapter);
 
-  if (kit.ready && kit.ready.markReady) {
-    kit.ready.markReady("viz.kinds.spatial");
+  if (kit.registerModule) {
+    kit.registerModule("viz.kinds.spatial", {
+      init: function () {
+        return Promise.resolve();
+      }
+    });
   }
 })(typeof window !== "undefined" ? window : globalThis);

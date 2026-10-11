@@ -132,8 +132,8 @@
       "vendor": [
         {
           "id": "plotly",
-          "version": "3.0.1",
-          "cdn": "https://cdn.jsdelivr.net/npm/plotly.js-dist-min@3.0.1/plotly.min.js",
+          "version": "4.1.2",
+          "cdn": "https://cdn.jsdelivr.net/npm/plotly.js-dist-min@4.1.2/plotly.min.js",
           "local": "vendor/plotly.js-dist-min/plotly.min.js"
         }
       ],
@@ -215,8 +215,8 @@
       "vendor": [
         {
           "id": "jsxgraph",
-          "version": "1.8.0",
-          "cdn": "https://cdn.jsdelivr.net/npm/jsxgraph@1.8.0/distrib/jsxgraphcore.js",
+          "version": "1.14.0",
+          "cdn": "https://cdn.jsdelivr.net/npm/jsxgraph@1.14.0/distrib/jsxgraphcore.js",
           "local": "vendor/jsxgraph/jsxgraphcore.js"
         }
       ],

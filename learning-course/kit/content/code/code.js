@@ -73,44 +73,52 @@
         root.hljs.highlightElement(codeNode);
       } catch (e) {}
       block.root.dataset.kitState = "ready";
+      return Promise.resolve();
     } else if (lang !== "text" && kit.need) {
-      kit.need("hljs").then(function () {
+      return kit.need("hljs").then(function () {
         if (root.hljs) {
           try {
             root.hljs.highlightElement(codeNode);
           } catch (e) {}
         }
         block.root.dataset.kitState = "ready";
-      }).catch(function () {
+      }).catch(function (err) {
         block.root.dataset.kitState = "failed";
+        console.warn("[kit.code] Syntax highlighting failed:", err);
       });
     } else {
       block.root.dataset.kitState = "ready";
+      return Promise.resolve();
     }
   }
 
   // Legacy .code-block support
   function enhanceLegacyCodeBlocks() {
     var legacyBlocks = document.querySelectorAll(".code-block:not(.kit-block)");
+    var promises = [];
     Array.prototype.forEach.call(legacyBlocks, function (el) {
       var code = el.querySelector("code");
-      if (code) enhanceCodeBlock(code);
+      if (code) {
+        var p = enhanceCodeBlock(code);
+        if (p) promises.push(p);
+      }
     });
+    return promises;
   }
 
   function init() {
-    if (typeof document === "undefined") return;
-    if (kit.ready && kit.ready.registerPending) {
-      kit.ready.registerPending("content.code");
-    }
+    if (typeof document === "undefined") return Promise.resolve();
 
     var codeNodes = document.querySelectorAll("pre > code");
-    Array.prototype.forEach.call(codeNodes, enhanceCodeBlock);
-    enhanceLegacyCodeBlocks();
+    var promises = [];
+    Array.prototype.forEach.call(codeNodes, function (node) {
+      var p = enhanceCodeBlock(node);
+      if (p) promises.push(p);
+    });
+    var legacyPromises = enhanceLegacyCodeBlocks();
+    promises = promises.concat(legacyPromises);
 
-    if (kit.ready && kit.ready.markReady) {
-      kit.ready.markReady("content.code");
-    }
+    return Promise.all(promises);
   }
 
   kit.code = {
@@ -118,11 +126,7 @@
     enhance: enhanceCodeBlock
   };
 
-  if (typeof document !== "undefined") {
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", init);
-    } else {
-      init();
-    }
+  if (kit.registerModule) {
+    kit.registerModule("content.code", kit.code);
   }
 })(typeof window !== "undefined" ? window : globalThis);

@@ -1,0 +1,56 @@
+{
+  "kit": "2.0.0",
+  "modules": {
+    "core": "2.0.0",
+    "foundation": "2.0.0",
+    "content._block": "2.0.0",
+    "content.callout": "2.0.0",
+    "content.code": "2.0.0",
+    "shell.nav": "2.0.0",
+    "shell.progress": "2.0.0",
+    "shell.theme-switcher": "2.0.0",
+    "shell.toc": "2.0.0",
+    "learning.records": "2.0.0",
+    "learning.step": "2.0.0"
+  },
+  "reasons": {
+    "core": [
+      "core"
+    ],
+    "foundation": [
+      "core"
+    ],
+    "shell.nav": [
+      "core"
+    ],
+    "shell.progress": [
+      "core"
+    ],
+    "shell.theme-switcher": [
+      "core"
+    ],
+    "shell.toc": [
+      "core"
+    ],
+    "learning.records": [
+      "core"
+    ],
+    "content._block": [
+      "core"
+    ],
+    "content.callout": [
+      "auto:0001-example.html:.callout"
+    ],
+    "content.code": [
+      "auto:0001-example.html:.code-block"
+    ],
+    "learning.step": [
+      "auto:0001-example.html:.step"
+    ]
+  },
+  "files": {
+    "kit.css": "sha256-eec0a1ce46604c0eb98030941e0c6108e68b2833aa53bf1aca8cf8075bd8f960",
+    "kit.js": "sha256-0a66448f51024dc1733bd9057ec5ecee3b7e4b8fa1dfd891e611d5227ac31418"
+  },
+  "vendor": {}
+}

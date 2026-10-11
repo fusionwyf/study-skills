@@ -121,7 +121,7 @@
     var selected = selectedLabels(node);
     if (selected.length) return selected.join("；");
     var field = node.querySelector("textarea, input:not([type=radio]):not([type=checkbox])");
-    return field && field.value.trim() ? field.value.trim() : "";
+    return field ? field.value : "";
   }
 
   function buildLearningRecord(lesson, state) {
@@ -149,17 +149,14 @@
         : (q.verdict || "not-checked");
 
       var independence = q.independence;
-      if (!independence) {
-        if (q.hintUsed) independence = "with_hints";
-        else if (q.attempts > 0) independence = "independent";
-        else independence = "unknown";
-      }
+      var learnerStatement = independence ? independence : "未填写/待确认 (页内未设置自述输入)";
 
       var observed = q.observedAssistance;
       if (!observed) {
         if (q.hintUsed) observed = "with_hints (使用了页面提示)";
-        else if (q.attempts > 0) observed = "未观察到外部辅助，独立完成";
-        else observed = "未作答";
+        else if (q.answerViewed) observed = "answer_revealed (查看了解析/对照要点)";
+        else if (q.attempts > 0) observed = "none (未在页内使用提示；外部辅助不可观测)";
+        else observed = "not_attempted (未作答)";
       }
 
       lines.push(
@@ -169,7 +166,7 @@
         "- 原始答案: " + multiline(answer),
         "- 检查次数: " + q.attempts,
         "- 使用提示: " + (q.hintUsed ? "是" : "否"),
-        "- 辅助情况（学习者自述）: " + independence,
+        "- 辅助情况（学习者自述）: " + learnerStatement,
         "- 页面观察到的帮助: " + observed,
         "- 已查看对照要点: " + (q.answerViewed ? "是（作答后）" : "否"),
         "- 即时判定: " + result
@@ -281,6 +278,10 @@
     initPrintState: initPrintState,
     init: initRecords
   };
+
+  if (kit.registerModule) {
+    kit.registerModule("learning.records", kit.records);
+  }
 
   if (typeof document !== "undefined") {
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initRecords);

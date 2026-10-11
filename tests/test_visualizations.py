@@ -75,7 +75,7 @@ class VisualizationTests(unittest.TestCase):
         self.assertEqual(trace["z"][0][0], 8)
 
     def test_dependency_files_match_recorded_checksums_and_keep_licenses(self):
-        manifest = json.loads((VENDOR / "manifest.json").read_text())
+        manifest = json.loads((VENDOR / "manifest.json").read_text(encoding="utf-8"))
         for dependency in manifest.values():
             self.assertTrue(any("LICENSE" in name for name in dependency["files"]))
             for file, checksum in dependency["sha256"].items():
@@ -108,15 +108,15 @@ class VisualizationTests(unittest.TestCase):
             self.assertFalse((target / "kinds/spatial.js").exists())
             self.assertTrue((target / "vendor/plotly.js-dist-min/plotly.min.js").is_file())
             self.assertFalse((target / "vendor/jsxgraph").exists())
-            self.assertEqual(sorted(json.loads((target / "vendor/manifest.json").read_text())), ["chart"])
+            self.assertEqual(sorted(json.loads((target / "vendor/manifest.json").read_text(encoding="utf-8"))), ["chart"])
             self.assertTrue(any("chart" in notice for notice in notices))
 
             # Optional installs are composable and preserve the first vendor lock.
             install(root, ["spatial"])
             self.assertTrue((target / "kinds/spatial.js").is_file())
             self.assertTrue((target / "vendor/jsxgraph/jsxgraphcore.js").is_file())
-            self.assertEqual(sorted(json.loads((target / "vendor/manifest.json").read_text())), ["chart", "spatial"])
-            asset_manifest = json.loads((root / "assets/asset-manifest.json").read_text())
+            self.assertEqual(sorted(json.loads((target / "vendor/manifest.json").read_text(encoding="utf-8"))), ["chart", "spatial"])
+            asset_manifest = json.loads((root / "assets/asset-manifest.json").read_text(encoding="utf-8"))
             self.assertEqual(sorted(asset_manifest["visualizations"]["optional_kinds"]), ["chart", "spatial"])
             lock_after = json.loads((kit_dir / "kit.lock.json").read_text(encoding="utf-8"))
             self.assertIn("viz.kinds.chart", lock_after.get("modules", {}))
@@ -158,13 +158,13 @@ class VisualizationTests(unittest.TestCase):
             # Repeating a component and adding a visualization is safe and recorded.
             install(root, ["theme", "chart"])
             self.assertTrue((root / "assets/visualizations/kinds/chart.js").is_file())
-            asset_manifest = json.loads((root / "assets/asset-manifest.json").read_text())
+            asset_manifest = json.loads((root / "assets/asset-manifest.json").read_text(encoding="utf-8"))
             self.assertEqual(asset_manifest["components"], ["code-highlight", "theme"])
             self.assertEqual(asset_manifest["visualizations"]["optional_kinds"], ["chart"])
 
     def test_declared_visualization_kinds_match_the_shipped_modules(self):
         """`adapters.json` and `kinds/` must agree, so no course references a missing module."""
-        registry = json.loads((KIT / "adapters.json").read_text())
+        registry = json.loads((KIT / "adapters.json").read_text(encoding="utf-8"))
         declared = {name: entry for name, entry in registry["kinds"].items() if entry.get("tier") in ("universal", "optional")}
         modules = set()
         for name, entry in declared.items():
@@ -182,17 +182,17 @@ class VisualizationTests(unittest.TestCase):
                          "visualizations/visualizations.js", "visualizations/visualizations.css",
                          "visualizations/adapters.json"):
             self.assertTrue((EXAMPLE / "assets" / relative).is_file(), f"example-course is missing {relative}")
-        state = json.loads((EXAMPLE / "assets/asset-manifest.json").read_text())
+        state = json.loads((EXAMPLE / "assets/asset-manifest.json").read_text(encoding="utf-8"))
         self.assertEqual(state["components"], ["code-highlight", "theme"])
 
     def test_example_lesson_loads_the_universal_visualization_modules(self):
         """The P0 regression: a lesson template that never loads the kit renders nothing."""
-        lesson = (EXAMPLE / "lessons/0001-example.html").read_text()
+        lesson = (EXAMPLE / "lessons/0001-example.html").read_text(encoding="utf-8")
         for name in ("visualizations.js", "kinds/list.js", "kinds/sequence.js", "kinds/table.js"):
             self.assertIn(f"visualizations/{name}", lesson, f"the example lesson must load {name}")
 
     def test_lesson_template_wires_the_universal_visualization_modules(self):
-        template = (SKILL / "templates/lesson.html").read_text()
+        template = (SKILL / "templates/lesson.html").read_text(encoding="utf-8")
         self.assertIn("assets/kit/kit.css", template)
         self.assertIn("assets/kit/kit.js", template)
 
@@ -222,7 +222,7 @@ class VisualizationTests(unittest.TestCase):
             self.assertEqual(errors, [])
 
     def test_optional_manifest_lists_only_real_files(self):
-        manifest = json.loads((SKILL / "kit/kit.manifest.json").read_text())
+        manifest = json.loads((SKILL / "kit/kit.manifest.json").read_text(encoding="utf-8"))
         self.assertTrue(len(manifest.get("modules", {})) >= 23)
 
     def validate(self, body):
@@ -231,19 +231,19 @@ class VisualizationTests(unittest.TestCase):
         return errors
 
     def test_showcase_contract_and_legacy_optional_compatibility(self):
-        self.assertEqual(self.validate((KIT / "demo.html").read_text()), [])
+        self.assertEqual(self.validate((KIT / "demo.html").read_text(encoding="utf-8")), [])
         self.assertEqual(self.validate('<main class="lesson"><p>Legacy lesson</p></main>'), [])
 
     def test_missing_fallback_bad_json_and_unlabeled_keyboard_inputs_are_rejected(self):
-        demo = (KIT / "demo.html").read_text()
+        demo = (KIT / "demo.html").read_text(encoding="utf-8")
         self.assertTrue(any("visible data-viz-fallback" in e for e in self.validate(demo.replace('data-viz-fallback', 'data-unused'))))
         self.assertTrue(any("invalid JSON" in e for e in self.validate(demo.replace('"vector":[1,0]', '"vector":[NaN,0]'))))
         self.assertTrue(any("keyboard controls" in e for e in self.validate(demo.replace('for="vector-x"', 'for="missing"'))))
         self.assertTrue(any("unique id" in e for e in self.validate(demo.replace('id="spatial-demo"', 'id="chart-demo"'))))
 
     def test_showcase_covers_every_registered_kind(self):
-        demo = (KIT / "demo.html").read_text()
-        registry = json.loads((KIT / "adapters.json").read_text())
+        demo = (KIT / "demo.html").read_text(encoding="utf-8")
+        registry = json.loads((KIT / "adapters.json").read_text(encoding="utf-8"))
         registered = {k for k, v in registry["kinds"].items() if v["renderer"] != "registered extension"}
         shown = set(re.findall(r'data-visualization="([^"]+)"', demo))
         self.assertEqual(registered - shown, set(), "the showcase must exercise each built-in adapter")

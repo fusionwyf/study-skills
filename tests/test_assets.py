@@ -88,8 +88,8 @@ class AssetTests(unittest.TestCase):
             theme = root / "assets/theme.css"
             theme.write_text(":root { --course-accent: purple; }")
             install(root, ["media"])
-            self.assertEqual(css.read_text(), "custom course theme")
-            self.assertEqual(theme.read_text(), ":root { --course-accent: purple; }")
+            self.assertEqual(css.read_text(encoding="utf-8"), "custom course theme")
+            self.assertEqual(theme.read_text(encoding="utf-8"), ":root { --course-accent: purple; }")
             subprocess.run(
                 [
                     sys.executable,
@@ -99,7 +99,7 @@ class AssetTests(unittest.TestCase):
                 check=True,
                 capture_output=True,
             )
-            self.assertIn("assets/theme.css", (root / "index.html").read_text())
+            self.assertIn("assets/theme.css", (root / "index.html").read_text(encoding="utf-8"))
 
     def test_mid_write_failure_rolls_back(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -251,6 +251,31 @@ class AssetTests(unittest.TestCase):
             env=env,
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_kit_sync_and_check_and_tamper_detection(self):
+        kit_py = ROOT / "learning-course/kit/build/kit.py"
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.init(root)
+            lesson = root / "lessons/0001-test.html"
+            lesson.write_text("""<!DOCTYPE html>
+<html><head><link rel="stylesheet" href="../assets/kit/kit.css"></head>
+<body class="lesson" data-course-id="c1" data-lesson-id="1" data-objective="obj1">
+  <div class="code-block"><pre><code class="language-python">print('hi')</code></pre></div>
+  <script src="../assets/kit/kit.js"></script>
+</body></html>""", encoding="utf-8")
+            # Sync
+            res = subprocess.run([sys.executable, str(kit_py), "sync", str(root)], capture_output=True, text=True, encoding="utf-8", errors="replace")
+            self.assertEqual(res.returncode, 0, (res.stdout or "") + (res.stderr or ""))
+            # Check passes
+            res = subprocess.run([sys.executable, str(kit_py), "check", str(root)], capture_output=True, text=True, encoding="utf-8", errors="replace")
+            self.assertEqual(res.returncode, 0, (res.stdout or "") + (res.stderr or ""))
+            # Tamper kit.js
+            kit_js = root / "assets/kit/kit.js"
+            kit_js.write_text("tampered content", encoding="utf-8")
+            res = subprocess.run([sys.executable, str(kit_py), "check", str(root)], capture_output=True, text=True, encoding="utf-8", errors="replace")
+            self.assertNotEqual(res.returncode, 0)
+            self.assertIn("Hash mismatch", (res.stdout or "") + (res.stderr or ""))
 
 
 if __name__ == "__main__":

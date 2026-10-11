@@ -108,9 +108,9 @@ last_feedback: null
 
 ## 课件制作约定
 
-- 视觉主题：在 `assets/theme.css` 自定义配色、字体、布局，在 `assets/theme.js` 登记主题与第三方渲染设置；页面最后加载 theme.css。
-- 第三方库：按内容优先选成熟库；代码启用 highlight.js，公式启用 KaTeX，其他组件先查合适的库再写课程接线。
-- 依赖记录：在这里记录库名、固定版本、CDN/本地加载方式与对应课件；离线要求另行注明。
+- 视觉主题：在 `assets/course/theme.css` 自定义配色与字体，配置写入 `assets/course/config.json`。
+- 第三方库：按内容优先选成熟库；通过 `kit.py sync` 自动打包管理。
+- 依赖记录：产物由 `kit.lock.json` 锁定哈希。
 
 ## 学习记录约定
 
@@ -121,9 +121,33 @@ last_feedback: null
 
     title = html.escape(args.title)
     index = f"""<!doctype html>
-<html lang=\"{html.escape(args.language)}\" data-theme=\"course\" data-theme-surface=\"light\">
-<head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>{title}</title><link rel=\"stylesheet\" href=\"assets/course.css\"><link rel=\"stylesheet\" href=\"assets/theme.css\"></head>
-<body><div class=\"course-shell\"><header class=\"course-header\"><p class=\"course-kicker\">课程入口</p><h1 class=\"course-title\">{title}</h1><p class=\"course-subtitle\">{html.escape(args.goal)}</p></header><main><div class=\"card\"><h2>开始学习</h2><p>课程完成后，新的课件会出现在 <code>lessons/</code>，学习反馈请发给老师或 Agent。</p><p>当前尚未生成第一课。</p></div></main></div></body></html>"""
+<html lang=\"{html.escape(args.language)}\" data-theme=\"course\">
+<head>
+  <meta charset=\"utf-8\">
+  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">
+  <title>{title}</title>
+  <link rel=\"stylesheet\" href=\"assets/kit/kit.css\">
+  <link rel=\"stylesheet\" href=\"assets/course/theme.css\">
+  <script defer src=\"assets/kit/kit.js\"></script>
+</head>
+<body class=\"kit-page\">
+  <div class=\"kit-main\">
+    <header class=\"course-header\">
+      <p class=\"course-kicker\">课程入口</p>
+      <h1 class=\"course-title\">{title}</h1>
+      <p class=\"course-subtitle\">{html.escape(args.goal)}</p>
+      <div data-theme-switcher></div>
+    </header>
+    <main>
+      <div class=\"callout\" data-callout=\"note\">
+        <h2>开始学习</h2>
+        <p>课程完成后，新的课件会出现在 <code>lessons/</code>，学习反馈请发给老师或 Agent。</p>
+        <p>当前尚未生成第一课。</p>
+      </div>
+    </main>
+  </div>
+</body>
+</html>"""
     write_text(course_dir / "index.html", index, args.force)
     print(course_dir)
     return 0

@@ -139,21 +139,14 @@ HTML 的“复制学习记录”按钮只汇总原始答案、检查次数、提
 - 诊断流程与错误分类：读取 `../shared/references/diagnostic-protocol.md`。
 - 练习梯度与证据升级：读取 `../shared/references/transfer-rubric.md`。
 
-Kit 架构与扩展开发：
-
-- **扩展组件开发**：添加动画、交互、可视化等自定义模块时，读取 `docs/extension-guide.md`。包含模块分层、描述符编写、CSS @layer 规范、就绪协议、gallery 演示、测试策略。
-- **兼容层与迁移**：旧版题目写法（`.quiz`、`data-answer-*` 等）的兼容策略与移除时间表，读取 `docs/compatibility.md`。包含自动迁移脚本使用、手动迁移对照表、v2.3.0 移除计划。
-- **架构设计**：理解 L0-L5 分层、设计令牌、模块依赖、就绪协议时，读取 `docs/architecture.md`。
-- **重构计划**：查看 v2 实施的完整任务分解、决策记录、验收标准时，读取 `docs/refactor-plan.md`。
-
-`fixtures/acceptance/` 用于资产与交互验收测试，日常 create/continue 不读取。`fixtures/gallery/` 展示单个组件的独立演示。
+（注：`docs/` 目录仅作为底层重构历史与工程归档，不作为 Agent 运行时参考文档；`fixtures/acceptance/` 用于资产与交互验收测试，日常 create/continue 不读取；`fixtures/gallery/` 展示单个组件的独立演示。）
 
 ## 模块管理与可选组件
 
 Course Kit v2 采用 `core / auto / opt-in` 三态模块管理：
 
-- **core**（L0 核心、L1 基础与主题引擎、L4 记录模型）随 `kit.js` 默认包含。
-- **auto**（`content.code`、`content.math`、`content.diagram`、`content.animation`、`shell.toc`、`learning.question`、`viz.core` 及通用可视化 kind 等）：`kit sync` 扫描课件 HTML 自动识别并纳入打包，无需作者手动安装。
+- **core**（运行时基础设施 L0、视觉基础与主题 L1、公共块外壳 `content._block`、外壳骨架与目录 `shell.*`、学习记录模型 `learning.records`）：随 `kit.js` 与 `kit.css` 默认包含。
+- **auto**（内容增强 `content.*`、统一题目 `learning.question`、步骤向导 `learning.step`、可视化核心 `viz.core` 及通用 kind）：`kit sync` 扫描课件 HTML 自动识别并纳入打包，无需作者手动安装。
 - **opt-in**（图表 `viz.kinds.chart`、空间几何 `viz.kinds.spatial` 等重型依赖）：按需添加：
 
 ```text
@@ -173,7 +166,7 @@ python kit/build/migrate_questions.py <course-dir> --dry-run
 python kit/build/migrate_questions.py <course-dir> --apply
 ```
 
-迁移策略与兼容层移除记录（已于 v2.3.0 正式移除，旧写法不再生效）见 `docs/compatibility.md`。自主添加新模块参考 `docs/extension-guide.md`。
+旧写法已于 v2.3.0 正式移除不再生效，新课件统一使用 `<section class="question" data-kind="...">`。添加扩展模块参考 `references/assets.md`。
 
 ## 验证
 

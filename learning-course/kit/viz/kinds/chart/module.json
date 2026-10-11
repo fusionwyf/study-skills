@@ -14,8 +14,8 @@
   "vendor": [
     {
       "id": "plotly",
-      "version": "3.0.1",
-      "cdn": "https://cdn.jsdelivr.net/npm/plotly.js-dist-min@3.0.1/plotly.min.js",
+      "version": "4.1.2",
+      "cdn": "https://cdn.jsdelivr.net/npm/plotly.js-dist-min@4.1.2/plotly.min.js",
       "local": "vendor/plotly.js-dist-min/plotly.min.js"
     }
   ],
