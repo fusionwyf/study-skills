@@ -167,6 +167,8 @@ class ExportSmokeTests(unittest.TestCase):
         )
 
     def test_export_pdf_blocks_degraded_rendering(self) -> None:
+        if not BROWSER:
+            self.skipTest("Chromium-family browser required for export checks")
         course = self.copy_course()
         lesson = course / "lessons" / "0001-degraded.html"
         lesson.write_text("""<!DOCTYPE html>
@@ -183,6 +185,16 @@ class ExportSmokeTests(unittest.TestCase):
             "Export blocked" in combined or "failed" in combined or "degraded" in combined,
             combined,
         )
+
+    def test_check_dom_failures_blocks_degraded(self) -> None:
+        with self.assertRaises(SystemExit) as ctx:
+            _EXPORT_PDF_MODULE.check_dom_failures(
+                '<div class="formula" data-kit-state="degraded">E = mc^2</div>',
+                is_settled=True,
+                allow_failed=False,
+                wait_ms=3000,
+            )
+        self.assertIn("Export blocked", str(ctx.exception))
 
 
 if __name__ == "__main__":

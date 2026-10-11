@@ -95,11 +95,11 @@
 
   function initTheme() {
     var stored = null;
-    if (typeof localStorage !== "undefined") {
-      try {
-        stored = localStorage.getItem("kit_theme_" + getCourseId());
-      } catch (e) {}
-    }
+    try {
+      if (typeof window !== "undefined" && window.localStorage) {
+        stored = window.localStorage.getItem("kit_theme_" + getCourseId());
+      }
+    } catch (e) {}
 
     var defaultTheme = (kit.config && kit.config.theme) || "course";
     var initialTheme = stored || defaultTheme;
@@ -126,6 +126,10 @@
     toggle: toggleTheme,
     init: initTheme
   };
+
+  if (kit.registerModule) {
+    kit.registerModule("foundation", kit.theme);
+  }
 
   if (typeof document !== "undefined") {
     if (document.readyState === "loading") {

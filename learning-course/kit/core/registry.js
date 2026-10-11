@@ -11,6 +11,8 @@
     if (initialized[id]) return Promise.resolve();
     var mod = modules[id];
     if (!mod) {
+      initialized[id] = true;
+      if (kit.ready && kit.ready.markReady) kit.ready.markReady(id);
       return Promise.resolve();
     }
     initialized[id] = true;
@@ -48,6 +50,13 @@
       initModule(id);
     }
   };
+
+  // Base core module lifecycle registration
+  kit.registerModule("core", {
+    init: function () {
+      return Promise.resolve();
+    }
+  });
 
   kit.getModule = function (id) {
     return modules[id];

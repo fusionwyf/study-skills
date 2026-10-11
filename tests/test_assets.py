@@ -362,6 +362,43 @@ class AssetTests(unittest.TestCase):
             current_html = lesson.read_text(encoding="utf-8")
             self.assertEqual(current_html, unnormalized_html, "Courseware HTML must not be modified when sync fails")
 
+    def test_sync_html_write_failure_rolls_back_raw_bytes(self):
+        kit_py = ROOT / "learning-course/kit/build/kit.py"
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.init(root)
+            lesson1 = root / "lessons/0001-first.html"
+            content1 = "<!DOCTYPE html><html><head></head><body class=\"lesson\" data-course-id=\"c\" data-lesson-id=\"1\"><h3>H1</h3></body></html>"
+            lesson1.write_text(content1, encoding="utf-8")
+            bytes1 = lesson1.read_bytes()
+
+            lesson2 = root / "lessons/0002-second.html"
+            content2 = "<!DOCTYPE html><html><head></head><body class=\"lesson\" data-course-id=\"c\" data-lesson-id=\"2\"><h3>H2</h3></body></html>"
+            lesson2.write_text(content2, encoding="utf-8")
+            bytes2 = lesson2.read_bytes()
+
+            orig_replace = os.replace
+            def faulty_replace(src, dst):
+                src_path = Path(src)
+                # Fail when committing the staged temporary file for 0002
+                if src_path.name.startswith(".tmp_0002"):
+                    raise IOError("Simulated disk error during atomic replace of lesson 2")
+                return orig_replace(src, dst)
+
+            sys.path.insert(0, str(ROOT / "learning-course/kit/build"))
+            import kit as kit_mod
+
+            with patch("os.replace", side_effect=faulty_replace):
+                success = kit_mod.sync_course(root)
+                self.assertFalse(success, "sync_course must return False on commit error")
+
+            # Both files must have exact original bytes preserved, without corruption or truncation
+            self.assertEqual(lesson1.read_bytes(), bytes1, "lesson 1 must be rolled back to original bytes")
+            self.assertEqual(lesson2.read_bytes(), bytes2, "lesson 2 must remain original bytes")
+            # Verify no temporary files left in lessons directory
+            temp_files = list((root / "lessons").glob(".tmp_*"))
+            self.assertEqual(temp_files, [], "No temporary files should be left after rollback")
+
 
 if __name__ == "__main__":
     unittest.main()

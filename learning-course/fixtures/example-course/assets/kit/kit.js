@@ -848,12 +848,28 @@
 
   function loadScript(url, attrs, isLocal) {
     if (typeof document === "undefined") return Promise.resolve();
+    if (typeof navigator !== "undefined" && navigator.userAgent && navigator.userAgent.indexOf("jsdom") >= 0) {
+      return Promise.reject(new Error("External script loading is not supported in JSDOM: " + url));
+    }
     return new Promise(function (resolve, reject) {
+      var timer = null;
+      if (typeof setTimeout === "function") {
+        timer = setTimeout(function () {
+          reject(new Error("Timeout loading script: " + url));
+        }, 5000);
+      }
       var existing = document.querySelector('script[src="' + url + '"]');
       if (existing) {
-        if (existing.dataset.loaded === "true") return resolve();
-        existing.addEventListener("load", function () { resolve(); });
+        if (existing.dataset.loaded === "true") {
+          if (timer) clearTimeout(timer);
+          return resolve();
+        }
+        existing.addEventListener("load", function () {
+          if (timer) clearTimeout(timer);
+          resolve();
+        });
         existing.addEventListener("error", function (e) {
+          if (timer) clearTimeout(timer);
           reject(new Error("Failed to load script: " + url));
         });
         return;
@@ -865,10 +881,12 @@
         Object.keys(attrs).forEach(function (k) { s.setAttribute(k, attrs[k]); });
       }
       s.onload = function () {
+        if (timer) clearTimeout(timer);
         s.dataset.loaded = "true";
         resolve();
       };
       s.onerror = function (e) {
+        if (timer) clearTimeout(timer);
         var msg = isLocal
           ? "Failed to load local vendor script: " + url + ". External network fallback is prohibited in local mode."
           : "Failed to load vendor script: " + url;
@@ -880,17 +898,33 @@
 
   function loadStyle(url, attrs, isLocal) {
     if (typeof document === "undefined") return Promise.resolve();
+    if (typeof navigator !== "undefined" && navigator.userAgent && navigator.userAgent.indexOf("jsdom") >= 0) {
+      return Promise.reject(new Error("External stylesheet loading is not supported in JSDOM: " + url));
+    }
     return new Promise(function (resolve, reject) {
+      var timer = null;
+      if (typeof setTimeout === "function") {
+        timer = setTimeout(function () {
+          reject(new Error("Timeout loading stylesheet: " + url));
+        }, 5000);
+      }
       var existing = document.querySelector('link[href="' + url + '"]');
-      if (existing) return resolve();
+      if (existing) {
+        if (timer) clearTimeout(timer);
+        return resolve();
+      }
       var link = document.createElement("link");
       link.rel = "stylesheet";
       link.href = url;
       if (attrs) {
         Object.keys(attrs).forEach(function (k) { link.setAttribute(k, attrs[k]); });
       }
-      link.onload = function () { resolve(); };
+      link.onload = function () {
+        if (timer) clearTimeout(timer);
+        resolve();
+      };
       link.onerror = function (e) {
+        if (timer) clearTimeout(timer);
         var msg = isLocal
           ? "Failed to load local vendor stylesheet: " + url + ". External network fallback is prohibited in local mode."
           : "Failed to load stylesheet: " + url;
@@ -1067,9 +1101,14 @@
 
   function initModule(id) {
     if (initialized[id]) return Promise.resolve();
-    initialized[id] = true;
     var mod = modules[id];
-    if (!mod || typeof mod.init !== "function") {
+    if (!mod) {
+      initialized[id] = true;
+      if (kit.ready && kit.ready.markReady) kit.ready.markReady(id);
+      return Promise.resolve();
+    }
+    initialized[id] = true;
+    if (typeof mod.init !== "function") {
       if (kit.ready && kit.ready.markReady) kit.ready.markReady(id);
       return Promise.resolve();
     }
@@ -1104,6 +1143,13 @@
     }
   };
 
+  // Base core module lifecycle registration
+  kit.registerModule("core", {
+    init: function () {
+      return Promise.resolve();
+    }
+  });
+
   kit.getModule = function (id) {
     return modules[id];
   };
@@ -1129,7 +1175,7 @@
 
   kit.initAll = initAll;
 
-  if (typeof document !== "undefined") {
+  if (typeof document !== "undefined" && !Array.isArray(kit.__ACTIVE_MODULES__)) {
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", initAll);
     } else {
@@ -1239,11 +1285,11 @@
 
   function initTheme() {
     var stored = null;
-    if (typeof localStorage !== "undefined") {
-      try {
-        stored = localStorage.getItem("kit_theme_" + getCourseId());
-      } catch (e) {}
-    }
+    try {
+      if (typeof window !== "undefined" && window.localStorage) {
+        stored = window.localStorage.getItem("kit_theme_" + getCourseId());
+      }
+    } catch (e) {}
 
     var defaultTheme = (kit.config && kit.config.theme) || "course";
     var initialTheme = stored || defaultTheme;
@@ -1270,6 +1316,10 @@
     toggle: toggleTheme,
     init: initTheme
   };
+
+  if (kit.registerModule) {
+    kit.registerModule("foundation", kit.theme);
+  }
 
   if (typeof document !== "undefined") {
     if (document.readyState === "loading") {
@@ -2353,5 +2403,14 @@
 })(typeof window !== "undefined" ? window : globalThis);
 
   })();
+
+  /* ---- Bundle Initialization ---- */
+  if (CourseKit.initAll && typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', CourseKit.initAll);
+    } else {
+      CourseKit.initAll();
+    }
+  }
 
 })(typeof window !== 'undefined' ? window : globalThis);

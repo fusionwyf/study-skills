@@ -111,6 +111,10 @@
     init: initMedia
   };
 
+  if (kit.registerModule) {
+    kit.registerModule("content.media", kit.media);
+  }
+
   if (typeof document !== "undefined") {
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initMedia);
     else initMedia();

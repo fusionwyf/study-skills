@@ -18,6 +18,7 @@ import re
 import shutil
 import sys
 import tempfile
+import uuid
 from html.parser import HTMLParser
 from pathlib import Path
 
@@ -788,13 +789,14 @@ def sync_course(course_dir):
 
     # Step 1: Pre-normalize lesson HTML (staged in memory to protect courseware if sync fails)
     staged_html = {}
-    raw_html_backup = {}
+    raw_html_bytes = {}
     lessons_dir = cpath / "lessons"
     if lessons_dir.exists():
-        for hf in lessons_dir.glob("*.html"):
+        for hf in sorted(lessons_dir.glob("*.html")):
             try:
-                raw_html = hf.read_text(encoding="utf-8")
-                raw_html_backup[hf] = raw_html
+                b = hf.read_bytes()
+                raw_html_bytes[hf] = b
+                raw_html = b.decode("utf-8")
                 norm_html, headings = normalize_html_content(raw_html)
                 if norm_html != raw_html:
                     staged_html[hf] = norm_html
@@ -868,12 +870,16 @@ def sync_course(course_dir):
         if had_previous:
             shutil.copytree(kit_output_dir, backup_dir)
 
-        written_html = []
+        written_html = set()
+        staged_tmp_files = []
         try:
-            # Commit staged HTML files first
+            # Commit staged HTML files via atomic temp replacement
             for hf, content in staged_html.items():
-                hf.write_text(content, encoding="utf-8", newline="\n")
-                written_html.append(hf)
+                tmp_hf = hf.with_name(f".tmp_{hf.stem}_{os.getpid()}_{uuid.uuid4().hex[:6]}.html")
+                staged_tmp_files.append(tmp_hf)
+                tmp_hf.write_text(content, encoding="utf-8", newline="\n")
+                os.replace(tmp_hf, hf)
+                written_html.add(hf)
                 print(f"Normalized {hf.name}.")
 
             # Commit kit files
@@ -882,10 +888,25 @@ def sync_course(course_dir):
             shutil.copytree(tmp_kit_dir, kit_output_dir)
         except Exception as swap_err:
             print(f"Error committing kit files: {swap_err}. Rolling back...", file=sys.stderr)
-            # Rollback HTML files
-            for hf in written_html:
-                if hf in raw_html_backup:
-                    hf.write_text(raw_html_backup[hf], encoding="utf-8", newline="\n")
+            # Clean up any leftover temp files
+            for tf in staged_tmp_files:
+                if tf.exists():
+                    try:
+                        tf.unlink()
+                    except Exception:
+                        pass
+            # Rollback HTML files from exact raw bytes
+            for hf, orig_bytes in raw_html_bytes.items():
+                if hf in staged_html:
+                    try:
+                        tmp_restore = hf.with_name(f".tmp_rollback_{hf.stem}_{os.getpid()}.html")
+                        tmp_restore.write_bytes(orig_bytes)
+                        os.replace(tmp_restore, hf)
+                    except Exception:
+                        try:
+                            hf.write_bytes(orig_bytes)
+                        except Exception:
+                            pass
             # Rollback Kit files
             if had_previous and backup_dir.exists():
                 if kit_output_dir.exists():

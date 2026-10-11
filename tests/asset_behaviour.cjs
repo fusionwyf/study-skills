@@ -71,6 +71,10 @@ const wait = () => new Promise((r) => setTimeout(r, 60));
     doc = w.document,
     lesson = doc.querySelector(".lesson"),
     store = lesson.__evidenceStore;
+  const kitInstance = w.CourseKit || w.kit;
+  assert.equal(kitInstance.ready.isSettled(), true, "CourseKit.ready.isSettled() must be true");
+  assert.equal(doc.documentElement.dataset.kitStatus, "settled", "documentElement dataset.kitStatus must be 'settled'");
+  assert.ok(kitInstance.ready.getReadyModules().includes("core"), "core module must be in readyModules");
   function answer(id, value) {
     const task = doc.querySelector(`[data-question-id="${id}"]`),
       input = task.querySelector("input[data-answer-input]");
