@@ -12,6 +12,7 @@ import shutil
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 import urllib.parse
 import urllib.request
@@ -163,11 +164,13 @@ def check_dom_failures(dom_text: str, is_settled: bool, allow_failed: bool, wait
             print("WARNING: Exporting with failed components (--allow-failed is enabled).", file=sys.stderr)
 
 
-def export_via_cdp(browser: str, source_url: str, output: Path, wait_ms: int, allow_failed: bool) -> bool:
+def export_via_cdp(browser: str, source_url: str, output: Path, wait_ms: int, allow_failed: bool) -> tuple[bool, str]:
     """Exports PDF by checking DOM and printing in the EXACT SAME browser page session via CDP."""
     port = get_free_port()
+    user_data_dir = tempfile.mkdtemp(prefix="chrome-cdp-export-")
     cmd = [
         browser, "--headless=new", "--disable-gpu",
+        f"--user-data-dir={user_data_dir}",
         f"--remote-debugging-port={port}",
         source_url
     ]
@@ -187,7 +190,7 @@ def export_via_cdp(browser: str, source_url: str, output: Path, wait_ms: int, al
             except Exception:
                 time.sleep(0.08)
         if not ws_url:
-            return False
+            return False, f"Could not connect to browser DevTools on port {port} within timeout"
 
         ws = SimpleWebSocket(ws_url, timeout=max(15.0, wait_ms / 1000.0 + 5.0))
         ws.call("Page.enable")
@@ -220,9 +223,9 @@ def export_via_cdp(browser: str, source_url: str, output: Path, wait_ms: int, al
         if not pdf_bytes or not pdf_bytes.startswith(b"%PDF"):
             raise SystemExit("Browser returned without a usable PDF")
         output.write_bytes(pdf_bytes)
-        return True
-    except (ConnectionError, RuntimeError, OSError):
-        return False
+        return True, ""
+    except (ConnectionError, RuntimeError, OSError) as e:
+        return False, str(e)
     finally:
         if ws:
             ws.close()
@@ -231,48 +234,57 @@ def export_via_cdp(browser: str, source_url: str, output: Path, wait_ms: int, al
             proc.wait(timeout=2)
         except Exception:
             pass
+        if user_data_dir and os.path.exists(user_data_dir):
+            shutil.rmtree(user_data_dir, ignore_errors=True)
 
 
 def export_via_cli(browser: str, source_url: str, output: Path, wait_ms: int, allow_failed: bool):
     """Fallback export using CLI flags when CDP is unavailable."""
-    dump_cmd = [
-        browser, "--headless=new", "--disable-gpu",
-        f"--virtual-time-budget={wait_ms}",
-        "--dump-dom", source_url
-    ]
-    dump_res = subprocess.run(dump_cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
-    dom_text = ""
-    if dump_res.returncode != 0 or not (dump_res.stdout and dump_res.stdout.strip()):
-        err_msg = (dump_res.stderr or "").strip() or f"Pre-flight exited with code {dump_res.returncode} and produced no DOM output."
-        if not allow_failed:
-            raise SystemExit(f"Export blocked: Pre-flight DOM check failed ({err_msg}). Use --allow-failed to force export.")
+    user_data_dir = tempfile.mkdtemp(prefix="chrome-cli-export-")
+    try:
+        dump_cmd = [
+            browser, "--headless=new", "--disable-gpu",
+            f"--user-data-dir={user_data_dir}",
+            f"--virtual-time-budget={wait_ms}",
+            "--dump-dom", source_url
+        ]
+        dump_res = subprocess.run(dump_cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
+        dom_text = ""
+        if dump_res.returncode != 0 or not (dump_res.stdout and dump_res.stdout.strip()):
+            err_msg = (dump_res.stderr or "").strip() or f"Pre-flight exited with code {dump_res.returncode} and produced no DOM output."
+            if not allow_failed:
+                raise SystemExit(f"Export blocked: Pre-flight DOM check failed ({err_msg}). Use --allow-failed to force export.")
+            else:
+                print(f"WARNING: Pre-flight DOM check failed ({err_msg}). Continuing due to --allow-failed.", file=sys.stderr)
+                dom_text = dump_res.stdout or ""
         else:
-            print(f"WARNING: Pre-flight DOM check failed ({err_msg}). Continuing due to --allow-failed.", file=sys.stderr)
-            dom_text = dump_res.stdout or ""
-    else:
-        dom_text = dump_res.stdout
+            dom_text = dump_res.stdout
 
-    if dom_text:
-        is_settled = ('data-kit-status="settled"' in dom_text or
-                      "data-kit-status='settled'" in dom_text or
-                      'data-course-ready="true"' in dom_text or
-                      "data-course-ready='true'" in dom_text)
-        check_dom_failures(dom_text, is_settled, allow_failed, wait_ms)
+        if dom_text:
+            is_settled = ('data-kit-status="settled"' in dom_text or
+                          "data-kit-status='settled'" in dom_text or
+                          'data-course-ready="true"' in dom_text or
+                          "data-course-ready='true'" in dom_text)
+            check_dom_failures(dom_text, is_settled, allow_failed, wait_ms)
 
-    command = [
-        browser, "--headless=new", "--disable-gpu", "--no-pdf-header-footer",
-        f"--virtual-time-budget={wait_ms}",
-        f"--print-to-pdf={output}", source_url
-    ]
-    result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", errors="replace")
-    if result.returncode != 0:
-        if output.exists():
-            output.unlink()
-        raise SystemExit(result.stderr.strip() or "Browser PDF export failed")
-    if not output.is_file() or output.stat().st_size == 0:
-        if output.exists():
-            output.unlink()
-        raise SystemExit("Browser returned without a usable PDF")
+        command = [
+            browser, "--headless=new", "--disable-gpu", "--no-pdf-header-footer",
+            f"--user-data-dir={user_data_dir}",
+            f"--virtual-time-budget={wait_ms}",
+            f"--print-to-pdf={output}", source_url
+        ]
+        result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", errors="replace")
+        if result.returncode != 0:
+            if output.exists():
+                output.unlink()
+            raise SystemExit(result.stderr.strip() or "Browser PDF export failed")
+        if not output.is_file() or output.stat().st_size == 0:
+            if output.exists():
+                output.unlink()
+            raise SystemExit("Browser returned without a usable PDF")
+    finally:
+        if user_data_dir and os.path.exists(user_data_dir):
+            shutil.rmtree(user_data_dir, ignore_errors=True)
 
 
 def main() -> int:
@@ -283,6 +295,13 @@ def main() -> int:
     parser.add_argument("--browser", help="Chromium-family browser executable")
     parser.add_argument("--wait-ms", type=int, default=2500, help="Virtual time budget for client-side rendering")
     parser.add_argument("--allow-failed", action="store_true", help="Allow exporting PDF even if some visual components failed")
+    parser.add_argument(
+        "--allow-cli-fallback",
+        "--fallback-cli",
+        dest="allow_cli_fallback",
+        action="store_true",
+        help="Explicitly allow falling back to legacy two-pass CLI export if CDP connection fails (NOTE: does not guarantee identical preflight and print state, and WebGL/Canvas buffer data may be lost)"
+    )
     args = parser.parse_args()
 
     source = Path(args.source).expanduser().resolve()
@@ -296,11 +315,23 @@ def main() -> int:
 
     source_url = source.as_uri() + f"?export={args.mode}"
 
-    # First attempt same-page inspection and printing via Chrome DevTools Protocol
-    success = export_via_cdp(browser, source_url, output, args.wait_ms, args.allow_failed)
+    # Attempt same-page inspection and printing via Chrome DevTools Protocol
+    success, err_msg = export_via_cdp(browser, source_url, output, args.wait_ms, args.allow_failed)
     if not success:
-        # Fallback to CLI
-        export_via_cli(browser, source_url, output, args.wait_ms, args.allow_failed)
+        if args.allow_cli_fallback:
+            print(
+                f"WARNING: CDP session failed ({err_msg}). Falling back to legacy CLI export.\n"
+                "LIMITATION NOTICE: CLI fallback opens the page twice (preflight check and print are separate). "
+                "WebGL/Canvas dynamic buffers may be lost and the printed page does not share verified live state.",
+                file=sys.stderr
+            )
+            export_via_cli(browser, source_url, output, args.wait_ms, args.allow_failed)
+        else:
+            raise SystemExit(
+                f"Export failed via CDP session: {err_msg}.\n"
+                "CDP guarantees preflight inspection and printing occur in the exact same page session to avoid state desync or canvas loss.\n"
+                "To force legacy two-pass CLI fallback without this guarantee, pass --allow-cli-fallback."
+            )
 
     print(output)
     return 0

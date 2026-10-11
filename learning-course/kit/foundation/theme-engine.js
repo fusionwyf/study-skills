@@ -93,7 +93,10 @@
     return next;
   }
 
+  var themeInitialized = false;
   function initTheme() {
+    if (themeInitialized) return;
+    themeInitialized = true;
     var stored = null;
     try {
       if (typeof window !== "undefined" && window.localStorage) {
@@ -131,7 +134,7 @@
     kit.registerModule("foundation", kit.theme);
   }
 
-  if (typeof document !== "undefined") {
+  if (typeof document !== "undefined" && !kit.registerModule) {
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", initTheme);
     } else {

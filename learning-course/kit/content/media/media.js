@@ -13,6 +13,7 @@
     }
 
     nodes.forEach(function (node) {
+      if (node.dataset.mediaInitialized === "true") return;
       try {
         var script = node.querySelector("[data-media-config]"),
           config = script ? JSON.parse(script.textContent) : { hotspots: [] };
@@ -42,6 +43,14 @@
         });
         if (hotspots.length && (!image || !frame || !image.alt))
           throw new Error("图片标注需要带 alt 的 img 与 data-media-frame");
+
+        if (frame) {
+          var oldButtons = frame.querySelectorAll(".media-hotspot");
+          oldButtons.forEach(function (btn) {
+            btn.parentNode && btn.parentNode.removeChild(btn);
+          });
+        }
+
         var task = node.closest("[data-question-id]"),
           field = task && task.querySelector("textarea"),
           lesson = node.closest(".lesson");
@@ -95,6 +104,7 @@
           });
           frame.appendChild(button);
         });
+        node.dataset.mediaInitialized = "true";
         node.dataset.mediaState = JSON.stringify({ selected: [] });
         node.dataset.mediaReady = "true";
       } catch (error) {
@@ -115,7 +125,7 @@
     kit.registerModule("content.media", kit.media);
   }
 
-  if (typeof document !== "undefined") {
+  if (!kit.registerModule && typeof document !== "undefined") {
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initMedia);
     else initMedia();
   }

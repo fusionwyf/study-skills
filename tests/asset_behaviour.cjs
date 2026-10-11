@@ -90,6 +90,16 @@ const wait = () => new Promise((r) => setTimeout(r, 60));
   answer("fill", "  ＡＬＰＨＡ  ");
   assert.equal(store.getState().questions.fill.verdict, "correct");
   assert.equal(store.getState().questions.fill.rawAnswer, "  ＡＬＰＨＡ  ");
+  const hotspots = doc.querySelectorAll("[data-media] .media-hotspot");
+  assert.equal(hotspots.length, 1, "There must be exactly 1 hotspot button per configured hotspot, not duplicated");
+  if (kitInstance.media && kitInstance.media.init) {
+    kitInstance.media.init();
+    assert.equal(
+      doc.querySelectorAll("[data-media] .media-hotspot").length,
+      1,
+      "Hotspot buttons must not duplicate on re-initialization"
+    );
+  }
   doc.querySelector(".media-hotspot").click();
   assert.match(doc.querySelector("[data-media]").dataset.mediaState, /"a"/);
   doc.getElementById("notes").value = "入口使动线清楚";

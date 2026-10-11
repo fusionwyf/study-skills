@@ -27,6 +27,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import yaml
 
@@ -195,6 +196,52 @@ class ExportSmokeTests(unittest.TestCase):
                 wait_ms=3000,
             )
         self.assertIn("Export blocked", str(ctx.exception))
+
+    def test_cdp_export_blocks_silent_fallback_without_flag(self) -> None:
+        course = self.copy_course()
+        lesson = course / "lessons" / "0001-example.html"
+        pdf_path = course / "exports" / "0001-example.pdf"
+        with patch.object(_EXPORT_PDF_MODULE, "export_via_cdp", return_value=(False, "simulated cdp failure")), \
+             patch.object(_EXPORT_PDF_MODULE, "export_via_cli") as mock_cli, \
+             patch.object(_EXPORT_PDF_MODULE, "find_browser", return_value="dummy_browser"):
+            # Without --allow-cli-fallback, main() must exit with error and NOT call export_via_cli
+            with patch("sys.argv", ["export_pdf.py", str(lesson), str(pdf_path)]):
+                with self.assertRaises(SystemExit) as ctx:
+                    _EXPORT_PDF_MODULE.main()
+                self.assertIn("Export failed via CDP session", str(ctx.exception))
+                self.assertIn("--allow-cli-fallback", str(ctx.exception))
+                mock_cli.assert_not_called()
+
+            # With --allow-cli-fallback, main() allows fallback to export_via_cli
+            with patch("sys.argv", ["export_pdf.py", str(lesson), str(pdf_path), "--allow-cli-fallback"]):
+                _EXPORT_PDF_MODULE.main()
+                mock_cli.assert_called_once()
+
+    def test_export_via_cdp_uses_isolated_user_data_dir(self) -> None:
+        import os
+        from unittest.mock import MagicMock
+        captured_cmd = []
+        captured_data_dir = None
+
+        mock_proc = MagicMock()
+        mock_proc.terminate.return_value = None
+        mock_proc.wait.return_value = 0
+
+        def fake_popen(cmd, **kwargs):
+            nonlocal captured_cmd, captured_data_dir
+            captured_cmd = cmd
+            for arg in cmd:
+                if arg.startswith("--user-data-dir="):
+                    captured_data_dir = arg.split("=", 1)[1]
+            return mock_proc
+
+        with patch("subprocess.Popen", side_effect=fake_popen):
+            success, err = _EXPORT_PDF_MODULE.export_via_cdp("dummy_browser", "http://dummy", Path("out.pdf"), 500, False)
+            self.assertFalse(success)
+            self.assertIsNotNone(captured_data_dir, "--user-data-dir must be passed to browser")
+            self.assertTrue(any("--user-data-dir=" in arg for arg in captured_cmd))
+            # Verify temporary directory is cleaned up
+            self.assertFalse(os.path.exists(captured_data_dir), "Temporary user-data-dir must be deleted after export")
 
 
 if __name__ == "__main__":
