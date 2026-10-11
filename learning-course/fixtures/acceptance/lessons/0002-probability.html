@@ -94,6 +94,25 @@
         <section
           class="question"
           data-role="evidence"
+          data-question-id="normalization"
+          data-kind="choice"
+          data-max-attempts="2"
+        >
+          <div data-stem><h2   id="概率归一化">伯努利试验中，为什么成功与失败的概率之和必须为 1？</h2></div>
+          <ol data-options>
+            <li data-option>因为成功和失败是对称的<span data-why>对称性不是归一化的原因，概率分布可以不对称。</span></li>
+            <li data-option data-correct>因为这两种结果穷尽了所有可能性<span data-why>伯努利试验只有成功和失败两种互斥且完备的结果，概率必然相加为 1。</span></li>
+            <li data-option>因为 p 的取值范围是 0 到 1<span data-why>这是单个概率的约束，不是两个概率相加为 1 的原因。</span></li>
+          </ol>
+          <ol data-hints>
+            <li>思考：如果还有第三种可能的结果，归一化条件会如何变化？</li>
+            <li>提示：概率论公理要求样本空间的概率为 1。</li>
+          </ol>
+          <div data-explain><p>伯努利试验的样本空间只包含成功和失败两种互斥且完备的结果，根据概率论公理，所有可能结果的概率之和必须等于 1。</p></div>
+        </section>
+        <section
+          class="question"
+          data-role="evidence"
           data-question-id="failure"
           data-kind="numeric"
           data-expected="0.2"
@@ -130,6 +149,7 @@
       <li class="toc-item is-h2"><a class="toc-link" href="#学习成果">学习成果</a></li>
       <li class="toc-item is-h2"><a class="toc-link" href="#伯努利试验">伯努利试验</a></li>
       <li class="toc-item is-h2"><a class="toc-link" href="#成功与失败的概率">成功与失败的概率</a></li>
+      <li class="toc-item is-h2"><a class="toc-link" href="#概率归一化">概率归一化</a></li>
       <li class="toc-item is-h2"><a class="toc-link" href="#成功概率为-08失败概率是多少">成功概率为 0.8，失败概率是多少？</a></li>
       <li class="toc-item is-h2"><a class="toc-link" href="#合卷检索">合卷检索</a></li>
       <li class="toc-item is-h2"><a class="toc-link" href="#学习反馈">学习反馈</a></li>

@@ -139,7 +139,14 @@ HTML 的“复制学习记录”按钮只汇总原始答案、检查次数、提
 - 诊断流程与错误分类：读取 `../shared/references/diagnostic-protocol.md`。
 - 练习梯度与证据升级：读取 `../shared/references/transfer-rubric.md`。
 
-`fixtures/acceptance/` 用于资产与交互验收测试，日常 create/continue 不读取。
+Kit 架构与扩展开发：
+
+- **扩展组件开发**：添加动画、交互、可视化等自定义模块时，读取 `docs/extension-guide.md`。包含模块分层、描述符编写、CSS @layer 规范、就绪协议、gallery 演示、测试策略。
+- **兼容层与迁移**：旧版题目写法（`.quiz`、`data-answer-*` 等）的兼容策略与移除时间表，读取 `docs/compatibility.md`。包含自动迁移脚本使用、手动迁移对照表、v2.3.0 移除计划。
+- **架构设计**：理解 L0-L5 分层、设计令牌、模块依赖、就绪协议时，读取 `docs/architecture.md`。
+- **重构计划**：查看 v2 实施的完整任务分解、决策记录、验收标准时，读取 `docs/refactor-plan.md`。
+
+`fixtures/acceptance/` 用于资产与交互验收测试，日常 create/continue 不读取。`fixtures/gallery/` 展示单个组件的独立演示。
 
 ## 模块管理与可选组件
 

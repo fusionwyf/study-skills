@@ -43,6 +43,26 @@
     a[i], a[m] = a[m], a[i]</code></pre>
         </section>
         <section
+          class="question"
+          data-role="evidence"
+          data-question-id="invariants"
+          data-kind="multi"
+          data-max-attempts="2"
+        >
+          <div data-stem><h2   id="选择排序的不变量">选择排序算法执行过程中，以下哪些性质在每轮循环后保持不变？（多选）</h2></div>
+          <ol data-options>
+            <li data-option data-correct>前 i 个元素已按升序排列<span data-why>这是选择排序的核心循环不变量，每轮将最小值放到前缀末尾。</span></li>
+            <li data-option>数组长度保持不变<span data-why>虽然长度确实不变，但这不是算法特有的不变量，任何原地排序都如此。</span></li>
+            <li data-option data-correct>数组元素的多重集不变<span data-why>排序只改变元素顺序，不增删元素，多重集（元素及其出现次数）保持不变。</span></li>
+            <li data-option data-correct>前 i 个元素不大于后续任何元素<span data-why>已排序的前缀中所有元素都小于等于未排序部分的任何元素。</span></li>
+          </ol>
+          <ol data-hints>
+            <li>循环不变量应该在每次迭代前后都成立，且有助于证明算法正确性。</li>
+            <li>思考：哪些性质能推导出最终整个数组有序？</li>
+          </ol>
+          <div data-explain><p>选择排序的关键不变量包括：(1) 前 i 个元素有序；(2) 元素多重集不变（只交换不增删）；(3) 前缀元素都不大于后续元素。这三个性质共同保证算法正确性。数组长度不变虽然正确，但不是算法特有的性质。</p></div>
+        </section>
+        <section
           class="visualization"
           id="sort-steps"
           data-visualization="sequence"
@@ -146,6 +166,7 @@
     <ul class="toc-list">
       <li class="toc-item is-h2"><a class="toc-link" href="#学习成果">学习成果</a></li>
       <li class="toc-item is-h2"><a class="toc-link" href="#一次完整的选择排序">一次完整的选择排序</a></li>
+      <li class="toc-item is-h2"><a class="toc-link" href="#选择排序的不变量">选择排序的不变量</a></li>
       <li class="toc-item is-h2"><a class="toc-link" href="#逐轮执行轨迹">逐轮执行轨迹</a></li>
       <li class="toc-item is-h2"><a class="toc-link" href="#选择排序的循环流程">选择排序的循环流程</a></li>
       <li class="toc-item is-h2"><a class="toc-link" href="#对-231-独立写出各轮结果并解释不变量">对 [2,3,1] 独立写出各轮结果，并解释不变量</a></li>
