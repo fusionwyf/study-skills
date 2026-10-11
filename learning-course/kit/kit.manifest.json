@@ -15,6 +15,7 @@
     "core",
     "foundation",
     "content._block",
+    "content.animation",
     "content.callout",
     "content.code",
     "content.diagram",
@@ -452,6 +453,32 @@
         ]
       },
       "ready": "kit:learning.step:ready"
+    },
+    "content.animation": {
+      "id": "content.animation",
+      "layer": 2,
+      "version": "2.0.0",
+      "requires": [
+        "core",
+        "foundation"
+      ],
+      "presence": "auto",
+      "detect": {
+        "selectors": [
+          "[data-animate]",
+          ".animate-fade-in",
+          ".animate-slide"
+        ]
+      },
+      "provides": {
+        "css": [
+          "animation.css"
+        ],
+        "js": [
+          "animation.js"
+        ]
+      },
+      "ready": "kit:content.animation:ready"
     },
     "content.callout": {
       "id": "content.callout",

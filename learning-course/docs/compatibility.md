@@ -39,8 +39,9 @@ Course Kit v2 重构引入了统一问题组件，将旧版的 6 种分散写法
 
 **行动：**
 - ✅ 已完成：在 `kit.js` 构建时添加警告注释
-- 待完成：在浏览器控制台输出 `console.warn` 提示迁移路径
-- 待完成：在 `SKILL.md` 和 `references/lesson.md` 标注旧写法为 `[已废弃]`
+- ✅ 已完成：在浏览器控制台输出 `console.warn` 提示迁移路径（`question.js`）
+- ✅ 已完成：在 `SKILL.md` 和 `references/lesson.md` 标注旧写法为 `[已废弃]`
+- ✅ 已完成：实现自动迁移脚本 `kit/build/migrate_questions.py` 并提供单元测试
 
 **示例警告：**
 ```javascript
@@ -77,7 +78,7 @@ console.warn(
 
 ## 迁移指南
 
-### 自动迁移脚本（待实现）
+### 自动迁移脚本（已实现）
 
 ```bash
 python kit/build/migrate_questions.py <course-dir> --dry-run

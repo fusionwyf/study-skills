@@ -2410,7 +2410,8 @@
         Array.prototype.forEach.call(turnsSrc.children, function (li, i) {
           var t = el("div", "q-turn");
           t.hidden = i > 0;
-          var p = el("label", "q-turn-prompt", li.textContent);
+          var promptText = li.dataset.prompt || li.textContent.trim();
+          var p = el("label", "q-turn-prompt", promptText);
           p.setAttribute("for", id + "-t" + i);
           var ta2 = el("textarea", "q-textarea");
           ta2.id = id + "-t" + i;
@@ -2928,6 +2929,12 @@
     // 2. Process legacy elements (if not already enhanced by modern):
     var legacyQuizEls = Array.prototype.slice.call(document.querySelectorAll(".quiz[data-question-id]"))
       .filter(function (el) { return modernEls.indexOf(el) < 0; });
+    if (legacyQuizEls.length) {
+      console.warn(
+        "[Kit v2] 检测到旧版 .quiz 写法 (" + legacyQuizEls.length + " 处)，请迁移到 data-kind=\"choice\"。" +
+        "参考：learning-course/references/lesson.md#统一题目块。兼容层将在 v2.3.0 移除。"
+      );
+    }
     legacyQuizEls.forEach(function (el) {
       var view = bindLegacyQuiz(el, store);
       if (view) legacyInstances.push({ el: el, view: view });
@@ -2935,6 +2942,12 @@
 
     var legacyAnswerEls = Array.prototype.slice.call(document.querySelectorAll('[data-answer-kind="numeric"], [data-answer-kind="fill"]'))
       .filter(function (el) { return modernEls.indexOf(el) < 0; });
+    if (legacyAnswerEls.length) {
+      console.warn(
+        "[Kit v2] 检测到旧版 data-answer-* 写法 (" + legacyAnswerEls.length + " 处)，请迁移到 data-kind=\"numeric\" 或 data-kind=\"fill\"。" +
+        "参考：learning-course/references/lesson.md#统一题目块。兼容层将在 v2.3.0 移除。"
+      );
+    }
     legacyAnswerEls.forEach(function (el) {
       var view = bindLegacyAnswer(el, store);
       if (view) legacyInstances.push({ el: el, view: view });
@@ -2942,6 +2955,12 @@
 
     var legacyTargetEls = Array.prototype.slice.call(document.querySelectorAll('[data-role~="teaching-target"]'))
       .filter(function (el) { return modernEls.indexOf(el) < 0; });
+    if (legacyTargetEls.length) {
+      console.warn(
+        "[Kit v2] 检测到旧版 teaching-target 写法 (" + legacyTargetEls.length + " 处)，请迁移到 data-kind=\"open\"。" +
+        "参考：learning-course/references/lesson.md#统一题目块。兼容层将在 v2.3.0 移除。"
+      );
+    }
     legacyTargetEls.forEach(function (el) {
       var view = bindLegacyTeachingTarget(el, store);
       if (view) legacyInstances.push({ el: el, view: view });
@@ -2949,12 +2968,24 @@
 
     var legacyDialogueEls = Array.prototype.slice.call(document.querySelectorAll('[data-role~="dialogue-practice"]'))
       .filter(function (el) { return modernEls.indexOf(el) < 0; });
+    if (legacyDialogueEls.length) {
+      console.warn(
+        "[Kit v2] 检测到旧版 dialogue-practice 写法 (" + legacyDialogueEls.length + " 处)，请迁移到 data-kind=\"dialogue\"。" +
+        "参考：learning-course/references/lesson.md#统一题目块。兼容层将在 v2.3.0 移除。"
+      );
+    }
     legacyDialogueEls.forEach(function (el) {
       var view = bindLegacyDialogue(el, store);
       if (view) legacyInstances.push({ el: el, view: view });
     });
 
     var legacyIndepEls = Array.prototype.slice.call(document.querySelectorAll("[data-question-id]:has(select[data-independence])"));
+    if (legacyIndepEls.length) {
+      console.warn(
+        "[Kit v2] 检测到旧版 select[data-independence] 写法 (" + legacyIndepEls.length + " 处)，已废弃。" +
+        "作答帮助方式现由提示按钮自动判定，无需手动选择。兼容层将在 v2.3.0 移除。"
+      );
+    }
     legacyIndepEls.forEach(function (el) {
       var view = bindLegacyIndependence(el, store);
       if (view) legacyInstances.push({ el: el, view: view });

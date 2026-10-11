@@ -153,7 +153,7 @@ Kit 架构与扩展开发：
 Course Kit v2 采用 `core / auto / opt-in` 三态模块管理：
 
 - **core**（L0 核心、L1 基础与主题引擎、L4 记录模型）随 `kit.js` 默认包含。
-- **auto**（`content.code`、`content.math`、`content.diagram`、`shell.toc`、`learning.question`、`viz.core` 及通用可视化 kind 等）：`kit sync` 扫描课件 HTML 自动识别并纳入打包，无需作者手动安装。
+- **auto**（`content.code`、`content.math`、`content.diagram`、`content.animation`、`shell.toc`、`learning.question`、`viz.core` 及通用可视化 kind 等）：`kit sync` 扫描课件 HTML 自动识别并纳入打包，无需作者手动安装。
 - **opt-in**（图表 `viz.kinds.chart`、空间几何 `viz.kinds.spatial` 等重型依赖）：按需添加：
 
 ```text
@@ -163,6 +163,17 @@ python kit/build/kit.py add <course-dir> viz.kinds.spatial
 
 模块列表与能力说明可通过 `python kit/build/kit.py list` 查询。
 `python kit/build/kit.py check <course-dir>` 用于校验课程 `kit.lock.json` 的模块与文件哈希完整性。
+
+### 题目迁移与旧版兼容
+
+旧版课程若包含 `.quiz`、`data-answer-*`、`teaching-target`、`dialogue-practice` 或自述独立性下拉等旧写法，使用自动迁移工具一键转换：
+
+```text
+python kit/build/migrate_questions.py <course-dir> --dry-run
+python kit/build/migrate_questions.py <course-dir> --apply
+```
+
+迁移策略与兼容层移除时间表（将在 v2.3.0 彻底移除）见 `docs/compatibility.md`。自主添加新模块参考 `docs/extension-guide.md`。
 
 ## 验证
 

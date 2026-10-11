@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="course">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gallery · Animation Component (Course Kit v2)</title>
+  <link rel="stylesheet" href="../acceptance/assets/kit/kit.css">
+  <link rel="stylesheet" href="../acceptance/assets/course/theme.css">
+</head>
+<body>
+<div class="kit-page">
+  <main class="kit-main" data-course-id="gallery" data-lesson-id="0007-animation" data-objective="gallery-animation" data-evidence="practice" data-cognitive-level="apply" data-retrieval="required" data-feedback="required" data-source-status="verified" data-answer-status="provided">
+    <header class="course-header">
+      <p class="course-kicker">Course Kit v2 · Component Gallery</p>
+      <h1>Animation Component (L2 Content Layer)</h1>
+      <p>Demonstrates declarative animations (fadeIn, slideUp, bounce) with scroll triggering and reduced-motion accessibility.</p>
+    </header>
+
+    <section id="sec-fade">
+      <h2>1. Fade In Animation</h2>
+      <div data-animate="fadeIn" data-animate-trigger="immediate" style="padding: 1.5rem; background: var(--c-surface, #f8f9fa); border: 1px solid var(--c-border, #e9ecef); border-radius: var(--radius, 6px); margin: 1rem 0;">
+        <p>This box fades in immediately on page load.</p>
+      </div>
+    </section>
+
+    <section id="sec-slide">
+      <h2>2. Slide Up Animation</h2>
+      <div data-animate="slideUp" data-animate-delay="0.2s" style="padding: 1.5rem; background: var(--c-surface, #f8f9fa); border: 1px solid var(--c-border, #e9ecef); border-radius: var(--radius, 6px); margin: 1rem 0;">
+        <p>This box slides up smoothly with a 0.2s delay.</p>
+      </div>
+    </section>
+
+    <section id="sec-bounce">
+      <h2>3. Bounce Preset Animation</h2>
+      <div data-animate="bounce" data-animate-trigger="immediate" style="padding: 1.5rem; background: var(--c-surface, #f8f9fa); border: 1px solid var(--c-border, #e9ecef); border-radius: var(--radius, 6px); margin: 1rem 0;">
+        <p>This box plays a bounce animation on entrance.</p>
+      </div>
+    </section>
+  </main>
+</div>
+<script src="../acceptance/assets/kit/kit.js"></script>
+</body>
+</html>

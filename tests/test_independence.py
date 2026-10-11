@@ -15,8 +15,8 @@ from validate_record import contract_errors, recent_guided_records
 
 
 def run(script: str, *args: object):
-    return subprocess.run([sys.executable, str(ROOT / script), *map(str, args)],
-                          capture_output=True, text=True, encoding="utf-8", cwd=ROOT)
+    return subprocess.run([sys.executable, "-X", "utf8", str(ROOT / script), *map(str, args)],
+                          capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=ROOT)
 
 
 def write_record(course: Path, name: str, mastery: str, independence: str | None,

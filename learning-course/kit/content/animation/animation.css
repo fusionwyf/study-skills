@@ -1,0 +1,56 @@
+@layer content {
+  /* 基础动画类 */
+  [data-animate] {
+    --anim-duration: var(--duration, 0.6s);
+    --anim-delay: var(--delay, 0s);
+    --anim-easing: var(--easing, cubic-bezier(0.4, 0, 0.2, 1));
+  }
+
+  [data-animate]:not(.is-animated) {
+    opacity: 0;
+  }
+
+  [data-animate].is-animated {
+    animation: var(--anim-name) var(--anim-duration) var(--anim-easing) var(--anim-delay) forwards;
+  }
+
+  /* 预设动画关键帧 */
+  @keyframes kit-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes kit-slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(1.5rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes kit-bounce {
+    0%, 100% { transform: translateY(0); opacity: 1; }
+    50% { transform: translateY(-0.75rem); opacity: 1; }
+  }
+
+  /* 快捷类名支持 */
+  .animate-fade-in {
+    animation: kit-fade-in 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  .animate-slide {
+    animation: kit-slide-up 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  /* 无障碍：尊重用户减少动效偏好 */
+  @media (prefers-reduced-motion: reduce) {
+    [data-animate] {
+      animation: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+    }
+  }
+}

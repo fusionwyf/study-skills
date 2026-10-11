@@ -69,9 +69,9 @@
 | numeric | ✅ 0001, 0002 | ✅ | 完整 |
 | fill | ✅ 0006 | ✅ | 完整 |
 | open | ✅ 0003, 0004, 0005 | ✅ | 完整 |
-| dialogue | ❌ | ✅ | gallery only |
+| dialogue | ✅ 0006 | ✅ | 完整 |
 
-**备注**: `dialogue` 类型未在 acceptance 中补充，因为需要设计合适的多轮对话场景，建议后续单独规划。
+**备注**: `dialogue` 类型已在 `0006-language.html` 中补充（情境对话演练：预约与确认约定），所有 6 种题目类型均已在验收课件中达到 100% 覆盖。
 
 ## 问题 3: dialogue 类型实现细节未展开
 
@@ -244,35 +244,20 @@ learning-course/
 | numeric | ✅ | ✅ | 完整 |
 | fill | ✅ | ✅ | 完整 |
 | open | ✅ | ✅ | 完整 |
-| dialogue | ❌ | ✅ | 待补充 |
+| dialogue | ✅ | ✅ | 完整 |
 
-### Git 提交
-```
-commit 15fc9c6
-docs(learning-course): add extension guide, compatibility plan, and complete acceptance coverage
+## 完善进展与落地状态
 
-- Add docs/extension-guide.md: comprehensive guide for adding custom modules
-- Add docs/compatibility.md: legacy component deprecation strategy
-- Update SKILL.md: add references to new docs in routing section
-- Complete acceptance fixtures: add choice to 0002, add multi to 0003
-```
+### 已落地项
+1. ✅ **浏览器控制台 deprecation warning**：在 `kit/learning/question/question.js` 中对 5 种旧写法（`.quiz`、`data-answer-*`、`teaching-target`、`dialogue-practice`、`select[data-independence]`）添加控制台警告，指引迁移路径并标明 v2.3.0 移除时间表。
+2. ✅ **自动迁移脚本**：实现 `kit/build/migrate_questions.py`，支持 `--dry-run` 预览与 `--apply` 自动备份及转换，新增 `tests/test_migrate_questions.py` 单元测试并通过。
+3. ✅ **验收课件 100% 题目覆盖**：在 `0006-language.html` 补充多轮对话（dialogue）题目与 TOC 路由，6 类题目全部覆盖。
+4. ✅ **首个官方扩展组件范例**：根据 `docs/extension-guide.md` 创建 `kit/content/animation` 模块（L2 层），包含描述符、CSS @layer、JS 就绪机制、文档与 `fixtures/gallery/animation.html` 演示，并纳入 `kit.manifest.json`。
+5. ✅ **文档全面对齐**：更新 `SKILL.md`、`references/lesson.md`，添加旧写法废弃说明、动画组件说明与迁移命令。
+6. ✅ **清理冗余**：清理合并完成的工作树目录，保持技能目录结构干净。
 
-## 后续建议
-
-### 短期（1-2 周）
-1. 在浏览器控制台添加实际的 deprecation warning（目前 compatibility.md 只是设计）
-2. 实现自动迁移脚本 `kit/build/migrate_questions.py`
-3. 在 example-course 中添加 dialogue 题目示例
-
-### 中期（1-2 个月）
-1. 为 acceptance 课件添加 dialogue 题目（需设计合适场景）
-2. 创建第一个真实的扩展组件（如 animation）作为范例
-3. 编写 Kit 扩展组件的单元测试模板
-
-### 长期（3+ 个月）
-1. 执行 v2.3.0 兼容层移除（2027 Q1）
-2. 收集社区反馈改进 extension-guide.md
-3. 建立扩展组件市场/仓库（如果需要）
+### 后续规划
+- **Phase 2 (v2.3.0)**：正式移除兼容层代码（预计 2027 Q1）。
 
 ---
 

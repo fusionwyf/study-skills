@@ -141,6 +141,14 @@
 - **自动辅助判定**：取消自述下拉控件。点击提示自动记录 `with_hints`；带 `data-guidance="ai_guided"` 的提示记录为 `ai_guided`；未用提示且答对记录为 `independent`。记录输出保持逐字节等价性。
 - **揭示保护**：未答对时隐藏答案，达到 `data-max-attempts`（默认 2）后提供“查看答案”按钮。
 
+#### ⚠️ 旧写法废弃与迁移说明（将在 v2.3.0 移除）：
+- 旧版 `.quiz` 提交模式 ➔ 迁移为 `data-kind="choice"`
+- 旧版 `[data-answer-input]` / `[data-answer-check]` ➔ 迁移为 `data-kind="numeric"` 或 `data-kind="fill"`
+- 旧版 `[data-role~="teaching-target"]` ➔ 迁移为 `data-kind="open"`
+- 旧版 `[data-role~="dialogue-practice"]` ➔ 迁移为 `data-kind="dialogue"`
+- 旧版 `<select data-independence>` ➔ 移除自述下拉，已改为提示按钮自动判定
+- 自动迁移：运行 `python kit/build/migrate_questions.py <course-dir> --apply`。详细策略见 `docs/compatibility.md`。
+
 ### 2. 代码块（Code Block）
 
 作者只写原生语义标记：
@@ -193,6 +201,19 @@
   </script>
 </section>
 ```
+
+### 7. 动效增强（Animation Component - L2）
+
+声明式滚动与即时动效组件：
+```html
+<div data-animate="slideUp" data-animate-delay="0.2s">
+  <p>内容进入视口时平滑滑入。</p>
+</div>
+```
+- **预设**：`fadeIn`、`slideUp`、`bounce`。
+- **配置属性**：`data-animate`（预设名称或动画名）、`data-animate-duration`（时长）、`data-animate-delay`（延迟）、`data-animate-easing`（缓动曲线）、`data-animate-trigger="immediate"`（即时播放）。
+- **无障碍**：自动响应 `@media (prefers-reduced-motion: reduce)` 停用动效并展示静态内容。
+- **开发扩展**：自定义扩展模块参考 `docs/extension-guide.md`。
 
 ## 四、Bloom 认知层级
 
