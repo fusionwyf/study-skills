@@ -7,17 +7,13 @@
   "detect": {
     "selectors": [
       ".question",
-      "section[data-question-id]",
-      ".quiz",
-      "[data-answer-kind]",
-      "[data-role~=\"teaching-target\"]",
-      "[data-role~=\"dialogue-practice\"]"
+      "section[data-question-id]"
     ]
   },
   "provides": {
     "css": ["question.css"],
     "js": ["question.js"],
-    "selectors": [".question", ".quiz", "[data-question-id]"]
+    "selectors": [".question", "section[data-question-id]"]
   },
   "ready": "kit:learning.question:ready"
 }

@@ -141,7 +141,7 @@
 - **自动辅助判定**：取消自述下拉控件。点击提示自动记录 `with_hints`；带 `data-guidance="ai_guided"` 的提示记录为 `ai_guided`；未用提示且答对记录为 `independent`。记录输出保持逐字节等价性。
 - **揭示保护**：未答对时隐藏答案，达到 `data-max-attempts`（默认 2）后提供“查看答案”按钮。
 
-#### ⚠️ 旧写法废弃与迁移说明（将在 v2.3.0 移除）：
+#### ⚠️ 旧写法移除与迁移说明（已于 v2.3.0 正式移除，不再生效）：
 - 旧版 `.quiz` 提交模式 ➔ 迁移为 `data-kind="choice"`
 - 旧版 `[data-answer-input]` / `[data-answer-check]` ➔ 迁移为 `data-kind="numeric"` 或 `data-kind="fill"`
 - 旧版 `[data-role~="teaching-target"]` ➔ 迁移为 `data-kind="open"`

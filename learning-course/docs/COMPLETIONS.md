@@ -255,9 +255,15 @@ learning-course/
 4. ✅ **首个官方扩展组件范例**：根据 `docs/extension-guide.md` 创建 `kit/content/animation` 模块（L2 层），包含描述符、CSS @layer、JS 就绪机制、文档与 `fixtures/gallery/animation.html` 演示，并纳入 `kit.manifest.json`。
 5. ✅ **文档全面对齐**：更新 `SKILL.md`、`references/lesson.md`，添加旧写法废弃说明、动画组件说明与迁移命令。
 6. ✅ **清理冗余**：清理合并完成的工作树目录，保持技能目录结构干净。
+7. ✅ **兼容层正式彻底移除 (Phase 2)**：
+   - 彻底删除 `question.js` 中的 5 个 `bindLegacy*` 兼容函数。
+   - 彻底从 `initQuestions` 移除旧选择器扫描与旧实例更新。
+   - 彻底从 `module.json` 的 `detect.selectors` 与 `provides.selectors` 移除旧选择器。
+   - 重新打包生成 `assets/kit/kit.js` 与 `kit.manifest.json`，验证全量 111 项测试通过。
+   - 更新 `CHANGELOG.md` 记录 BREAKING CHANGE。
 
 ### 后续规划
-- **Phase 2 (v2.3.0)**：正式移除兼容层代码（预计 2027 Q1）。
+- **Phase 3 (v3.0.0)**：持续推进清理历史遗留测试断言与旧版资产副本。
 
 ---
 

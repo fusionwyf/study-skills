@@ -52,22 +52,22 @@ console.warn(
 );
 ```
 
-### Phase 2: v2.3.0 (预计 2027 Q1：兼容层移除)
+### Phase 2: v2.3.0 (当前版本：兼容层已正式移除)
 
-**策略：** 移除所有 legacy binding 函数，旧写法不再工作。
+**策略：** 移除所有 legacy binding 函数，旧写法不再工作（BREAKING CHANGE）。
 
-**前置条件：**
-1. 所有 example-course、acceptance fixtures、gallery 已迁移到新写法
-2. 文档中旧写法示例全部替换或删除
-3. 至少经过一个完整课程制作周期（3 个月）的警告期
+**前置条件达成情况：**
+1. ✅ 所有 acceptance fixtures、gallery 已全部迁移到现代统一题目块
+2. ✅ 文档中旧写法已标注废弃说明与迁移指南
+3. ✅ 提供自动迁移工具 `migrate_questions.py`
 
-**移除清单：**
-- 删除 `question.js` 中 5 个 `bindLegacy*` 函数
-- 从 `kit.records.view.init` 移除旧选择器扫描
-- 从 `module.json` 的 `detect.selectors` 移除旧选择器（`.quiz`, `[data-answer-input]`, 等）
-- 更新 CHANGELOG.md 标注为 **BREAKING CHANGE**
+**移除清单执行状态：**
+- ✅ 已删除 `question.js` 中 5 个 `bindLegacy*` 函数
+- ✅ 已从 `initQuestions` 移除旧选择器扫描与旧实例更新
+- ✅ 已从 `module.json` 的 `detect.selectors` 与 `provides.selectors` 移除旧选择器（`.quiz`, `[data-answer-input]`, 等）
+- ✅ 已更新 CHANGELOG.md 标注为 **BREAKING CHANGE**
 
-### Phase 3: v3.0.0 (预计 2027 Q3：清理遗留)
+### Phase 3: v3.0.0 (清理遗留)
 
 **策略：** 清理所有与旧写法相关的测试、文档引用、类型定义。
 

@@ -173,7 +173,7 @@ python kit/build/migrate_questions.py <course-dir> --dry-run
 python kit/build/migrate_questions.py <course-dir> --apply
 ```
 
-迁移策略与兼容层移除时间表（将在 v2.3.0 彻底移除）见 `docs/compatibility.md`。自主添加新模块参考 `docs/extension-guide.md`。
+迁移策略与兼容层移除记录（已于 v2.3.0 正式移除，旧写法不再生效）见 `docs/compatibility.md`。自主添加新模块参考 `docs/extension-guide.md`。
 
 ## 验证
 

@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented in this file.
 
+## [2.3.0] - 2026-10-11
+
+### Removed (BREAKING CHANGE)
+
+- **Legacy Question Compatibility Layer Removed:**
+  - Removed all 5 legacy binding functions (`bindLegacyQuiz`, `bindLegacyAnswer`, `bindLegacyTeachingTarget`, `bindLegacyDialogue`, `bindLegacyIndependence`) from `kit/learning/question/question.js`.
+  - Removed legacy selectors (`.quiz`, `[data-answer-kind]`, `[data-role~="teaching-target"]`, `[data-role~="dialogue-practice"]`, `select[data-independence]`) from question detection and runtime initialization.
+  - Legacy question markup will no longer be enhanced at runtime; courses must be migrated to modern `<section class="question" data-kind="...">` syntax using `python kit/build/migrate_questions.py <course-dir> --apply`.
+
 ## [2.0.0] - 2026-10-11
 
 Course Kit v2 major refactoring: single asset source in `kit/`, L0–L5 architectural layering, unified block chrome, token-driven theming, responsive 3-state TOC, unified Question component with automated assistance detection, and CLI toolchain.

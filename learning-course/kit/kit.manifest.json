@@ -385,11 +385,7 @@
       "detect": {
         "selectors": [
           ".question",
-          "section[data-question-id]",
-          ".quiz",
-          "[data-answer-kind]",
-          "[data-role~=\"teaching-target\"]",
-          "[data-role~=\"dialogue-practice\"]"
+          "section[data-question-id]"
         ]
       },
       "provides": {
@@ -401,8 +397,7 @@
         ],
         "selectors": [
           ".question",
-          ".quiz",
-          "[data-question-id]"
+          "section[data-question-id]"
         ]
       },
       "ready": "kit:learning.question:ready"
