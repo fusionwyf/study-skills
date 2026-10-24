@@ -64,7 +64,7 @@ const wait = () => new Promise((r) => setTimeout(r, 60));
     `<main class="lesson" data-course-id="test" data-lesson-id="0001" data-objective="test">
  <section data-question-id="numeric" data-answer-kind="numeric" data-expected="0.3" data-tolerance="0.00001"><label for="n">答案</label><input id="n" data-answer-input><button data-answer-check>检查</button><p data-role="answer-feedback"></p></section>
  <section data-question-id="fill" data-answer-kind="fill" data-accepted='["alpha"]'><label for="f">答案</label><input id="f" data-answer-input><button data-answer-check>检查</button><p data-role="answer-feedback"></p></section>
- <section data-question-id="image-notes"><figure data-media><div data-media-frame><img alt="原创图"></div><figcaption data-media-fallback>热点说明</figcaption><p data-media-status></p><details data-media-transcript><summary>参考</summary>文字稿</details><script data-media-config type="application/json">{"hotspots":[{"id":"a","label":"入口","x":10,"y":50}]}</script></figure><label for="notes">观察</label><textarea id="notes"></textarea></section><button data-copy-feedback>复制</button></main>`
+ <section data-question-id="image-notes"><figure data-media><div data-media-frame><img alt="原创图"></div><figcaption data-media-fallback>热点说明</figcaption><p data-media-status></p><details data-media-transcript><summary>参考</summary>文字稿</details><script data-media-config type="application/json">{"hotspots":[{"id":"a","label":"入口","x":10,"y":50}]}</script></figure><label for="notes">观察</label><textarea id="notes"></textarea></section><button data-submit-feedback>复制</button></main>`
   );
   await wait();
   const w = d.window,
@@ -123,7 +123,7 @@ const wait = () => new Promise((r) => setTimeout(r, 60));
       },
     },
   });
-  doc.querySelector("[data-copy-feedback]").click();
+  doc.querySelector("[data-submit-feedback]").click();
   await wait();
   assert.match(copied, /入口使动线清楚/);
   assert.match(copied, /热点选择/);

@@ -837,79 +837,15 @@
     }
   },
   "assets": {
-    "course-runtime": {
-      "role": "common",
-      "delivery": "default",
-      "status": "implemented",
-      "files": [
-        "course-template/course.js",
-        "course-template/course.css"
-      ],
-      "dependencies": [
-        "state-runtime"
-      ],
-      "supports": [
-        "测验、提示、开放回答、数字与填空回答、原始学习记录"
-      ],
-      "limitations": [
-        "页面判定只针对本题，不推断掌握"
-      ],
-      "example": "acceptance-course/lessons/0001-math.html",
-      "fallback": "正文与静态后备在无脚本和打印时可读",
-      "targets": {
-        "course-template/course.js": "course.js",
-        "course-template/course.css": "course.css"
-      }
-    },
-    "state-runtime": {
-      "role": "common",
-      "delivery": "default",
-      "status": "implemented",
-      "files": [
-        "learnkit/learnkit.js",
-        "learnkit/components.json",
-        "learnkit/lesson-spec.schema.json"
-      ],
-      "dependencies": [],
-      "supports": [
-        "状态、历史、模型和视图注册"
-      ],
-      "limitations": [
-        "LessonSpec 是规划校验器，不是整页生成器"
-      ],
-      "example": "acceptance-course/lessons/0002-probability.html",
-      "fallback": "正文与静态后备在无脚本和打印时可读"
-    },
-    "viz-core": {
-      "role": "rendering",
-      "delivery": "default",
-      "status": "implemented",
-      "files": [
-        "visualizations/visualizations.js",
-        "visualizations/visualizations.css",
-        "visualizations/adapters.json"
-      ],
-      "dependencies": [
-        "state-runtime"
-      ],
-      "supports": [
-        "注册、初始化、状态订阅、销毁、后备"
-      ],
-      "limitations": [
-        "专用模型必须显式注册"
-      ],
-      "example": "acceptance-course/lessons/0002-probability.html",
-      "fallback": "正文与静态后备在无脚本和打印时可读"
-    },
     "relation": {
       "role": "rendering",
       "delivery": "default",
       "status": "implemented",
       "files": [
-        "visualizations/kinds/list.js"
+        "kit/viz/kinds/list/list.js"
       ],
       "dependencies": [
-        "viz-core"
+        "viz.core"
       ],
       "supports": [
         "关系图：节点与边"
@@ -940,10 +876,10 @@
       "delivery": "default",
       "status": "implemented",
       "files": [
-        "visualizations/kinds/list.js"
+        "kit/viz/kinds/list/list.js"
       ],
       "dependencies": [
-        "viz-core"
+        "viz.core"
       ],
       "supports": [
         "时间轴：事件和阶段"
@@ -974,10 +910,10 @@
       "delivery": "default",
       "status": "implemented",
       "files": [
-        "visualizations/kinds/list.js"
+        "kit/viz/kinds/list/list.js"
       ],
       "dependencies": [
-        "viz-core"
+        "viz.core"
       ],
       "supports": [
         "流程与状态图"
@@ -1007,10 +943,10 @@
       "delivery": "default",
       "status": "implemented",
       "files": [
-        "visualizations/kinds/sequence.js"
+        "kit/viz/kinds/sequence/sequence.js"
       ],
       "dependencies": [
-        "viz-core"
+        "viz.core"
       ],
       "supports": [
         "通用步骤回放"
@@ -1040,10 +976,10 @@
       "delivery": "default",
       "status": "implemented",
       "files": [
-        "visualizations/kinds/table.js"
+        "kit/viz/kinds/table/table.js"
       ],
       "dependencies": [
-        "viz-core"
+        "viz.core"
       ],
       "supports": [
         "结构化数据表"
@@ -1068,10 +1004,10 @@
       "delivery": "optional",
       "status": "implemented",
       "files": [
-        "visualizations/kinds/chart.js"
+        "kit/viz/kinds/chart/chart.js"
       ],
       "dependencies": [
-        "viz-core"
+        "viz.core"
       ],
       "supports": [
         "数据图表：曲线、柱状、散点、曲面、热图"
@@ -1097,10 +1033,10 @@
       "delivery": "optional",
       "status": "implemented",
       "files": [
-        "visualizations/kinds/spatial.js"
+        "kit/viz/kinds/spatial/spatial.js"
       ],
       "dependencies": [
-        "viz-core"
+        "viz.core"
       ],
       "supports": [
         "空间与几何画布"
@@ -1121,108 +1057,34 @@
       "bind": "snapshot.derived.visualizations[容器 id] 或 snapshot.derived.visualization；sequence 使用 derived.index",
       "vendor": "spatial"
     },
-    "theme": {
+    "plot": {
       "role": "rendering",
       "delivery": "optional",
       "status": "implemented",
       "files": [
-        "optional/theme/theme.js",
-        "optional/theme/theme.css",
-        "optional/theme/README.md"
-      ],
-      "dependencies": [],
-      "supports": [
-        "主题切换器（换肤层）"
-      ],
-      "limitations": [
-        "按组件 README 接线"
-      ],
-      "example": "optional/theme/README.md",
-      "fallback": "脚本缺失时按系统偏好生效；打印强制浅色",
-      "docs": "optional/theme/README.md",
-      "wiring": "head 在 course.css 之后引入 theme.css，正文末尾引入 theme.js；用 html[data-theme] 或脚本的切换按钮选择主题",
-      "recommended_when": "新课程初始化已安装切换器；课程自定义文件为 assets/theme.css 与 assets/theme.js"
-    },
-    "code-highlight": {
-      "role": "rendering",
-      "delivery": "optional",
-      "status": "implemented",
-      "files": [
-        "optional/code-highlight/code-highlight.js",
-        "optional/code-highlight/code-highlight.css",
-        "optional/code-highlight/theme.js",
-        "optional/code-highlight/README.md"
-      ],
-      "dependencies": [],
-      "supports": [
-        "代码块语法着色"
-      ],
-      "limitations": [
-        "代码块出现时默认启用；额外语言可加载官方语法包"
-      ],
-      "example": "optional/code-highlight/README.md",
-      "fallback": "脚本缺失或禁用 JavaScript 时保留单色原文；语言不在内置清单时不着色；打印强制还原为可复制文本",
-      "docs": "optional/code-highlight/README.md",
-      "wiring": "head 引入 code-highlight.css，正文末尾依次引入 theme.js（挑官方主题）与 code-highlight.js（上色）；脚本自动处理所有 .code-block pre code",
-      "network": {
-        "default": "highlight.js 11.12.0 官方 CDN 引擎与主题 CSS",
-        "offline": "预置同版本引擎和官方主题；先注册 window.hljs，在 COURSE_CODE_THEMES 指定本地样式"
-      },
-      "recommended_when": "出现代码示例时安装并加载；新课程初始化已安装"
-    },
-    "mermaid": {
-      "role": "rendering",
-      "delivery": "optional",
-      "status": "implemented",
-      "files": [
-        "optional/mermaid/mermaid.js",
-        "optional/mermaid/mermaid.css",
-        "optional/mermaid/README.md"
-      ],
-      "dependencies": [],
-      "supports": [
-        "流程图、状态图、时序图、类图、甘特图、饼图"
-      ],
-      "limitations": [
-        "Mermaid 文本语法定义图形；不支持自定义 SVG 级别的精细像素控制"
-      ],
-      "example": "optional/mermaid/README.md",
-      "fallback": "CDN 失败或无脚本时 pre 内文本定义仍可读",
-      "docs": "optional/mermaid/README.md",
-      "wiring": "head 引入 mermaid.css，body 末尾引入 mermaid.js（type=module）；用 <pre class=\"mermaid\"> 写图定义",
-      "network": {
-        "default": "CDN Mermaid 11 ESM",
-        "offline": "assets/vendor/mermaid/，替换 import 地址"
-      },
-      "recommended_when": "课件含流程图、状态图、时序图时安装并加载；不手写 SVG 替代 Mermaid 能表达的图形"
-    },
-    "media": {
-      "role": "common",
-      "delivery": "optional",
-      "status": "implemented",
-      "files": [
-        "optional/media/media.js",
-        "optional/media/media.css",
-        "optional/media/README.md"
+        "kit/viz/kinds/plot/plot.js"
       ],
       "dependencies": [
-        "course-runtime"
+        "viz.core"
       ],
       "supports": [
-        "图片、音频、视频原生控件；图片热点与开放文字标注；标注进入学习记录",
-        "音视频原生播放与文字稿"
+        "统计图形：线、点、条、箱线、直方等 Observable Plot 复合图形"
       ],
       "limitations": [
-        "热点为 0..100 百分比坐标；音视频由浏览器原生播放器支持，不自动判定听力能力"
+        "规范直接透传 Plot.plot()；marks/axes 须在 config.plot 内声明"
       ],
-      "example": "acceptance-course/lessons/0005-design.html",
+      "example": "showcase/lessons/0003-sim-and-charts.html",
       "fallback": "正文与静态后备在无脚本和打印时可读",
-      "docs": "optional/media/README.md",
-      "wiring": "course.css 后加载 media.css；LearnKit、course.js 后加载 media.js；使用 data-media 与 data-media-config",
-      "examples": [
-        "acceptance-course/lessons/0005-design.html",
-        "acceptance-course/lessons/0006-language.html"
-      ]
+      "kind": "plot",
+      "module": "kinds/plot.js",
+      "adapter": {
+        "label": "统计图形（Observable Plot）",
+        "data": "plot.marks",
+        "renderer": "Observable Plot"
+      },
+      "dynamic": true,
+      "bind": "snapshot.derived.visualizations[容器 id] 或 snapshot.derived.visualization；sequence 使用 derived.index",
+      "vendor": "plot"
     },
     "katex": {
       "role": "rendering",
@@ -1236,7 +1098,7 @@
       "limitations": [
         "默认 CDN；完全离线需同版本 JS/CSS/fonts"
       ],
-      "example": "example-course/lessons/0001-example.html",
+      "example": "acceptance-course/lessons/0001-math.html",
       "fallback": "显示 LaTeX 原文与文字解释",
       "network": {
         "default": "KaTeX 0.16.11 CDN",
@@ -1249,7 +1111,7 @@
       "status": "extension-required",
       "files": [],
       "dependencies": [
-        "viz-core"
+        "viz.core"
       ],
       "supports": [
         "学科模拟舞台"
@@ -1273,7 +1135,7 @@
       "status": "extension-required",
       "files": [],
       "dependencies": [
-        "viz-core"
+        "viz.core"
       ],
       "supports": [
         "层级结构"
@@ -1297,7 +1159,7 @@
       "status": "extension-required",
       "files": [],
       "dependencies": [
-        "viz-core"
+        "viz.core"
       ],
       "supports": [
         "课程专用的自由绘制、区域或专业图像标注"
@@ -1314,28 +1176,6 @@
         "renderer": "registered extension",
         "tier": "extension"
       }
-    },
-    "course-theme": {
-      "role": "common",
-      "delivery": "default",
-      "status": "implemented",
-      "files": [
-        "course-template/theme.css",
-        "course-template/theme.js"
-      ],
-      "targets": {
-        "course-template/theme.css": "theme.css",
-        "course-template/theme.js": "theme.js"
-      },
-      "dependencies": [],
-      "supports": [
-        "课程自定义主题、布局、官方高亮主题选择与公式设置"
-      ],
-      "limitations": [
-        "修改课程副本；theme.css 最后加载，theme.js 在主题切换器与渲染器之前加载"
-      ],
-      "example": "course-template/lesson.html",
-      "fallback": "纯 CSS 主题与打印浅色样式"
     }
   }
 }

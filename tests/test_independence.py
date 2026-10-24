@@ -24,11 +24,18 @@ def write_record(course: Path, name: str, mastery: str, independence: str | None
     fm = {"record_schema": 1, "assessment_status": "finalized", "record_id": record_id,
           "attempted_at": attempted_at, "source_backed": False, "synthetic": True,
           "lesson": 1, "evidence_type": "application", "evidence_strength": "strong",
-          "supported_objectives": [{"id": "variables-and-assignment", "mastery": mastery}]}
+          "supported_objectives": [{"id": "math", "mastery": mastery}]}
     if independence is not None:
         fm["independence"] = independence
     p = course / "records" / name
-    p.write_text("---\n" + yaml.safe_dump(fm, sort_keys=False) + "---\n\n## 原始回答\n\n我解释了条件并给出了反例。\n", encoding="utf-8")
+    body = (
+        "\n## 学习者原始反馈\n\n我解释了条件并给出了反例。\n"
+        "\n## 可观察行为\n\n- 回答了什么：一段独立解释。\n- 正确性或产物结果：包含反例，判断成立。\n"
+        "- 是否使用提示：未使用提示。\n- 是否包含解释或迁移：包含适用条件解释。\n"
+        "\n## Agent 判断\n\n- evidence_type: application\n- evidence_strength: strong\n"
+        "\n## 下一步\n\n安排新语境变式确认迁移。\n"
+    )
+    p.write_text("---\n" + yaml.safe_dump(fm, sort_keys=False) + "---\n" + body, encoding="utf-8")
     return p
 
 
@@ -42,7 +49,8 @@ class IndependenceTests(unittest.TestCase):
 
     def course(self, name="course"):
         target = self.root / name
-        shutil.copytree(ROOT / "learning-course/fixtures/example-course", target)
+        shutil.copytree(ROOT / "learning-course/fixtures/acceptance", target)
+        (target / "records").mkdir(exist_ok=True)
         return target
 
     def test_mastery_update_matrix_refuses_insufficient_or_unknown_independence_without_writes(self):
@@ -54,7 +62,7 @@ class IndependenceTests(unittest.TestCase):
                     before = (course / "course.yaml").read_bytes()
                     record_before = record.read_bytes()
                     result = run("learning-course/scripts/update_progress.py", course,
-                                 "--evidence-record", record, "--objective", f"variables-and-assignment={mastery}")
+                                 "--evidence-record", record, "--objective", f"math={mastery}")
                     allowed = mastery == "recognition" or independence == "independent" or (
                         mastery == "application" and independence == "with_hints")
                     if allowed:
@@ -100,11 +108,30 @@ class IndependenceTests(unittest.TestCase):
 
     def test_new_course_completion_cannot_bypass_unknown_independence(self):
         course = self.course()
-        record = write_record(course, "0002-legacy.md", "transfer", None)
         state_path = course / "course.yaml"
         state = yaml.safe_load(state_path.read_text(encoding="utf-8"))
-        state["objectives"][0].update(mastery="transfer", evidence=[{
-            "record": "records/0002-legacy.md", "type": "application", "strength": "strong", "mastery": "transfer"}])
+        objective_ids = [o["id"] for o in state["objectives"]]
+
+        def write_multi_record(name, independence, record_id):
+            fm = {"record_schema": 1, "assessment_status": "finalized", "record_id": record_id,
+                  "attempted_at": "2026-10-09", "source_backed": False, "synthetic": True,
+                  "lesson": 1, "evidence_type": "application", "evidence_strength": "strong",
+                  "supported_objectives": [{"id": oid, "mastery": "transfer"} for oid in objective_ids]}
+            if independence is not None:
+                fm["independence"] = independence
+            body = ("\n## 学习者原始反馈\n\n我完成了全部目标的迁移练习。\n"
+                    "\n## 可观察行为\n\n- 回答了什么：每个目标一个迁移作答。\n- 正确性或产物结果：全部正确。\n"
+                    "- 是否使用提示：未使用提示。\n- 是否包含解释或迁移：包含迁移解释。\n"
+                    "\n## Agent 判断\n\n- evidence_type: application\n- evidence_strength: strong\n"
+                    "\n## 下一步\n\n完成课程状态更新。\n")
+            p = course / "records" / name
+            p.write_text("---\n" + yaml.safe_dump(fm, sort_keys=False) + "---\n" + body, encoding="utf-8")
+            return p
+
+        record = write_multi_record("0002-legacy.md", None, "L0002")
+        for objective in state["objectives"]:
+            objective.update(mastery="transfer", evidence=[{
+                "record": "records/0002-legacy.md", "type": "application", "strength": "strong", "mastery": "transfer"}])
         state_path.write_text(yaml.safe_dump(state, sort_keys=False), encoding="utf-8")
         before = state_path.read_bytes()
         result = run("learning-course/scripts/update_progress.py", course, "--status", "complete")
@@ -112,9 +139,12 @@ class IndependenceTests(unittest.TestCase):
         self.assertIn("independence-qualified", result.stderr)
         self.assertEqual(state_path.read_bytes(), before)
         # Simulate new qualifying evidence, without editing the old finalized record.
-        independent = write_record(course, "0003-independent.md", "transfer", "independent", record_id="L0003")
-        result = run("learning-course/scripts/update_progress.py", course, "--evidence-record", independent,
-                     "--objective", "variables-and-assignment=transfer", "--status", "complete")
+        write_multi_record("0003-independent.md", "independent", "L0003")
+        for objective in state["objectives"]:
+            objective["evidence"] = [{
+                "record": "records/0003-independent.md", "type": "application", "strength": "strong", "mastery": "transfer"}]
+        state_path.write_text(yaml.safe_dump(state, sort_keys=False), encoding="utf-8")
+        result = run("learning-course/scripts/update_progress.py", course, "--status", "complete")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertNotIn("independence", record.read_text(encoding="utf-8"))
 
@@ -150,10 +180,10 @@ class IndependenceTests(unittest.TestCase):
             result = run("study/scripts/build_report.py", course)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             if value == "independent":
-                self.assertIn("[confirmed] variables-and-assignment", result.stdout)
+                self.assertIn("[confirmed] math", result.stdout)
             else:
-                self.assertNotIn("[confirmed] variables-and-assignment", result.stdout)
-                self.assertIn("[inferred] variables-and-assignment", result.stdout)
+                self.assertNotIn("[confirmed] math", result.stdout)
+                self.assertIn("[inferred] math", result.stdout)
                 self.assertIn(f"independence={value or 'unknown'}", result.stdout)
 
     def test_report_and_update_warn_after_three_guided_records(self):
@@ -170,9 +200,9 @@ class IndependenceTests(unittest.TestCase):
     def test_guided_review_does_not_extend_interval_and_contradictory_independent_hint_is_refused(self):
         course = self.course()
         initial = yaml.safe_load((course / "course.yaml").read_text(encoding="utf-8"))
-        initial["review_queue"] = [{"objective_id": "variables-and-assignment", "due_at": "2026-10-09", "interval_days": 3, "review_count": 0}]
+        initial["review_queue"] = [{"objective_id": "math", "due_at": "2026-10-09", "interval_days": 3, "review_count": 0}]
         (course / "course.yaml").write_text(yaml.safe_dump(initial, sort_keys=False), encoding="utf-8")
-        args = (course, "--objective-id", "variables-and-assignment", "--review-kind", "transfer", "--performance", "good",
+        args = (course, "--objective-id", "math", "--review-kind", "transfer", "--performance", "good",
                 "--evidence-strength", "strong", "--raw-answer", "在指导下完成")
         before = (course / "course.yaml").read_bytes()
         invalid = run("spaced-review/scripts/complete_review.py", *args, "--hint-used", "true", "--independence", "independent")

@@ -35,7 +35,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 BUILD_INDEX = ROOT / "learning-course" / "scripts" / "build_index.py"
 EXPORT_PDF = ROOT / "learning-course" / "scripts" / "export_pdf.py"
-EXAMPLE_COURSE = ROOT / "learning-course" / "fixtures" / "example-course"
+EXAMPLE_COURSE = ROOT / "learning-course" / "fixtures" / "acceptance"
 
 
 def _load_export_pdf_module():
@@ -113,15 +113,15 @@ class ExportSmokeTests(unittest.TestCase):
         self.assertTrue(index_html.strip(), "index.html must be non-empty")
         self.assertIn(title, index_md)
         self.assertIn(title, index_html)
-        self.assertIn("lessons/0001-example.html", index_md)
+        self.assertIn("lessons/0001-math.html", index_md)
 
         # Only the two derived views were rewritten; every source is untouched.
         self.assertEqual(source_digests(course), sources_before)
 
     def test_export_pdf_keeps_html_and_never_writes_a_placeholder_pdf(self) -> None:
         course = self.copy_course()
-        lesson = course / "lessons" / "0001-example.html"
-        pdf_path = course / "exports" / "0001-example.pdf"
+        lesson = course / "lessons" / "0001-math.html"
+        pdf_path = course / "exports" / "0001-math.pdf"
 
         sources_before = source_digests(course)
         build = run_script(BUILD_INDEX, course)
@@ -164,7 +164,7 @@ class ExportSmokeTests(unittest.TestCase):
         # The lesson HTML survives intact (also covered by the hash equality above).
         self.assertEqual(
             hashlib.sha256(lesson.read_bytes()).hexdigest(),
-            sources_before["lessons/0001-example.html"],
+            sources_before["lessons/0001-math.html"],
         )
 
     def test_export_pdf_blocks_degraded_rendering(self) -> None:
@@ -199,8 +199,8 @@ class ExportSmokeTests(unittest.TestCase):
 
     def test_cdp_export_blocks_silent_fallback_without_flag(self) -> None:
         course = self.copy_course()
-        lesson = course / "lessons" / "0001-example.html"
-        pdf_path = course / "exports" / "0001-example.pdf"
+        lesson = course / "lessons" / "0001-math.html"
+        pdf_path = course / "exports" / "0001-math.pdf"
         with patch.object(_EXPORT_PDF_MODULE, "export_via_cdp", return_value=(False, "simulated cdp failure")), \
              patch.object(_EXPORT_PDF_MODULE, "export_via_cli") as mock_cli, \
              patch.object(_EXPORT_PDF_MODULE, "find_browser", return_value="dummy_browser"):

@@ -63,7 +63,7 @@ class SpacedReviewTestCase(unittest.TestCase):
 
     def copy_course(self, name: str = "course") -> Path:
         target = self.root / name
-        shutil.copytree(ROOT / "learning-course" / "fixtures" / "example-course", target)
+        shutil.copytree(ROOT / "learning-course" / "fixtures" / "acceptance", target)
         return target
 
     def copy_exam(self, name: str = "exam") -> Path:
@@ -75,14 +75,14 @@ class SpacedReviewTestCase(unittest.TestCase):
 class BuildReviewSessionTests(SpacedReviewTestCase):
     def test_due_entry_is_detected_and_first_review_suggests_retrieval(self) -> None:
         course = self.copy_course()
-        inject_due_entry(course / "course.yaml", "objective_id", "variables-and-assignment")
+        inject_due_entry(course / "course.yaml", "objective_id", "math")
         result = run_script(BUILD_SESSION, course)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         session = yaml.safe_load(result.stdout)
         self.assertEqual(session["kind"], "course")
         self.assertEqual(len(session["items"]), 1)
         item = session["items"][0]
-        self.assertEqual(item["target"], "variables-and-assignment")
+        self.assertEqual(item["target"], "math")
         self.assertEqual(item["review_count"], 0)
         self.assertEqual(item["suggested_review_kind"], "retrieval")
 
@@ -107,7 +107,7 @@ class CompleteReviewCourseTests(SpacedReviewTestCase):
             COMPLETE_REVIEW,
             course,
             "--objective-id",
-            "variables-and-assignment",
+            "math",
             "--review-kind",
             kind,
             "--performance",
@@ -122,7 +122,7 @@ class CompleteReviewCourseTests(SpacedReviewTestCase):
 
     def test_happy_path_writes_valid_record_and_updates_queue(self) -> None:
         course = self.copy_course()
-        inject_due_entry(course / "course.yaml", "objective_id", "variables-and-assignment")
+        inject_due_entry(course / "course.yaml", "objective_id", "math")
         result = self.complete(course, "good")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
@@ -146,12 +146,12 @@ class CompleteReviewCourseTests(SpacedReviewTestCase):
 
     def test_good_and_poor_performance_yield_different_intervals(self) -> None:
         good_course = self.copy_course("course-good")
-        inject_due_entry(good_course / "course.yaml", "objective_id", "variables-and-assignment")
+        inject_due_entry(good_course / "course.yaml", "objective_id", "math")
         good = self.complete(good_course, "good")
         self.assertEqual(good.returncode, 0, good.stdout + good.stderr)
 
         poor_course = self.copy_course("course-poor")
-        inject_due_entry(poor_course / "course.yaml", "objective_id", "variables-and-assignment")
+        inject_due_entry(poor_course / "course.yaml", "objective_id", "math")
         poor = self.complete(poor_course, "poor")
         self.assertEqual(poor.returncode, 0, poor.stdout + poor.stderr)
 
@@ -189,13 +189,13 @@ class CompleteReviewCourseTests(SpacedReviewTestCase):
 
     def test_next_action_with_yaml_special_chars_is_serialized_safely(self) -> None:
         course = self.copy_course()
-        inject_due_entry(course / "course.yaml", "objective_id", "variables-and-assignment")
+        inject_due_entry(course / "course.yaml", "objective_id", "math")
         tricky = "复习: 第 5 章 # 重点（P(A|B) ≠ P(B|A)）"
         result = run_script(
             COMPLETE_REVIEW,
             course,
             "--objective-id",
-            "variables-and-assignment",
+            "math",
             "--review-kind",
             "variation",
             "--performance",
@@ -216,7 +216,7 @@ class CompleteReviewCourseTests(SpacedReviewTestCase):
         # the frontmatter must parse, and the value must round-trip unchanged
         frontmatter = yaml.safe_load(records[0].read_text(encoding="utf-8").split("---", 2)[1])
         self.assertEqual(frontmatter["next_action"], tricky)
-        self.assertEqual(frontmatter["objective_id"], "variables-and-assignment")
+        self.assertEqual(frontmatter["objective_id"], "math")
 
         shared = run_script(SHARED_VALIDATE, records[0], "--type", "review")
         self.assertEqual(shared.returncode, 0, shared.stdout + shared.stderr)
@@ -233,7 +233,7 @@ class CompleteReviewAtomicityTests(SpacedReviewTestCase):
 
     def test_state_replace_failure_rolls_back_record(self) -> None:
         course = self.copy_course()
-        inject_due_entry(course / "course.yaml", "objective_id", "variables-and-assignment")
+        inject_due_entry(course / "course.yaml", "objective_id", "math")
         state_before = load_yaml(course / "course.yaml")
 
         module = self.load_module()
@@ -241,7 +241,7 @@ class CompleteReviewAtomicityTests(SpacedReviewTestCase):
             "complete_review.py",
             str(course),
             "--objective-id",
-            "variables-and-assignment",
+            "math",
             "--review-kind",
             "variation",
             "--performance",
@@ -264,7 +264,7 @@ class CompleteReviewAtomicityTests(SpacedReviewTestCase):
 
     def test_record_write_failure_leaves_no_partial_record(self) -> None:
         course = self.copy_course()
-        inject_due_entry(course / "course.yaml", "objective_id", "variables-and-assignment")
+        inject_due_entry(course / "course.yaml", "objective_id", "math")
         state_before = load_yaml(course / "course.yaml")
 
         module = self.load_module()
@@ -281,7 +281,7 @@ class CompleteReviewAtomicityTests(SpacedReviewTestCase):
             "complete_review.py",
             str(course),
             "--objective-id",
-            "variables-and-assignment",
+            "math",
             "--review-kind",
             "variation",
             "--performance",

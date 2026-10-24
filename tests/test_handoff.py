@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CREATE = ROOT / "shared" / "scripts" / "create_handoff.py"
 COMPLETE = ROOT / "shared" / "scripts" / "complete_handoff.py"
 VALIDATE = ROOT / "shared" / "scripts" / "validate_handoffs.py"
-EXAMPLE_COURSE = ROOT / "learning-course" / "fixtures" / "example-course"
+EXAMPLE_COURSE = ROOT / "learning-course" / "fixtures" / "acceptance"
 EXAMPLE_EXAM = ROOT / "exam-prep" / "assets" / "example-exam"
 
 
@@ -49,9 +49,50 @@ class HandoffTestCase(unittest.TestCase):
         shutil.copytree(EXAMPLE_EXAM, target)
         return target
 
+    FINALIZED_RECORD = """---
+record_schema: 1
+assessment_status: finalized
+record_id: L0001
+attempted_at: 2026-08-24
+source_backed: false
+synthetic: false
+lesson: 1
+evidence_type: application
+evidence_strength: strong
+supported_objectives:
+  - id: math
+    mastery: application
+---
+# 第 0001 课学习记录
+
+## 学习者原始反馈
+
+> 我独立完成了补课练习，并解释了每一步的适用条件。
+
+## 可观察行为
+
+- 回答了什么：补课练习的完整作答与解释。
+- 正确性或产物结果：全部正确。
+- 是否使用提示：未使用提示。
+- 是否包含解释或迁移：包含适用条件解释。
+
+## Agent 判断
+
+- evidence_type: application
+- evidence_strength: strong
+- 支持的 mastery: math 达到 application
+- 仍不确定：能否迁移到课程主线的原始情境。
+
+## 下一步
+
+回到课程主线，用原始情境的变式确认返回条件。
+"""
+
     def copy_course(self, name: str = "course") -> Path:
         target = self.root / name
         shutil.copytree(EXAMPLE_COURSE, target)
+        (target / "records").mkdir(exist_ok=True)
+        (target / "records" / "0001-feedback.md").write_text(self.FINALIZED_RECORD, encoding="utf-8")
         return target
 
     def create(self, source: Path, target: Path, record: str = "records/R0001.md", *extra: str):
@@ -153,12 +194,12 @@ class CompleteHandoffTests(HandoffTestCase):
 
     def test_complete_flow_returns_and_both_packages_validate(self) -> None:
         exam, course, handoff = self.prepare_open_handoff()
-        result = run_script(COMPLETE, "--handoff", handoff, "--returned-record", "records/0001-example-feedback.md")
+        result = run_script(COMPLETE, "--handoff", handoff, "--returned-record", "records/0001-feedback.md")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
         text = handoff.read_text(encoding="utf-8")
         self.assertIn("status: returned", text)
-        self.assertIn("returned_record: records/0001-example-feedback.md", text)
+        self.assertIn("returned_record: records/0001-feedback.md", text)
         self.assertIn("returned_at:", text)
 
         for package in (exam, course):
@@ -315,7 +356,7 @@ class ValidateHandoffTests(HandoffTestCase):
                 "return_condition:\n- one finalized application record\n"
                 "from:\n  skill: exam-prep\n  package: exam\n  record: records/R0001.md\n"
                 f"to:\n  skill: learning-course\n  package: {course}\n  goal: 目标\n  boundary:\n    include: []\n    exclude: []\n"
-                "returned_record: records/0001-example-feedback.md\n"
+                "returned_record: records/0001-feedback.md\n"
             ),
         )
         result = run_script(VALIDATE, exam)
@@ -392,7 +433,7 @@ class SharedContractAndRelativePathTests(HandoffTestCase):
             "--handoff",
             handoff,
             "--returned-record",
-            "records/0001-example-feedback.md",
+            "records/0001-feedback.md",
         )
         self.assertEqual(complete.returncode, 0, complete.stdout + complete.stderr)
         final = run_script(VALIDATE, exam)

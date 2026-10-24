@@ -6,10 +6,43 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "learning-course" / "scripts"))
 from validate_course import validate_open_components, validate_answers_and_media
 
+# Legacy open-component markup (teaching target + multi-turn dialogue), kept
+# inline now that the legacy fixture pages are gone: the compat validators must
+# keep accepting this shape without optional components installed.
+LEGACY_BODY = """
+<section class="card" data-role="evidence teaching-target" data-question-id="teach-ai" data-answer-kind="open" aria-labelledby="teach-ai-title">
+  <h2 id="teach-ai-title">你来教 AI：纠正一个误解</h2>
+  <p>下面是模拟学生的错误理解，请指出错误、说明适用条件，并给一个反例。</p>
+  <label for="teach-ai-answer">你会怎样纠正这个学生？</label>
+  <textarea id="teach-ai-answer"></textarea>
+  <button class="button" type="button" data-teaching-check hidden>保存纠正并查看对照要点</button>
+  <div class="answer review-only" data-role="answer-feedback" data-teaching-key>
+    <p>对照要点：说明规则的前提；指出遗漏条件会怎样；用一个反例检验误解。</p>
+  </div>
+</section>
+<section class="card" data-role="evidence dialogue-practice" data-question-id="dialogue-1" data-answer-kind="open" aria-labelledby="dialogue-title">
+  <h2 id="dialogue-title">逐轮追问</h2>
+  <div data-dialogue-turn="1">
+    <label for="dialogue-answer-1" data-dialogue-prompt>先解释：你选择这条规则的依据是什么？</label>
+    <textarea id="dialogue-answer-1"></textarea>
+  </div>
+  <div data-dialogue-turn="2">
+    <label for="dialogue-answer-2" data-dialogue-prompt>如果去掉一个前提条件，你的结论还成立吗？给一个反例。</label>
+    <textarea id="dialogue-answer-2"></textarea>
+  </div>
+  <div data-dialogue-turn="3">
+    <label for="dialogue-answer-3" data-dialogue-prompt>换到一个新场景，你会先检查什么，再选择方法？</label>
+    <textarea id="dialogue-answer-3"></textarea>
+  </div>
+  <button class="button" type="button" data-dialogue-next hidden>保存本轮并继续</button>
+  <p data-dialogue-status role="status"></p>
+</section>
+"""
+
 
 class OpenComponentTests(unittest.TestCase):
     def setUp(self):
-        self.body = (ROOT / "learning-course/fixtures/legacy_template.html").read_text(encoding="utf-8")
+        self.body = LEGACY_BODY
         self.modern_template = (ROOT / "learning-course/templates/lesson.html").read_text(encoding="utf-8")
 
     def validate(self, body):
@@ -37,10 +70,6 @@ class OpenComponentTests(unittest.TestCase):
         self.assertTrue(any("labeled textarea" in e for e in errors))
         self.assertTrue(any("data-teaching-key" in e for e in errors))
 
-    def test_legacy_lessons_without_optional_components_stay_valid(self):
-        body = (ROOT / "learning-course/fixtures/example-course/lessons/0001-example.html").read_text(encoding="utf-8")
-        self.assertEqual(self.validate(body), [])
-
     def test_modern_template_validates_cleanly(self):
         self.assertEqual(self.validate_modern(self.modern_template), [])
 
@@ -61,4 +90,3 @@ class OpenComponentTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

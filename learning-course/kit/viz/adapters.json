@@ -94,6 +94,13 @@
       "tier": "optional",
       "module": "kinds/spatial.js"
     },
+    "plot": {
+      "label": "统计图形（Observable Plot）",
+      "data": "plot.marks",
+      "renderer": "Observable Plot",
+      "tier": "optional",
+      "module": "kinds/plot.js"
+    },
     "simulation": {
       "label": "学科模拟舞台",
       "data": "adapter-defined snapshot",

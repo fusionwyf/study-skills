@@ -12,37 +12,11 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "learning-course/scripts"))
 from build_visualization_data import reciprocal_config, surface_config
-from install_optional import InstallError, install
 from validate_course import validate_visualizations
 
 KIT = ROOT / "learning-course/kit/viz"
 VENDOR = ROOT / "learning-course/kit/vendor"
 SKILL = ROOT / "learning-course"
-EXAMPLE = SKILL / "fixtures/example-course"
-HLJS_VERSION = "11.12.0"
-HLJS_URL = f"https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@{HLJS_VERSION}/build/highlight.min.js"
-
-
-def fetch_highlight_engine() -> Path | None:
-    """Return the pinned highlight.js build, downloading it into tests/.cache once.
-
-    The engine is a large vendor artifact and stays out of the repository, so the
-    test fetches it on first use and reuses the cache afterwards. Returning None
-    (rather than raising) lets the caller skip when there is no network.
-    """
-    cache = ROOT / "tests/.cache"
-    engine = cache / f"hljs-{HLJS_VERSION}.min.js"
-    if engine.is_file():
-        return engine
-    try:
-        import urllib.request
-
-        cache.mkdir(parents=True, exist_ok=True)
-        with urllib.request.urlopen(HLJS_URL, timeout=30) as response:
-            engine.write_bytes(response.read())
-    except Exception:
-        return None
-    return engine if engine.is_file() else None
 
 
 class VisualizationTests(unittest.TestCase):
@@ -81,87 +55,6 @@ class VisualizationTests(unittest.TestCase):
             for file, checksum in dependency["sha256"].items():
                 self.assertEqual(hashlib.sha256((VENDOR / file).read_bytes()).hexdigest(), checksum)
 
-    def test_universal_kinds_are_supplied_by_init_while_optional_ones_install(self):
-        """The two tiers are the contract: universal comes free, optional is asked for."""
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            install_course = subprocess.run(
-                [sys.executable, "-X", "utf8", str(ROOT / "learning-course/scripts/init_course.py"),
-                 "--course-dir", str(root), "--title", "t", "--goal", "g"],
-                capture_output=True, text=True,
-            )
-            self.assertEqual(install_course.returncode, 0, install_course.stdout + install_course.stderr)
-            kit_dir = root / "assets/kit"
-            for name in ("kit.js", "kit.css", "kit.lock.json"):
-                self.assertTrue((kit_dir / name).is_file(), f"init_course.py must ship {name}")
-            lock_data = json.loads((kit_dir / "kit.lock.json").read_text(encoding="utf-8"))
-            self.assertIn("core", lock_data.get("modules", {}))
-
-            target = root / "assets/visualizations"
-            # ...and carries no vendor library, so a plain course stays offline.
-            self.assertFalse((target / "vendor").exists())
-            self.assertFalse((target / "kinds/chart.js").exists())
-
-            # Installing an optional kind adds only that module plus its vendor tree.
-            notices = install(root, ["chart"])
-            self.assertTrue((target / "kinds/chart.js").is_file())
-            self.assertFalse((target / "kinds/spatial.js").exists())
-            self.assertTrue((target / "vendor/plotly.js-dist-min/plotly.min.js").is_file())
-            self.assertFalse((target / "vendor/jsxgraph").exists())
-            self.assertEqual(sorted(json.loads((target / "vendor/manifest.json").read_text(encoding="utf-8"))), ["chart"])
-            self.assertTrue(any("chart" in notice for notice in notices))
-
-            # Optional installs are composable and preserve the first vendor lock.
-            install(root, ["spatial"])
-            self.assertTrue((target / "kinds/spatial.js").is_file())
-            self.assertTrue((target / "vendor/jsxgraph/jsxgraphcore.js").is_file())
-            self.assertEqual(sorted(json.loads((target / "vendor/manifest.json").read_text(encoding="utf-8"))), ["chart", "spatial"])
-            asset_manifest = json.loads((root / "assets/asset-manifest.json").read_text(encoding="utf-8"))
-            self.assertEqual(sorted(asset_manifest["visualizations"]["optional_kinds"]), ["chart", "spatial"])
-            lock_after = json.loads((kit_dir / "kit.lock.json").read_text(encoding="utf-8"))
-            self.assertIn("viz.kinds.chart", lock_after.get("modules", {}))
-            self.assertIn("viz.kinds.spatial", lock_after.get("modules", {}))
-
-    def test_universal_kind_names_installed_directly_report_instead_of_copying(self):
-        """A course asking for a universal kind gets a notice, not a second copy."""
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            (root / "course.yaml").write_text("schema_version: 3\n")
-            notices = install(root, ["relation", "timeline", "process", "sequence", "table"])
-            self.assertEqual(len(notices), 5)
-            for notice in notices:
-                self.assertIn("通用 kind", notice)
-            # Nothing was written: the universal tier is init_course.py's job.
-            self.assertFalse((root / "assets/visualizations").exists())
-
-    def test_unknown_and_legacy_component_names_are_rejected(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            (root / "course.yaml").write_text("schema_version: 3\n")
-            for name in ("plot", "geometry", "algorithm", "chart-ish"):
-                with self.assertRaises(InstallError):
-                    install(root, [name])
-
-    def test_self_contained_components_install_without_vendor_files(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            (root / "course.yaml").write_text("schema_version: 3\n")
-            install(root, ["code-highlight", "theme"])
-            highlight = root / "assets/optional/code-highlight"
-            theme = root / "assets/optional/theme"
-            self.assertTrue((highlight / "code-highlight.js").is_file())
-            self.assertTrue((highlight / "code-highlight.css").is_file())
-            self.assertTrue((theme / "theme.js").is_file())
-            self.assertTrue((theme / "theme.css").is_file())
-            # No visualization kit and no vendor tree should be pulled in.
-            self.assertFalse((root / "assets/visualizations").exists())
-            # Repeating a component and adding a visualization is safe and recorded.
-            install(root, ["theme", "chart"])
-            self.assertTrue((root / "assets/visualizations/kinds/chart.js").is_file())
-            asset_manifest = json.loads((root / "assets/asset-manifest.json").read_text(encoding="utf-8"))
-            self.assertEqual(asset_manifest["components"], ["code-highlight", "theme"])
-            self.assertEqual(asset_manifest["visualizations"]["optional_kinds"], ["chart"])
-
     def test_declared_visualization_kinds_match_the_shipped_modules(self):
         """`adapters.json` and `kinds/` must agree, so no course references a missing module."""
         registry = json.loads((KIT / "adapters.json").read_text(encoding="utf-8"))
@@ -172,54 +65,14 @@ class VisualizationTests(unittest.TestCase):
             module = KIT / "kinds" / kind_stem / f"{kind_stem}.js"
             self.assertTrue(module.is_file(), f"{name} declares {entry['module']} but it is missing")
             modules.add(entry["module"])
-            self.assertEqual(entry["tier"], "optional" if name in ("chart", "spatial") else "universal", f"{name} has the wrong tier")
+            self.assertEqual(entry["tier"], "optional" if name in ("chart", "spatial", "plot") else "universal", f"{name} has the wrong tier")
         shipped = {f"kinds/{path.name}.js" for path in (KIT / "kinds").iterdir() if path.is_dir()}
         self.assertEqual(modules, shipped, "every shipped kind module must be declared, and vice versa")
-
-    def test_example_course_assets_are_byte_identical_to_their_sources(self):
-        """`fixtures/example-course/` is a smoke test; verify its essential assets exist."""
-        for relative in ("course.css", "course.js", "theme.css", "theme.js",
-                         "visualizations/visualizations.js", "visualizations/visualizations.css",
-                         "visualizations/adapters.json"):
-            self.assertTrue((EXAMPLE / "assets" / relative).is_file(), f"example-course is missing {relative}")
-        state = json.loads((EXAMPLE / "assets/asset-manifest.json").read_text(encoding="utf-8"))
-        self.assertEqual(state["components"], ["code-highlight", "theme"])
-
-    def test_example_lesson_loads_the_universal_visualization_modules(self):
-        """The P0 regression: a lesson template that never loads the kit renders nothing."""
-        lesson = (EXAMPLE / "lessons/0001-example.html").read_text(encoding="utf-8")
-        for name in ("visualizations.js", "kinds/list.js", "kinds/sequence.js", "kinds/table.js"):
-            self.assertIn(f"visualizations/{name}", lesson, f"the example lesson must load {name}")
 
     def test_lesson_template_wires_the_universal_visualization_modules(self):
         template = (SKILL / "templates/lesson.html").read_text(encoding="utf-8")
         self.assertIn("assets/kit/kit.css", template)
         self.assertIn("assets/kit/kit.js", template)
-
-    def test_course_validator_uses_course_assets_and_installed_optional_state(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            created = subprocess.run(
-                [sys.executable, "-X", "utf8", str(ROOT / "learning-course/scripts/init_course.py"),
-                 "--course-dir", str(root), "--title", "t", "--goal", "g"],
-                capture_output=True, text=True,
-            )
-            self.assertEqual(created.returncode, 0, created.stdout + created.stderr)
-            lesson = root / "lessons/0001-model.html"
-            body = '''<link rel="stylesheet" href="../assets/visualizations/visualizations.css">
-<section id="v" data-visualization="chart"><div data-viz-fallback>fallback</div>
-<div id="h" data-viz-host hidden></div><p data-viz-status role="status"></p>
-<script type="application/json" data-viz-config>{"model":"m","domain":"d","precision":"p","traces":[{"x":[0],"y":[0]}]}</script></section>'''
-            lesson.write_text(body, encoding="utf-8")
-            errors = []
-            validate_visualizations(lesson, body, errors)
-            self.assertTrue(any("implementation module is missing" in error or "requires module viz.kinds.chart" in error for error in errors))
-            install(root, ["chart"])
-            body += '<script src="../assets/visualizations/visualizations.js"></script><script src="../assets/visualizations/kinds/chart.js"></script>'
-            lesson.write_text(body, encoding="utf-8")
-            errors = []
-            validate_visualizations(lesson, body, errors)
-            self.assertEqual(errors, [])
 
     def test_optional_manifest_lists_only_real_files(self):
         manifest = json.loads((SKILL / "kit/kit.manifest.json").read_text(encoding="utf-8"))
@@ -274,26 +127,6 @@ class VisualizationTests(unittest.TestCase):
         if not jsdom or not jsdom.exists():
             self.skipTest("jsdom is required for DOM rendering checks")
         env = dict(os.environ, NODE_PATH=str(jsdom.parent))
-        result = subprocess.run(["node", str(harness)], capture_output=True, text=True, env=env)
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-
-    @unittest.skipUnless(shutil.which("node"), "Node is required for DOM behaviour checks")
-    def test_optional_components_behave_in_a_real_dom(self):
-        """code-highlight and theme are exercised against a real DOM.
-
-        The harness needs jsdom (managed node workspace) and the pinned
-        highlight.js build. The engine is fetched into tests/.cache/ when missing
-        and is never committed; when it cannot be fetched the test skips rather
-        than fails, so an offline checkout still runs the rest of the suite.
-        """
-        harness = ROOT / "tests/optional_components.cjs"
-        jsdom = self.resolve_jsdom()
-        if not jsdom or not jsdom.exists():
-            self.skipTest("jsdom is required for DOM behaviour checks")
-        engine = fetch_highlight_engine()
-        if engine is None:
-            self.skipTest("highlight.js engine unavailable (no network and no cache)")
-        env = dict(os.environ, NODE_PATH=str(jsdom.parent), HLJS_ENGINE_PATH=str(engine))
         result = subprocess.run(["node", str(harness)], capture_output=True, text=True, env=env)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 

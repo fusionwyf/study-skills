@@ -13,7 +13,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 BUILD_REPORT = ROOT / "study" / "scripts" / "build_report.py"
-EXAMPLE_COURSE = ROOT / "learning-course" / "fixtures" / "example-course"
+EXAMPLE_COURSE = ROOT / "learning-course" / "fixtures" / "acceptance"
 EXAMPLE_EXAM = ROOT / "exam-prep" / "assets" / "example-exam"
 
 SECTION_TITLES = ("当前目标", "证据覆盖率", "已确认能力", "仍不确定能力", "最近错误模式", "到期复习", "风险", "下一步建议")
@@ -46,9 +46,50 @@ class StudyReportTestCase(unittest.TestCase):
     def tearDown(self) -> None:
         self.temp.cleanup()
 
+    FINALIZED_RECORD = """---
+record_schema: 1
+assessment_status: finalized
+record_id: L0001
+attempted_at: 2026-01-02
+source_backed: false
+synthetic: false
+lesson: 1
+evidence_type: application
+evidence_strength: strong
+supported_objectives:
+  - id: math
+    mastery: application
+---
+# 第 0001 课学习记录
+
+## 学习者原始反馈
+
+> 我做完了练习：变量赋值与重新赋值的预测全部正确，并解释了执行顺序。
+
+## 可观察行为
+
+- 回答了什么：两道赋值练习与一段解释。
+- 正确性或产物结果：全部正确。
+- 是否使用提示：未使用提示。
+- 是否包含解释或迁移：包含解释。
+
+## Agent 判断
+
+- evidence_type: application
+- evidence_strength: strong
+- 支持的 mastery: math 达到 application
+- 仍不确定：能否迁移到新语境。
+
+## 下一步
+
+下一课安排新语境变式。
+"""
+
     def copy_course(self, name: str = "course") -> Path:
         target = self.root / name
         shutil.copytree(EXAMPLE_COURSE, target)
+        (target / "records").mkdir(exist_ok=True)
+        (target / "records" / "0001-feedback.md").write_text(self.FINALIZED_RECORD, encoding="utf-8")
         return target
 
     def copy_exam(self, name: str = "exam") -> Path:
@@ -60,25 +101,25 @@ class StudyReportTestCase(unittest.TestCase):
 class CourseReportTests(StudyReportTestCase):
     def test_report_has_all_sections_and_confirms_strong_objective(self) -> None:
         course = self.copy_course()
-        record = course / "records" / "0001-example-feedback.md"
+        record = course / "records" / "0001-feedback.md"
         record.write_text(record.read_text(encoding="utf-8").replace("evidence_strength: strong", "evidence_strength: strong\nindependence: independent"), encoding="utf-8")
         result = run_script(BUILD_REPORT, course)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         for section in SECTION_TITLES:
             self.assertIn(f"## {section}", result.stdout)
-        self.assertIn("[confirmed] variables-and-assignment", result.stdout)
-        self.assertIn("records/0001-example-feedback.md", result.stdout)
+        self.assertIn("[confirmed] math", result.stdout)
+        self.assertIn("records/0001-feedback.md", result.stdout)
         self.assertRegex(result.stdout, r"generated: \d{4}-\d{2}-\d{2}")
 
     def test_medium_evidence_only_is_inferred_not_confirmed(self) -> None:
         course = self.copy_course()
-        record = course / "records" / "0001-example-feedback.md"
+        record = course / "records" / "0001-feedback.md"
         text = record.read_text(encoding="utf-8")
         text = text.replace("evidence_strength: strong", "evidence_strength: medium")
         record.write_text(text, encoding="utf-8")
         result = run_script(BUILD_REPORT, course)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn("[inferred] variables-and-assignment", result.stdout)
+        self.assertIn("[inferred] math", result.stdout)
         self.assertNotIn("[confirmed]", result.stdout)
 
     def test_empty_state_reports_unknowns_instead_of_crashing(self) -> None:
@@ -91,8 +132,8 @@ class CourseReportTests(StudyReportTestCase):
         state_path.write_text(yaml.safe_dump(state, allow_unicode=True, sort_keys=False), encoding="utf-8")
         result = run_script(BUILD_REPORT, course)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn("[unknown] variables-and-assignment", result.stdout)
-        self.assertIn("0/1 个目标有至少一条 finalized 记录支撑", result.stdout)
+        self.assertIn("[unknown] math", result.stdout)
+        self.assertIn("0/6 个目标有至少一条 finalized 记录支撑", result.stdout)
 
 
 class ExamReportTests(StudyReportTestCase):

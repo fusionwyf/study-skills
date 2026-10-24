@@ -61,7 +61,8 @@ class RecoveryTestCase(unittest.TestCase):
 
     def copy_course(self) -> Path:
         target = self.root / "course"
-        shutil.copytree(ROOT / "learning-course" / "fixtures" / "example-course", target)
+        shutil.copytree(ROOT / "learning-course" / "fixtures" / "acceptance", target)
+        (target / "records").mkdir(exist_ok=True)
         return target
 
     def copy_exam(self) -> Path:
@@ -148,7 +149,7 @@ class BrokenRecordFrontmatterTests(RecoveryTestCase):
             "--evidence-record",
             "records/0002-broken.md",
             "--objective",
-            "variables-and-assignment=application",
+            "math=application",
         )
         self.assertEqual(update.returncode, 1)
         self.assertIn("is missing YAML frontmatter", output_of(update))
@@ -156,7 +157,7 @@ class BrokenRecordFrontmatterTests(RecoveryTestCase):
         self.assertUnchanged(before)
         self.assertEqual(
             sorted(path.name for path in (course / "records").iterdir()),
-            ["0001-example-feedback.md", "0002-broken.md"],
+            ["0002-broken.md"],
             "refused update must not create or remove records",
         )
 
@@ -180,7 +181,7 @@ class BrokenRecordFrontmatterTests(RecoveryTestCase):
             "--evidence-record",
             "records/0002-broken.md",
             "--objective",
-            "variables-and-assignment=application",
+            "math=application",
         )
         self.assertEqual(update.returncode, 1)
         self.assertIn("frontmatter cannot be parsed", output_of(update))
@@ -220,7 +221,7 @@ class DanglingReferenceTests(RecoveryTestCase):
         state = yaml.safe_load(state_path.read_text(encoding="utf-8"))
         state["review_queue"] = [
             {
-                "objective_id": "variables-and-assignment",
+                "objective_id": "math",
                 "due_at": "2026-09-01",
                 "interval_days": 3,
                 "review_count": 1,
@@ -253,7 +254,7 @@ lesson: 1
 evidence_type: application
 evidence_strength: strong
 supported_objectives:
-  - id: variables-and-assignment
+  - id: math
     mastery: application
 ---
 # body

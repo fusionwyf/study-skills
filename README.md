@@ -24,7 +24,7 @@ Design and run structured study courses with a full learning loop: diagnose → 
   - `chart` / `spatial` — Plotly numeric curves, heatmaps and 3D surfaces; JSXGraph draggable 2D linear transformations with equal units
   - `sequence` / `relation` / `timeline` / `process` / `table` — dependency-free HTML/SVG adapters
 - Lesson, render and export guides: `learning-course/references/` (four documents: `state`, `lesson`, `render`, `export`); runnable showcase: `learning-course/fixtures/gallery/viz.html`
-- Python scripts: `init_course.py`, `validate_course.py`, `update_progress.py`, `build_index.py`, `export_pdf.py`, `install_optional.py`, `build_visualization_data.py`
+- Python scripts: `init_course.py`, `validate_course.py`, `update_progress.py`, `build_index.py`, `export_pdf.py`, `prepare_acceptance.py`, `build_visualization_data.py`
 
 ### exam-prep
 
@@ -95,21 +95,19 @@ The former source, report, and handoff skills no longer have `SKILL.md` or UI me
 
 ```text
 python -m unittest discover -s tests -v
-python learning-course/scripts/validate_course.py learning-course/fixtures/example-course --strict-schema --pedagogical
+python learning-course/scripts/validate_course.py learning-course/fixtures/acceptance --strict-schema --pedagogical
 python exam-prep/scripts/validate_exam.py exam-prep/assets/example-exam --strict-schema
 python shared/scripts/validate_sources.py exam-prep/assets/example-exam
 python shared/scripts/validate_handoffs.py exam-prep/assets/example-exam
-python study/scripts/build_report.py learning-course/fixtures/example-course
+python study/scripts/build_report.py learning-course/fixtures/acceptance
 python shared/scripts/validate_record.py exam-prep/assets/example-exam/records/R0001.md
 ```
 
-Install optional or auto-detected components into a course package via Course Kit CLI (or the compatibility wrapper `install_optional.py`):
+Install optional or auto-detected components into a course package via Course Kit CLI (`kit.py sync` / `kit.py add`):
 
 ```text
 python learning-course/kit/build/kit.py sync <course-dir>
-python learning-course/kit/build/kit.py add <course-dir> --modules content.diagram viz.chart
-# Or via compatibility wrapper:
-python learning-course/scripts/install_optional.py <course-dir> --components code-highlight theme
+python learning-course/kit/build/kit.py add <course-dir> --modules content.diagram viz.kinds.chart
 ```
 
 ## License

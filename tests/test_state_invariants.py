@@ -49,7 +49,7 @@ class PackageTestCase(unittest.TestCase):
 
     def copy_course(self) -> Path:
         target = self.root / "course"
-        shutil.copytree(ROOT / "learning-course" / "fixtures" / "example-course", target)
+        shutil.copytree(ROOT / "learning-course" / "fixtures" / "acceptance", target)
         (target / "records").mkdir(exist_ok=True)
         (target / "reference").mkdir(exist_ok=True)
         (target / "exports").mkdir(exist_ok=True)
@@ -106,7 +106,7 @@ The learner predicted the output and explained the reassignment.
             "--feedback-text",
             "I feel confident",
             "--objective",
-            "variables-and-assignment=transfer",
+            "math=transfer",
         )
         self.assertNotEqual(result.returncode, 0)
         self.assertFalse((course / "records" / "0001-feedback.md").exists())
@@ -121,7 +121,7 @@ The learner predicted the output and explained the reassignment.
             "--evidence-record",
             "records/0001-feedback.md",
             "--objective",
-            "variables-and-assignment=transfer",
+            "math=transfer",
         )
         self.assertNotEqual(update.returncode, 0)
         state = load_yaml(course / "course.yaml")
@@ -129,14 +129,14 @@ The learner predicted the output and explained the reassignment.
 
     def test_finalized_record_updates_known_objective_and_validates(self) -> None:
         course = self.copy_course()
-        self.finalized_record(course, "variables-and-assignment", "application")
+        self.finalized_record(course, "math", "application")
         update = run_script(
             COURSE_UPDATE,
             course,
             "--evidence-record",
             "records/0001-feedback.md",
             "--objective",
-            "variables-and-assignment=application",
+            "math=application",
         )
         self.assertEqual(update.returncode, 0, update.stdout + update.stderr)
         validation = run_script(COURSE_VALIDATE, course, "--strict-schema", "--pedagogical")
@@ -159,20 +159,20 @@ The learner predicted the output and explained the reassignment.
 
     def test_historical_evidence_remains_valid_after_mastery_advances(self) -> None:
         course = self.copy_course()
-        first = self.finalized_record(course, "variables-and-assignment", "application")
+        first = self.finalized_record(course, "math", "application")
         application = run_script(
             COURSE_UPDATE,
             course,
             "--evidence-record",
             first.relative_to(course),
             "--objective",
-            "variables-and-assignment=application",
+            "math=application",
         )
         self.assertEqual(application.returncode, 0, application.stdout + application.stderr)
 
         second = self.finalized_record(
             course,
-            "variables-and-assignment",
+            "math",
             "transfer",
             "0001-transfer.md",
         )
@@ -182,7 +182,7 @@ The learner predicted the output and explained the reassignment.
             "--evidence-record",
             second.relative_to(course),
             "--objective",
-            "variables-and-assignment=transfer",
+            "math=transfer",
         )
         self.assertEqual(transfer.returncode, 0, transfer.stdout + transfer.stderr)
         validation = run_script(COURSE_VALIDATE, course, "--strict-schema", "--pedagogical")
@@ -191,7 +191,7 @@ The learner predicted the output and explained the reassignment.
     def test_current_lesson_requires_a_lesson_file(self) -> None:
         course = self.copy_course()
         state = load_yaml(course / "course.yaml")
-        state["current_lesson"] = 2
+        state["current_lesson"] = 99
         dump_yaml(course / "course.yaml", state)
         result = run_script(COURSE_VALIDATE, course, "--strict-schema", "--pedagogical")
         self.assertNotEqual(result.returncode, 0)
@@ -213,7 +213,16 @@ The learner predicted the output and explained the reassignment.
             "--feedback-text",
             "I feel confident",
         ]
-        with mock.patch.object(module.os, "replace", side_effect=OSError("simulated replace failure")):
+        # Only the state-file commit must fail: the pending record is written
+        # first through its own atomic replace, which must succeed untouched.
+        real_replace = module.os.replace
+
+        def fail_state_replace(src, dst):
+            if str(dst).endswith("course.yaml"):
+                raise OSError("simulated replace failure")
+            return real_replace(src, dst)
+
+        with mock.patch.object(module.os, "replace", side_effect=fail_state_replace):
             with mock.patch.object(sys, "argv", argv):
                 with self.assertRaises(SystemExit):
                     module.main()

@@ -143,13 +143,19 @@ def build_record_text(args: argparse.Namespace, record_id: str, target_key: str,
         target_key: target,
     }
     dumped = yaml_module.safe_dump(frontmatter, allow_unicode=True, sort_keys=False, default_flow_style=False)
+    hint_label = "是" if args.hint_used == "true" else "否"
     return f"""---
 {dumped}---
 # 复习记录 {record_id}
 
-## 原始回答
+## 学习者原始反馈
 
 {args.raw_answer.rstrip()}
+
+## 可观察行为
+
+- 复习对象：{target}（{target_key}）
+- 复习形式：{args.review_kind}；表现评定：{args.performance}；是否使用提示：{hint_label}。
 
 ## Agent 判断
 
