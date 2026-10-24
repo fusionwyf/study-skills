@@ -142,12 +142,12 @@ def record_metadata(path: Path, yaml: object, label: str, errors: list[str]) -> 
     if not text.startswith("---\n"):
         errors.append(f"{label} is missing YAML frontmatter")
         return None
-    parts = text.split("---", 2)
-    if len(parts) != 3:
+    split = course_layout.split_frontmatter(text)
+    if split is None:
         errors.append(f"{label} has invalid YAML frontmatter")
         return None
     try:
-        metadata = yaml.safe_load(parts[1]) or {}  # type: ignore[attr-defined]
+        metadata = yaml.safe_load(split[0]) or {}  # type: ignore[attr-defined]
     except Exception as exc:
         errors.append(f"{label} frontmatter cannot be parsed: {exc}")
         return None

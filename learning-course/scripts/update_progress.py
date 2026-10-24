@@ -85,11 +85,11 @@ def load_record_metadata(path: Path, yaml: Any) -> dict[str, Any]:
     text = path.read_text(encoding="utf-8")
     if not text.startswith("---\n"):
         raise SystemExit(f"evidence record is missing YAML frontmatter: {path}")
-    parts = text.split("---", 2)
-    if len(parts) != 3:
+    split = course_layout.split_frontmatter(text)
+    if split is None:
         raise SystemExit(f"evidence record has invalid YAML frontmatter: {path}")
     try:
-        metadata = yaml.safe_load(parts[1]) or {}
+        metadata = yaml.safe_load(split[0]) or {}
     except Exception as exc:
         raise SystemExit(f"evidence record frontmatter cannot be parsed: {path}: {exc}") from exc
     if not isinstance(metadata, dict):

@@ -1342,13 +1342,11 @@ def list_record_metadata(cpath):
             text = path.read_text(encoding="utf-8", errors="replace")
         except OSError:
             continue
-        if not text.startswith("---"):
-            continue
-        parts = text.split("---", 2)
-        if len(parts) < 3:
+        split = course_layout.split_frontmatter(text)
+        if split is None:
             continue
         meta = {"path": path.relative_to(cpath).as_posix()}
-        for line in parts[1].splitlines():
+        for line in split[0].splitlines():
             key, sep, value = line.partition(":")
             if sep and key.strip() in RECORD_META_KEYS:
                 meta[key.strip()] = value.strip().strip("'\"")

@@ -120,6 +120,21 @@ def iter_record_files(course_root: Path) -> list[Path]:
     )
 
 
+def split_frontmatter(text: str) -> tuple[str, str] | None:
+    """Split a record file into (frontmatter_text, body_text).
+
+    Returns None when the text has no well-formed ``---`` frontmatter block.
+    The single splitter every records/ consumer uses; per-field parsing
+    (yaml or line-scan) stays with the callers.
+    """
+    if not text.startswith("---"):
+        return None
+    parts = text.split("---", 2)
+    if len(parts) < 3:
+        return None
+    return parts[1], parts[2]
+
+
 FINALIZED_RE = re.compile(r"^\s*assessment_status\s*:\s*(\w+)", re.M)
 RECORD_LESSON_RE = re.compile(r"^\s*lesson\s*:\s*[\"']?(\d+)[\"']?", re.M)
 RECORD_NAME_RE = re.compile(r"^(\d{4})-")
@@ -151,12 +166,10 @@ def completed_lesson_keys(course_root: Path) -> list[str]:
             text = path.read_text(encoding="utf-8", errors="replace")
         except OSError:
             continue
-        if not text.startswith("---"):
+        split = split_frontmatter(text)
+        if split is None:
             continue
-        parts = text.split("---", 2)
-        if len(parts) < 3:
-            continue
-        frontmatter = parts[1]
+        frontmatter = split[0]
         status = FINALIZED_RE.search(frontmatter)
         if not status or status.group(1).lower() != "finalized":
             continue
