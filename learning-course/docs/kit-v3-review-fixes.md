@@ -1,6 +1,6 @@
 # Course Kit v3 审查修复计划
 
-状态: 待执行
+状态: 已全部完成（2026-10-24，提交 15e4714..468b9ec，Phase 1–4 全部门禁通过：三 fixture validate/check 绿、sync 字节一致、serve 冒烟、主题晋升端到端）
 来源: 双轴代码审查(Standards / Spec),审阅范围 `origin/master..master` 即 `ba3dcef..7817e7c` 共 8 个提交;Spec 对照 `kit-v3-proposal.md`(Course Kit v3 完整提案)。
 日期: 2026-10-24
 
