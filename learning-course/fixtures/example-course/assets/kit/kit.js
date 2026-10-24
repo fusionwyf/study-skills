@@ -9,6 +9,7 @@
   CourseKit.__COURSE_CONFIG__ = {"theme": "course", "vendor": {"mode": "cdn"}, "code": {"themes": {"light": "github", "dark": "github-dark"}}, "modules": []};
   CourseKit.__ACTIVE_MODULES__ = ["core", "foundation", "content._block", "content.callout", "content.code", "shell.elements", "shell.nav", "shell.progress", "shell.theme-switcher", "shell.toc", "learning.records", "learning.step"];
   CourseKit.VENDORS = {"hljs": {"id": "hljs", "version": "11.12.0", "js": {"cdn": "https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.12.0/build/highlight.min.js", "local": "../assets/kit/vendor/hljs/highlight.min.js"}}};
+  CourseKit.__LOCAL_VENDORS__ = [];
   CourseKit.__EXTENSIONS__ = [];
   CourseKit.__NAV_DATA__ = {"title": "5 分钟编程入门：什么是变量", "course_id": "example-course", "current_lesson": 1, "completed_lessons": ["0001"], "completed_count": 1, "total_count": 1, "lessons": [{"number": "0001", "chapter": "", "title": "变量：给数据一个可以重复使用的名字", "objective": "variables-and-assignment", "file": "0001-example.html", "key": "0001", "href": "lessons/0001-example.html", "home": "../index.html", "prev": null, "next": null}], "home": "../index.html"};
 
@@ -789,6 +790,8 @@
   var kit = root.CourseKit = root.CourseKit || {};
   root.kit = root.kit || kit;
 
+  // Dev fallback registry for unbundled kit/ source. Bundle output is
+  // authoritative: kit.py injects the active subset as CourseKit.VENDORS.
   var DEFAULT_VENDORS = {
     hljs: {
       id: "hljs",
@@ -835,7 +838,7 @@
       version: "0.6.16",
       js: {
         cdn: "https://cdn.jsdelivr.net/combine/npm/d3@7.9.0/dist/d3.min.js,npm/@observablehq/plot@0.6.16/dist/plot.umd.min.js",
-        local: "../assets/kit/vendor/observable-plot/plot.umd.min.js"
+        local: "../assets/kit/vendor/observable-plot/plot.bundle.min.js"
       }
     },
     jsxgraph: {
@@ -971,8 +974,10 @@
 
     var mode = (kit.config && kit.config.vendor && kit.config.vendor.mode) ||
                (kit.config && kit.config.vendor_mode) || "cdn";
-    // Only vendors with actual local distribution packages should use local mode
-    var localPackages = ["plotly", "jsxgraph"];
+    // Which vendors actually have offline packages is build-time knowledge,
+    // injected as kit.__LOCAL_VENDORS__ (scanned from kit/vendor/ by kit.py);
+    // this list is only a dev fallback for unbundled kit/ source.
+    var localPackages = kit.__LOCAL_VENDORS__ || ["plotly", "jsxgraph", "plot"];
     var useLocal = (mode === "local") && (localPackages.indexOf(vendorId) >= 0);
 
     function getUrl(item) {

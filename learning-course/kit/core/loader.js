@@ -4,6 +4,8 @@
   var kit = root.CourseKit = root.CourseKit || {};
   root.kit = root.kit || kit;
 
+  // Dev fallback registry for unbundled kit/ source. Bundle output is
+  // authoritative: kit.py injects the active subset as CourseKit.VENDORS.
   var DEFAULT_VENDORS = {
     hljs: {
       id: "hljs",
@@ -50,7 +52,7 @@
       version: "0.6.16",
       js: {
         cdn: "https://cdn.jsdelivr.net/combine/npm/d3@7.9.0/dist/d3.min.js,npm/@observablehq/plot@0.6.16/dist/plot.umd.min.js",
-        local: "../assets/kit/vendor/observable-plot/plot.umd.min.js"
+        local: "../assets/kit/vendor/observable-plot/plot.bundle.min.js"
       }
     },
     jsxgraph: {
@@ -186,8 +188,10 @@
 
     var mode = (kit.config && kit.config.vendor && kit.config.vendor.mode) ||
                (kit.config && kit.config.vendor_mode) || "cdn";
-    // Only vendors with actual local distribution packages should use local mode
-    var localPackages = ["plotly", "jsxgraph"];
+    // Which vendors actually have offline packages is build-time knowledge,
+    // injected as kit.__LOCAL_VENDORS__ (scanned from kit/vendor/ by kit.py);
+    // this list is only a dev fallback for unbundled kit/ source.
+    var localPackages = kit.__LOCAL_VENDORS__ || ["plotly", "jsxgraph", "plot"];
     var useLocal = (mode === "local") && (localPackages.indexOf(vendorId) >= 0);
 
     function getUrl(item) {

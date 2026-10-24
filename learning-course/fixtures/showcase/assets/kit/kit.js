@@ -9,6 +9,7 @@
   CourseKit.__COURSE_CONFIG__ = {"theme": "swiss", "themes": ["swiss", "course", "ink", "paper", "blueprint", "riso", "brutal", "field", "crt-terminal"], "customThemes": {"crt-terminal": {"label": "绿磷终端", "scheme": "dark", "code": "dark", "fonts": ["jetbrains-mono:400,700"]}}, "vendor": {"mode": "cdn"}, "code": {"themes": {"light": "github", "dark": "github-dark"}}, "modules": ["viz.kinds.plot"]};
   CourseKit.__ACTIVE_MODULES__ = ["core", "foundation", "content._block", "content.callout", "content.code", "content.math", "shell.elements", "shell.nav", "shell.progress", "shell.theme-switcher", "shell.toc", "learning.param", "learning.records", "learning.predict", "learning.question", "learning.step", "viz.core", "viz.island", "viz.kinds.plot", "viz.kinds.sequence", "viz.kinds.table"];
   CourseKit.VENDORS = {"hljs": {"id": "hljs", "version": "11.12.0", "js": {"cdn": "https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.12.0/build/highlight.min.js", "local": "../assets/kit/vendor/hljs/highlight.min.js"}}, "katex": {"id": "katex", "version": "0.16.11", "css": {"cdn": "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css", "local": "../assets/kit/vendor/katex/katex.min.css"}, "js": {"cdn": "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js", "local": "../assets/kit/vendor/katex/katex.min.js"}, "autoRender": {"cdn": "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js", "local": "../assets/kit/vendor/katex/auto-render.min.js"}}, "plot": {"id": "plot", "version": "0.6.16", "js": {"cdn": "https://cdn.jsdelivr.net/combine/npm/d3@7.9.0/dist/d3.min.js,npm/@observablehq/plot@0.6.16/dist/plot.umd.min.js", "local": "../assets/kit/vendor/observable-plot/plot.bundle.min.js"}}};
+  CourseKit.__LOCAL_VENDORS__ = ["plot"];
   CourseKit.__EXTENSIONS__ = [];
   CourseKit.__NAV_DATA__ = {"title": "Course Kit 组件全览", "course_id": "showcase", "current_lesson": 0, "completed_lessons": ["0001", "0004"], "completed_count": 2, "total_count": 4, "lessons": [{"number": "0001", "chapter": "", "title": "版式节奏与先预测后揭晓", "objective": "obj-layout", "file": "0001-layout-predict.html", "key": "0001", "href": "lessons/0001-layout-predict.html", "home": "../index.html", "prev": null, "next": {"number": "0002", "file": "0002-question-kinds.html", "chapter": "", "key": "0002", "href": "0002-question-kinds.html"}}, {"number": "0002", "chapter": "", "title": "六类题型全览", "objective": "obj-questions", "file": "0002-question-kinds.html", "key": "0002", "href": "lessons/0002-question-kinds.html", "home": "../index.html", "prev": {"number": "0001", "file": "0001-layout-predict.html", "chapter": "", "key": "0001", "href": "0001-layout-predict.html"}, "next": {"number": "0003", "file": "0003-sim-and-charts.html", "chapter": "", "key": "0003", "href": "0003-sim-and-charts.html"}}, {"number": "0003", "chapter": "", "title": "仿真孤岛与图表", "objective": "obj-viz", "file": "0003-sim-and-charts.html", "key": "0003", "href": "lessons/0003-sim-and-charts.html", "home": "../index.html", "prev": {"number": "0002", "file": "0002-question-kinds.html", "chapter": "", "key": "0002", "href": "0002-question-kinds.html"}, "next": {"number": "0004", "file": "0004-evidence-loop.html", "chapter": "", "key": "0004", "href": "0004-evidence-loop.html"}}, {"number": "0004", "chapter": "", "title": "证据回流与独立验证", "objective": "obj-evidence", "file": "0004-evidence-loop.html", "key": "0004", "href": "lessons/0004-evidence-loop.html", "home": "../index.html", "prev": {"number": "0003", "file": "0003-sim-and-charts.html", "chapter": "", "key": "0003", "href": "0003-sim-and-charts.html"}, "next": null}], "home": "../index.html"};
 
@@ -789,6 +790,8 @@
   var kit = root.CourseKit = root.CourseKit || {};
   root.kit = root.kit || kit;
 
+  // Dev fallback registry for unbundled kit/ source. Bundle output is
+  // authoritative: kit.py injects the active subset as CourseKit.VENDORS.
   var DEFAULT_VENDORS = {
     hljs: {
       id: "hljs",
@@ -835,7 +838,7 @@
       version: "0.6.16",
       js: {
         cdn: "https://cdn.jsdelivr.net/combine/npm/d3@7.9.0/dist/d3.min.js,npm/@observablehq/plot@0.6.16/dist/plot.umd.min.js",
-        local: "../assets/kit/vendor/observable-plot/plot.umd.min.js"
+        local: "../assets/kit/vendor/observable-plot/plot.bundle.min.js"
       }
     },
     jsxgraph: {
@@ -971,8 +974,10 @@
 
     var mode = (kit.config && kit.config.vendor && kit.config.vendor.mode) ||
                (kit.config && kit.config.vendor_mode) || "cdn";
-    // Only vendors with actual local distribution packages should use local mode
-    var localPackages = ["plotly", "jsxgraph"];
+    // Which vendors actually have offline packages is build-time knowledge,
+    // injected as kit.__LOCAL_VENDORS__ (scanned from kit/vendor/ by kit.py);
+    // this list is only a dev fallback for unbundled kit/ source.
+    var localPackages = kit.__LOCAL_VENDORS__ || ["plotly", "jsxgraph", "plot"];
     var useLocal = (mode === "local") && (localPackages.indexOf(vendorId) >= 0);
 
     function getUrl(item) {

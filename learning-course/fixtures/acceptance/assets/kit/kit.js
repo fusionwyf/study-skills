@@ -9,6 +9,7 @@
   CourseKit.__COURSE_CONFIG__ = {"theme": "course", "vendor": {"mode": "cdn"}, "code": {"themes": {"light": "github", "dark": "github-dark"}}, "modules": ["viz.kinds.spatial", "viz.kinds.chart"]};
   CourseKit.__ACTIVE_MODULES__ = ["core", "foundation", "content._block", "content.code", "content.math", "content.media", "shell.elements", "shell.nav", "shell.progress", "shell.theme-switcher", "shell.toc", "learning.records", "learning.question", "viz.core", "viz.kinds.chart", "viz.kinds.list", "viz.kinds.sequence", "viz.kinds.spatial", "viz.kinds.table"];
   CourseKit.VENDORS = {"hljs": {"id": "hljs", "version": "11.12.0", "js": {"cdn": "https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.12.0/build/highlight.min.js", "local": "../assets/kit/vendor/hljs/highlight.min.js"}}, "katex": {"id": "katex", "version": "0.16.11", "css": {"cdn": "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css", "local": "../assets/kit/vendor/katex/katex.min.css"}, "js": {"cdn": "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js", "local": "../assets/kit/vendor/katex/katex.min.js"}, "autoRender": {"cdn": "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js", "local": "../assets/kit/vendor/katex/auto-render.min.js"}}, "plotly": {"id": "plotly", "version": "4.1.2", "js": {"cdn": "https://cdn.jsdelivr.net/npm/plotly.js-dist-min@4.1.2/plotly.min.js", "local": "../assets/kit/vendor/plotly.js-dist-min/plotly.min.js"}}, "jsxgraph": {"id": "jsxgraph", "version": "1.14.0", "css": {"cdn": "https://cdn.jsdelivr.net/npm/jsxgraph@1.14.0/distrib/jsxgraph.css", "local": "../assets/kit/vendor/jsxgraph/jsxgraph.css"}, "js": {"cdn": "https://cdn.jsdelivr.net/npm/jsxgraph@1.14.0/distrib/jsxgraphcore.js", "local": "../assets/kit/vendor/jsxgraph/jsxgraphcore.js"}}};
+  CourseKit.__LOCAL_VENDORS__ = ["jsxgraph", "plotly"];
   CourseKit.__EXTENSIONS__ = [];
   CourseKit.__NAV_DATA__ = {"title": "通用资产验收课件", "course_id": "acceptance-course", "current_lesson": 6, "completed_lessons": [], "completed_count": 0, "total_count": 6, "lessons": [{"number": "0001", "chapter": "", "title": "数学推导与核对", "objective": "math", "file": "0001-math.html", "key": "0001", "href": "lessons/0001-math.html", "home": "../index.html", "prev": null, "next": {"number": "0002", "file": "0002-probability.html", "chapter": "", "key": "0002", "href": "0002-probability.html"}}, {"number": "0002", "chapter": "", "title": "概率参数实验", "objective": "probability", "file": "0002-probability.html", "key": "0002", "href": "lessons/0002-probability.html", "home": "../index.html", "prev": {"number": "0001", "file": "0001-math.html", "chapter": "", "key": "0001", "href": "0001-math.html"}, "next": {"number": "0003", "file": "0003-algorithm.html", "chapter": "", "key": "0003", "href": "0003-algorithm.html"}}, {"number": "0003", "chapter": "", "title": "算法回放与流程", "objective": "algorithm", "file": "0003-algorithm.html", "key": "0003", "href": "lessons/0003-algorithm.html", "home": "../index.html", "prev": {"number": "0002", "file": "0002-probability.html", "chapter": "", "key": "0002", "href": "0002-probability.html"}, "next": {"number": "0004", "file": "0004-history.html", "chapter": "", "key": "0004", "href": "0004-history.html"}}, {"number": "0004", "chapter": "", "title": "材料分析与时间轴", "objective": "history", "file": "0004-history.html", "key": "0004", "href": "lessons/0004-history.html", "home": "../index.html", "prev": {"number": "0003", "file": "0003-algorithm.html", "chapter": "", "key": "0003", "href": "0003-algorithm.html"}, "next": {"number": "0005", "file": "0005-design.html", "chapter": "", "key": "0005", "href": "0005-design.html"}}, {"number": "0005", "chapter": "", "title": "图像观察与标注", "objective": "design", "file": "0005-design.html", "key": "0005", "href": "lessons/0005-design.html", "home": "../index.html", "prev": {"number": "0004", "file": "0004-history.html", "chapter": "", "key": "0004", "href": "0004-history.html"}, "next": {"number": "0006", "file": "0006-language.html", "chapter": "", "key": "0006", "href": "0006-language.html"}}, {"number": "0006", "chapter": "", "title": "听辨媒体与填空", "objective": "language", "file": "0006-language.html", "key": "0006", "href": "lessons/0006-language.html", "home": "../index.html", "prev": {"number": "0005", "file": "0005-design.html", "chapter": "", "key": "0005", "href": "0005-design.html"}, "next": null}], "home": "../index.html"};
 
@@ -789,6 +790,8 @@
   var kit = root.CourseKit = root.CourseKit || {};
   root.kit = root.kit || kit;
 
+  // Dev fallback registry for unbundled kit/ source. Bundle output is
+  // authoritative: kit.py injects the active subset as CourseKit.VENDORS.
   var DEFAULT_VENDORS = {
     hljs: {
       id: "hljs",
@@ -835,7 +838,7 @@
       version: "0.6.16",
       js: {
         cdn: "https://cdn.jsdelivr.net/combine/npm/d3@7.9.0/dist/d3.min.js,npm/@observablehq/plot@0.6.16/dist/plot.umd.min.js",
-        local: "../assets/kit/vendor/observable-plot/plot.umd.min.js"
+        local: "../assets/kit/vendor/observable-plot/plot.bundle.min.js"
       }
     },
     jsxgraph: {
@@ -971,8 +974,10 @@
 
     var mode = (kit.config && kit.config.vendor && kit.config.vendor.mode) ||
                (kit.config && kit.config.vendor_mode) || "cdn";
-    // Only vendors with actual local distribution packages should use local mode
-    var localPackages = ["plotly", "jsxgraph"];
+    // Which vendors actually have offline packages is build-time knowledge,
+    // injected as kit.__LOCAL_VENDORS__ (scanned from kit/vendor/ by kit.py);
+    // this list is only a dev fallback for unbundled kit/ source.
+    var localPackages = kit.__LOCAL_VENDORS__ || ["plotly", "jsxgraph", "plot"];
     var useLocal = (mode === "local") && (localPackages.indexOf(vendorId) >= 0);
 
     function getUrl(item) {

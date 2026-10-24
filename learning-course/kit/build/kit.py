@@ -916,6 +916,15 @@ def bundle_kit(active_modules, output_dir, course_config=None, vendor_mode="cdn"
         if em not in active_runtime_ids:
             active_runtime_ids.append(em)
 
+    # Which vendors actually have offline packages is decided here (single
+    # source of truth: kit/vendor/); the runtime reads kit.__LOCAL_VENDORS__
+    # instead of hardcoding the list in loader.js.
+    local_ready = sorted(
+        vid for vid in active_vendors
+        if (KIT_ROOT / "vendor" / pkg_map.get(vid, vid)).is_dir()
+        and any((KIT_ROOT / "vendor" / pkg_map.get(vid, vid)).iterdir())
+    )
+
     config_json_str = json.dumps(course_config or {}, ensure_ascii=False)
     active_mods_str = json.dumps(active_runtime_ids, ensure_ascii=False)
     vendors_str = json.dumps(active_vendors, ensure_ascii=False)
@@ -928,6 +937,7 @@ def bundle_kit(active_modules, output_dir, course_config=None, vendor_mode="cdn"
         f'  CourseKit.__COURSE_CONFIG__ = {config_json_str};\n',
         f'  CourseKit.__ACTIVE_MODULES__ = {active_mods_str};\n',
         f'  CourseKit.VENDORS = {vendors_str};\n',
+        f'  CourseKit.__LOCAL_VENDORS__ = {json.dumps(local_ready)};\n',
         f'  CourseKit.__EXTENSIONS__ = {extensions_str};\n',
         f'  CourseKit.__NAV_DATA__ = {nav_str};\n'
     ]

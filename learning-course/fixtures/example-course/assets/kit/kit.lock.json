@@ -54,7 +54,7 @@
   },
   "files": {
     "kit.css": "sha256-64a0dabc2d95f64705699ceed3ae821fe83590f4ef4277ecf232e8818f3d32ef",
-    "kit.js": "sha256-96436b126a83bc6eea1c859447995baad7a109b1f8cf595f8d08b2844a9242ff"
+    "kit.js": "sha256-fb5a5bd7d5fb99542991a97da4a981cc44eb912ea3ee84ebe684c16692d54530"
   },
   "vendor": {}
 }
