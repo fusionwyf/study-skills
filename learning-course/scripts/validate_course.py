@@ -528,7 +528,7 @@ def validate_visualizations(lesson: Path, body: str, errors: list[str]) -> None:
     registry_path = course_root / "assets" / "visualizations" / "adapters.json" if is_course_package else VIZ_REGISTRY_PATH
     registry_kinds = {}
     ext_q_kinds, ext_v_kinds = get_extended_capabilities(course_root)
-    kinds = {"chart", "relation", "timeline", "process", "spatial", "sequence", "table"} | ext_v_kinds
+    kinds = {"chart", "relation", "timeline", "process", "spatial", "sequence", "table", "plot"} | ext_v_kinds
 
     kit_modules: dict[str, str] = {}
     if is_kit_package:
@@ -548,7 +548,7 @@ def validate_visualizations(lesson: Path, body: str, errors: list[str]) -> None:
             if is_course_package:
                 errors.append(f"{lesson.name}: missing or invalid course visualization registry")
             registry_kinds = {}
-            kinds = {"chart", "relation", "timeline", "process", "spatial", "sequence", "table"}
+            kinds = {"chart", "relation", "timeline", "process", "spatial", "sequence", "table", "plot"}
 
     parser = ComponentParser()
     parser.feed(body)
@@ -572,6 +572,9 @@ def validate_visualizations(lesson: Path, body: str, errors: list[str]) -> None:
             errors.append(f"{lesson.name}: missing assets/asset-manifest.json")
     for node in parser.nodes:
         kind = node["attrs"].get("data-visualization")
+        if kind is None and node["tag"] == "kit-viz":
+            # Dual-track: <kit-viz kind="..."> normalizes to data-visualization at runtime.
+            kind = node["attrs"].get("kind")
         if kind is None:
             continue
         label = f"{lesson.name}: visualization {node['attrs'].get('id') or kind}"
@@ -587,6 +590,8 @@ def validate_visualizations(lesson: Path, body: str, errors: list[str]) -> None:
                 errors.append(f"{label} requires module viz.core in kit.lock.json")
             elif kind == "chart" and "viz.kinds.chart" not in kit_modules:
                 errors.append(f"{label} requires module viz.kinds.chart in kit.lock.json")
+            elif kind == "plot" and "viz.kinds.plot" not in kit_modules:
+                errors.append(f"{label} requires module viz.kinds.plot in kit.lock.json")
             elif kind == "spatial" and "viz.kinds.spatial" not in kit_modules:
                 errors.append(f"{label} requires module viz.kinds.spatial in kit.lock.json")
             source = node["attrs"].get("data-viz-source")
@@ -629,6 +634,10 @@ def validate_visualizations(lesson: Path, body: str, errors: list[str]) -> None:
                     errors.append(f"{label} requires model, domain and precision descriptions")
                 elif kind == "chart" and not isinstance(config.get("traces"), list):
                     errors.append(f"{label} chart config requires traces")
+                elif kind == "plot" and not (
+                    isinstance(config.get("plot"), dict) and isinstance(config["plot"].get("marks"), list) and config["plot"]["marks"]
+                ):
+                    errors.append(f"{label} plot config requires non-empty plot.marks")
                 elif kind == "relation" and not isinstance(config.get("nodes"), list):
                     errors.append(f"{label} relation config requires nodes")
                 elif kind == "timeline" and not isinstance(config.get("events"), list):
@@ -675,17 +684,20 @@ def validate_answers_and_media(lesson: Path, body: str, errors: list[str], warni
 
     for node in parser.nodes:
         attrs = node['attrs']
+        tag = node['tag']
         classes = attrs.get('class', '').split()
         children = list(descendants(node))
-        is_modern = "question" in classes or attrs.get("data-kind") in modern_kinds
+        # Dual-track: <kit-question kind="..."> normalizes to data-kind at runtime,
+        # so the validator accepts either spelling in authored HTML.
+        kind = attrs.get('data-kind') or (attrs.get('kind') if tag == 'kit-question' else None)
+        qid = attrs.get('data-question-id') or (attrs.get('question-id') if tag == 'kit-question' else None)
+        is_modern = "question" in classes or kind in modern_kinds
 
         if is_modern:
-            qid = attrs.get('data-question-id')
             if not qid:
                 errors.append(f"{lesson.name}: question missing data-question-id")
             else:
                 questions.append(qid)
-            kind = attrs.get('data-kind')
             label = f"{lesson.name}: question {qid or 'unnamed'}"
             if kind not in modern_kinds:
                 errors.append(f"{label} invalid data-kind: {kind}")
@@ -755,6 +767,30 @@ def validate_answers_and_media(lesson: Path, body: str, errors: list[str], warni
                     answers = json.loads(attrs['data-accepted'])
                     if not isinstance(answers,list) or not answers or not all(isinstance(v,str) and v.strip() for v in answers): raise ValueError('accepted must be nonempty strings')
             except (KeyError,ValueError,TypeError): errors.append(f'{label} requires valid expected/tolerance or accepted answers')
+        elif tag == 'kit-predict' or 'data-predict' in attrs:
+            pid = attrs.get('data-question-id') or attrs.get('question-id')
+            if pid:
+                questions.append(pid)
+            else:
+                errors.append(f"{lesson.name}: predict missing data-question-id")
+            label = f"{lesson.name}: predict {pid or 'unnamed'}"
+            reveals = [n for n in children if 'data-reveal' in n['attrs']]
+            if not reveals or not any(''.join(c['text'] for c in [r, *descendants(r)]).strip() for r in reveals):
+                errors.append(f"{label} requires data-reveal with readable no-script content")
+
+        elif tag == 'kit-island' or 'data-island' in attrs:
+            iid = attrs.get('id') or ''
+            label = f"{lesson.name}: island {iid}"
+            fallbacks = [n for n in children if 'data-viz-fallback' in n['attrs']]
+            if not fallbacks or not any(''.join(c['text'] for c in [f, *descendants(f)]).strip() for f in fallbacks) or any('hidden' in f['attrs'] for f in fallbacks):
+                errors.append(f"{label} requires visible data-viz-fallback no-script content")
+            if not any('data-island-host' in n['attrs'] for n in children):
+                errors.append(f"{label} requires data-island-host")
+            if not any(n['tag'] == 'script' and 'data-island-model' in n['attrs'] for n in children):
+                errors.append(f"{label} requires script[data-island-model]")
+            if not iid:
+                errors.append(f"{label} requires an id")
+
         elif attrs.get('data-question-id'):
             questions.append(attrs['data-question-id'])
 

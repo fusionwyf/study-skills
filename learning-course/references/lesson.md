@@ -263,6 +263,73 @@
 - **使用时机**：每个 `.sidenote` 承担一个“如果放进正文会打断主线”的旁支；每课至多 1–2 处 `.wide`（多则失去破栏效果）；`.pull-quote` 用于认知转折点，不用于装饰。
 - **打印与无脚本**：`.wide` 与 `.sidenote` 在打印样式与窄屏下自动回到常规文档流，无需作者处理。
 
+### 10. 先预测后揭晓（Predict Component）
+
+`learning.predict`（auto，自动打包）让学习者先承诺一个预测再揭晓真相，自动产出 ATTEMPT + RAW_ANSWER（+ 数值判定 VERDICT）证据。两种等价写法：
+
+```html
+<!-- 语义写法 -->
+<kit-predict data-question-id="p1" data-answer="9.8" data-tolerance="0.5" data-unit="m/s">
+  <div data-predict-prompt><p>先猜：下落 1 秒后的速度大约是多少？</p></div>
+  <div data-reveal><p>真实值约 9.8 m/s²，因为重力加速度……（也是无脚本后备）</p></div>
+</kit-predict>
+
+<!-- 元素简写 -->
+<kit-predict question-id="p1" answer="9.8" tolerance="0.5" unit="m/s">…</kit-predict>
+```
+
+- `data-answer` 为数值时自动判定：容差 `data-tolerance`（缺省真实值 10% 相对容差），揭晓后显示偏差条与"你的预测 vs 真实值"。
+- 无 `data-answer` 时是开放预测：只记录原文，不判对错。
+- **`data-reveal` 在 HTML 源码中必须可见可读**（无脚本/打印后备）；运行时增强后才隐藏，揭晓时展示。
+- 使用时机：概念课的"先直觉后机制"、定量课的"先估值后推导"、每个反直觉事实之前。
+
+### 11. 参数联动（Param Component）
+
+`learning.param`（auto）是行内可拖动参数：滑块 + 可横向拖曳的数值（scrubbable number），所有参数进入 `lesson.__paramStore`，正文用 `<output data-param-out="...">` 联动显示。
+
+```html
+<p>质量 <kit-param data-param="mass" data-min="0.5" data-max="5" data-step="0.1"
+   data-value="1" data-unit="kg" data-label="质量"></kit-param>，
+   动能 E<sub>k</sub> = ½mv² = <output data-param-out="ke">0.5</output> J。</p>
+```
+
+- 当前值写入 `data-param-value`，`learning.records` 汇总为"参数探索"证据。
+- 与 `viz.island` / LearnKit 探索容器组合时，多个 `kit-param` 共享同一参数存储，双店同步。
+- 使用时机：任何"改变一个量、观察结果如何变"的联动；参数 ≤ 3 个，过多改用 island 或扩展模型。
+
+### 12. 交互仿真孤岛（Island Component）
+
+`viz.island`（auto）承载免构建学科仿真（单摆、内存布局、梯度下降动画……），底层直接挂在 LearnKit store 上，自带时间旅行、播放/暂停、步进、速度与重置控制。
+
+```html
+<kit-island id="pendulum">
+  <h3>单摆仿真</h3>
+  <div data-viz-fallback><p>无脚本说明：小角度单摆 T ≈ 2π√(L/g)，L=1m 时约 2.0s。</p></div>
+  <div data-island-host hidden></div>
+  <div data-island-controls hidden></div>
+  <script type="text/plain" data-island-model>
+    kit.island.define("pendulum", {
+      initialState: function () { return { t: 0, theta: 0.6, omega: 0 }; },
+      tick: function (s) {
+        var dt = 0.05, alpha = -9.8 * s.theta;
+        return { t: s.t + dt, theta: s.theta + s.omega * dt, omega: s.omega + alpha * dt };
+      },
+      actions: { push: { label: "推一下", reduce: function (s) { return Object.assign({}, s, { omega: s.omega + 0.8 }); } } },
+      derive: function (s) { return { summary: "t = " + s.t.toFixed(2) + " s" }; },
+      view: function (s, api) {
+        return api.html`<p>θ = ${s.theta.toFixed(2)} rad，t = ${s.t.toFixed(2)} s</p>`;
+      }
+    });
+  </script>
+</kit-island>
+```
+
+- **契约**：`tick`/`reduce` 必须返回**新状态对象**（不可原地修改）；`view` 返回 HTML 字符串，插值默认转义，需要原始 HTML 用 `api.raw()`；自定义动作按钮由 `actions` 自动渲染。
+- **`data-viz-fallback` 必须存在且可见**（无脚本/打印后备），校验器强制。
+- 模型代码放在 `type="text/plain"` 脚本中由运行时编译（与页面脚本同一信任级）；也可在普通 `<script>` 里直接 `kit.island.define(...)`。
+- 当前状态写入 `data-visual-state`，进入学习记录的"仿真孤岛观察"。
+- 使用时机：连续演化 + 需要回放对比的动力学系统；一次性静态演示用普通可视化即可。
+
 ## 四、Bloom 认知层级
 
 - `remember`：列出、识别、回忆。

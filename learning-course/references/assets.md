@@ -7,9 +7,9 @@
 `kit/` 目录是所有资产的唯一代码源，`kit/catalog.json` 与 `kit/kit.manifest.json` 是模块能力、依赖与接入方式的权威视图。按教学目标选择最小组合。
 
 模块存在方式（presence）分为三类：
-- **core**：运行时基础设施 L0（`core`）、视觉与主题引擎 L1（`foundation`）、公共块外壳 L2（`content._block`）、页面骨架与目录 L3（`shell.nav`、`shell.progress`、`shell.theme-switcher`、`shell.toc`）、学习记录模型 L4（`learning.records`）。随 `kit.js` 与 `kit.css` 默认打包。
-- **auto**：代码块（`content.code`）、数学公式（`content.math`）、Mermaid 图表（`content.diagram`）、表格（`content.table`）、媒体（`content.media`）、动画（`content.animation`）、提示块（`content.callout`）、统一题目（`learning.question`）、步骤向导（`learning.step`）、可视化核心（`viz.core`）及无三方库 kind。`kit sync` 扫描课件自动识别并打包。
-- **opt-in**：重型第三方库依赖（如 `viz.kinds.chart` 依赖 Plotly、`viz.kinds.spatial` 依赖 JSXGraph）。通过 `python kit/build/kit.py add <course-dir> <module-id>` 显式启用。
+- **core**：运行时基础设施 L0（`core`）、视觉与主题引擎 L1（`foundation`）、公共块外壳 L2（`content._block`）、页面骨架与目录 L3（`shell.nav`、`shell.progress`、`shell.theme-switcher`、`shell.toc`、`shell.elements`）、学习记录模型 L4（`learning.records`）。随 `kit.js` 与 `kit.css` 默认打包。
+- **auto**：代码块（`content.code`）、数学公式（`content.math`）、Mermaid 图表（`content.diagram`）、表格（`content.table`）、媒体（`content.media`）、动画（`content.animation`）、提示块（`content.callout`）、统一题目（`learning.question`）、步骤向导（`learning.step`）、先预测后揭晓（`learning.predict`）、参数联动（`learning.param`）、仿真孤岛（`viz.island`）、可视化核心（`viz.core`）及无三方库 kind。`kit sync` 扫描课件自动识别并打包。
+- **opt-in**：重型第三方库依赖（`viz.kinds.chart` 依赖 Plotly、`viz.kinds.plot` 依赖 Observable Plot、`viz.kinds.spatial` 依赖 JSXGraph）。通过 `python kit/build/kit.py add <course-dir> <module-id>` 显式启用。
 
 ### 第三方库优先
 
@@ -20,11 +20,13 @@
 | 代码块 | 原生 `<pre><code class="language-...">` + Kit 块外壳 + highlight.js | 裸 `<pre><code>` 无外壳、手写高亮 |
 | 流程图、状态图、时序图、类图、甘特图、饼图 | Mermaid（`<pre class="mermaid">`） | 手写内联 SVG 替代 Mermaid 能表达的图形 |
 | 数学公式 | KaTeX（`\(...\)` 与 `\[...\]`） | 手写公式图片或纯文本近似 |
-| 2D 数据图表（折线、柱状、散点、饼图） | Chart.js（优先）或 Plotly（`chart`） | 手写 SVG/Canvas 画图表 |
-| 3D 曲面、热图、等高线 | Plotly（`chart`） | — |
-| 几何构造、数轴、坐标变换 | JSXGraph（`spatial`） | 手写 SVG 几何 |
+| 2D 函数/统计图（折线、散点、柱状、规则网格） | Observable Plot（`viz.kinds.plot`，opt-in） | 手写 SVG/Canvas 画图表 |
+| 3D 曲面、热图、等高线 | Plotly（`viz.kinds.chart`） | — |
+| 几何构造、数轴、坐标变换 | JSXGraph（`viz.kinds.spatial`） | 手写 SVG 几何 |
 | 复杂关系图（非 Mermaid 能覆盖） | Cytoscape | — |
 | 时间轴（数据驱动） | vis-timeline / Kit timeline | — |
+| 连续演化仿真（单摆、梯度下降、内存布局…） | `viz.island`（免构建 Preact 风格孤岛，挂在 kit.store 上） | 手写无后备的 Canvas 动画 |
+| 先预测后揭晓 / 行内参数联动 | `learning.predict` / `learning.param` | 手写输入框 + alert |
 
 优先复用库已实现的解析、排版、布局、绘制与交互能力；课程自写部分负责领域模型、教学动作、状态与证据接线。原生 HTML 足够的表格/媒体控件仍用原生能力；内置简单 SVG 仅用于简图示意和降级后备，不作为正式图形方案。
 

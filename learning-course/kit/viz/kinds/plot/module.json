@@ -1,0 +1,23 @@
+{
+  "id": "viz.kinds.plot",
+  "layer": 5,
+  "version": "2.0.0",
+  "requires": ["viz.core"],
+  "presence": "opt-in",
+  "detect": {
+    "selectors": ["[data-visualization=\"plot\"]"]
+  },
+  "provides": {
+    "js": ["plot.js"],
+    "kinds": ["plot"]
+  },
+  "vendor": [
+    {
+      "id": "plot",
+      "version": "0.6.16",
+      "cdn": "https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6.16/dist/plot.umd.min.js",
+      "local": "vendor/observable-plot/plot.umd.min.js"
+    }
+  ],
+  "ready": "kit:viz.kinds.plot:ready"
+}

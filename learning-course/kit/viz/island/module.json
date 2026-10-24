@@ -1,0 +1,18 @@
+{
+  "id": "viz.island",
+  "layer": 5,
+  "version": "2.0.0",
+  "requires": ["core", "foundation"],
+  "presence": "auto",
+  "detect": {
+    "selectors": [
+      "kit-island",
+      "[data-island]"
+    ]
+  },
+  "provides": {
+    "css": ["island.css"],
+    "js": ["island.js"]
+  },
+  "ready": "kit:viz.island:ready"
+}

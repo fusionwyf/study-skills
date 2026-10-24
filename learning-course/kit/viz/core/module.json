@@ -2,15 +2,29 @@
   "id": "viz.core",
   "layer": 5,
   "version": "2.0.0",
-  "requires": ["core", "foundation"],
+  "requires": [
+    "core",
+    "foundation"
+  ],
   "presence": "auto",
   "detect": {
-    "selectors": ["[data-visualization]", ".visualization"]
+    "selectors": [
+      "[data-visualization]",
+      ".visualization",
+      "kit-viz"
+    ]
   },
   "provides": {
-    "css": ["visualizations.css"],
-    "js": ["visualizations.js"],
-    "selectors": ["[data-visualization]", ".visualization"]
+    "css": [
+      "visualizations.css"
+    ],
+    "js": [
+      "visualizations.js"
+    ],
+    "selectors": [
+      "[data-visualization]",
+      ".visualization"
+    ]
   },
   "ready": "kit:viz.core:ready"
 }

@@ -96,7 +96,8 @@
       "detect": {
         "selectors": [
           "[data-visualization]",
-          ".visualization"
+          ".visualization",
+          "kit-viz"
         ]
       },
       "provides": {
@@ -112,6 +113,31 @@
         ]
       },
       "ready": "kit:viz.core:ready"
+    },
+    "viz.island": {
+      "id": "viz.island",
+      "layer": 5,
+      "version": "2.0.0",
+      "requires": [
+        "core",
+        "foundation"
+      ],
+      "presence": "auto",
+      "detect": {
+        "selectors": [
+          "kit-island",
+          "[data-island]"
+        ]
+      },
+      "provides": {
+        "css": [
+          "island.css"
+        ],
+        "js": [
+          "island.js"
+        ]
+      },
+      "ready": "kit:viz.island:ready"
     },
     "viz.kinds.chart": {
       "id": "viz.kinds.chart",
@@ -170,6 +196,37 @@
         ]
       },
       "ready": "kit:viz.kinds.list:ready"
+    },
+    "viz.kinds.plot": {
+      "id": "viz.kinds.plot",
+      "layer": 5,
+      "version": "2.0.0",
+      "requires": [
+        "viz.core"
+      ],
+      "presence": "opt-in",
+      "detect": {
+        "selectors": [
+          "[data-visualization=\"plot\"]"
+        ]
+      },
+      "provides": {
+        "js": [
+          "plot.js"
+        ],
+        "kinds": [
+          "plot"
+        ]
+      },
+      "vendor": [
+        {
+          "id": "plot",
+          "version": "0.6.16",
+          "cdn": "https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6.16/dist/plot.umd.min.js",
+          "local": "vendor/observable-plot/plot.umd.min.js"
+        }
+      ],
+      "ready": "kit:viz.kinds.plot:ready"
     },
     "viz.kinds.sequence": {
       "id": "viz.kinds.sequence",
@@ -249,6 +306,22 @@
         ]
       },
       "ready": "kit:viz.kinds.table:ready"
+    },
+    "shell.elements": {
+      "id": "shell.elements",
+      "layer": 3,
+      "version": "2.0.0",
+      "requires": [
+        "core",
+        "foundation"
+      ],
+      "presence": "core",
+      "provides": {
+        "js": [
+          "elements.js"
+        ]
+      },
+      "ready": "kit:shell.elements:ready"
     },
     "shell.nav": {
       "id": "shell.nav",
@@ -371,6 +444,57 @@
       },
       "ready": "kit:learning.cards:ready"
     },
+    "learning.param": {
+      "id": "learning.param",
+      "layer": 4,
+      "version": "2.0.0",
+      "requires": [
+        "core",
+        "foundation"
+      ],
+      "presence": "auto",
+      "detect": {
+        "selectors": [
+          "kit-param",
+          "[data-param]"
+        ]
+      },
+      "provides": {
+        "css": [
+          "param.css"
+        ],
+        "js": [
+          "param.js"
+        ]
+      },
+      "ready": "kit:learning.param:ready"
+    },
+    "learning.predict": {
+      "id": "learning.predict",
+      "layer": 4,
+      "version": "2.0.0",
+      "requires": [
+        "core",
+        "foundation",
+        "learning.records"
+      ],
+      "presence": "auto",
+      "detect": {
+        "selectors": [
+          "kit-predict",
+          "[data-predict]"
+        ]
+      },
+      "provides": {
+        "css": [
+          "predict.css"
+        ],
+        "js": [
+          "predict.js"
+        ]
+      },
+      "ready": "kit:learning.predict:ready"
+    },
     "learning.question": {
       "id": "learning.question",
       "layer": 4,
@@ -384,7 +508,8 @@
       "detect": {
         "selectors": [
           ".question",
-          "section[data-question-id]"
+          "section[data-question-id]",
+          "kit-question"
         ]
       },
       "provides": {
@@ -486,7 +611,8 @@
       "detect": {
         "selectors": [
           ".callout",
-          "aside.callout"
+          "aside.callout",
+          "kit-callout"
         ]
       },
       "provides": {

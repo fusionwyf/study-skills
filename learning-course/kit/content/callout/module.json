@@ -2,15 +2,28 @@
   "id": "content.callout",
   "layer": 2,
   "version": "2.0.0",
-  "requires": ["core", "foundation"],
+  "requires": [
+    "core",
+    "foundation"
+  ],
   "presence": "auto",
   "detect": {
-    "selectors": [".callout", "aside.callout"]
+    "selectors": [
+      ".callout",
+      "aside.callout",
+      "kit-callout"
+    ]
   },
   "provides": {
-    "css": ["callout.css"],
-    "js": ["callout.js"],
-    "selectors": [".callout"]
+    "css": [
+      "callout.css"
+    ],
+    "js": [
+      "callout.js"
+    ],
+    "selectors": [
+      ".callout"
+    ]
   },
   "ready": "kit:content.callout:ready"
 }

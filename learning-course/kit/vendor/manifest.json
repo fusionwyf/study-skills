@@ -34,5 +34,19 @@
       "jsxgraph/LICENSE.LGPL": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118",
       "jsxgraph/jsxgraphcore.js.LICENSE.txt": "7f15c10b7ed23971076d2eae092f817ff481e14cfe9fd9ecf61be5345e9981ca"
     }
+  },
+  "plot": {
+    "package": "@observablehq/plot",
+    "version": "0.6.16",
+    "license": "ISC",
+    "url": "https://registry.npmjs.org/@observablehq/plot/-/plot-0.6.16.tgz",
+    "files": [
+      "observable-plot/plot.umd.min.js",
+      "observable-plot/LICENSE"
+    ],
+    "sha256": {
+      "observable-plot/plot.umd.min.js": "ee8e99124680704d3ea4878bdb786362c70a412b7b9eb988ae852827fd6e0711",
+      "observable-plot/LICENSE": "4b295e011e0e046170041b5b46f1349393aeceb95797793a55bd21dbb543363a"
+    }
   }
 }

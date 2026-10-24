@@ -1,0 +1,92 @@
+@layer learning {
+  kit-predict,
+  .predict {
+    display: block;
+    margin: 1.25rem 0 1.5rem;
+    padding: 1.1rem 1.2rem;
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-left: 3px solid var(--c-accent);
+    border-radius: var(--radius);
+  }
+
+  .kit-predict__body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 0.75rem;
+  }
+
+  .kit-predict__input {
+    flex: 1 1 10rem;
+    min-width: 0;
+    padding: 0.5rem 0.7rem;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-sm);
+    background: var(--c-bg);
+    color: var(--c-text);
+    font: inherit;
+  }
+
+  .kit-predict__input:focus-visible {
+    outline: 0.15rem solid var(--c-accent);
+  }
+
+  .kit-predict__btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--c-accent);
+    border-radius: var(--radius-sm);
+    background: var(--c-accent-bg, var(--c-accent));
+    color: var(--c-text);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .kit-predict__btn:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+
+  .kit-predict__meter {
+    flex-basis: 100%;
+  }
+
+  .kit-predict__bar {
+    height: 0.45rem;
+    border-radius: var(--radius-pill);
+    background: var(--c-surface-2);
+    border: 1px solid var(--c-border);
+    overflow: hidden;
+    margin-bottom: 0.35rem;
+  }
+
+  .kit-predict__bar-fill {
+    height: 100%;
+    width: 0;
+    background: var(--series-3);
+    transition: width 0.4s ease;
+  }
+
+  .kit-predict__bar[data-tone="ok"] .kit-predict__bar-fill {
+    background: var(--c-success);
+  }
+
+  .kit-predict__bar[data-tone="off"] .kit-predict__bar-fill {
+    background: var(--c-warn);
+  }
+
+  .kit-predict__note {
+    margin: 0;
+    font-size: 0.88rem;
+    color: var(--c-text-2);
+  }
+
+  kit-predict [data-reveal],
+  .predict [data-reveal] {
+    margin-top: 0.9rem;
+    padding-top: 0.9rem;
+    border-top: 1px dashed var(--c-border);
+  }
+}

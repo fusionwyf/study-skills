@@ -227,6 +227,27 @@
       });
     }
 
+    var params = lesson.querySelectorAll("[data-param]");
+    if (params.length) {
+      lines.push("", "## 参数探索（当前状态；代表探索足迹）");
+      params.forEach(function (node) {
+        if (node.dataset.kitParamBound !== "true") return;
+        lines.push("", "### " + (node.dataset.param || node.id || "param"),
+          "- 当前值: " + (node.dataset.paramValue || "unknown"));
+      });
+    }
+
+    var islands = lesson.querySelectorAll("kit-island, [data-island]");
+    if (islands.length) {
+      lines.push("", "## 仿真孤岛观察（当前状态；不代表完成练习）");
+      islands.forEach(function (node) {
+        lines.push("", "### " + (node.id || "island"),
+          "- 初始化状态: " + (node.dataset.islandReady || "not-loaded"),
+          "- 当前状态: " + (node.dataset.visualState || "unknown"),
+          "- 预测记录: " + (node.dataset.predictState || "none"));
+      });
+    }
+
     lines.push("", "## 学习者反馈");
     var reflections = [];
     lesson.querySelectorAll(".reflection label").forEach(function (label) {

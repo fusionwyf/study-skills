@@ -89,6 +89,14 @@ UNIFIED_VENDORS = {
             "local": "../assets/kit/vendor/plotly.js-dist-min/plotly.min.js"
         }
     },
+    "plot": {
+        "id": "plot",
+        "version": "0.6.16",
+        "js": {
+            "cdn": "https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6.16/dist/plot.umd.min.js",
+            "local": "../assets/kit/vendor/observable-plot/plot.umd.min.js"
+        }
+    },
     "jsxgraph": {
         "id": "jsxgraph",
         "version": "1.14.0",
@@ -771,12 +779,13 @@ def bundle_kit(active_modules, output_dir, course_config=None, vendor_mode="cdn"
         "hljs": "hljs",
         "katex": "katex",
         "mermaid": "mermaid",
+        "plot": "observable-plot",
     }
     if vendor_mode == "local" and active_vendors:
         for vid in active_vendors:
             pkg_name = pkg_map.get(vid, vid)
             src_pkg = KIT_ROOT / "vendor" / pkg_name
-            if vid in ("plotly", "jsxgraph"):
+            if vid in ("plotly", "jsxgraph", "plot"):
                 if not src_pkg.exists() or not any(src_pkg.iterdir()):
                     raise ValueError(
                         f"Offline vendor package '{pkg_name}' for '{vid}' missing in kit/vendor/."

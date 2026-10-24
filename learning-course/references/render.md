@@ -11,9 +11,9 @@ Course Kit v2 将所有渲染组件划分为清晰的 6 层（L0–L5）：
 - **L0 核心层（`kit/core`）**：总线（`kit.bus`）、配置（`kit.config`）、加载器（`kit.need`）、就绪管理（`kit.ready`）、状态存储（`kit.store` / `LearnKit`）。
 - **L1 基础与主题（`kit/foundation`）**：全局 Token（`tokens.css`）、8 套预设主题（`course`/`ink`/`paper`/`swiss`/`blueprint`/`riso`/`brutal`/`field`）、基线排版与主题引擎（`theme-engine.js`）。
 - **L2 块外壳与内容（`kit/content`）**：统一块外壳（`_block`，提供复制/折叠/语言徽章）、代码（`code`）、数学（`math`）、流程图（`diagram`）、表格与媒体。
-- **L3 页面骨架（`kit/shell`）**：响应式布局、三态目录（`toc`）、导航与主题切换器。
-- **L4 学习交互（`kit/learning`）**：统一题目（`question`，支持 6 种题型）、步骤（`step`）、学习证据模型（`records`）。
-- **L5 可视化层（`kit/viz`）**：可视化内核（`core`）与图表适配器（`kinds/*`）。
+- **L3 页面骨架（`kit/shell`）**：响应式布局、三态目录（`toc`）、导航与主题切换器、Web Components 双轨外壳（`elements`）。
+- **L4 学习交互（`kit/learning`）**：统一题目（`question`，支持 6 种题型）、步骤（`step`）、先预测后揭晓（`predict`）、参数联动（`param`）、学习证据模型（`records`）。
+- **L5 可视化层（`kit/viz`）**：可视化内核（`core`）、仿真孤岛（`island`）与图表适配器（`kinds/*`：`chart`=Plotly、`plot`=Observable Plot、`spatial`=JSXGraph）。
 
 所有模块经 `kit sync` 拓扑排序后打包为：
 - 单一 JS：`assets/kit/kit.js`（IIFE 经典脚本，支持 `file://` 直接打开）
@@ -62,7 +62,33 @@ Course Kit v2 将所有渲染组件划分为清晰的 6 层（L0–L5）：
 - 控件使用 `data-lk-bind="params.xxx"` 自动进行状态双向绑定。
 - 可视化容器通过 `data-viz-source="#lk-id"` 订阅状态派生结果并实时更新图表。
 
-## 六、主题引擎（L1）
+## 六、Simulation 孤岛与 LearnKit 状态机
+
+`viz.island` 是学科仿真的标准载体，底层直接复用 LearnKit store 的时间旅行状态机
+（`STEP_NEXT`/`STEP_PREVIOUS`/`SEEK`/`PLAY`/`PAUSE`/`RESET`，历史上限 500 帧）：
+
+```html
+<kit-island id="pendulum">
+  <div data-viz-fallback><p>无脚本文字说明（校验器强制要求）</p></div>
+  <div data-island-host hidden></div>
+  <div data-island-controls hidden></div>
+  <script type="text/plain" data-island-model>
+    kit.island.define("pendulum", {
+      initialState: function () { return { t: 0, theta: 0.5, omega: 0 }; },
+      tick: function (s) { /* 返回新状态对象 */ },
+      actions: { push: { label: "推一下", reduce: function (s) { return Object.assign({}, s, {}); } } },
+      derive: function (s) { return { summary: "t = " + s.t.toFixed(1) }; },
+      view: function (s, api) { return api.html`<p>θ = ${s.theta}</p>`; }
+    });
+  </script>
+</kit-island>
+```
+
+- `kit.island.define(name, spec)` 的 spec 字段：`initialState()`、`tick(state)`（每帧）、`actions`（自定义动作按钮）、`derive(state)`（状态摘要）、`view(state, api)`（HTML 字符串渲染，`api.html` 插值默认转义、`api.raw` 透传、`api.fmt` 数值格式化）、`describe`（动作日志文案）。
+- 播放帧间隔用 `data-island-interval`（毫秒，默认 300）调节；速度下拉 0.5×–4×。
+- HTML 契约与后备要求见 `references/lesson.md` §12。
+
+## 七、主题引擎（L1）
 
 `theme-engine.js` 在 `foundation` 模块初始化时运行：
 

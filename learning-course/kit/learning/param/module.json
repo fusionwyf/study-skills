@@ -1,0 +1,18 @@
+{
+  "id": "learning.param",
+  "layer": 4,
+  "version": "2.0.0",
+  "requires": ["core", "foundation"],
+  "presence": "auto",
+  "detect": {
+    "selectors": [
+      "kit-param",
+      "[data-param]"
+    ]
+  },
+  "provides": {
+    "css": ["param.css"],
+    "js": ["param.js"]
+  },
+  "ready": "kit:learning.param:ready"
+}

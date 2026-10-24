@@ -1,0 +1,11 @@
+{
+  "id": "shell.elements",
+  "layer": 3,
+  "version": "2.0.0",
+  "requires": ["core", "foundation"],
+  "presence": "core",
+  "provides": {
+    "js": ["elements.js"]
+  },
+  "ready": "kit:shell.elements:ready"
+}

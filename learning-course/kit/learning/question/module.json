@@ -2,18 +2,30 @@
   "id": "learning.question",
   "layer": 4,
   "version": "2.0.0",
-  "requires": ["core", "foundation", "learning.records"],
+  "requires": [
+    "core",
+    "foundation",
+    "learning.records"
+  ],
   "presence": "auto",
   "detect": {
     "selectors": [
       ".question",
-      "section[data-question-id]"
+      "section[data-question-id]",
+      "kit-question"
     ]
   },
   "provides": {
-    "css": ["question.css"],
-    "js": ["question.js"],
-    "selectors": [".question", "section[data-question-id]"]
+    "css": [
+      "question.css"
+    ],
+    "js": [
+      "question.js"
+    ],
+    "selectors": [
+      ".question",
+      "section[data-question-id]"
+    ]
   },
   "ready": "kit:learning.question:ready"
 }
