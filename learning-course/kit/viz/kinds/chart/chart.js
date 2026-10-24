@@ -203,24 +203,77 @@
     var host = h.find(node, "[data-viz-host]"), current = config, disposed = false;
     var plotting = Promise.resolve();
 
+    // 主题 token 化配色：画布透明、文字/网格取设计 token，未显式指定颜色的
+    // trace 依次套用 --series-*。深浅主题切换时由 observer 触发重绘。
+    function themePalette() {
+      if (typeof getComputedStyle !== "function") return null;
+      var cs = getComputedStyle(document.documentElement);
+      function tok(name, fallback) {
+        var v = cs.getPropertyValue(name).trim();
+        return v || fallback;
+      }
+      var text = tok("--c-text", null);
+      var border = tok("--c-border", null);
+      if (!text && !border) return null;
+      return {
+        text: text,
+        text2: tok("--c-text-2", text),
+        border: border,
+        series: [1, 2, 3, 4, 5, 6, 7, 8].map(function (i) {
+          return tok("--series-" + i, null);
+        })
+      };
+    }
+
+    function themedTraces(next, palette) {
+      return next.traces.map(function (t, i) {
+        var out = Object.assign({}, t, { connectgaps: false });
+        var themed = out.type === "bar" || out.type === "scatter" || !out.type;
+        var hasColor = (out.marker && out.marker.color) || (out.line && out.line.color);
+        if (themed && !hasColor && palette && palette.series[i % 8]) {
+          out.marker = Object.assign({}, out.marker, { color: palette.series[i % 8] });
+        }
+        return out;
+      });
+    }
+
+    function themedLayout(next, palette) {
+      var base = { margin: { t: 35, r: 25, b: 55, l: 55 }, autosize: true };
+      if (palette) {
+        base.paper_bgcolor = "rgba(0,0,0,0)";
+        base.plot_bgcolor = "rgba(0,0,0,0)";
+        base.font = { color: palette.text };
+        base.xaxis = { gridcolor: palette.border, zerolinecolor: palette.border, tickfont: { color: palette.text2 } };
+        base.yaxis = { gridcolor: palette.border, zerolinecolor: palette.border, tickfont: { color: palette.text2 } };
+      }
+      return Object.assign(base, next.layout || {});
+    }
+
+    var themeObserver = null;
+    if (typeof MutationObserver === "function") {
+      themeObserver = new MutationObserver(function () {
+        if (!disposed) paint(current);
+      });
+      themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["data-theme"]
+      });
+    }
+
     function paint(next) {
       validateChart(next);
       current = next;
       h.show(node);
       if (root.Plotly) {
+        var palette = themePalette();
         plotting = plotting
           .catch(function () {})
           .then(function () {
             if (disposed) return;
             return root.Plotly.react(
               host,
-              next.traces.map(function (t) {
-                return Object.assign({}, t, { connectgaps: false });
-              }),
-              Object.assign(
-                { margin: { t: 35, r: 25, b: 55, l: 55 }, autosize: true },
-                next.layout || {}
-              ),
+              themedTraces(next, palette),
+              themedLayout(next, palette),
               { responsive: true, displaylogo: false }
             );
           });
@@ -256,6 +309,7 @@
       },
       destroy: function () {
         disposed = true;
+        if (themeObserver) themeObserver.disconnect();
         if (root.Plotly) root.Plotly.purge(host);
       }
     };

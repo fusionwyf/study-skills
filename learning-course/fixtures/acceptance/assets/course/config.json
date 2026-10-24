@@ -25,6 +25,14 @@
     }
   },
   "themes": [
+    "course",
+    "ink",
+    "paper",
+    "swiss",
+    "blueprint",
+    "riso",
+    "brutal",
+    "field",
     "crt-terminal"
   ]
 }
