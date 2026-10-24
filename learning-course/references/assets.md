@@ -99,6 +99,7 @@ Course Kit v2 将所有模块拓扑排序并拼接为单文件产物：
 
   - `fonts` 内多个字体用 `;` 分隔（单个 spec 内 `,` 表示多字重）；值可以是 fontsource 包名（`noto-sans-sc:400,700`）或完整 CSS URL。
   - 必填 Token（对齐 `themes/course.css`）：背景层 `--c-bg`/`--c-surface`/`--c-surface-2`、文字层 `--c-text`/`--c-text-2`/`--c-muted`、边框 `--c-border`/`--c-border-strong`、强调色家族 `--c-accent`/`--c-accent-strong`/`--c-accent-bg`/`--c-accent-border`、语义色 `--c-warn(-bg)`/`--c-danger(-bg)`/`--c-success(-bg)`、数据色板 `--series-1..8`、阴影 `--shadow`/`--shadow-card`、字体栈 `--font-display`/`--font-body`/`--font-mono`；可选结构装饰钩子：背景肌理 `background-image`、`h2` 章节造型、`.callout`/`.question` 边框与阴影风格。
+  - **注意**：`themes/course.css` 的 token 挂在裸 `:root` 上作为全局缺省基线——自创主题若省略某个 token，会继承 course 的浅色值（深色主题下会出现浅底浅字）。深色主题必须成套覆盖，缺什么补什么。
   - 门禁：`kit.py sync` 解析 `@kit-theme` 头并把主题合入 `kit.css` 与 `config.json` 的 `customThemes`/`themes`（无合法头部直接报错）；正文对比度 ≥ 4.5:1；深色主题必须 `scheme="dark"`（自动触发 SVG 亮色描边）；自创主题必须通过 `kit.py shot --theme <id>` 截图自检。
   - 晋升全局预设：把该 CSS 复制到 `kit/foundation/themes/<name>.css` 并运行 `kit.py build`，即可成为所有课程可用的内置预设。
 

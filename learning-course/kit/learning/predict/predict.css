@@ -37,7 +37,8 @@
     padding: 0.5rem 1rem;
     border: 1px solid var(--c-accent);
     border-radius: var(--radius-sm);
-    background: var(--c-accent-bg, var(--c-accent));
+    /* 不用 --c-accent-bg：极简主题会继承 course 主题 :root 的浅色基线，浅底配浅字不可读 */
+    background: color-mix(in srgb, var(--c-accent) 16%, var(--c-surface));
     color: var(--c-text);
     font: inherit;
     font-weight: 600;

@@ -41,7 +41,7 @@
 
   .kit-island__btn--action {
     border-color: var(--c-accent);
-    background: var(--c-accent-bg, var(--c-accent));
+    background: color-mix(in srgb, var(--c-accent) 16%, var(--c-surface));
     font-weight: 600;
   }
 

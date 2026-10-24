@@ -146,7 +146,16 @@
         }
       });
     }
-    commit(value);
+    // 初始值直接入 store（commit 对 next === last 会提前返回），保证
+    // data-param-out 联动与"参数探索"证据从挂载那一刻就有基准值。
+    if (store && store.dispatch) {
+      store.dispatch({ type: "SET_PARAM", name: name, value: value });
+    }
+    node.dataset.paramValue = String(value);
+    lesson.querySelectorAll('[data-param-out="' + name + '"]').forEach(function (target) {
+      if (!target.textContent.trim()) target.textContent = fmt(value, step) + (target.dataset.unit || unit);
+    });
+    notifyOutputs();
   }
 
   function init() {
