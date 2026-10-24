@@ -7,7 +7,7 @@
   var CourseKit = global.CourseKit = global.CourseKit || {};
   global.kit = global.kit || CourseKit;
   CourseKit.__COURSE_CONFIG__ = {"theme": "course", "vendor": {"mode": "cdn"}, "code": {"themes": {"light": "github", "dark": "github-dark"}}, "modules": ["viz.kinds.spatial", "viz.kinds.chart"]};
-  CourseKit.__ACTIVE_MODULES__ = ["core", "foundation", "content._block", "content.code", "content.math", "content.media", "shell.nav", "shell.progress", "shell.theme-switcher", "shell.toc", "learning.records", "learning.question", "viz.core", "viz.kinds.chart", "viz.kinds.list", "viz.kinds.sequence", "viz.kinds.spatial", "viz.kinds.table"];
+  CourseKit.__ACTIVE_MODULES__ = ["core", "foundation", "content._block", "content.code", "content.math", "content.media", "shell.elements", "shell.nav", "shell.progress", "shell.theme-switcher", "shell.toc", "learning.records", "learning.question", "viz.core", "viz.kinds.chart", "viz.kinds.list", "viz.kinds.sequence", "viz.kinds.spatial", "viz.kinds.table"];
   CourseKit.VENDORS = {"hljs": {"id": "hljs", "version": "11.12.0", "js": {"cdn": "https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.12.0/build/highlight.min.js", "local": "../assets/kit/vendor/hljs/highlight.min.js"}}, "katex": {"id": "katex", "version": "0.16.11", "css": {"cdn": "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css", "local": "../assets/kit/vendor/katex/katex.min.css"}, "js": {"cdn": "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js", "local": "../assets/kit/vendor/katex/katex.min.js"}, "autoRender": {"cdn": "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js", "local": "../assets/kit/vendor/katex/auto-render.min.js"}}, "plotly": {"id": "plotly", "version": "4.1.2", "js": {"cdn": "https://cdn.jsdelivr.net/npm/plotly.js-dist-min@4.1.2/plotly.min.js", "local": "../assets/kit/vendor/plotly.js-dist-min/plotly.min.js"}}, "jsxgraph": {"id": "jsxgraph", "version": "1.14.0", "css": {"cdn": "https://cdn.jsdelivr.net/npm/jsxgraph@1.14.0/distrib/jsxgraph.css", "local": "../assets/kit/vendor/jsxgraph/jsxgraph.css"}, "js": {"cdn": "https://cdn.jsdelivr.net/npm/jsxgraph@1.14.0/distrib/jsxgraphcore.js", "local": "../assets/kit/vendor/jsxgraph/jsxgraphcore.js"}}};
   CourseKit.__EXTENSIONS__ = [];
   CourseKit.__NAV_DATA__ = {"title": "通用资产验收课件", "course_id": "acceptance-course", "current_lesson": 6, "completed_lessons": [], "completed_count": 0, "total_count": 6, "lessons": [{"number": "0001", "chapter": "", "title": "数学推导与核对", "objective": "math", "file": "0001-math.html", "key": "0001", "href": "lessons/0001-math.html", "home": "../index.html", "prev": null, "next": {"number": "0002", "file": "0002-probability.html", "chapter": "", "key": "0002", "href": "0002-probability.html"}}, {"number": "0002", "chapter": "", "title": "概率参数实验", "objective": "probability", "file": "0002-probability.html", "key": "0002", "href": "lessons/0002-probability.html", "home": "../index.html", "prev": {"number": "0001", "file": "0001-math.html", "chapter": "", "key": "0001", "href": "0001-math.html"}, "next": {"number": "0003", "file": "0003-algorithm.html", "chapter": "", "key": "0003", "href": "0003-algorithm.html"}}, {"number": "0003", "chapter": "", "title": "算法回放与流程", "objective": "algorithm", "file": "0003-algorithm.html", "key": "0003", "href": "lessons/0003-algorithm.html", "home": "../index.html", "prev": {"number": "0002", "file": "0002-probability.html", "chapter": "", "key": "0002", "href": "0002-probability.html"}, "next": {"number": "0004", "file": "0004-history.html", "chapter": "", "key": "0004", "href": "0004-history.html"}}, {"number": "0004", "chapter": "", "title": "材料分析与时间轴", "objective": "history", "file": "0004-history.html", "key": "0004", "href": "lessons/0004-history.html", "home": "../index.html", "prev": {"number": "0003", "file": "0003-algorithm.html", "chapter": "", "key": "0003", "href": "0003-algorithm.html"}, "next": {"number": "0005", "file": "0005-design.html", "chapter": "", "key": "0005", "href": "0005-design.html"}}, {"number": "0005", "chapter": "", "title": "图像观察与标注", "objective": "design", "file": "0005-design.html", "key": "0005", "href": "lessons/0005-design.html", "home": "../index.html", "prev": {"number": "0004", "file": "0004-history.html", "chapter": "", "key": "0004", "href": "0004-history.html"}, "next": {"number": "0006", "file": "0006-language.html", "chapter": "", "key": "0006", "href": "0006-language.html"}}, {"number": "0006", "chapter": "", "title": "听辨媒体与填空", "objective": "language", "file": "0006-language.html", "key": "0006", "href": "lessons/0006-language.html", "home": "../index.html", "prev": {"number": "0005", "file": "0005-design.html", "chapter": "", "key": "0005", "href": "0005-design.html"}, "next": null}], "home": "../index.html"};
@@ -830,6 +830,14 @@
         local: "../assets/kit/vendor/plotly.js-dist-min/plotly.min.js"
       }
     },
+    plot: {
+      id: "plot",
+      version: "0.6.16",
+      js: {
+        cdn: "https://cdn.jsdelivr.net/combine/npm/d3@7.9.0/dist/d3.min.js,npm/@observablehq/plot@0.6.16/dist/plot.umd.min.js",
+        local: "../assets/kit/vendor/observable-plot/plot.umd.min.js"
+      }
+    },
     jsxgraph: {
       id: "jsxgraph",
       version: "1.14.0",
@@ -1375,8 +1383,6 @@
     if (typeof document !== "undefined") {
       document.documentElement.dataset.theme = currentTheme;
       document.documentElement.dataset.scheme = currentScheme;
-      // Legacy compatibility
-      document.documentElement.dataset.themeSurface = currentScheme;
 
       if (persist && typeof localStorage !== "undefined") {
         try {
@@ -1421,6 +1427,16 @@
   function initTheme() {
     if (themeInitialized) return;
     themeInitialized = true;
+
+    // 课程自创预设（kit.py sync 从 assets/course/themes/*.css 的 @kit-theme
+    // 头解析进 config.customThemes）在此注册，随后即可切换。
+    var custom = kit.config && kit.config.customThemes;
+    if (custom && typeof custom === "object") {
+      Object.keys(custom).forEach(function (name) {
+        if (typeof kit.theme.register === "function") kit.theme.register(name, custom[name]);
+      });
+    }
+
     var stored = null;
     try {
       if (typeof window !== "undefined" && window.localStorage) {
@@ -1429,8 +1445,17 @@
     } catch (e) {}
 
     var base = defaultTheme();
+    // URL ?kit-theme=<id> 优先（kit.py shot / 分享链接用），不改写持久化选择。
+    var urlTheme = null;
+    try {
+      if (typeof window !== "undefined" && window.location) {
+        urlTheme = new URLSearchParams(window.location.search).get("kit-theme");
+      }
+    } catch (e) {}
     // 已存储的主题若不在可切换列表中（例如课程更换了预设），回到默认主题。
-    var initialTheme = stored && availableThemes().indexOf(stored) !== -1 ? stored : base;
+    var initialTheme = base;
+    if (urlTheme && availableThemes().indexOf(urlTheme) !== -1) initialTheme = urlTheme;
+    else if (stored && availableThemes().indexOf(stored) !== -1) initialTheme = stored;
 
     applyTheme(initialTheme, false);
 
@@ -1933,6 +1958,184 @@
   if (!kit.registerModule && typeof document !== "undefined") {
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initMedia);
     else initMedia();
+  }
+})(typeof window !== "undefined" ? window : globalThis);
+
+  })();
+
+  /* ---- Module: shell.elements (elements.js) ---- */
+  (function () {
+/*
+ * shell.elements — Web Components 双轨外壳 (Light DOM Custom Elements)
+ *
+ * 与语义 HTML + data-* 契约 100% 等价的简洁写法。自定义元素在
+ * customElements.define 时同步升级既有 DOM，把简洁属性归一化为
+ * 标准 data-* 结构，随后由各内容模块按原契约接管：
+ *
+ *   <kit-question kind="choice" question-id="q1" max-attempts="2"> … </kit-question>
+ *   <kit-callout type="tip" label="重点提示" fold="open"> … </kit-callout>
+ *   <kit-viz kind="chart" id="demo"> … </kit-viz>
+ *   <kit-predict question-id="p1" answer="9.8" tolerance="0.5" unit="m/s"> … </kit-predict>
+ *   <kit-param name="mass" min="0.5" max="5" step="0.1" value="1" unit="kg"></kit-param>
+ *   <kit-island id="pendulum"> … </kit-island>
+ *
+ * 归一化发生在 kit.js 求值时（早于 initAll），因此静态页面无需额外处理；
+ * 动态插入的节点由 connectedCallback 归一化属性，交互增强仍以整页初始化为准。
+ */
+(function (root) {
+  "use strict";
+
+  var kit = root.CourseKit = root.CourseKit || {};
+  root.kit = root.kit || kit;
+
+  function mapAttributes(node, mapping) {
+    Object.keys(mapping).forEach(function (from) {
+      var to = mapping[from];
+      if (node.hasAttribute(from) && !node.hasAttribute(to)) {
+        node.setAttribute(to, node.getAttribute(from) || "");
+      }
+      node.removeAttribute(from);
+    });
+  }
+
+  function addClass(node, cls) {
+    var classes = (node.getAttribute("class") || "").split(/\s+/).filter(Boolean);
+    if (classes.indexOf(cls) === -1) classes.push(cls);
+    node.setAttribute("class", classes.join(" "));
+  }
+
+  var ELEMENT_SPECS = {
+    "kit-question": {
+      normalize: function (node) {
+        mapAttributes(node, {
+          "kind": "data-kind",
+          "question-id": "data-question-id",
+          "max-attempts": "data-max-attempts",
+          "expected": "data-expected",
+          "tolerance": "data-tolerance",
+          "unit": "data-unit",
+          "accepted": "data-accepted"
+        });
+        addClass(node, "question");
+        if (!node.hasAttribute("data-role")) node.setAttribute("data-role", "evidence");
+      }
+    },
+    "kit-callout": {
+      normalize: function (node) {
+        mapAttributes(node, { "type": "data-callout", "fold": "data-fold" });
+        addClass(node, "callout");
+        var label = node.getAttribute("label");
+        if (label && !node.querySelector(".callout__title")) {
+          var title = document.createElement("div");
+          title.className = "callout__title";
+          title.textContent = label;
+          node.insertBefore(title, node.firstChild);
+        }
+        node.removeAttribute("label");
+      }
+    },
+    "kit-viz": {
+      normalize: function (node) {
+        mapAttributes(node, { "kind": "data-visualization" });
+        addClass(node, "visualization");
+        if (!node.id) node.id = "kit-viz-" + Math.random().toString(36).slice(2, 8);
+      }
+    },
+    "kit-predict": {
+      normalize: function (node) {
+        mapAttributes(node, {
+          "question-id": "data-question-id",
+          "answer": "data-answer",
+          "tolerance": "data-tolerance",
+          "unit": "data-unit"
+        });
+        if (!node.hasAttribute("data-question-id") && node.id) {
+          node.setAttribute("data-question-id", node.id);
+        }
+        node.setAttribute("data-predict", "");
+      }
+    },
+    "kit-param": {
+      normalize: function (node) {
+        if (node.hasAttribute("name") && !node.hasAttribute("data-param")) {
+          node.setAttribute("data-param", node.getAttribute("name") || "");
+        }
+        node.removeAttribute("name");
+      }
+    },
+    "kit-island": {
+      normalize: function (node) {
+        if (!node.id && node.hasAttribute("name")) {
+          node.id = node.getAttribute("name") || "";
+        }
+        node.setAttribute("data-island", "");
+      }
+    }
+  };
+
+  function rerunModuleInit(moduleId) {
+    var mod = kit.getModule && kit.getModule(moduleId);
+    if (mod && typeof mod.init === "function") {
+      try { mod.init(); } catch (error) { console.error("[kit] elements re-init " + moduleId + ":", error); }
+    }
+  }
+
+  var REINIT_AFTER = {
+    "kit-question": "learning.question",
+    "kit-callout": "content.callout",
+    "kit-viz": "viz.core",
+    "kit-predict": "learning.predict",
+    "kit-param": "learning.param",
+    "kit-island": "viz.island"
+  };
+
+  function upgradeAll() {
+    Object.keys(ELEMENT_SPECS).forEach(function (tag) {
+      if (typeof document === "undefined") return;
+      document.querySelectorAll(tag).forEach(function (node) {
+        try {
+          ELEMENT_SPECS[tag].normalize(node);
+          node.dataset.kitElementNormalized = "true";
+        } catch (error) {
+          console.error("[kit] element normalize failed for <" + tag + ">:", error);
+        }
+      });
+    });
+  }
+
+  if (typeof customElements !== "undefined" && typeof document !== "undefined") {
+    Object.keys(ELEMENT_SPECS).forEach(function (tag) {
+      if (customElements.get(tag)) return;
+      var spec = ELEMENT_SPECS[tag];
+      var Controller = function () { return Reflect.construct(HTMLElement, [], Controller); };
+      Controller.prototype = Object.create(HTMLElement.prototype, {
+        connectedCallback: {
+          value: function () {
+            if (this.dataset.kitElementNormalized === "true") return;
+            try {
+              spec.normalize(this);
+              this.dataset.kitElementNormalized = "true";
+            } catch (error) {
+              console.error("[kit] element normalize failed for <" + tag + ">:", error);
+            }
+            if (kit.__ACTIVE_MODULES__ && kit.getModule && REINIT_AFTER[tag]) {
+              rerunModuleInit(REINIT_AFTER[tag]);
+            }
+          }
+        }
+      });
+      Object.defineProperty(Controller, "observedAttributes", { value: [] });
+      customElements.define(tag, Controller);
+    });
+  }
+
+  kit.elements = { specs: ELEMENT_SPECS, upgradeAll: upgradeAll };
+  if (kit.registerModule) {
+    kit.registerModule("shell.elements", {
+      init: function () {
+        upgradeAll();
+      }
+    });
   }
 })(typeof window !== "undefined" ? window : globalThis);
 
@@ -3283,6 +3486,27 @@
       });
     }
 
+    var params = lesson.querySelectorAll("[data-param]");
+    if (params.length) {
+      lines.push("", "## 参数探索（当前状态；代表探索足迹）");
+      params.forEach(function (node) {
+        if (node.dataset.kitParamBound !== "true") return;
+        lines.push("", "### " + (node.dataset.param || node.id || "param"),
+          "- 当前值: " + (node.dataset.paramValue || "unknown"));
+      });
+    }
+
+    var islands = lesson.querySelectorAll("kit-island, [data-island]");
+    if (islands.length) {
+      lines.push("", "## 仿真孤岛观察（当前状态；不代表完成练习）");
+      islands.forEach(function (node) {
+        lines.push("", "### " + (node.id || "island"),
+          "- 初始化状态: " + (node.dataset.islandReady || "not-loaded"),
+          "- 当前状态: " + (node.dataset.visualState || "unknown"),
+          "- 预测记录: " + (node.dataset.predictState || "none"));
+      });
+    }
+
     lines.push("", "## 学习者反馈");
     var reflections = [];
     lesson.querySelectorAll(".reflection label").forEach(function (label) {
@@ -3397,61 +3621,116 @@
     };
   }
 
-  function setupAutoSync(lesson, store) {
-    if (typeof window === "undefined" || !store || !store.subscribe) return;
-    getServeToken(); // 提前缓存 URL 中的 ?t= 令牌
+  function removeQueued(key) {
+    openQueueDB(function (db) {
+      if (!db) {
+        try { localStorage.removeItem("kit_q_" + key); } catch (e) {}
+        return;
+      }
+      try {
+        var tx = db.transaction(IDB_STORE, "readwrite");
+        tx.objectStore(IDB_STORE).delete(key);
+      } catch (e) {}
+    });
+  }
 
-    var pill = document.createElement("span");
-    pill.className = "kit-sync-pill";
-    pill.setAttribute("role", "status");
-    pill.hidden = true;
-    var host = lesson.querySelector(".course-actions") || document.querySelector("[data-copy-feedback]");
-    if (host && host.parentNode) {
-      if (host.classList && host.classList.contains("course-actions")) host.appendChild(pill);
-      else host.parentNode.insertBefore(pill, host.nextSibling);
-    }
-
-    function setPill(state, text) {
-      pill.hidden = false;
-      pill.dataset.state = state;
-      pill.textContent = text;
-    }
-
+  /* 断网补偿：页面以 http(s) 打开时，把此前 file:// 离线作答暂存在
+     IndexedDB / localStorage 里的 payload 逐条补传给 serve，成功即清除。 */
+  function flushQueue() {
+    if (typeof window === "undefined") return;
     var isHttp = window.location.protocol === "http:" || window.location.protocol === "https:";
-    var timer = null;
+    if (!isHttp || typeof fetch === "undefined") return;
+    openQueueDB(function (db) {
+      var entries = [];
+      var finish = function () {
+        entries.forEach(function (entry) {
+          if (!entry || !entry.key) return;
+          var headers = { "Content-Type": "application/json" };
+          var tok = getServeToken();
+          if (tok) headers["X-Kit-Token"] = tok;
+          fetch("/api/records", { method: "POST", headers: headers, body: JSON.stringify(entry) })
+            .then(function (r) { if (r.ok) removeQueued(entry.key); })
+            .catch(function () {});
+        });
+      };
+      if (!db) {
+        try {
+          Object.keys(localStorage).forEach(function (k) {
+            if (k.indexOf("kit_q_") === 0) {
+              try { entries.push(JSON.parse(localStorage.getItem(k))); } catch (e) {}
+            }
+          });
+        } catch (e) {}
+        finish();
+        return;
+      }
+      try {
+        var tx = db.transaction(IDB_STORE, "readonly");
+        var req = tx.objectStore(IDB_STORE).getAll();
+        req.onsuccess = function () { entries = (req.result || []).slice(); finish(); };
+        req.onerror = function () { finish(); };
+      } catch (e) { finish(); }
+    });
+  }
 
-    function pushNow() {
-      var payload = buildPayload(lesson, store.getState());
-      if (!payload.has_content) return;
-      saveToQueue(payload, function () {
-        if (!isHttp || typeof fetch === "undefined") {
-          setPill("local", "● 已暂存浏览器");
+  /*
+   * 提交按钮（二合一）：点击才提交，不作后台自动同步。
+   * 每次点击同时做两件事：
+   *   1. 提交 —— http(s) 下 POST /api/records（kit.py serve 实时落盘 records/），
+   *      失败或离线时 payload 留在 IndexedDB，下次在线打开页面自动补传（flushQueue）；
+   *   2. 复制 —— 把同样的 Markdown 复制到剪贴板，供 file:// 离线粘贴给 Agent。
+   */
+  function setupSubmitButton(lesson, store) {
+    if (typeof document === "undefined") return;
+    Array.prototype.slice.call(document.querySelectorAll("[data-submit-feedback]")).forEach(function (button) {
+      if (button.dataset.kitBound === "true") return;
+      button.dataset.kitBound = "true";
+
+      button.addEventListener("click", function () {
+        var status = lesson.querySelector("[data-submit-feedback-status]");
+        var setStatus = function (text) { if (status) status.textContent = text; };
+        var record = buildLearningRecord(lesson, store ? store.getState() : {});
+        if (!record.hasContent) {
+          setStatus("请先完成练习或填写反馈");
           return;
         }
-        var headers = { "Content-Type": "application/json" };
-        var tok = getServeToken();
-        if (tok) headers["X-Kit-Token"] = tok;
-        fetch("/api/records", {
-          method: "POST",
-          headers: headers,
-          body: JSON.stringify(payload)
-        }).then(function (r) {
-          if (r.ok) setPill("synced", "✓ 已自动同步到 records/inbox");
-          else setPill("local", "● 已暂存浏览器");
-        }).catch(function () {
-          setPill("local", "● 已暂存浏览器");
+
+        var payload = buildPayload(lesson, store.getState());
+        var submitted = false;
+        var copied = false;
+        var clearTimer = null;
+        var report = function () {
+          var text;
+          if (submitted && copied) text = "✓ 已提交到 records/，并已复制到剪贴板";
+          else if (submitted) text = "✓ 已提交到 records/（复制未成功，可再次点击）";
+          else if (copied) text = "● 已复制到剪贴板（未检测到本地服务；下次在线打开课件时自动补传）";
+          else text = "● 已暂存浏览器（未检测到本地服务，且复制未成功）";
+          setStatus(text);
+          if (clearTimer) clearTimeout(clearTimer);
+          clearTimer = setTimeout(function () { setStatus(""); }, 6000);
+        };
+
+        // 先复制（保持用户手势上下文，剪贴板 API 在异步回调里可能被拒）
+        kit.util.copyText(record.text, function () { copied = true; report(); }, function () { report(); });
+
+        saveToQueue(payload, function () {
+          var isHttp = window.location.protocol === "http:" || window.location.protocol === "https:";
+          if (!isHttp || typeof fetch === "undefined") { report(); return; }
+          var headers = { "Content-Type": "application/json" };
+          var tok = getServeToken();
+          if (tok) headers["X-Kit-Token"] = tok;
+          fetch("/api/records", {
+            method: "POST",
+            headers: headers,
+            body: JSON.stringify(payload)
+          }).then(function (r) {
+            if (r.ok) { submitted = true; removeQueued(payload.key); }
+            report();
+          }).catch(function () {
+            report();
+          });
         });
       });
-    }
-
-    function scheduleSync() {
-      if (timer) clearTimeout(timer);
-      timer = setTimeout(pushNow, 450);
-    }
-
-    store.subscribe(scheduleSync);
-    lesson.addEventListener("input", function (e) {
-      if (e.target && e.target.matches && e.target.matches("textarea, input")) scheduleSync();
     });
   }
 
@@ -3471,25 +3750,9 @@
       lesson.__evidenceStore = store;
     }
 
-    setupAutoSync(lesson, store);
-
-    Array.prototype.slice.call(document.querySelectorAll("[data-copy-feedback]")).forEach(function (button) {
-      if (button.dataset.kitBound === "true") return;
-      button.dataset.kitBound = "true";
-
-      button.addEventListener("click", function () {
-        var status = lesson.querySelector("[data-copy-feedback-status]");
-        var record = buildLearningRecord(lesson, store ? store.getState() : {});
-        if (!record.hasContent) {
-          if (status) status.textContent = "请先完成练习或填写反馈";
-          return;
-        }
-        var reset = function () { setTimeout(function () { if (status) status.textContent = ""; }, 1800); };
-        kit.util.copyText(record.text,
-          function () { if (status) status.textContent = "学习记录已复制"; reset(); },
-          function () { if (status) status.textContent = "复制失败，请手动选择内容"; reset(); });
-      });
-    });
+    getServeToken();
+    flushQueue();
+    setupSubmitButton(lesson, store);
 
     initPrintState();
     if (kit.ready && kit.ready.markReady) kit.ready.markReady("learning.records");
@@ -3924,9 +4187,14 @@
         Array.prototype.forEach.call(ctx.turnsSrc.children, function (li, i) {
           var t = el("div", "q-turn");
           t.hidden = i > 0;
+          // records.js 按 [data-dialogue-turn] / [data-dialogue-prompt] 收集轮次
+          // 原文与追问类型（learning.records 契约），这里同时挂两套属性。
+          t.dataset.dialogueTurn = String(i + 1);
+          t.dataset.guidance = li.dataset.guidance || "question";
           var promptText = li.dataset.prompt || li.textContent.trim();
           var p = el("label", "q-turn-prompt", promptText);
           p.setAttribute("for", ctx.id + "-t" + i);
+          p.setAttribute("data-dialogue-prompt", "");
           var ta2 = el("textarea", "q-textarea");
           ta2.id = ctx.id + "-t" + i;
           t.appendChild(p);
@@ -3972,7 +4240,7 @@
         ctx.setState("idle", "info", "上一轮已保留。请回答新的追问。");
       } else {
         ctx.bCheck.disabled = true;
-        ctx.setState("saved", "info", "各轮回答已保留，可复制学习记录给老师评估。");
+        ctx.setState("saved", "info", "各轮回答已保留，点击“复制并提交学习记录”交给老师评估。");
       }
       ctx.meta.textContent = "已完成 " + ctx.q.attempts + "/" + ctx.controls.turns.length + " 轮" + (ctx.q.hints ? " · 提示 " + ctx.q.hints : "");
     },
@@ -4480,6 +4748,9 @@
             if (!sourceStore) throw new Error("data-viz-source 未找到 LearnKit 状态源：" + node.dataset.vizSource);
           }
           var instance = await adapters[kind].render(node, config, { sourceStore: sourceStore });
+          // 渲染成功后隐藏无脚本后备：后备只在失败与无 JS 时可见
+          var renderedFallback = find(node, "[data-viz-fallback]");
+          if (renderedFallback) renderedFallback.hidden = true;
           var instanceUpdate = instance && typeof instance.update === "function" ? instance.update : adapters[kind].update;
           if (sourceStore && typeof instanceUpdate !== "function") throw new Error("此适配器不支持 data-viz-source 动态更新");
           if (sourceStore) {

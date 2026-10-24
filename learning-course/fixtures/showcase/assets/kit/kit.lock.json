@@ -97,8 +97,8 @@
     ]
   },
   "files": {
-    "kit.css": "sha256-41af28c392a0b7326872e9c9bb63a30dc4d15af6d70ee5fb228c4617f4fec826",
-    "kit.js": "sha256-872889abe3a2ac6158ac8b74f07836f0f856776b4263505bb2181e4b6f1108ae"
+    "kit.css": "sha256-1701608ebc1e1b88a3876ad67c6e6fac96a253706191980540fbceec335d34e0",
+    "kit.js": "sha256-7e73d11b5d3f8a7a67cea832352c0a2efc170bc9b73f5997aa342bc5115028a1"
   },
   "vendor": {}
 }

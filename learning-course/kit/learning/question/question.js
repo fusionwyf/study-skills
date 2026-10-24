@@ -457,7 +457,7 @@
         ctx.setState("idle", "info", "上一轮已保留。请回答新的追问。");
       } else {
         ctx.bCheck.disabled = true;
-        ctx.setState("saved", "info", "各轮回答已保留，可复制学习记录给老师评估。");
+        ctx.setState("saved", "info", "各轮回答已保留，点击“复制并提交学习记录”交给老师评估。");
       }
       ctx.meta.textContent = "已完成 " + ctx.q.attempts + "/" + ctx.controls.turns.length + " 轮" + (ctx.q.hints ? " · 提示 " + ctx.q.hints : "");
     },

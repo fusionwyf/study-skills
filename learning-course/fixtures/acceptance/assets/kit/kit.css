@@ -1012,9 +1012,77 @@
     display: none !important;
   }
 
-  .kit-bleed {
+  /* ---- Editorial rhythm: breakout, sidenote, pull quote ---- */
+  /* .kit-main is the inline-size container; .wide resolves against it. */
+  .kit-main {
+    container-type: inline-size;
+  }
+
+  /* .wide 破栏：从 50rem 正文度量扩展到整个内容区宽度 */
+  .wide {
+    width: 100cqi;
+    margin-inline: calc(50% - 50cqi);
+  }
+
+  /* .sidenote 边注：窄屏折叠为正文内注记，≥1200px 浮动到正文右侧 */
+  .sidenote {
+    font-size: 0.85rem;
+    line-height: 1.55;
+    color: var(--c-text-2);
+    border-left: 2px solid var(--c-accent);
+    padding: 0.1rem 0 0.1rem 0.8rem;
+    margin: 0.4rem 0 1.1rem;
+  }
+
+  @media (min-width: 1200px) {
+    .sidenote {
+      float: right;
+      clear: right;
+      width: 12rem;
+      margin: 0.2rem 0 1rem 1.5rem;
+      border-left-width: 2px;
+    }
+  }
+
+  /* .pull-quote 大号引语：打破卡片流，强调关键判断 */
+  .pull-quote {
+    margin: 2rem 0;
+    padding: 0.2rem 0 0.2rem 1.25rem;
+    border-left: 3px solid var(--c-accent);
+    font-size: 1.35rem;
+    line-height: 1.5;
+    font-weight: 550;
+    color: var(--c-text);
+  }
+
+  /* .reflection 标准反思输入块（data-role="learner-feedback" 载体） */
+  .reflection {
+    margin: 0 0 1.25rem;
+    padding: 1rem 1.1rem;
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+  }
+
+  .reflection label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.92rem;
+    margin-bottom: 0.4rem;
+    color: var(--c-text);
+  }
+
+  .reflection textarea,
+  .reflection input {
     width: 100%;
-    max-width: 100cqw;
+    box-sizing: border-box;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid var(--c-border);
+    border-radius: 8px;
+    background: var(--c-bg);
+    color: var(--c-text);
+    font: inherit;
+    resize: vertical;
   }
 
   /* Responsive layout: Collapse Left Column on Tablet (768px - 1199px) */
@@ -1159,6 +1227,18 @@
     max-width: 100% !important;
     padding: 0 !important;
     margin: 0 !important;
+  }
+
+  /* Editorial rhythm resets: print keeps everything inline */
+  .wide {
+    width: auto !important;
+    margin-inline: 0 !important;
+  }
+
+  .sidenote {
+    float: none !important;
+    width: auto !important;
+    margin: 0.5rem 0 !important;
   }
 
   .kit-block,
@@ -2340,7 +2420,7 @@
 
 /* ---- Module: learning.records (records.css) ---- */
 @layer learning {
-  [data-copy-feedback] {
+  [data-submit-feedback] {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
@@ -2355,41 +2435,20 @@
     transition: background 0.12s, border-color 0.12s;
   }
 
-  [data-copy-feedback]:hover {
+  [data-submit-feedback]:hover {
     background: var(--c-accent-strong);
     border-color: var(--c-accent-strong);
   }
 
-  [data-copy-feedback-status] {
+  [data-submit-feedback]:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  [data-submit-feedback-status] {
     font-size: 0.88rem;
     color: var(--c-text-2);
     margin-left: 0.5rem;
-  }
-
-  .kit-sync-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0.25rem 0.65rem;
-    margin-left: 0.5rem;
-    border: 1px solid var(--c-border);
-    border-radius: var(--radius-pill);
-    background: var(--c-surface);
-    color: var(--c-text-2);
-    font-family: var(--font-mono);
-    font-size: 0.76rem;
-    vertical-align: middle;
-  }
-  .kit-sync-pill[data-state="synced"] {
-    border-color: color-mix(in srgb, var(--c-success) 45%, var(--c-border));
-    color: var(--c-success);
-  }
-  .kit-sync-pill[data-state="local"] {
-    border-color: color-mix(in srgb, var(--c-warn) 45%, var(--c-border));
-    color: var(--c-warn);
-  }
-  @media print {
-    .kit-sync-pill { display: none !important; }
   }
 }
 
@@ -2914,6 +2973,7 @@
   [data-visualization="sequence"] .viz-host,
   [data-visualization="table"] .viz-host {
     height: auto;
+    min-height: 0;
     overflow: visible;
   }
 

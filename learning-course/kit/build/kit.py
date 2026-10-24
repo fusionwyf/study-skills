@@ -379,8 +379,17 @@ def slugify(text):
 def normalize_html_content(html_text):
     """
     Normalizes heading IDs and static TOC fallback in HTML.
+    Also migrates the legacy data-copy-feedback contract to data-submit-feedback
+    (capture is now click-driven; see learning.records).
     Returns (updated_html, headings_list).
     """
+    html_text = html_text.replace("data-copy-feedback-status", "data-submit-feedback-status")
+    html_text = html_text.replace("data-copy-feedback", "data-submit-feedback")
+    html_text = re.sub(
+        r'(<button[^>]*data-submit-feedback[^>]*>)\s*复制学习记录\s*(</button\s*>)',
+        r"\1复制并提交学习记录\2",
+        html_text,
+    )
     headings = []
     seen_ids = set()
 

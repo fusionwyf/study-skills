@@ -6,6 +6,7 @@
     "content._block": "2.0.0",
     "content.callout": "2.0.0",
     "content.code": "2.0.0",
+    "shell.elements": "2.0.0",
     "shell.nav": "2.1.1",
     "shell.progress": "2.0.0",
     "shell.theme-switcher": "2.0.0",
@@ -18,6 +19,9 @@
       "core"
     ],
     "foundation": [
+      "core"
+    ],
+    "shell.elements": [
       "core"
     ],
     "shell.nav": [
@@ -49,8 +53,8 @@
     ]
   },
   "files": {
-    "kit.css": "sha256-9833b80563246601f2ed40253e4556d63760963cd366c3f10ad03df26b9b5d9c",
-    "kit.js": "sha256-9523b8d42d166714a187d5513daa0a818e374a40974e2836d5bd34f0e7445c0f"
+    "kit.css": "sha256-64a0dabc2d95f64705699ceed3ae821fe83590f4ef4277ecf232e8818f3d32ef",
+    "kit.js": "sha256-cd4a3da407a0b316b78be4abc5f69a938a12c71274551d9eceade1315b694eb7"
   },
   "vendor": {}
 }

@@ -198,16 +198,18 @@
 </div>
 ```
 
-`data-feedback="required"` 的正文反思框用 `.reflection`：`learning.records` 只收集 `<label for="X">` + 同页 `id="X"` 的输入框，其它写法（如裸 `textarea[data-feedback-input]`）不会进入复制的学习记录。
+`data-feedback="required"` 的正文反思框用 `.reflection`：`learning.records` 只收集 `<label for="X">` + 同页 `id="X"` 的输入框，其它写法（如裸 `textarea[data-feedback-input]`）不会进入学习记录。
 
 ```html
 <section class="course-actions">
-  <div class="reflection">
+  <div class="reflection" data-role="learner-feedback">
     <label for="fb-1">哪里看懂了？</label>
     <textarea id="fb-1" rows="3"></textarea>
   </div>
-  <button type="button" data-copy-feedback>复制学习记录</button>
-  <span data-copy-feedback-status role="status"></span>
+  <!-- 学习记录只在点击时提交（不做后台自动同步）：
+       serve 运行时点击即落盘 records/<NNNN>-feedback.md，同时复制到剪贴板。 -->
+  <button type="button" data-submit-feedback>复制并提交学习记录</button>
+  <span data-submit-feedback-status role="status"></span>
 </section>
 ```
 

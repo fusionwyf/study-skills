@@ -42,7 +42,7 @@ supported_objectives: []
 
 ### drop-seq
 - 渲染状态: true
-- 当前参数/步骤: {"kind":"sequence","step":2,"total":4}
+- 当前参数/步骤: {"kind":"sequence","step":0,"total":4}
 
 ### drop-table
 - 渲染状态: true
@@ -52,14 +52,14 @@ supported_objectives: []
 
 ### pendulum
 - 初始化状态: true
-- 当前状态: {"mode":"island","name":"pendulum","cursor":10,"length":42,"playing":false,"summary":"t = 0.50 s · θ = 1.9°"}
+- 当前状态: {"mode":"island","name":"pendulum","cursor":0,"length":1,"playing":false,"summary":"t = 0.00 s · θ = 40.1°"}
 - 预测记录: none
 
 ## 学习者反馈
 
 ### 把单摆的阻尼调大 10 倍会看到什么？先预测再看（可以把 tick 里的 damping 改成 1.2 想象一下）。
 
-island 的时间旅行让'推一下'前后的对比成为可能——这是静态图做不到的。
+仅点击提交验证：marker XYZ789。
 ## 可观察行为
 
 - 回答了什么：待 Agent 根据原始反馈填写。

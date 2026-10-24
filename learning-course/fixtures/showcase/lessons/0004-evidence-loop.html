@@ -22,8 +22,8 @@
       <section data-role="objective" aria-labelledby="goal-title">
         <h2 id="goal-title">本课要解决的问题</h2>
         <aside class="callout" data-callout="info">
-          <div class="callout__title">两条回流通道</div>
-          <p><strong>通道 A</strong>：<code>kit.py serve</code> 运行时，本页作答实时落盘 <code>records/0004-feedback.md</code>，无需任何手动操作。<strong>通道 B</strong>：纯 <code>file://</code> 打开时点"复制学习记录"，把 Markdown 粘贴给 Agent。</p>
+          <div class="callout__title">一个按钮，两条去路</div>
+          <p><strong>提交</strong>：<code>kit.py serve</code> 运行时，点本页末尾的"复制并提交学习记录"，作答即实时落盘 <code>records/0004-feedback.md</code>。<strong>复制</strong>：按钮同时把 Markdown 复制到剪贴板——纯 <code>file://</code> 打开时这就是唯一通道，粘贴给 Agent 即可。记录只在点击时提交，不做后台自动同步。</p>
         </aside>
       </section>
 
@@ -72,8 +72,8 @@
           <label for="fb-4b">四节课下来，哪个组件对你自己的课程最有用？</label>
           <textarea id="fb-4b" rows="2"></textarea>
         </div>
-        <button type="button" class="btn primary" data-copy-feedback>复制学习记录</button>
-        <span data-copy-feedback-status role="status"></span>
+        <button type="button" class="btn primary" data-submit-feedback>复制并提交学习记录</button>
+        <span data-submit-feedback-status role="status"></span>
       </section>
 
       <nav class="kit-pager" aria-label="课时翻页导航"></nav>

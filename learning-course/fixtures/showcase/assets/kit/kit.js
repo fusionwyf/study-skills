@@ -3772,62 +3772,64 @@
     });
   }
 
-  function setupAutoSync(lesson, store) {
-    if (typeof window === "undefined" || !store || !store.subscribe) return;
-    getServeToken(); // 提前缓存 URL 中的 ?t= 令牌
-    flushQueue();
+  /*
+   * 提交按钮（二合一）：点击才提交，不作后台自动同步。
+   * 每次点击同时做两件事：
+   *   1. 提交 —— http(s) 下 POST /api/records（kit.py serve 实时落盘 records/），
+   *      失败或离线时 payload 留在 IndexedDB，下次在线打开页面自动补传（flushQueue）；
+   *   2. 复制 —— 把同样的 Markdown 复制到剪贴板，供 file:// 离线粘贴给 Agent。
+   */
+  function setupSubmitButton(lesson, store) {
+    if (typeof document === "undefined") return;
+    Array.prototype.slice.call(document.querySelectorAll("[data-submit-feedback]")).forEach(function (button) {
+      if (button.dataset.kitBound === "true") return;
+      button.dataset.kitBound = "true";
 
-    var pill = document.createElement("span");
-    pill.className = "kit-sync-pill";
-    pill.setAttribute("role", "status");
-    pill.hidden = true;
-    var host = lesson.querySelector(".course-actions") || document.querySelector("[data-copy-feedback]");
-    if (host && host.parentNode) {
-      if (host.classList && host.classList.contains("course-actions")) host.appendChild(pill);
-      else host.parentNode.insertBefore(pill, host.nextSibling);
-    }
-
-    function setPill(state, text) {
-      pill.hidden = false;
-      pill.dataset.state = state;
-      pill.textContent = text;
-    }
-
-    var isHttp = window.location.protocol === "http:" || window.location.protocol === "https:";
-    var timer = null;
-
-    function pushNow() {
-      var payload = buildPayload(lesson, store.getState());
-      if (!payload.has_content) return;
-      saveToQueue(payload, function () {
-        if (!isHttp || typeof fetch === "undefined") {
-          setPill("local", "● 已暂存浏览器");
+      button.addEventListener("click", function () {
+        var status = lesson.querySelector("[data-submit-feedback-status]");
+        var setStatus = function (text) { if (status) status.textContent = text; };
+        var record = buildLearningRecord(lesson, store ? store.getState() : {});
+        if (!record.hasContent) {
+          setStatus("请先完成练习或填写反馈");
           return;
         }
-        var headers = { "Content-Type": "application/json" };
-        var tok = getServeToken();
-        if (tok) headers["X-Kit-Token"] = tok;
-        fetch("/api/records", {
-          method: "POST",
-          headers: headers,
-          body: JSON.stringify(payload)
-        }).then(function (r) {
-          if (r.ok) setPill("synced", "✓ 已自动同步到 records/inbox");
-          else setPill("local", "● 已暂存浏览器");
-        }).catch(function () {
-          setPill("local", "● 已暂存浏览器");
+
+        var payload = buildPayload(lesson, store.getState());
+        var submitted = false;
+        var copied = false;
+        var clearTimer = null;
+        var report = function () {
+          var text;
+          if (submitted && copied) text = "✓ 已提交到 records/，并已复制到剪贴板";
+          else if (submitted) text = "✓ 已提交到 records/（复制未成功，可再次点击）";
+          else if (copied) text = "● 已复制到剪贴板（未检测到本地服务；下次在线打开课件时自动补传）";
+          else text = "● 已暂存浏览器（未检测到本地服务，且复制未成功）";
+          setStatus(text);
+          if (clearTimer) clearTimeout(clearTimer);
+          clearTimer = setTimeout(function () { setStatus(""); }, 6000);
+        };
+
+        // 先复制（保持用户手势上下文，剪贴板 API 在异步回调里可能被拒）
+        kit.util.copyText(record.text, function () { copied = true; report(); }, function () { report(); });
+
+        saveToQueue(payload, function () {
+          var isHttp = window.location.protocol === "http:" || window.location.protocol === "https:";
+          if (!isHttp || typeof fetch === "undefined") { report(); return; }
+          var headers = { "Content-Type": "application/json" };
+          var tok = getServeToken();
+          if (tok) headers["X-Kit-Token"] = tok;
+          fetch("/api/records", {
+            method: "POST",
+            headers: headers,
+            body: JSON.stringify(payload)
+          }).then(function (r) {
+            if (r.ok) { submitted = true; removeQueued(payload.key); }
+            report();
+          }).catch(function () {
+            report();
+          });
         });
       });
-    }
-
-    function scheduleSync() {
-      if (timer) clearTimeout(timer);
-      timer = setTimeout(pushNow, 450);
-    }
-
-    store.subscribe(scheduleSync);
-    lesson.addEventListener("input", function (e) {
-      if (e.target && e.target.matches && e.target.matches("textarea, input")) scheduleSync();
     });
   }
 
@@ -3847,25 +3849,9 @@
       lesson.__evidenceStore = store;
     }
 
-    setupAutoSync(lesson, store);
-
-    Array.prototype.slice.call(document.querySelectorAll("[data-copy-feedback]")).forEach(function (button) {
-      if (button.dataset.kitBound === "true") return;
-      button.dataset.kitBound = "true";
-
-      button.addEventListener("click", function () {
-        var status = lesson.querySelector("[data-copy-feedback-status]");
-        var record = buildLearningRecord(lesson, store ? store.getState() : {});
-        if (!record.hasContent) {
-          if (status) status.textContent = "请先完成练习或填写反馈";
-          return;
-        }
-        var reset = function () { setTimeout(function () { if (status) status.textContent = ""; }, 1800); };
-        kit.util.copyText(record.text,
-          function () { if (status) status.textContent = "学习记录已复制"; reset(); },
-          function () { if (status) status.textContent = "复制失败，请手动选择内容"; reset(); });
-      });
-    });
+    getServeToken();
+    flushQueue();
+    setupSubmitButton(lesson, store);
 
     initPrintState();
     if (kit.ready && kit.ready.markReady) kit.ready.markReady("learning.records");
@@ -4519,7 +4505,7 @@
         ctx.setState("idle", "info", "上一轮已保留。请回答新的追问。");
       } else {
         ctx.bCheck.disabled = true;
-        ctx.setState("saved", "info", "各轮回答已保留，可复制学习记录给老师评估。");
+        ctx.setState("saved", "info", "各轮回答已保留，点击“复制并提交学习记录”交给老师评估。");
       }
       ctx.meta.textContent = "已完成 " + ctx.q.attempts + "/" + ctx.controls.turns.length + " 轮" + (ctx.q.hints ? " · 提示 " + ctx.q.hints : "");
     },

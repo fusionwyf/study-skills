@@ -66,10 +66,11 @@
           <label for="fb-1">这一课哪里看懂了？哪里还不确定？</label>
           <textarea id="fb-1" rows="3" placeholder="用自己的话写下当前理解与疑问"></textarea>
         </div>
-        <!-- kit.py serve 运行时，作答与反思会自动同步到 records/inbox/ 并实时
-             合成 records/<NNNN>-feedback.md，无需手动复制；此按钮仅作 file:// 离线兜底。 -->
-        <button type="button" class="btn primary" data-copy-feedback>复制学习记录</button>
-        <span data-copy-feedback-status role="status"></span>
+        <!-- 学习记录只在点击本按钮时提交（不做后台自动同步）：
+             serve 运行时点击即实时落盘 records/<NNNN>-feedback.md；
+             同时复制到剪贴板，file:// 离线时粘贴给 Agent 兜底。 -->
+        <button type="button" class="btn primary" data-submit-feedback>复制并提交学习记录</button>
+        <span data-submit-feedback-status role="status"></span>
       </section>
 
       <nav class="kit-pager" aria-label="课时翻页导航"></nav>
