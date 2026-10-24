@@ -56,7 +56,7 @@ Course Kit v2 将所有模块拓扑排序并拼接为单文件产物：
 
 ## 导航与进度数据
 
-侧边栏课表、当前课高亮、完成进度条由 `assets/course/nav.json` 承载。**`kit.py sync` 末尾会自动调用 `build_index.py --nav` 重新生成**，无需手动跑。
+侧边栏课表、当前课高亮、完成进度条由 `assets/course/nav.json` 承载。**`kit.py sync` 末尾会自动调用 `build_index.py --nav-only --nav` 只重新生成 nav.json**（不触碰 INDEX.md 与 index.html），无需手动跑。
 
 `nav.json` 的内容与来源：
 
@@ -67,13 +67,38 @@ Course Kit v2 将所有模块拓扑排序并拼接为单文件产物：
 | `completed_lessons` | 扫描 `records/*.md` 中 `assessment_status: finalized` 的记录 | 侧边栏 ✓ 标记 + 进度条分子 |
 | `completed_count` | `completed_lessons` 的长度 | 进度条显示 |
 
-如需单独生成（不打包 kit），可手动运行 `python scripts/build_index.py <course-dir> --nav`。
+如需重建课程索引页（INDEX.md 与 index.html），手动运行 `python scripts/build_index.py <course-dir>`。
 
-## 主题与配色
+## 主题与配色：内置预设 + 自创主题
 
 - **L1 Token 系统**：三级设计令牌（primitive → semantic → component），包含 `--c-bg`、`--c-text`、`--c-accent`、`--series-1...8`、`--code-*`、`--toc-*`。组件 CSS 严格禁止出现字面十六进制色值。
-- **内置主题**：`course`、`ink`、`paper`，声明自身 `color-scheme`。
 - **第三方接线**：Chart.js/Plotly/JSXGraph 读取 `--series-*` 变量；highlight.js 官方主题由单个 `<link id="kit-hljs-theme">` 承载，主题切换时由主题引擎无缝切换；Mermaid `themeVariables` 自动响应主题变更派发的 `kit:themechange` 事件。
+- **内置 8 套预设**（`init_course.py --theme` 选择，右上角切换器可换）：
+
+| 预设 | 明暗 | 代码块 | 按需字体 | 适用 |
+|---|---|---|---|---|
+| `swiss` | 浅色 | 深色 | Noto Sans SC / JetBrains Mono | 理工、数学、排版严谨的推导课 |
+| `blueprint` | 深色 | 深色 | Noto Sans SC / JetBrains Mono | 工程、系统、网络拓扑类内容 |
+| `riso` | 浅色 | 深色 | Noto Sans SC / Space Grotesk | 通识、概念、设计感强的主题 |
+| `brutal` | 浅色 | 深色 | Noto Sans SC / Space Grotesk / JetBrains Mono | 编程、练习、强节奏反馈 |
+| `field` | 浅色 | 深色 | LXGW WenKai | 自然、生物、人文观察笔记 |
+| `course` | 浅色 | 跟随页面 | — | 默认通用 |
+| `ink` | 深色 | 深色 | — | 默认深色 |
+| `paper` | 浅色 | 浅色 | — | 打印与纸质阅读 |
+
+- **课程自创主题（开放扩展契约）**：在 `<course-dir>/assets/course/themes/<name>.css` 编写新预设，文件首行必须是元数据注释：
+
+  ```css
+  /* @kit-theme name="cyber-crt" label="复古终端" scheme="dark" code="dark" fonts="jetbrains-mono:400,700" */
+  @layer theme {
+    html[data-theme="cyber-crt"] { /* 覆盖语义色彩、字体、圆角与版式钩子 */ }
+  }
+  ```
+
+  - `fonts` 内多个字体用 `;` 分隔（单个 spec 内 `,` 表示多字重）；值可以是 fontsource 包名（`noto-sans-sc:400,700`）或完整 CSS URL。
+  - 必填 Token（对齐 `themes/course.css`）：背景层 `--c-bg`/`--c-surface`/`--c-surface-2`、文字层 `--c-text`/`--c-text-2`/`--c-muted`、边框 `--c-border`/`--c-border-strong`、强调色家族 `--c-accent`/`--c-accent-strong`/`--c-accent-bg`/`--c-accent-border`、语义色 `--c-warn(-bg)`/`--c-danger(-bg)`/`--c-success(-bg)`、数据色板 `--series-1..8`、阴影 `--shadow`/`--shadow-card`、字体栈 `--font-display`/`--font-body`/`--font-mono`；可选结构装饰钩子：背景肌理 `background-image`、`h2` 章节造型、`.callout`/`.question` 边框与阴影风格。
+  - 门禁：`kit.py sync` 解析 `@kit-theme` 头并把主题合入 `kit.css` 与 `config.json` 的 `customThemes`/`themes`（无合法头部直接报错）；正文对比度 ≥ 4.5:1；深色主题必须 `scheme="dark"`（自动触发 SVG 亮色描边）；自创主题必须通过 `kit.py shot --theme <id>` 截图自检。
+  - 晋升全局预设：把该 CSS 复制到 `kit/foundation/themes/<name>.css` 并运行 `kit.py build`，即可成为所有课程可用的内置预设。
 
 ## 扩展组件开发规范
 
@@ -104,3 +129,4 @@ Course Kit v2 将所有模块拓扑排序并拼接为单文件产物：
 3. 新组件或领域模型实际打开页面，检查 `kit:ready`（全局 `data-kit-ready`）与逐模块 `kit:<module>:ready`，确认无 `data-kit-state=failed` 容器。
 4. 375px/768px/1280px 宽度实测：无水平溢出，TOC 三态切换正常，主题无刷新平滑切换。
 5. 无脚本与打印时：正文、代码、公式源、Mermaid 源、静态目录均可读。
+6. 视觉自检：`python kit/build/kit.py shot <course-dir> [--lesson N] [--theme <id>]` 用无头 Chromium 生成桌面（1440×2400）与窄屏（390×1600）截图到 `exports/shots/`；具备视觉能力的 Agent 直接读取 PNG 检查排版溢出、公式与图表渲染；自创主题必须截图验收对比度。

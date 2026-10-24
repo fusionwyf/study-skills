@@ -8,6 +8,10 @@ Commands:
   kit check <course_dir>     Verifies kit.lock.json hashes and module integrity
   kit add <course_dir> <mod> Adds an opt-in module to course config and syncs
   kit list                   Lists available modules and descriptors
+  kit serve <course_dir>     Local HTTP server; POST /api/records merges into
+                             records/<NNNN>-feedback.md in real time, /dashboard UI
+  kit ingest <course_dir>    Offline fallback: merges records/inbox/*.json the same way
+  kit shot <course_dir>      Headless-Chromium screenshots for visual QC (exports/shots/)
 """
 
 import argparse
@@ -38,6 +42,7 @@ KIT_ROOT = Path(__file__).resolve().parent.parent
 # scripts/course_layout.py); lessons/ and records/ may be split per chapter.
 sys.path.insert(0, str(KIT_ROOT.parent / "scripts"))
 import course_layout
+import record_builder
 SKILL_ROOT = KIT_ROOT.parent
 
 LAYER_ORDER = ["reset", "tokens", "base", "content", "shell", "learning", "viz", "theme", "course"]
@@ -468,6 +473,82 @@ def normalize_html_content(html_text):
     return normalized, headings
 
 
+KIT_THEME_HEADER_RE = re.compile(r"/\*\s*@kit-theme\s+(.*?)\*/", re.S)
+KIT_THEME_META_RE = re.compile(r'([a-zA-Z]+)\s*=\s*"([^"]*)"')
+
+
+def parse_kit_theme_header(css_text):
+    """Parses the mandatory `/* @kit-theme ... */` header of a custom theme CSS."""
+    match = KIT_THEME_HEADER_RE.search(css_text[:2000])
+    if not match:
+        return None
+    meta = dict(KIT_THEME_META_RE.findall(match.group(1)))
+    name = meta.get("name", "").strip()
+    if not name:
+        return None
+    scheme = meta.get("scheme", "light").strip().lower()
+    if scheme not in ("light", "dark"):
+        scheme = "light"
+    # Font specs keep "pkg:400,700" intact; multiple specs are ';' separated.
+    fonts = [part.strip() for part in re.split(r";", meta.get("fonts", "")) if part.strip()]
+    parsed = {
+        "name": name,
+        "label": meta.get("label", "").strip() or name,
+        "scheme": scheme,
+        "fonts": fonts,
+    }
+    code = meta.get("code", "").strip().lower()
+    if code in ("light", "dark"):
+        parsed["code"] = code
+    return parsed
+
+
+def discover_course_themes(course_dir):
+    """Scans <course>/assets/course/themes/*.css for @kit-theme declarations.
+
+    Returns a list of {"meta": parsed-header, "file": Path}; raises when a CSS
+    file there lacks a valid header so broken custom themes fail sync loudly.
+    """
+    themes_dir = Path(course_dir) / "assets" / "course" / "themes"
+    found = []
+    if not themes_dir.is_dir():
+        return found
+    for theme_file in sorted(themes_dir.glob("*.css")):
+        meta = parse_kit_theme_header(theme_file.read_text(encoding="utf-8"))
+        if meta is None:
+            raise ValueError(
+                f"assets/course/themes/{theme_file.name}: missing or invalid "
+                '`/* @kit-theme name="..." label="..." scheme="light|dark" ... */` header'
+            )
+        found.append({"meta": meta, "file": theme_file})
+    return found
+
+
+def merge_course_themes_into_config(course_config, discovered):
+    """Injects discovered custom themes into config.json fields and returns them.
+
+    `customThemes` maps name -> engine metadata (consumed by theme-engine.js);
+    every name is also appended to the switchable `themes` list.
+    """
+    if not discovered:
+        return course_config
+    custom = course_config.get("customThemes") if isinstance(course_config.get("customThemes"), dict) else {}
+    themes_list = course_config.get("themes") if isinstance(course_config.get("themes"), list) else []
+    for entry in discovered:
+        meta = entry["meta"]
+        custom[meta["name"]] = {
+            "label": meta["label"],
+            "scheme": meta["scheme"],
+            **({"code": meta["code"]} if meta.get("code") else {}),
+            **({"fonts": meta["fonts"]} if meta.get("fonts") else {}),
+        }
+        if meta["name"] not in themes_list:
+            themes_list.append(meta["name"])
+    course_config["customThemes"] = custom
+    course_config["themes"] = themes_list
+    return course_config
+
+
 def load_course_extensions(course_dir, course_config=None):
     """Loads course extension declarations from config.json and/or extensions.json."""
     extensions = []
@@ -593,7 +674,7 @@ def collect_completed_lessons_from_records(course_p: Path) -> list[str]:
     return course_layout.completed_lesson_keys(Path(course_p))
 
 
-def bundle_kit(active_modules, output_dir, course_config=None, vendor_mode="cdn", course_dir=None):
+def bundle_kit(active_modules, output_dir, course_config=None, vendor_mode="cdn", course_dir=None, course_themes=None):
     """Bundles kit.js and kit.css for the active modules and copies local vendor files if local mode."""
     output_path = Path(output_dir)
 
@@ -666,6 +747,11 @@ def bundle_kit(active_modules, output_dir, course_config=None, vendor_mode="cdn"
         mod_name = ext.get("module", ext_id)
         if mod_name not in ext_module_ids:
             ext_module_ids.append(mod_name)
+
+    # Append course-level custom themes (single-file, offline-friendly)
+    for entry in course_themes or []:
+        css_content = entry["file"].read_text(encoding="utf-8")
+        css_parts.append(f"/* ---- Course Theme: {entry['meta']['name']} ({entry['file'].name}) ---- */\n{css_content}\n")
 
     kit_css_content = "\n".join(css_parts)
 
@@ -924,6 +1010,24 @@ def sync_course(course_dir):
         )
         theme_file.write_text(default_theme_css, encoding="utf-8", newline="\n")
 
+    # Step 2b: Discover course-level custom themes (assets/course/themes/*.css)
+    (course_assets / "themes").mkdir(parents=True, exist_ok=True)
+    try:
+        discovered_themes = discover_course_themes(cpath)
+    except ValueError as theme_err:
+        print(f"Error: {theme_err}", file=sys.stderr)
+        return False
+    if discovered_themes:
+        config_before = json.dumps(course_config, ensure_ascii=False, sort_keys=True)
+        merge_course_themes_into_config(course_config, discovered_themes)
+        if config_before != json.dumps(course_config, ensure_ascii=False, sort_keys=True):
+            config_file.write_text(
+                json.dumps(course_config, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8", newline="\n",
+            )
+        names = ", ".join(entry["meta"]["name"] for entry in discovered_themes)
+        print(f"  -> Custom themes discovered: {names}")
+
     vendor_mode = course_config.get("vendor", {}).get("mode", "cdn")
 
     # Step 3: Detect active modules and bundle kit
@@ -938,7 +1042,8 @@ def sync_course(course_dir):
         tmp_kit_dir = Path(tmp_dir) / "kit"
         try:
             files_hashes, ordered_ids, vendor_hashes = bundle_kit(
-                active_modules, tmp_kit_dir, course_config=course_config, vendor_mode=vendor_mode, course_dir=cpath
+                active_modules, tmp_kit_dir, course_config=course_config, vendor_mode=vendor_mode,
+                course_dir=cpath, course_themes=discovered_themes,
             )
         except Exception as e:
             print(f"Error bundling kit: {e}", file=sys.stderr)
@@ -1011,7 +1116,7 @@ def sync_course(course_dir):
     if build_index.exists():
         try:
             subprocess.run(
-                [sys.executable, str(build_index), str(cpath), "--nav"],
+                [sys.executable, str(build_index), str(cpath), "--nav-only", "--nav"],
                 check=True, capture_output=True, text=True,
             )
             print(f"  -> nav.json regenerated from records.")
@@ -1313,9 +1418,22 @@ def serve_course(course_dir, host="127.0.0.1", port=8765, lan=False, token=None)
             lesson = re.sub(r"[^0-9A-Za-z_-]", "", str(payload.get("lesson", "unknown"))) or "unknown"
             dev = re.sub(r"[^0-9A-Za-z_-]", "", str(payload.get("device_id", "local"))) or "local"
             fname = f"lesson-{lesson}-{dev}.json"
-            target = inbox_dir / fname
-            target.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
-            return self._send_json(200, {"ok": True, "file": f"records/inbox/{fname}"})
+            inbox_file = inbox_dir / fname
+            inbox_file.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
+
+            # Real-time merge into records/<NNNN>-feedback.md — the identical
+            # code path kit.py ingest uses, so both produce the same record.
+            response = {"ok": True, "file": f"records/inbox/{fname}"}
+            try:
+                outcome = record_builder.merge_inbox_payload(cpath, payload)
+            except Exception as merge_err:
+                return self._send_json(500, {"ok": False, "error": f"merge_failed: {merge_err}"})
+            if outcome.get("record"):
+                record_builder.update_last_feedback(cpath, outcome["record"])
+                response["record"] = outcome["record"]
+            if outcome.get("skipped"):
+                response["skipped"] = outcome["skipped"]
+            return self._send_json(200, response)
 
     httpd = ThreadingHTTPServer((bind_host, port), CourseHandler)
     local_url = f"http://127.0.0.1:{port}/"
@@ -1336,55 +1454,110 @@ def serve_course(course_dir, host="127.0.0.1", port=8765, lan=False, token=None)
 
 
 def ingest_inbox(course_dir):
-    """Converts records/inbox/*.json into pending Markdown record skeletons in records/."""
+    """Offline fallback: merges records/inbox/*.json exactly like kit.py serve does."""
     cpath = Path(course_dir).resolve()
-    inbox_dir = cpath / "records" / "inbox"
-    if not inbox_dir.is_dir():
-        print("No records/inbox/ directory found.")
-        return True
-    files = sorted(inbox_dir.glob("*.json"))
-    if not files:
-        print("Inbox is empty.")
-        return True
+    if not cpath.is_dir():
+        print(f"Error: Course directory {cpath} does not exist.", file=sys.stderr)
+        return False
+    record_builder.ingest_inbox(cpath)
+    return True
 
-    records_dir = cpath / "records"
-    for f in files:
-        try:
-            payload = json.loads(f.read_text(encoding="utf-8"))
-        except Exception as e:
-            print(f"Skipping bad JSON {f.name}: {e}", file=sys.stderr)
-            continue
-        lesson_str = str(payload.get("lesson", "")).strip()
-        try:
-            lesson_num = int(lesson_str)
-            lesson_pad = f"{lesson_num:04d}"
-        except Exception:
-            lesson_num = lesson_str or "unknown"
-            lesson_pad = str(lesson_num)
-        dev = re.sub(r"[^0-9A-Za-z_-]", "", str(payload.get("device_id", "local"))) or "local"
-        md_body = (payload.get("markdown") or "").strip()
-        updated = (payload.get("updated_at") or "")[:10]
 
-        out_file = records_dir / f"{lesson_pad}-inbox-{dev}.md"
-        if out_file.exists():
-            existing = out_file.read_text(encoding="utf-8")
-            if "assessment_status: finalized" in existing:
-                print(f"Skipping {out_file.name}: already finalized.")
-                continue
+def find_chromium_browser():
+    import shutil
+    candidates = [
+        shutil.which("chrome"), shutil.which("chromium"), shutil.which("chromium-browser"),
+        shutil.which("msedge"),
+        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+        r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+        r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+        r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+    ]
+    for candidate in candidates:
+        if candidate and Path(candidate).is_file():
+            return candidate
+    return None
 
-        frontmatter = [
-            "---",
-            "record_schema: 1",
-            "assessment_status: pending",
-            "record_type: attempt",
-            f"lesson: {lesson_num}",
-            f"device_id: {dev}",
-            f"inbox_updated_at: {updated}",
-            "---",
-            "",
-        ]
-        out_file.write_text("\n".join(frontmatter) + md_body + "\n", encoding="utf-8", newline="\n")
-        print(f"Wrote pending record: records/{out_file.name}")
+
+SHOT_VIEWPORTS = [("desktop", 1440, 2400), ("mobile", 390, 1600)]
+
+
+def shot_course(course_dir, lesson=None, themes=None, browser=None):
+    """Headless-Chromium screenshots of lessons into exports/shots/ for visual QC."""
+    import tempfile as _tempfile
+    cpath = Path(course_dir).resolve()
+    if not cpath.is_dir():
+        print(f"Error: Course directory not found: {cpath}", file=sys.stderr)
+        return False
+    browser = browser or find_chromium_browser()
+    if not browser:
+        print(
+            "Error: no Chromium-family browser found (chrome/chromium/msedge); "
+            "pass --browser to specify one explicitly.",
+            file=sys.stderr,
+        )
+        return False
+
+    entries = course_layout.iter_lessons(cpath)
+    if lesson is not None:
+        needle = f"{int(lesson):04d}"
+        entries = [entry for entry in entries if entry["number"] == needle]
+        if not entries:
+            print(f"Error: lesson {needle} not found.", file=sys.stderr)
+            return False
+    if not entries:
+        print("Error: no lessons found.", file=sys.stderr)
+        return False
+
+    if not themes:
+        themes = []
+        config_file = cpath / "assets" / "course" / "config.json"
+        if config_file.is_file():
+            try:
+                default_theme = json.loads(config_file.read_text(encoding="utf-8")).get("theme")
+                if default_theme:
+                    themes = [default_theme]
+            except Exception:
+                pass
+
+    shots_dir = cpath / "exports" / "shots"
+    shots_dir.mkdir(parents=True, exist_ok=True)
+    written = []
+    with _tempfile.TemporaryDirectory(prefix="kit-shot-profile-") as profile:
+        for entry in entries:
+            base_url = entry["path"].resolve().as_uri()
+            for theme in themes or [None]:
+                themed_url = f"{base_url}?kit-theme={theme}" if theme else base_url
+                suffix = f"-{theme}" if theme else ""
+                for label, width, height in SHOT_VIEWPORTS:
+                    out = shots_dir / f"{entry['number']}{suffix}-{label}.png"
+                    cmd = [
+                        browser, "--headless=new", "--disable-gpu", "--hide-scrollbars",
+                        f"--user-data-dir={profile}",
+                        f"--window-size={width},{height}",
+                        "--virtual-time-budget=12000",
+                        f"--screenshot={out}",
+                        themed_url,
+                    ]
+                    try:
+                        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+                    except subprocess.TimeoutExpired:
+                        print(f"Error: screenshot timed out for {entry['file']} ({label}{suffix})", file=sys.stderr)
+                        return False
+                    if out.is_file():
+                        written.append(out)
+                        print(f"Shot: {out.relative_to(cpath).as_posix()}")
+                    else:
+                        detail = (result.stderr or "").strip().splitlines()
+                        print(
+                            f"Error: screenshot failed for {entry['file']} ({label}{suffix}): "
+                            + (detail[-1] if detail else "no output"),
+                            file=sys.stderr,
+                        )
+                        return False
+    print(f"{len(written)} screenshot(s) in exports/shots/")
     return True
 
 
@@ -1419,8 +1592,15 @@ def main():
     serve_p.add_argument("--token", default=None, help="Custom access token for --lan")
 
     # ingest
-    ing_p = subparsers.add_parser("ingest", help="Converts records/inbox/*.json into pending record .md files")
+    ing_p = subparsers.add_parser("ingest", help="Merges records/inbox/*.json into pending record .md files")
     ing_p.add_argument("course_dir", help="Path to course directory")
+
+    # shot
+    shot_p = subparsers.add_parser("shot", help="Headless-Chromium screenshots for visual QC")
+    shot_p.add_argument("course_dir", help="Path to course directory")
+    shot_p.add_argument("--lesson", type=int, help="Only shoot this lesson number")
+    shot_p.add_argument("--theme", action="append", help="Theme to shoot (repeatable; default: course config theme)")
+    shot_p.add_argument("--browser", help="Chromium-family browser executable override")
 
     args = parser.parse_args()
 
@@ -1440,7 +1620,11 @@ def main():
     elif args.command == "serve":
         serve_course(args.course_dir, port=args.port, lan=args.lan, token=args.token)
     elif args.command == "ingest":
-        ingest_inbox(args.course_dir)
+        ok = ingest_inbox(args.course_dir)
+        sys.exit(0 if ok else 1)
+    elif args.command == "shot":
+        ok = shot_course(args.course_dir, lesson=args.lesson, themes=args.theme, browser=args.browser)
+        sys.exit(0 if ok else 1)
 
 
 if __name__ == "__main__":

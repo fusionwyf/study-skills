@@ -42,10 +42,12 @@ disable-model-invocation: true
 ├── lessons/0001-<slug>.html
 ├── assets/
 │   ├── kit/             # Course Kit v2 生成物 (kit.js, kit.css, kit.lock.json)
-│   └── course/          # 课程专用配置 (config.json, theme.css)
+│   └── course/          # 课程专用配置 (config.json, theme.css, themes/ 自创主题)
 ├── reference/
 ├── records/
+│   └── inbox/           # 浏览器作答原始快照 (kit.py serve 自动写入)
 └── exports/
+    └── shots/           # kit.py shot 视觉自检截图
 ```
 
 保留完整目录骨架。课号使用四位连续数字，slug 使用安全的 dash-case。创建前检查现有文件，避免覆盖已有课程。
@@ -64,11 +66,12 @@ Course Kit v2 将所有教学资产统一维护在 `kit/`（L0 运行时、L1 �
      --title "<课程标题>" --goal "<学习者真实目标>" [--language zh-CN] [--diagnostic]
    ```
 
-   `--course-dir`、`--title`、`--goal` 均为必填；`--diagnostic` 只在第 2 步判定起点需要诊断时传入。目标目录已存在时脚本拒绝覆盖，除非显式加 `--force`。
+   `--course-dir`、`--title`、`--goal` 均为必填；`--diagnostic` 只在第 2 步判定起点需要诊断时传入；`--theme` 选择视觉预设（内置 8 套：`swiss`/`blueprint`/`riso`/`brutal`/`field`/`course`/`ink`/`paper`，按学科匹配——理工/数学优先 `swiss` 或 `blueprint`，编程/练习优先 `brutal` 或 `blueprint`，通识/概念优先 `riso`，自然/生物/人文笔记优先 `field`）。目标目录已存在时脚本拒绝覆盖，除非显式加 `--force`。
+   若课程有鲜明的学科气质或学习者提出了特殊审美偏好，允许并鼓励在 `<course-dir>/assets/course/themes/<name>.css` 中自创课程专属预设（写法见 `references/assets.md`），`kit.py sync` 会自动发现并注入。
 4. 在 `PLAN.md` 中维护课程路线和边界。它不是可重新生成文件。
 5. 读取 `references/lesson.md` 与 `references/assets.md`，按课程目标从 `kit/catalog.json` 选择已实现能力；有公式、图形或动态模型时读取 `references/render.md`。以原生语义 HTML + data-* 契约为制作入口，生成一个具有可验证学习成果和 evidence opportunity 的 HTML 课件。
    把学习者要求的深度、视觉风格、交互与验收标准写入课程 `PLAN.md`；不足的能力按 assets 协议选择静态表达或课程专用扩展。
-   成熟第三方库优先，允许固定版本 CDN；代码使用原生 `<pre><code class="language-...">`（由 Kit 块外壳与 highlight.js 渲染），公式使用 KaTeX 语法（`\(...\)` / `\[...\]`），流程图/状态图/时序图使用 Mermaid（`<pre class="mermaid">`），不手写 SVG 替代 Mermaid 能表达的图形。题目统一使用 `<section class="question" data-kind="...">` 题块。视觉定制写入 `assets/course/theme.css`，主题与第三方配置写入 `assets/course/config.json`。
+   成熟第三方库优先，允许固定版本 CDN；代码使用原生 `<pre><code class="language-...">`（由 Kit 块外壳与 highlight.js 渲染），公式使用 KaTeX 语法（`\(...\)` / `\[...\]`），流程图/状态图/时序图使用 Mermaid（`<pre class="mermaid">`），不手写 SVG 替代 Mermaid 能表达的图形。题目统一使用 `<section class="question" data-role="evidence" data-kind="...">` 题块。版式用 `.sidenote` / `.wide` / `.pull-quote` 打破卡片堆砌（契约见 `references/lesson.md`）。视觉定制写入 `assets/course/theme.css`，主题与第三方配置写入 `assets/course/config.json`。
    `templates/lesson.html` 是标准课件模板：复制后必须替换其中占位的 `data-course-id` 与 `data-objective`，并确保该 objective 已写入 `course.yaml` 的 `objectives`。
 6. 运行 `python kit/build/kit.py sync <course-dir>` 同步模块并重新生成 `nav.json`（导航与进度数据），然后验证课程包：
 
@@ -79,6 +82,13 @@ Course Kit v2 将所有教学资产统一维护在 `kit/`（L0 运行时、L1 �
    ```
 
 完成条件：成功标准和 objective 已写入状态，第一课文件存在且引用已定义 objective，phase 为 `awaiting_evidence`，模块已同步，nav.json 已更新，验证命令均通过。
+向学习者交付课件时启动本地服务（作答实时落盘，无需手动收集反馈）：
+
+```text
+python kit/build/kit.py serve <course-dir> [--lan]
+```
+
+自创主题或大改版式后必须运行 `python kit/build/kit.py shot <course-dir>` 截图自检（对比度、溢出、公式与图表渲染）。
 
 ## Continue
 
@@ -109,11 +119,15 @@ python ../shared/scripts/validate_sources.py <course-dir>
 
 每课必须包含一个获取掌握证据的机会。证据可以是练习答案、解释、作品、操作结果、反思或普通聊天回复。
 
-HTML 的“复制学习记录”按钮只汇总原始答案、检查次数、提示使用、即时题目判定和学习者反思，不推断 mastery。学习者把结构化 Markdown 粘贴给 Agent 后使用两阶段记录：
+捕获分两条通道，产出字节级一致的 `records/<NNNN>-feedback.md`（模板收敛在 `scripts/record_builder.py`）：
 
-1. 使用 `scripts/update_progress.py <course-dir> --lesson <N> --feedback-file <file>` 捕获原始反馈；生成的 record 保持 `assessment_status: pending`。
-2. 在 record 中区分可观察行为和自我报告，填写 evidence type、strength、independence、supported objectives，并设为 `assessment_status: finalized`。独立性字段与升级边界读取 `../shared/references/record-contract.md`；页面反馈包含多轮回答时逐轮保留问题与原话。
-3. 使用 `--evidence-record <record> --objective <ID=MASTERY>` 更新状态。objective 必须已经存在，record 必须明确支持该更新。
+- **通道 A（默认：服务运行期全自动落盘，无需 Agent 收集）**：`kit.py serve` 运行期间，学习者在网页上作答或填写反思时，服务进程收到 `POST /api/records` 后当场把设备快照写入 `records/inbox/`，并实时合成/更新 `records/<NNNN>-feedback.md`（`assessment_status: pending`）与 `course.yaml` 的 `last_feedback`。学习者回到对话窗口后，Agent **直接读取已落盘的 record 文件**完成教学评估：区分可观察行为与自我报告，填写 evidence type、strength、independence、supported objectives，设为 `finalized`。已被 Agent 定稿的 record 不会被新快照覆盖（原始快照保留在 `records/inbox/`）。
+- **通道 B（纯 `file://` 离线兜底）**：未启动服务时，HTML 的“复制学习记录”按钮汇总原始答案、检查次数、提示使用、即时判定和学习者反思；学习者把结构化 Markdown 粘贴给 Agent 后运行 `scripts/update_progress.py <course-dir> --lesson <N> --feedback-file <file>`。若学习者曾离线作答后手动导出 JSON 放入 `records/inbox/`，运行 `kit.py ingest <course-dir>` 或 `update_progress.py <course-dir> --from-inbox` 触发同一合并逻辑。
+
+定稿与状态更新（两条通道相同）：
+
+1. record 保持 `assessment_status: pending` 直到 Agent 填写判断；独立性字段与升级边界读取 `../shared/references/record-contract.md`；页面反馈包含多轮回答时逐轮保留问题与原话。
+2. 使用 `--evidence-record <record> --objective <ID=MASTERY>` 更新状态。objective 必须已经存在，record 必须明确支持该更新。
 
 完成条件：原始反馈未被改写，finalized record 不含待判断占位符，状态中的 evidence type、strength 和 mastery 与 record frontmatter 一致。除 `uncertain` 外，修改 mastery 必须引用 finalized record。复习间隔只由 `update_progress.py` 的当前算法管理，主文件不复制算法。
 

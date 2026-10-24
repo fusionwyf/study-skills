@@ -13,6 +13,8 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+BUILTIN_THEMES = ("course", "ink", "paper", "swiss", "blueprint", "riso", "brutal", "field")
+
 
 def slugify(value: str) -> str:
     value = value.strip().lower()
@@ -36,6 +38,12 @@ def main() -> int:
     parser.add_argument("--course-dir", required=True, help="Destination course directory")
     parser.add_argument("--title", required=True, help="Human-facing course title")
     parser.add_argument("--goal", required=True, help="Learner's real-world goal")
+    parser.add_argument(
+        "--theme",
+        default="course",
+        help="Visual preset: a built-in name (swiss/blueprint/riso/brutal/field/course/ink/paper) "
+        "or a custom theme the agent authors in assets/course/themes/<name>.css",
+    )
     parser.add_argument("--language", default="zh-CN")
     parser.add_argument("--diagnostic", action="store_true", help="Start with a minimal diagnostic")
     parser.add_argument("--force", action="store_true", help="Overwrite generated files")
@@ -43,15 +51,18 @@ def main() -> int:
 
     course_dir = Path(args.course_dir).expanduser().resolve()
     course_id = slugify(course_dir.name)
+    theme = re.sub(r"[^a-z0-9_-]+", "-", args.theme.strip().lower()) or "course"
     now = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     for name in ("lessons", "assets", "reference", "records", "exports"):
         (course_dir / name).mkdir(parents=True, exist_ok=True)
+    (course_dir / "assets" / "course" / "themes").mkdir(parents=True, exist_ok=True)
 
     starter_template = Path(__file__).resolve().parents[1] / "templates" / "lesson.html"
     if starter_template.is_file():
         lesson_content = starter_template.read_text(encoding="utf-8")
         lesson_content = lesson_content.replace("example-course", course_id)
         lesson_content = lesson_content.replace("课程标题", html.escape(args.title))
+        lesson_content = lesson_content.replace('data-theme="course"', f'data-theme="{theme}"')
         write_text(course_dir / "lessons/0001-lesson.html", lesson_content, args.force)
 
     phase = "diagnostic" if args.diagnostic else "designing"
@@ -82,11 +93,33 @@ review_queue: []
 last_feedback: null
 """
     write_text(course_dir / "course.yaml", course_yaml, args.force)
+
     # Kit v2 sync bundles assets/kit/ and assets/course/
+    config_dir = course_dir / "assets" / "course"
+    config_file = config_dir / "config.json"
+    if config_file.exists() and not args.force:
+        raise FileExistsError(f"Refusing to overwrite existing file: {config_file}")
+    themes_list = [theme] + [name for name in BUILTIN_THEMES if name != theme]
+    config = {
+        "theme": theme,
+        "themes": themes_list,
+        "customThemes": {},
+        "vendor": {"mode": "cdn"},
+        "code": {"themes": {"light": "github", "dark": "github-dark"}},
+        "modules": [],
+    }
+    config_file.write_text(json.dumps(config, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
+
     kit_py = Path(__file__).resolve().parents[1] / "kit" / "build" / "kit.py"
     if kit_py.is_file():
         import subprocess
         subprocess.run([sys.executable, str(kit_py), "sync", str(course_dir)], check=True)
+    if theme not in BUILTIN_THEMES and not any((config_dir / "themes").glob("*.css")):
+        print(
+            f"NOTE: theme '{theme}' is not a built-in preset and assets/course/themes/ is empty; "
+            f"author assets/course/themes/{theme}.css with a @kit-theme header, then re-run kit.py sync.",
+            file=sys.stderr,
+        )
 
     plan = f"""# {args.title}
 
@@ -108,7 +141,9 @@ last_feedback: null
 
 ## 课件制作约定
 
-- 视觉主题：在 `assets/course/theme.css` 自定义配色与字体，配置写入 `assets/course/config.json`。
+- 视觉预设：`{theme}`（切换器可选 `{"、".join(themes_list)}`；课程自创主题放 `assets/course/themes/<name>.css`，`kit.py sync` 自动发现）。
+- 课程专用样式与配置：`assets/course/theme.css` 与 `assets/course/config.json`。
+- 本地服务：`python .agents/skills/learning-course/kit/build/kit.py serve <course-dir> --lan`，作答实时落盘 `records/`；视觉自检用 `python .agents/skills/learning-course/kit/build/kit.py shot <course-dir>`。
 - 第三方库：按内容优先选成熟库；通过 `kit.py sync` 自动打包管理。
 - 依赖记录：产物由 `kit.lock.json` 锁定哈希。
 
@@ -121,7 +156,7 @@ last_feedback: null
 
     title = html.escape(args.title)
     index = f"""<!doctype html>
-<html lang=\"{html.escape(args.language)}\" data-theme=\"course\">
+<html lang=\"{html.escape(args.language)}\" data-theme=\"{theme}\">
 <head>
   <meta charset=\"utf-8\">
   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">

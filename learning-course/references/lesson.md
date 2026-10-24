@@ -244,6 +244,25 @@
 - **无障碍**：自动响应 `@media (prefers-reduced-motion: reduce)` 停用动效并展示静态内容。
 - **开发扩展**：自定义扩展模块参考 `references/assets.md`。
 
+### 9. 版式节奏：边注、破栏与引语
+
+连续的圆角卡片和 callout 会造成单调的视觉流。用三个基础版式类制造节奏，它们是 `foundation/layout.css` 的标准能力，所有主题可用：
+
+```html
+<aside class="sidenote">宽屏（≥1200px）浮动到正文右侧的小号边注，放术语出处、
+直觉补充或“为什么不是另一种解释”；窄屏自动折叠回正文流内的注记。</aside>
+
+<div class="wide">
+  <!-- 破栏容器：图表、大图、宽表格可超出 50rem 正文度量，扩展到整个内容区 -->
+  <section class="visualization" ...>...</section>
+</div>
+
+<p class="pull-quote">大号引语：本课最希望学习者带走的那句关键判断。</p>
+```
+
+- **使用时机**：每个 `.sidenote` 承担一个“如果放进正文会打断主线”的旁支；每课至多 1–2 处 `.wide`（多则失去破栏效果）；`.pull-quote` 用于认知转折点，不用于装饰。
+- **打印与无脚本**：`.wide` 与 `.sidenote` 在打印样式与窄屏下自动回到常规文档流，无需作者处理。
+
 ## 四、Bloom 认知层级
 
 - `remember`：列出、识别、回忆。

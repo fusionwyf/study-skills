@@ -9,7 +9,7 @@
 Course Kit v2 将所有渲染组件划分为清晰的 6 层（L0–L5）：
 
 - **L0 核心层（`kit/core`）**：总线（`kit.bus`）、配置（`kit.config`）、加载器（`kit.need`）、就绪管理（`kit.ready`）、状态存储（`kit.store` / `LearnKit`）。
-- **L1 基础与主题（`kit/foundation`）**：全局 Token（`tokens.css`）、预设主题（`course`/`ink`/`paper`）、基线排版与主题引擎（`theme-engine.js`）。
+- **L1 基础与主题（`kit/foundation`）**：全局 Token（`tokens.css`）、8 套预设主题（`course`/`ink`/`paper`/`swiss`/`blueprint`/`riso`/`brutal`/`field`）、基线排版与主题引擎（`theme-engine.js`）。
 - **L2 块外壳与内容（`kit/content`）**：统一块外壳（`_block`，提供复制/折叠/语言徽章）、代码（`code`）、数学（`math`）、流程图（`diagram`）、表格与媒体。
 - **L3 页面骨架（`kit/shell`）**：响应式布局、三态目录（`toc`）、导航与主题切换器。
 - **L4 学习交互（`kit/learning`）**：统一题目（`question`，支持 6 种题型）、步骤（`step`）、学习证据模型（`records`）。
@@ -61,3 +61,13 @@ Course Kit v2 将所有渲染组件划分为清晰的 6 层（L0–L5）：
 - 容器使用 `data-learnkit="explore"` 与 `data-lk-config`。
 - 控件使用 `data-lk-bind="params.xxx"` 自动进行状态双向绑定。
 - 可视化容器通过 `data-viz-source="#lk-id"` 订阅状态派生结果并实时更新图表。
+
+## 六、主题引擎（L1）
+
+`theme-engine.js` 在 `foundation` 模块初始化时运行：
+
+- **注册表与切换**：`kit.theme.list()` 返回可切换主题（`config.json` 的 `themes` 数组优先，否则为 [默认主题, 明暗备选]）；`kit.theme.setTheme(name)` 无刷新切换并持久化到 localStorage；`kit.theme.register(name, meta)` 供课程注册自创预设。
+- **customThemes 自动注册**：`kit.py sync` 把 `assets/course/themes/*.css` 的 `@kit-theme` 头解析进 `config.json` 的 `customThemes`，引擎 boot 时自动 `register` 全部条目，无需手写 JS。
+- **URL 覆盖**：`?kit-theme=<id>` 优先于默认主题（不写入 localStorage），`kit.py shot --theme <id>` 与主题分享链接都依赖它。
+- **字体按需加载**：meta.fonts 中的 fontsource 包名或 CSS URL 仅在主题首次启用时插入 `<link>`，失败静默回退到 CSS 字体栈；`config.fonts: "system"` 可整体禁用。
+- **代码主题联动**：`kit:themechange` 时按 meta.code 或页面明暗替换 `#kit-hljs-theme`，Mermaid 监听同一事件重绘。

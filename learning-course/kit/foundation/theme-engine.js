@@ -124,8 +124,6 @@
     if (typeof document !== "undefined") {
       document.documentElement.dataset.theme = currentTheme;
       document.documentElement.dataset.scheme = currentScheme;
-      // Legacy compatibility
-      document.documentElement.dataset.themeSurface = currentScheme;
 
       if (persist && typeof localStorage !== "undefined") {
         try {
@@ -170,6 +168,16 @@
   function initTheme() {
     if (themeInitialized) return;
     themeInitialized = true;
+
+    // 课程自创预设（kit.py sync 从 assets/course/themes/*.css 的 @kit-theme
+    // 头解析进 config.customThemes）在此注册，随后即可切换。
+    var custom = kit.config && kit.config.customThemes;
+    if (custom && typeof custom === "object") {
+      Object.keys(custom).forEach(function (name) {
+        if (typeof kit.theme.register === "function") kit.theme.register(name, custom[name]);
+      });
+    }
+
     var stored = null;
     try {
       if (typeof window !== "undefined" && window.localStorage) {
@@ -178,8 +186,17 @@
     } catch (e) {}
 
     var base = defaultTheme();
+    // URL ?kit-theme=<id> 优先（kit.py shot / 分享链接用），不改写持久化选择。
+    var urlTheme = null;
+    try {
+      if (typeof window !== "undefined" && window.location) {
+        urlTheme = new URLSearchParams(window.location.search).get("kit-theme");
+      }
+    } catch (e) {}
     // 已存储的主题若不在可切换列表中（例如课程更换了预设），回到默认主题。
-    var initialTheme = stored && availableThemes().indexOf(stored) !== -1 ? stored : base;
+    var initialTheme = base;
+    if (urlTheme && availableThemes().indexOf(urlTheme) !== -1) initialTheme = urlTheme;
+    else if (stored && availableThemes().indexOf(stored) !== -1) initialTheme = stored;
 
     applyTheme(initialTheme, false);
 

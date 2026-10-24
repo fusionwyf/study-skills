@@ -22,11 +22,11 @@ from validate_record import independence_error, recent_guided_records  # noqa: E
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import course_layout  # noqa: E402
+import record_builder  # noqa: E402
 
 
 MASTERY_VALUES = {"unseen", "recognition", "application", "transfer", "uncertain"}
 PHASE_VALUES = {"diagnostic", "designing", "teaching", "awaiting_evidence", "review_due", "recovery"}
-RECORD_FILENAME_RE = re.compile(r"^(\d{4})-")
 
 
 def now_iso() -> str:
@@ -141,13 +141,7 @@ def lesson_exists(root: Path, lesson: int, chapter: str | None = None) -> bool:
 
 
 def next_record_sequence(records_dir: Path) -> int:
-    highest = 0
-    if records_dir.is_dir():
-        for entry in records_dir.iterdir():
-            match = RECORD_FILENAME_RE.match(entry.name)
-            if match:
-                highest = max(highest, int(match.group(1)))
-    return highest + 1
+    return record_builder.next_record_sequence(records_dir)
 
 
 def resolve_chapter(state: dict, objectives: list, wanted: str | None, parsed_objectives: list) -> dict | None:
@@ -197,39 +191,15 @@ def make_record(args: argparse.Namespace, record_path: Path) -> str | None:
     if record_path.exists():
         raise SystemExit(f"feedback record already exists and records are append-only: {record_path}")
     record_id = "L%04d" % next_record_sequence(record_path.parent)
-    attempted_at = date.today().isoformat()
-    content = f"""---
-record_schema: 1
-assessment_status: pending
-record_id: {record_id}
-attempted_at: {attempted_at}
-source_backed: false
-synthetic: false
-independence: {args.independence or 'null'}
-lesson: {args.lesson}
-evidence_type: null
-evidence_strength: null
-supported_objectives: []
----
-# 第 {args.lesson:04d} 课学习记录
-
-## 学习者原始反馈
-
-{raw.rstrip()}
-
-## 可观察行为
-
-- 回答了什么：待 Agent 根据原始反馈填写。
-- 正确性或产物结果：待判断。
-- 是否使用提示：待判断。
-- 是否包含解释或迁移：待判断。
-
-## Agent 判断
-
-- 仍不确定：待 Agent 补充。完成判断后同步填写 frontmatter，并将 `assessment_status` 设为 `finalized`。
-"""
+    content = record_builder.render_pending_record(
+        lesson=args.lesson,
+        raw_markdown=raw,
+        record_id=record_id,
+        attempted_at=date.today().isoformat(),
+        independence=args.independence,
+    )
     record_path.parent.mkdir(parents=True, exist_ok=True)
-    record_path.write_text(content, encoding="utf-8", newline="\n")
+    record_builder.write_atomic(record_path, content)
     return record_path.as_posix()
 
 
@@ -239,6 +209,9 @@ def main() -> int:
     parser.add_argument("course_dir")
     parser.add_argument("--lesson", type=int, help="Current lesson number")
     parser.add_argument("--chapter", help="Chapter label or id for a chaptered course (e.g. 第九章 or vm)")
+    parser.add_argument("--from-inbox", action="store_true", dest="from_inbox",
+                        help="Merge records/inbox/*.json snapshots into pending records (offline "
+                        "fallback when kit.py serve was not running), then exit")
     parser.add_argument("--phase", choices=tuple(sorted(PHASE_VALUES)))
     parser.add_argument("--status", choices=("draft", "active", "paused", "complete"))
     parser.add_argument("--feedback-file")
@@ -255,6 +228,19 @@ def main() -> int:
 
     root = Path(args.course_dir).expanduser().resolve()
     state_path = root / "course.yaml"
+
+    if args.from_inbox:
+        conflicting = [
+            name for name in ("lesson", "chapter", "phase", "status", "feedback_file", "feedback_text",
+                              "independence", "evidence_record", "objective", "review", "performance", "due_lesson")
+            if getattr(args, name)
+        ]
+        if conflicting:
+            raise SystemExit("--from-inbox merges inbox snapshots only; drop other flags: " + ", ".join(conflicting))
+        merged = record_builder.ingest_inbox(root)
+        print(f"merged {merged} inbox snapshot(s) into records/")
+        return 0
+
     if not state_path.is_file():
         raise SystemExit("course.yaml is missing; enter recovery before updating progress")
     state, yaml = load_yaml(state_path)

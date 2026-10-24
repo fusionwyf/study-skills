@@ -238,6 +238,8 @@ def main() -> int:
     parser.add_argument("course_dir")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--nav", action="store_true", help="Generate assets/course/nav.json navigation manifest")
+    parser.add_argument("--nav-only", action="store_true", dest="nav_only",
+                        help="Only write nav.json; leave INDEX.md and index.html untouched")
     args = parser.parse_args()
     root = Path(args.course_dir).expanduser().resolve()
     if not root.is_dir(): raise SystemExit(f"course directory does not exist: {root}")
@@ -251,12 +253,15 @@ def main() -> int:
         root / "INDEX.md": render_markdown(meta, lessons),
         root / "index.html": render_html(meta, lessons, (root / "assets/theme.css").is_file(), is_kit),
     }
+    if args.nav_only:
+        outputs = {}
     if args.dry_run:
         for path, content in outputs.items(): print(f"--- {path} ---\n{content}")
     else:
         for path, content in outputs.items(): path.write_text(content, encoding="utf-8", newline="\n")
-        print(root / "INDEX.md")
-        print(root / "index.html")
+        if outputs:
+            print(root / "INDEX.md")
+            print(root / "index.html")
         if args.nav:
             nav_p = write_navigation_data(root, lessons, meta, chapters)
             if nav_p:

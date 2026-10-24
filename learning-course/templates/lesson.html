@@ -36,11 +36,15 @@
         <h2 id="core-title">核心解释</h2>
         <p>先用自然语言说明机制，再给出正式定义、规则或判断框架。</p>
         <p>\[a^2 + b^2 = c^2\]</p>
+        <!-- 版式节奏示例（按需取用，避免圆角卡片堆砌）：
+             <aside class="sidenote">宽屏浮到正文右侧的边注；窄屏折叠为内注记。</aside>
+             <div class="wide">破栏容器：图表/大图可超出 50rem 正文度量。</div>
+             <p class="pull-quote">大号引语，强调本课关键判断。</p> -->
       </section>
 
       <section aria-labelledby="practice-title">
         <h2 id="practice-title">理解验证</h2>
-        <section class="question" data-question-id="q1" data-kind="choice" data-max-attempts="2">
+        <section class="question" data-role="evidence" data-question-id="q1" data-kind="choice" data-max-attempts="2">
           <div data-stem><p>哪一个选项最符合本课的判断规则？</p></div>
           <ol data-options>
             <li data-option>只看表面现象，结论越快越好。<span data-why>表面现象不能区分规则的适用条件。</span></li>
@@ -52,7 +56,18 @@
         </section>
       </section>
 
+      <section data-role="retrieval" aria-labelledby="retrieval-title">
+        <h2 id="retrieval-title">本课小结</h2>
+        <p>先不看正文，用自己的话复述本课的核心判断规则，并说明它的适用条件；说不出来的地方回到上文重读。</p>
+      </section>
+
       <section class="course-actions">
+        <div class="reflection" data-role="learner-feedback">
+          <label for="fb-1">这一课哪里看懂了？哪里还不确定？</label>
+          <textarea id="fb-1" rows="3" placeholder="用自己的话写下当前理解与疑问"></textarea>
+        </div>
+        <!-- kit.py serve 运行时，作答与反思会自动同步到 records/inbox/ 并实时
+             合成 records/<NNNN>-feedback.md，无需手动复制；此按钮仅作 file:// 离线兜底。 -->
         <button type="button" class="btn primary" data-copy-feedback>复制学习记录</button>
         <span data-copy-feedback-status role="status"></span>
       </section>
