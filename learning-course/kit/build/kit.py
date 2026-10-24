@@ -686,11 +686,6 @@ def detect_modules_for_course(course_dir, manifest, staged_html=None):
     return active_modules, reasons
 
 
-def collect_completed_lessons_from_records(course_p: Path) -> list[str]:
-    """Composite progress keys backed by finalized records (chapter-aware)."""
-    return course_layout.completed_lesson_keys(Path(course_p))
-
-
 def bundle_kit(active_modules, output_dir, course_config=None, vendor_mode="cdn", course_dir=None, course_themes=None):
     """Bundles kit.js and kit.css for the active modules and copies local vendor files if local mode."""
     output_path = Path(output_dir)
@@ -855,7 +850,7 @@ def bundle_kit(active_modules, output_dir, course_config=None, vendor_mode="cdn"
                             "key": other["key"],
                             "href": course_layout.lesson_href(it["file"], other["file"]),
                         }
-                completed_lessons = collect_completed_lessons_from_records(course_p)
+                completed_lessons = course_layout.completed_lesson_keys(course_p)
                 cur_l = c_meta.get("current_lesson", len(completed_lessons) if completed_lessons else len(items))
                 try:
                     cur_l_num = int(cur_l)
@@ -876,7 +871,7 @@ def bundle_kit(active_modules, output_dir, course_config=None, vendor_mode="cdn"
                     nav_data["chapters"] = chapter_meta
                     nav_data["chaptered"] = True
         elif "completed_lessons" not in nav_data:
-            completed_lessons = collect_completed_lessons_from_records(course_p)
+            completed_lessons = course_layout.completed_lesson_keys(course_p)
             nav_data["completed_lessons"] = completed_lessons
             nav_data["completed_count"] = len(completed_lessons)
             nav_data["total_count"] = len(nav_data.get("lessons", []))

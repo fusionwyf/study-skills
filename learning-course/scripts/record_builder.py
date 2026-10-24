@@ -211,8 +211,7 @@ def ingest_inbox(course_root: Path, quiet: bool = False) -> int:
         if outcome["record"]:
             merged += 1
             record_rel = outcome["record"]
-            if update_last_feedback(course_root, record_rel):
-                pass
+            update_last_feedback(course_root, record_rel)
             if not quiet:
                 print(f"Merged {path.name} -> {record_rel}")
         elif outcome["skipped"] and not quiet:

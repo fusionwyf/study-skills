@@ -121,36 +121,15 @@ last_feedback: null
             file=sys.stderr,
         )
 
-    plan = f"""# {args.title}
-
-## 课程契约
-
-- 学习目标：{args.goal}
-
-## 课程边界
-
-待与学习者确认。
-
-## 成功标准
-
-待与学习者确认。
-
-## 路线概览
-
-待设计。路线可以根据后续学习证据调整。
-
-## 课件制作约定
-
-- 视觉预设：`{theme}`（切换器可选 `{"、".join(themes_list)}`；课程自创主题放 `assets/course/themes/<name>.css`，`kit.py sync` 自动发现）。
-- 课程专用样式与配置：`assets/course/theme.css` 与 `assets/course/config.json`。
-- 本地服务：`python .agents/skills/learning-course/kit/build/kit.py serve <course-dir> --lan`，作答实时落盘 `records/`；视觉自检用 `python .agents/skills/learning-course/kit/build/kit.py shot <course-dir>`。
-- 第三方库：按内容优先选成熟库；通过 `kit.py sync` 自动打包管理。
-- 依赖记录：产物由 `kit.lock.json` 锁定哈希。
-
-## 学习记录约定
-
-学习者原始反馈和 Agent 的证据判断保存在 `records/`。
-"""
+    # PLAN.md 渲染自 templates/PLAN.md（唯一模板源；占位符 {{TITLE}}/{{GOAL}}/{{THEME}}/{{THEMES}}）
+    plan_template = Path(__file__).resolve().parents[1] / "templates" / "PLAN.md"
+    plan = (
+        plan_template.read_text(encoding="utf-8")
+        .replace("{{TITLE}}", args.title)
+        .replace("{{GOAL}}", args.goal)
+        .replace("{{THEME}}", theme)
+        .replace("{{THEMES}}", "、".join(themes_list))
+    )
     write_text(course_dir / "PLAN.md", plan, args.force)
     write_text(course_dir / "INDEX.md", f"# {args.title}\n\n课程索引将从 `course.yaml` 和 `lessons/` 生成。\n", args.force)
 

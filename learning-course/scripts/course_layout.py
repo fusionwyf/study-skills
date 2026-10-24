@@ -105,11 +105,19 @@ def iter_lessons(course_root: Path, chapter_order: list[str] | None = None) -> l
 
 
 def iter_record_files(course_root: Path) -> list[Path]:
-    """All record markdown files, recursing into chapter sub-directories."""
+    """All record markdown files, recursing into chapter sub-directories.
+
+    records/inbox/ holds raw device snapshots, not agent-facing records, so
+    every walk of records/ explicitly skips it (shared record contract).
+    """
     records_dir = Path(course_root) / "records"
     if not records_dir.is_dir():
         return []
-    return sorted(records_dir.rglob("*.md"))
+    return sorted(
+        path
+        for path in records_dir.rglob("*.md")
+        if "inbox" not in path.relative_to(records_dir).parts[:-1]
+    )
 
 
 FINALIZED_RE = re.compile(r"^\s*assessment_status\s*:\s*(\w+)", re.M)
@@ -138,7 +146,7 @@ def completed_lesson_keys(course_root: Path) -> list[str]:
     if not records_dir.is_dir():
         return []
     keys: set[str] = set()
-    for path in sorted(records_dir.rglob("*.md")):
+    for path in iter_record_files(course_root):
         try:
             text = path.read_text(encoding="utf-8", errors="replace")
         except OSError:

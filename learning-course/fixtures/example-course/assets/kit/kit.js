@@ -1856,10 +1856,15 @@
     },
     "kit-param": {
       normalize: function (node) {
-        if (node.hasAttribute("name") && !node.hasAttribute("data-param")) {
-          node.setAttribute("data-param", node.getAttribute("name") || "");
-        }
-        node.removeAttribute("name");
+        mapAttributes(node, {
+          "name": "data-param",
+          "min": "data-min",
+          "max": "data-max",
+          "step": "data-step",
+          "value": "data-value",
+          "unit": "data-unit",
+          "label": "data-label"
+        });
       }
     },
     "kit-island": {

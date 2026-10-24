@@ -75,9 +75,25 @@
 
 ## 三、HTML 核心组件契约
 
+### 0. 双轨写法（Custom Elements 简写）
+
+所有核心组件都有两套等价写法：标准语义 HTML（`class` + `data-*`）与 Light DOM 自定义元素简写（由 core 模块 `shell.elements` 在 kit.js 求值时同步归一化）。归一化把简洁属性映射为标准 `data-*` 结构，随后由各内容模块按本节契约接管；两套写法产出**完全相同的机器契约**，`validate_course.py` 双轨识别，动态插入的节点由 `connectedCallback` 自动升级并触发对应模块重新初始化。
+
+| 简写 | 等价标准写法 | 归一化规则 |
+|---|---|---|
+| `<kit-question kind question-id max-attempts expected tolerance unit accepted>` | `<section class="question" data-role="evidence">`（§1） | 同名属性前加 `data-`；自动补 `class="question"` 与 `data-role="evidence"` |
+| `<kit-callout type label fold>` | `<aside class="callout" data-callout data-fold>`（§5） | `type→data-callout`、`fold→data-fold`；`label` 生成 `.callout__title` |
+| `<kit-viz kind id>` | `<section class="visualization" data-visualization>`（§7） | `kind→data-visualization`；自动补类名，缺 `id` 自动生成 |
+| `<kit-predict question-id answer tolerance unit>` | `<kit-predict data-question-id data-answer data-tolerance data-unit>`（§10） | 同名属性前加 `data-`；自动补 `data-predict` |
+| `<kit-param name min max step value unit label>` | `<kit-param data-param data-min data-max data-step data-value data-unit data-label>`（§11） | 同名属性前加 `data-` |
+| `<kit-island id name>` | `<kit-island data-island>`（§12） | 缺 `id` 时用 `name` 回填；自动补 `data-island` |
+
+- 归一化只映射外壳属性，**不生成内部结构**：题干、选项、提示、解析、`data-viz-fallback` 后备等子结构两套写法完全相同，仍须按各组件契约编写。
+- 例：`<kit-question kind="choice" question-id="q1" max-attempts="2">…选项与解析…</kit-question>` 与 §1 的 `<section class="question" data-role="evidence" data-question-id="q1" data-kind="choice" data-max-attempts="2">` 完全等价。
+
 ### 1. 统一题目块（Question Component）
 
-统一题目块替代旧版分散的 `.quiz`、`data-answer-*`、`teaching-target`、`dialogue-practice`。所有题型共用外壳、状态机、多级提示、反馈区与证据导出接口。作者只写语义标记，运行时生成交互控件。
+统一题目块替代旧版分散的 `.quiz`、`data-answer-*`、`teaching-target`、`dialogue-practice`。所有题型共用外壳、状态机、多级提示、反馈区与证据导出接口。作者只写语义标记，运行时生成交互控件。简写：`<kit-question kind="choice" question-id="q1" max-attempts="2">`（属性归一化见 §三.0 双轨写法）。
 
 #### 六类题型作者契约：
 
@@ -185,6 +201,7 @@
 - `data-callout` 取值：`note`、`info`、`tip`、`warning`、`danger`。
 - 标题元素是 `.callout__title`（**双下划线**，与 `callout.js`/`callout.css` 一致）。省略标题时运行时按类型自动注入中文名（注意/说明/提示/警告/危险）；写成 `.callout-title` 不会被识别，会同时出现两个标题。
 - `data-fold="open|closed"` 控制折叠交互。
+- 简写：`<kit-callout type="tip" label="重点提示" fold="open">`（见 §三.0 双轨写法）。
 
 ### 6. 分步推导（Step）与反思输入（Reflection）
 
@@ -215,7 +232,7 @@
 
 ### 7. 数据可视化（Visualizations）
 
-使用 `data-visualization="chart|spatial|relation|timeline|process|sequence|table"` 容器与 `data-viz-config` 配置。
+使用 `data-visualization="chart|spatial|relation|timeline|process|sequence|table"` 容器与 `data-viz-config` 配置。简写：`<kit-viz kind="chart" id="demo-chart">`（见 §三.0 双轨写法）。
 ```html
 <section class="visualization" id="demo-chart" data-visualization="chart">
   <h2>图表标题</h2>

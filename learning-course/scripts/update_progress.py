@@ -135,15 +135,6 @@ def require_finalized_evidence(
     return evidence_type, evidence_strength
 
 
-def lesson_exists(root: Path, lesson: int, chapter: str | None = None) -> bool:
-    """Chaptered packages restart numbering, so a number is only unique with its chapter."""
-    return course_layout.lesson_exists(root, lesson, chapter)
-
-
-def next_record_sequence(records_dir: Path) -> int:
-    return record_builder.next_record_sequence(records_dir)
-
-
 def resolve_chapter(state: dict, objectives: list, wanted: str | None, parsed_objectives: list) -> dict | None:
     """Pick the chapter a progress update targets.
 
@@ -190,7 +181,7 @@ def make_record(args: argparse.Namespace, record_path: Path) -> str | None:
 
     if record_path.exists():
         raise SystemExit(f"feedback record already exists and records are append-only: {record_path}")
-    record_id = "L%04d" % next_record_sequence(record_path.parent)
+    record_id = "L%04d" % record_builder.next_record_sequence(record_path.parent)
     content = record_builder.render_pending_record(
         lesson=args.lesson,
         raw_markdown=raw,
@@ -277,7 +268,7 @@ def main() -> int:
         lesson = args.lesson if args.lesson is not None else int(state.get("current_lesson") or 0)
     if (args.feedback_file or args.feedback_text) and lesson <= 0:
         raise SystemExit("feedback updates require a positive lesson number")
-    if lesson > 0 and (args.lesson is not None or args.feedback_file or args.feedback_text) and not lesson_exists(root, lesson, chapter_label):
+    if lesson > 0 and (args.lesson is not None or args.feedback_file or args.feedback_text) and not course_layout.lesson_exists(root, lesson, chapter_label):
         scope = f"lessons/{chapter_label}/" if chapter_label else "lessons/"
         raise SystemExit(f"lesson {lesson:04d} does not exist in {scope}")
     args.lesson = lesson

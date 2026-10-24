@@ -45,7 +45,7 @@ disable-model-invocation: true
 │   └── course/          # 课程专用配置 (config.json, theme.css, themes/ 自创主题)
 ├── reference/
 ├── records/
-│   └── inbox/           # 浏览器作答原始快照 (kit.py serve 自动写入)
+│   └── inbox/           # 浏览器作答原始快照（点击提交后由 kit.py serve 写入）
 └── exports/
     └── shots/           # kit.py shot 视觉自检截图
 ```
@@ -82,13 +82,13 @@ Course Kit v2 将所有教学资产统一维护在 `kit/`（L0 运行时、L1 �
    ```
 
 完成条件：成功标准和 objective 已写入状态，第一课文件存在且引用已定义 objective，phase 为 `awaiting_evidence`，模块已同步，nav.json 已更新，验证命令均通过。
-向学习者交付课件时启动本地服务（作答实时落盘，无需手动收集反馈）：
+向学习者交付课件时启动本地服务（学习者点击提交后实时落盘，无需手动收集反馈）：
 
 ```text
 python kit/build/kit.py serve <course-dir> [--lan]
 ```
 
-服务同时托管只读仪表盘 `http://127.0.0.1:<port>/dashboard`（目标掌握地图、独立性分布、证据时间线、到期复习队列与收件箱）。自创主题或大改版式后必须运行 `python kit/build/kit.py shot <course-dir>` 截图自检（对比度、溢出、公式与图表渲染）。
+服务同时托管只读仪表盘 `http://127.0.0.1:<port>/dashboard`（目标掌握地图、独立性分布、证据时间线、到期复习队列与收件箱），其数据来自三个只读端点：`/api/course`（course.yaml 状态）、`/api/records`（记录 frontmatter 摘要）、`/api/inbox`（设备原始快照）。自创主题或大改版式后必须运行 `python kit/build/kit.py shot <course-dir>` 截图自检（对比度、溢出、公式与图表渲染）。
 
 ## Continue
 
