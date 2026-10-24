@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="swiss">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>第 0003 课｜仿真孤岛与图表</title>
+  <link rel="stylesheet" href="../assets/kit/kit.css">
+  <link rel="stylesheet" href="../assets/course/theme.css">
+  <script defer src="../assets/kit/kit.js"></script>
+</head>
+<body class="kit-page">
+  <div class="kit-main">
+    <header class="course-header">
+      <p class="course-kicker">第 0003 课 · 组件全览</p>
+      <h1 class="course-title">仿真孤岛与图表</h1>
+      <p class="course-subtitle">island 时间旅行仿真、Observable Plot 函数曲线、sequence 步骤回放与动态表格。</p>
+      <div data-theme-switcher></div>
+    </header>
+
+    <main class="lesson" id="lesson-content" data-course-id="kit-showcase" data-lesson-id="0003" data-objective="obj-viz" data-evidence="practice" data-cognitive-level="apply" data-retrieval="required" data-feedback="required" data-source-status="not-needed" data-answer-status="provided">
+
+      <section data-role="objective" aria-labelledby="goal-title">
+        <h2 id="goal-title">本课要解决的问题</h2>
+        <aside class="callout" data-callout="tip">
+          <div class="callout__title">学完后你能……</div>
+          <p>为内容选择正确的可视化层级：仿真用 island、函数曲线用 plot、过程回放用 sequence、数据明细用 table。</p>
+        </aside>
+      </section>
+
+      <section aria-labelledby="island-title">
+        <h2 id="island-title">仿真孤岛：阻尼单摆</h2>
+        <p>点<strong>播放</strong>观察阻尼摆动；用<strong>时间旅行滑块</strong>回放任意时刻；<strong>推一下</strong>是自定义动作。</p>
+        <aside class="sidenote">island 的播放/步进/回放全部来自 LearnKit store 的时间旅行状态机——作者只写模型函数。</aside>
+        <kit-island id="pendulum">
+          <div data-viz-fallback><p>无脚本说明：小角度阻尼单摆按 θ″ = −(g/L)θ − c·θ′ 振荡，振幅指数衰减；L = 1 m、g = 9.8 m/s² 时周期约 2.0 s。</p></div>
+          <div data-island-host hidden></div>
+          <div data-island-controls hidden></div>
+          <p data-island-status role="status"></p>
+          <script type="text/plain" data-island-model>
+            kit.island.define("pendulum", {
+              initialState: function () { return { t: 0, theta: 0.7, omega: 0 }; },
+              tick: function (s) {
+                var dt = 0.05, gOverL = 9.8, damping = 0.12;
+                var alpha = -gOverL * s.theta - damping * s.omega;
+                return { t: s.t + dt, theta: s.theta + s.omega * dt, omega: s.omega + alpha * dt };
+              },
+              actions: {
+                push: { label: "推一下", reduce: function (s) { return Object.assign({}, s, { omega: s.omega + 1.2 }); } }
+              },
+              derive: function (s) {
+                return { summary: "t = " + s.t.toFixed(2) + " s · θ = " + (s.theta * 180 / Math.PI).toFixed(1) + "°" };
+              },
+              view: function (s, api) {
+                var len = 70;
+                var x = len * Math.sin(s.theta), y = len * Math.cos(s.theta);
+                return api.html`<div style="display:flex;gap:1.5rem;align-items:center;flex-wrap:wrap">
+                  <svg viewBox="-82 -14 164 104" width="220" role="img" aria-label="单摆示意">
+                    <line x1="0" y1="0" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="var(--c-accent)" stroke-width="2.5"/>
+                    <circle cx="0" cy="0" r="3" fill="var(--c-text-2)"/>
+                    <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="9" fill="var(--series-1)" stroke="var(--c-border)"/>
+                  </svg>
+                  <div>
+                    <p style="margin:.1rem 0">t = ${s.t.toFixed(2)} s</p>
+                    <p style="margin:.1rem 0">θ = ${(s.theta * 180 / Math.PI).toFixed(1)}°</p>
+                    <p style="margin:.1rem 0">ω = ${s.omega.toFixed(2)} rad/s</p>
+                  </div>
+                </div>`;
+              }
+            });
+          </script>
+        </kit-island>
+      </section>
+
+      <section aria-labelledby="plot-title">
+        <h2 id="plot-title">函数曲线：Observable Plot</h2>
+        <p>下落距离 h = ½gt² 的精确曲线（破栏展示）与数值点对比：</p>
+        <div class="wide">
+          <section class="visualization" id="freefall-plot" data-visualization="plot">
+            <h3 id="下落距离-时间曲线">下落距离-时间曲线</h3>
+            <div data-viz-fallback><p>无脚本表格后备：t=0 s 时 h=0；t=1 s 时 h=4.9 m；t=2 s 时 h=19.6 m。曲线为二次抛物线。</p></div>
+            <div class="viz-host" id="freefall-plot-host" data-viz-host hidden></div>
+            <p data-viz-status role="status"></p>
+            <script type="application/json" data-viz-config>
+              {
+                "model": "自由落体距离 h(t) = ½·g·t²，g = 9.8 m/s²",
+                "domain": "t ∈ [0, 2] s，h ∈ [0, 19.6] m",
+                "precision": "h 保留两位小数，采样步长 0.25 s",
+                "plot": {
+                  "x": { "label": "t / s" },
+                  "y": { "label": "h / m" },
+                  "marks": [
+                    { "type": "gridY" },
+                    { "type": "line", "data": [
+                      { "t": 0, "h": 0 }, { "t": 0.25, "h": 0.31 }, { "t": 0.5, "h": 1.23 },
+                      { "t": 0.75, "h": 2.76 }, { "t": 1, "h": 4.9 }, { "t": 1.25, "h": 7.66 },
+                      { "t": 1.5, "h": 11.03 }, { "t": 1.75, "h": 15.01 }, { "t": 2, "h": 19.6 }
+                    ], "x": "t", "y": "h", "stroke": "var(--series-1)", "strokeWidth": 2.5 },
+                    { "type": "dot", "data": [ { "t": 1, "h": 4.9 }, { "t": 2, "h": 19.6 } ], "x": "t", "y": "h", "fill": "var(--series-3)", "r": 4 }
+                  ]
+                }
+              }
+            </script>
+          </section>
+        </div>
+      </section>
+
+      <section aria-labelledby="seq-title">
+        <h2 id="seq-title">步骤回放 sequence 与动态表格 table</h2>
+        <section class="visualization" id="drop-seq" data-visualization="sequence">
+          <h3 id="下落过程的分步回放">下落过程的分步回放</h3>
+          <div data-viz-fallback><p>无脚本说明：每 0.5 s 一步，速度线性增加，距离按平方增长，共 4 步。</p></div>
+          <div class="viz-host" id="drop-seq-host" data-viz-host hidden></div>
+          <p data-viz-status role="status"></p>
+          <div data-viz-controls>
+            <label for="drop-seek">进度</label>
+            <input id="drop-seek" type="range" min="0" max="3" value="0">
+            <button type="button" data-viz-prev>上一步</button>
+            <button type="button" data-viz-next>下一步</button>
+          </div>
+          <script type="application/json" data-viz-config>
+            {
+              "model": "自由落体每 0.5 s 的速度与累计距离（g = 9.8）",
+              "domain": "t ∈ [0.5, 2] s，等间隔 4 步",
+              "precision": "速度保留 1 位小数，距离保留 2 位小数",
+              "steps": [
+                { "title": "t = 0.5 s · 速度 4.9 m/s", "description": "累计下落 1.23 m。速度按 g 线性增长，距离从 0 开始缓慢爬升。" },
+                { "title": "t = 1.0 s · 速度 9.8 m/s", "description": "累计下落 4.90 m。第 1 秒末的速度数值上等于 g。" },
+                { "title": "t = 1.5 s · 速度 14.7 m/s", "description": "累计下落 11.03 m。曲线开始明显变陡——距离是时间的二次函数。" },
+                { "title": "t = 2.0 s · 速度 19.6 m/s", "description": "累计下落 19.60 m。2 秒内的下落距离是 1 秒的 4 倍（时间的平方）。" }
+              ]
+            }
+          </script>
+        </section>
+
+        <section class="visualization" id="drop-table" data-visualization="table">
+          <h3 id="采样明细表">采样明细表</h3>
+          <div data-viz-fallback><p>无脚本表格见正文数据：0.5 s → 1.23 m；1.0 s → 4.90 m；1.5 s → 11.03 m；2.0 s → 19.60 m。</p></div>
+          <div class="viz-host" id="drop-table-host" data-viz-host hidden></div>
+          <p data-viz-status role="status"></p>
+          <script type="application/json" data-viz-config>
+            {
+              "model": "自由落体采样明细（g = 9.8 m/s²）",
+              "domain": "t ∈ [0.5, 2] s",
+              "precision": "h 保留两位小数",
+              "columns": [
+                { "name": "时间 t/s", "key": "t" },
+                { "name": "距离 h/m", "key": "h" },
+                { "name": "h / t²（应≈4.9）", "key": "ratio" }
+              ],
+              "rows": [
+                { "t": "0.5", "h": "1.23", "ratio": "4.92" },
+                { "t": "1.0", "h": "4.90", "ratio": "4.90" },
+                { "t": "1.5", "h": "11.03", "ratio": "4.90" },
+                { "t": "2.0", "h": "19.60", "ratio": "4.90" }
+              ]
+            }
+          </script>
+        </section>
+      </section>
+
+      <section aria-labelledby="choose-title">
+        <h2 id="choose-title">选择层级</h2>
+        <p><strong>连续演化+回放</strong>→ island；<strong>函数/统计关系</strong>→ plot；<strong>教学步骤</strong>→ sequence；<strong>明细核对</strong>→ table。不要用图表装饰已有文字。</p>
+        <section class="question" data-role="evidence" data-question-id="q-viz" data-kind="choice" data-max-attempts="2">
+          <div data-stem><p>阻尼单摆的周期（小角度）主要取决于什么？</p></div>
+          <ol data-options>
+            <li data-option>摆球的质量<span data-why>周期与质量无关——轻摆和重摆同周期，这正是"摆的等时性"。</span></li>
+            <li data-option data-correct>摆长与当地重力加速度<span data-why>\(T = 2\pi\sqrt{L/g}\)：L 越长越慢，g 越大越快。</span></li>
+            <li data-option>释放时的初始角度<span data-why>小角度下周期与振幅无关（等时性）；大角度才有微小偏差。</span></li>
+            <li data-option>空气阻力的大小<span data-why>阻力只让振幅衰减（本课 island 的阻尼项），几乎不改变小角度周期。</span></li>
+          </ol>
+          <ol data-hints><li>回忆 island 仿真：推一下（改变振幅）后，摆动节奏变了吗？</li></ol>
+          <div data-explain><p>\(T = 2\pi\sqrt{L/g}\)。L = 1 m、g = 9.8 时约 2.0 s——与你在 island 里数出来的节奏对得上吗？</p></div>
+        </section>
+      </section>
+
+      <section data-role="retrieval" aria-labelledby="ret-title">
+        <h2 id="ret-title">本课小结</h2>
+        <p>复述：island 的哪些控制来自 store 时间旅行？plot 的 marks 在哪个字段声明？</p>
+      </section>
+
+      <section class="course-actions">
+        <div class="reflection" data-role="learner-feedback">
+          <label for="fb-3">把单摆的阻尼调大 10 倍会看到什么？先预测再看（可以把 tick 里的 damping 改成 1.2 想象一下）。</label>
+          <textarea id="fb-3" rows="3"></textarea>
+        </div>
+        <button type="button" class="btn primary" data-copy-feedback>复制学习记录</button>
+        <span data-copy-feedback-status role="status"></span>
+      </section>
+
+      <nav class="kit-pager" aria-label="课时翻页导航"></nav>
+    </main>
+  </div>
+  <aside class="kit-rail">
+    <nav class="kit-toc" aria-label="本课目录" data-kit-toc>
+  <div class="toc-header"><p class="toc-title">本课目录</p></div>
+  <div class="toc-scroll">
+    <ul class="toc-list">
+      <li class="toc-item is-h2 no-children">
+        <div class="toc-row"><span class="kit-toc__spacer" aria-hidden="true"></span><a class="toc-link is-h2-link" href="#goal-title">本课要解决的问题</a></div>
+      </li>
+      <li class="toc-item is-h2 no-children">
+        <div class="toc-row"><span class="kit-toc__spacer" aria-hidden="true"></span><a class="toc-link is-h2-link" href="#island-title">仿真孤岛：阻尼单摆</a></div>
+      </li>
+      <li class="toc-item is-h2 has-children is-collapsed">
+        <div class="toc-row"><button type="button" class="toc-toggle kit-toc__toggle" aria-label="展开子目录" title="展开子目录" aria-expanded="false"><svg class="kit-toc__chevron" viewBox="0 0 16 16" width="9" height="9" aria-hidden="true"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><a class="toc-link is-h2-link" href="#plot-title">函数曲线：Observable Plot</a></div>
+        <ul class="toc-sublist">
+          <li class="toc-item is-h3"><a class="toc-link is-h3-link" href="#下落距离-时间曲线">下落距离-时间曲线</a></li>
+        </ul>
+      </li>
+      <li class="toc-item is-h2 has-children is-collapsed">
+        <div class="toc-row"><button type="button" class="toc-toggle kit-toc__toggle" aria-label="展开子目录" title="展开子目录" aria-expanded="false"><svg class="kit-toc__chevron" viewBox="0 0 16 16" width="9" height="9" aria-hidden="true"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><a class="toc-link is-h2-link" href="#seq-title">步骤回放 sequence 与动态表格 table</a></div>
+        <ul class="toc-sublist">
+          <li class="toc-item is-h3"><a class="toc-link is-h3-link" href="#下落过程的分步回放">下落过程的分步回放</a></li>
+          <li class="toc-item is-h3"><a class="toc-link is-h3-link" href="#采样明细表">采样明细表</a></li>
+        </ul>
+      </li>
+      <li class="toc-item is-h2 no-children">
+        <div class="toc-row"><span class="kit-toc__spacer" aria-hidden="true"></span><a class="toc-link is-h2-link" href="#choose-title">选择层级</a></div>
+      </li>
+      <li class="toc-item is-h2 no-children">
+        <div class="toc-row"><span class="kit-toc__spacer" aria-hidden="true"></span><a class="toc-link is-h2-link" href="#ret-title">本课小结</a></div>
+      </li>
+    </ul>
+  </div>
+</nav>
+  </aside>
+</body>
+</html>

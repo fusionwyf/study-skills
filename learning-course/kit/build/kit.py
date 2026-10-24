@@ -93,8 +93,8 @@ UNIFIED_VENDORS = {
         "id": "plot",
         "version": "0.6.16",
         "js": {
-            "cdn": "https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6.16/dist/plot.umd.min.js",
-            "local": "../assets/kit/vendor/observable-plot/plot.umd.min.js"
+            "cdn": "https://cdn.jsdelivr.net/combine/npm/d3@7.9.0/dist/d3.min.js,npm/@observablehq/plot@0.6.16/dist/plot.umd.min.js",
+            "local": "../assets/kit/vendor/observable-plot/plot.bundle.min.js"
         }
     },
     "jsxgraph": {
@@ -1541,9 +1541,18 @@ def find_chromium_browser():
 SHOT_VIEWPORTS = [("desktop", 1440, 2400), ("mobile", 390, 1600)]
 
 
-def shot_course(course_dir, lesson=None, themes=None, browser=None):
-    """Headless-Chromium screenshots of lessons into exports/shots/ for visual QC."""
-    import tempfile as _tempfile
+def shot_course(course_dir, lesson=None, themes=None, browser=None, wait_ms=12000):
+    """Headless-Chromium screenshots of lessons into exports/shots/ for visual QC.
+
+    Uses CDP device-metrics emulation: `--window-size` below ~520px gets clamped
+    by desktop browsers (Windows), which silently crops narrow-viewport shots.
+    """
+    import base64
+    import shutil
+    import time
+    import urllib.request
+    from export_pdf import SimpleWebSocket, get_free_port
+
     cpath = Path(course_dir).resolve()
     if not cpath.is_dir():
         print(f"Error: Course directory not found: {cpath}", file=sys.stderr)
@@ -1581,41 +1590,90 @@ def shot_course(course_dir, lesson=None, themes=None, browser=None):
 
     shots_dir = cpath / "exports" / "shots"
     shots_dir.mkdir(parents=True, exist_ok=True)
+
+    port = get_free_port()
+    profile_dir = tempfile.mkdtemp(prefix="kit-shot-profile-")
+    cmd = [
+        browser, "--headless=new", "--disable-gpu",
+        f"--user-data-dir={profile_dir}",
+        f"--remote-debugging-port={port}",
+        "about:blank",
+    ]
+    proc = None
+    ws = None
     written = []
-    with _tempfile.TemporaryDirectory(prefix="kit-shot-profile-") as profile:
+    try:
+        proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        ws_url = None
+        deadline = time.time() + 8.0
+        while time.time() < deadline:
+            try:
+                with urllib.request.urlopen(f"http://127.0.0.1:{port}/json/list", timeout=1) as resp:
+                    targets = json.loads(resp.read())
+                    pages = [t for t in targets if t.get("type") == "page" and t.get("webSocketDebuggerUrl")]
+                    if pages:
+                        ws_url = pages[0]["webSocketDebuggerUrl"]
+                        break
+            except Exception:
+                time.sleep(0.08)
+        if not ws_url:
+            print("Error: could not reach browser DevTools endpoint.", file=sys.stderr)
+            return False
+
+        ws = SimpleWebSocket(ws_url, timeout=max(20.0, wait_ms / 1000.0 + 5.0))
+        ws.call("Page.enable")
+
         for entry in entries:
             base_url = entry["path"].resolve().as_uri()
             for theme in themes or [None]:
                 themed_url = f"{base_url}?kit-theme={theme}" if theme else base_url
                 suffix = f"-{theme}" if theme else ""
                 for label, width, height in SHOT_VIEWPORTS:
+                    ws.call("Emulation.setDeviceMetricsOverride", {
+                        "width": width, "height": height,
+                        "deviceScaleFactor": 1, "mobile": width < 700,
+                    })
+                    ws.call("Page.navigate", {"url": themed_url})
+                    settle_deadline = time.time() + wait_ms / 1000.0
+                    loaded = False
+                    while time.time() < settle_deadline:
+                        try:
+                            res = ws.call("Runtime.evaluate", {"expression": "document.readyState"})
+                            if res.get("result", {}).get("value") == "complete":
+                                loaded = True
+                                time.sleep(2.2)  # fonts, KaTeX, CDN charts
+                                break
+                        except Exception:
+                            pass
+                        time.sleep(0.1)
+                    if not loaded:
+                        print(f"Warning: {entry['file']} ({label}{suffix}) did not reach readyState=complete in {wait_ms}ms", file=sys.stderr)
+                    shot = ws.call("Page.captureScreenshot", {"format": "png"})
+                    data = base64.b64decode(shot.get("data", ""))
+                    if not data:
+                        print(f"Error: empty screenshot for {entry['file']} ({label}{suffix})", file=sys.stderr)
+                        return False
                     out = shots_dir / f"{entry['number']}{suffix}-{label}.png"
-                    cmd = [
-                        browser, "--headless=new", "--disable-gpu", "--hide-scrollbars",
-                        f"--user-data-dir={profile}",
-                        f"--window-size={width},{height}",
-                        "--virtual-time-budget=12000",
-                        f"--screenshot={out}",
-                        themed_url,
-                    ]
-                    try:
-                        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
-                    except subprocess.TimeoutExpired:
-                        print(f"Error: screenshot timed out for {entry['file']} ({label}{suffix})", file=sys.stderr)
-                        return False
-                    if out.is_file():
-                        written.append(out)
-                        print(f"Shot: {out.relative_to(cpath).as_posix()}")
-                    else:
-                        detail = (result.stderr or "").strip().splitlines()
-                        print(
-                            f"Error: screenshot failed for {entry['file']} ({label}{suffix}): "
-                            + (detail[-1] if detail else "no output"),
-                            file=sys.stderr,
-                        )
-                        return False
-    print(f"{len(written)} screenshot(s) in exports/shots/")
-    return True
+                    out.write_bytes(data)
+                    written.append(out)
+                    print(f"Shot: {out.relative_to(cpath).as_posix()}")
+        print(f"{len(written)} screenshot(s) in exports/shots/")
+        return True
+    except (ConnectionError, RuntimeError, OSError) as shot_err:
+        print(f"Error: CDP screenshot failed: {shot_err}", file=sys.stderr)
+        return False
+    finally:
+        try:
+            if ws:
+                ws.close()
+            if proc is not None:
+                proc.terminate()
+                try:
+                    proc.wait(timeout=2)
+                except subprocess.TimeoutExpired:
+                    proc.kill()
+        finally:
+            shutil.rmtree(profile_dir, ignore_errors=True)
 
 
 def main():

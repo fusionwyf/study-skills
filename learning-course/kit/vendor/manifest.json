@@ -41,12 +41,14 @@
     "license": "ISC",
     "url": "https://registry.npmjs.org/@observablehq/plot/-/plot-0.6.16.tgz",
     "files": [
-      "observable-plot/plot.umd.min.js",
-      "observable-plot/LICENSE"
+      "observable-plot/plot.bundle.min.js",
+      "observable-plot/LICENSE",
+      "observable-plot/LICENSE-d3"
     ],
     "sha256": {
-      "observable-plot/plot.umd.min.js": "ee8e99124680704d3ea4878bdb786362c70a412b7b9eb988ae852827fd6e0711",
-      "observable-plot/LICENSE": "4b295e011e0e046170041b5b46f1349393aeceb95797793a55bd21dbb543363a"
-    }
+      "observable-plot/plot.bundle.min.js": "9183a2de1cac7c9a8a7ee5d12ac02e15828d06d9daae868350325a902a63b118",
+      "observable-plot/LICENSE-d3": "3e6849627f74ff73c257a3ae1efb574015d94fc1035c05ec3c15805165efcbc4"
+    },
+    "note": "plot.umd.min.js 依赖 d3 全局；bundle = d3@7.9.0 + plot UMD 拼合，离线单文件加载"
   }
 }

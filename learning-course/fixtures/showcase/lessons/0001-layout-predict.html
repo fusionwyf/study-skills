@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="swiss">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>第 0001 课｜版式节奏与预测组件</title>
+  <link rel="stylesheet" href="../assets/kit/kit.css">
+  <link rel="stylesheet" href="../assets/course/theme.css">
+  <script defer src="../assets/kit/kit.js"></script>
+</head>
+<body class="kit-page">
+  <div class="kit-main">
+    <header class="course-header">
+      <p class="course-kicker">第 0001 课 · 组件全览</p>
+      <h1 class="course-title">版式节奏与先预测后揭晓</h1>
+      <p class="course-subtitle">边注、破栏、引语与 predict 组件：让正文有呼吸感，让反直觉结论先被承诺。</p>
+      <div data-theme-switcher></div>
+    </header>
+
+    <main class="lesson" id="lesson-content" data-course-id="kit-showcase" data-lesson-id="0001" data-objective="obj-layout" data-evidence="practice" data-cognitive-level="apply" data-retrieval="required" data-feedback="required" data-source-status="not-needed" data-answer-status="provided">
+
+      <section data-role="objective" aria-labelledby="goal-title">
+        <h2 id="goal-title">本课要解决的问题</h2>
+        <aside class="callout" data-callout="tip">
+          <div class="callout__title">学完后你能……</div>
+          <p>为一页课件选择合适的版式组件（边注/破栏/引语），并说明 predict 组件适合放在什么位置、会产生哪些学习证据。</p>
+        </aside>
+      </section>
+
+      <section aria-labelledby="rhythm-title">
+        <h2 id="rhythm-title">版式节奏：打破卡片流</h2>
+        <p>连续的圆角卡片会让页面变成"卡片隧道"。三个基础类制造节奏：<code>.sidenote</code> 边注、<code>.wide</code> 破栏、<code>.pull-quote</code> 引语。</p>
+        <p class="pull-quote">先承诺一个预测，记忆才会为真相留出位置。</p>
+        <p>右边的边注承担"放进正文会打断主线"的旁支内容。窄屏（&lt;1200px）时它会折叠回正文流，你可以在浏览器里拖窄窗口观察。</p>
+        <aside class="sidenote">边注（sidenote）：本段在宽屏浮到正文右侧，字号略小、左侧有强调色竖线。它不进入主要论证线，随时可以跳过。</aside>
+        <p>破栏容器让图表或大图突破 50rem 的正文度量。下面这段代码块故意放进 <code>.wide</code> 里，注意它比正文更宽：</p>
+      </section>
+
+      <section aria-labelledby="wide-title">
+        <h2 id="wide-title">破栏示例与代码块</h2>
+        <div class="wide">
+          <pre><code class="language-python">def freefall_height(t, g=9.8):
+    """自由落体：h(t) = ½·g·t²"""
+    return 0.5 * g * t * t
+
+for t in (0.5, 1.0, 2.0):
+    print(f"t={t:>4}s  h={freefall_height(t):6.2f} m")
+# t= 0.5s  h=  1.23 m
+# t= 1.0s  h=  4.90 m
+# t= 2.0s  h= 19.60 m</code></pre>
+        </div>
+        <p>数学公式走 KaTeX：独立公式 \[h(t) = \tfrac{1}{2} g t^2\] 由块外壳提供溢出滚动与复制按钮；行内如 \(g \approx 9.8\ \mathrm{m/s^2}\)。</p>
+      </section>
+
+      <section aria-labelledby="predict-title">
+        <h2 id="predict-title">先预测后揭晓</h2>
+        <p>每个反直觉事实之前都值得放一个预测。<strong>数值预测</strong>会自动判定并画出偏差条：</p>
+        <kit-predict data-question-id="p1" data-answer="4.9" data-tolerance="0.3" data-unit="m">
+          <div data-predict-prompt><p>从静止下落 <strong>1 秒</strong>，物体走过的距离大约是多少米？</p></div>
+          <div data-reveal data-role="answer-feedback"><p>\(h = \tfrac12 g t^2 = \tfrac12 \times 9.8 \times 1^2 = 4.9\ \mathrm{m}\)。多数人猜 9.8——那是<strong>速度</strong>，不是距离。速度要再乘时间折半。</p></div>
+        </kit-predict>
+        <p><strong>开放预测</strong>没有唯一数值答案，只记录原文：</p>
+        <div class="predict" data-predict data-question-id="p2">
+          <div data-predict-prompt><p>真空管里，羽毛和铁球同时释放，谁先落地？为什么日常经验相反？</p></div>
+          <div data-reveal data-role="answer-feedback"><p>同时落地。重力加速度与质量无关（伽利略比萨斜塔思想实验、阿波罗 15 号月面实测）。日常经验相反是因为空气阻力对轻物体的影响比例更大。</p></div>
+        </div>
+        <aside class="callout" data-callout="note">
+          <div class="callout__title">证据去向</div>
+          <p>两次预测会向学习记录派发 ATTEMPT + RAW_ANSWER；数值预测再派发 VERDICT。运行 <code>kit.py serve</code> 后这些证据实时落到 <code>records/</code>。</p>
+        </aside>
+      </section>
+
+      <section aria-labelledby="callout-title">
+        <h2 id="callout-title">五类提示块</h2>
+        <p><code>data-callout</code> 取值决定语义色与图标；标题写在 <code>.callout__title</code>（双下划线）：</p>
+        <aside class="callout" data-callout="note"><div class="callout__title">note</div><p>中性补充信息。</p></aside>
+        <aside class="callout" data-callout="info"><div class="callout__title">info</div><p>背景知识或延伸阅读。</p></aside>
+        <aside class="callout" data-callout="tip"><div class="callout__title">tip</div><p>可操作的技巧。</p></aside>
+        <aside class="callout" data-callout="warning"><div class="callout__title">warning</div><p>容易踩的坑：把 9.8 当作 1 秒的下落距离。</p></aside>
+        <aside class="callout" data-callout="danger"><div class="callout__title">danger</div><p>危险操作：物理演示中务必护住脚面。</p></aside>
+      </section>
+
+      <section aria-labelledby="steps-title">
+        <h2 id="steps-title">分步推导</h2>
+        <div class="steps" data-steps-scope>
+          <div class="step"><strong>第 1 步</strong><p>速度每秒增加 \(g\)：\(v(t) = g t\)。</p></div>
+          <div class="step is-hidden"><strong>第 2 步</strong><p>对速度积分得到距离：\(h(t) = \int_0^t g\tau\,d\tau = \tfrac12 g t^2\)。</p></div>
+          <div class="step is-hidden"><strong>第 3 步</strong><p>代入 t = 1 s：\(h = 4.9\ \mathrm{m}\)，与你的预测对上了吗？</p></div>
+          <div class="steps-controls"><button type="button" data-step-next>展开下一步</button></div>
+        </div>
+      </section>
+
+      <section aria-labelledby="param-title">
+        <h2 id="param-title">参数联动</h2>
+        <p>拖动质量滑块（或横向拖曳数值），观察动能公式的联动输出：</p>
+        <p>\(m =\) <kit-param data-param="m" data-min="0.5" data-max="5" data-step="0.1" data-value="2" data-unit=" kg" data-label="质量"></kit-param>，
+           \(v = 10\ \mathrm{m/s}\) 时动能 \(E_k = \tfrac12 m v^2\) 中质量项为
+           <output data-param-out="m"></output>，动能随质量线性增长。</p>
+        <aside class="sidenote">param 的值存在 lesson 级 <code>__paramStore</code>；正文里所有 <code>data-param-out="m"</code> 的输出会同步。跨节联动需要课程扩展模型。</aside>
+      </section>
+
+      <section data-role="retrieval" aria-labelledby="ret-title">
+        <h2 id="ret-title">本课小结</h2>
+        <p>不看正文回答：边注和 callout 的分工是什么？predict 揭晓前学习者会承诺什么？</p>
+      </section>
+
+      <section class="course-actions">
+        <div class="reflection" data-role="learner-feedback">
+          <label for="fb-1">你的页面里哪一段最适合放边注？哪一段最值得放预测？</label>
+          <textarea id="fb-1" rows="3" placeholder="用自己的话写下判断与理由"></textarea>
+        </div>
+        <button type="button" class="btn primary" data-copy-feedback>复制学习记录</button>
+        <span data-copy-feedback-status role="status"></span>
+      </section>
+
+      <nav class="kit-pager" aria-label="课时翻页导航"></nav>
+    </main>
+  </div>
+  <aside class="kit-rail">
+    <nav class="kit-toc" aria-label="本课目录" data-kit-toc>
+  <div class="toc-header"><p class="toc-title">本课目录</p></div>
+  <div class="toc-scroll">
+    <ul class="toc-list">
+      <li class="toc-item is-h2 no-children">
+        <div class="toc-row"><span class="kit-toc__spacer" aria-hidden="true"></span><a class="toc-link is-h2-link" href="#goal-title">本课要解决的问题</a></div>
+      </li>
+      <li class="toc-item is-h2 no-children">
+        <div class="toc-row"><span class="kit-toc__spacer" aria-hidden="true"></span><a class="toc-link is-h2-link" href="#rhythm-title">版式节奏：打破卡片流</a></div>
+      </li>
+      <li class="toc-item is-h2 no-children">
+        <div class="toc-row"><span class="kit-toc__spacer" aria-hidden="true"></span><a class="toc-link is-h2-link" href="#wide-title">破栏示例与代码块</a></div>
+      </li>
+      <li class="toc-item is-h2 no-children">
+        <div class="toc-row"><span class="kit-toc__spacer" aria-hidden="true"></span><a class="toc-link is-h2-link" href="#predict-title">先预测后揭晓</a></div>
+      </li>
+      <li class="toc-item is-h2 no-children">
+        <div class="toc-row"><span class="kit-toc__spacer" aria-hidden="true"></span><a class="toc-link is-h2-link" href="#callout-title">五类提示块</a></div>
+      </li>
+      <li class="toc-item is-h2 no-children">
+        <div class="toc-row"><span class="kit-toc__spacer" aria-hidden="true"></span><a class="toc-link is-h2-link" href="#steps-title">分步推导</a></div>
+      </li>
+      <li class="toc-item is-h2 no-children">
+        <div class="toc-row"><span class="kit-toc__spacer" aria-hidden="true"></span><a class="toc-link is-h2-link" href="#param-title">参数联动</a></div>
+      </li>
+      <li class="toc-item is-h2 no-children">
+        <div class="toc-row"><span class="kit-toc__spacer" aria-hidden="true"></span><a class="toc-link is-h2-link" href="#ret-title">本课小结</a></div>
+      </li>
+    </ul>
+  </div>
+</nav>
+  </aside>
+</body>
+</html>

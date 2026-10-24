@@ -76,6 +76,7 @@
 
   async function renderPlot(node, config) {
     var host = h.find(node, "[data-viz-host]");
+    h.show(node);
     h.clear(host);
     var Plot = root.Plot;
     if (!Plot) {

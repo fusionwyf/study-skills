@@ -49,7 +49,7 @@
       id: "plot",
       version: "0.6.16",
       js: {
-        cdn: "https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6.16/dist/plot.umd.min.js",
+        cdn: "https://cdn.jsdelivr.net/combine/npm/d3@7.9.0/dist/d3.min.js,npm/@observablehq/plot@0.6.16/dist/plot.umd.min.js",
         local: "../assets/kit/vendor/observable-plot/plot.umd.min.js"
       }
     },

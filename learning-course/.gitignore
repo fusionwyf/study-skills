@@ -2,4 +2,4 @@ __pycache__/
 *.py[cod]
 exports/.rendering/
 exports/*.tmp
-exports/shots/
+**/exports/shots/

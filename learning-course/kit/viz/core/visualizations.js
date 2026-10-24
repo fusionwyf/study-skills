@@ -142,6 +142,9 @@
             if (!sourceStore) throw new Error("data-viz-source 未找到 LearnKit 状态源：" + node.dataset.vizSource);
           }
           var instance = await adapters[kind].render(node, config, { sourceStore: sourceStore });
+          // 渲染成功后隐藏无脚本后备：后备只在失败与无 JS 时可见
+          var renderedFallback = find(node, "[data-viz-fallback]");
+          if (renderedFallback) renderedFallback.hidden = true;
           var instanceUpdate = instance && typeof instance.update === "function" ? instance.update : adapters[kind].update;
           if (sourceStore && typeof instanceUpdate !== "function") throw new Error("此适配器不支持 data-viz-source 动态更新");
           if (sourceStore) {

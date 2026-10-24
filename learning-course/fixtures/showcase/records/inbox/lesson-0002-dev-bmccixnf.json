@@ -1,0 +1,94 @@
+{
+  "key": "kit-showcase::0002::dev-bmccixnf",
+  "course_id": "kit-showcase",
+  "lesson": "0002",
+  "objective_id": "obj-questions",
+  "device_id": "dev-bmccixnf",
+  "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) ZCode/3.16.3 Chrome/146.0.7680.80 Electron/41.0.3 Safari/537.36",
+  "updated_at": "2026-10-24T08:13:31.843Z",
+  "has_content": true,
+  "state": {
+    "questions": {
+      "q-choice": {
+        "attempts": 2,
+        "hintUsed": false,
+        "answerViewed": false,
+        "observedAssistance": null,
+        "independence": "",
+        "rawAnswer": "9.8 m/s",
+        "verdict": "correct",
+        "firstTryCorrect": false,
+        "turns": {}
+      },
+      "q-multi": {
+        "attempts": 1,
+        "hintUsed": false,
+        "answerViewed": false,
+        "observedAssistance": null,
+        "independence": "",
+        "rawAnswer": "给每个干扰项写 data-why，指出它对应的误解；干扰项对应真实的教学误区",
+        "verdict": "correct",
+        "firstTryCorrect": true,
+        "turns": {}
+      },
+      "q-numeric": {
+        "attempts": 1,
+        "hintUsed": false,
+        "answerViewed": false,
+        "observedAssistance": null,
+        "independence": "",
+        "rawAnswer": "19.6",
+        "verdict": "correct",
+        "firstTryCorrect": true,
+        "turns": {}
+      },
+      "q-fill": {
+        "attempts": 1,
+        "hintUsed": false,
+        "answerViewed": false,
+        "observedAssistance": null,
+        "independence": "",
+        "rawAnswer": "伽利略",
+        "verdict": "correct",
+        "firstTryCorrect": true,
+        "turns": {}
+      },
+      "q-open": {
+        "attempts": 0,
+        "hintUsed": false,
+        "answerViewed": true,
+        "observedAssistance": null,
+        "independence": "",
+        "rawAnswer": "重力加速度与质量无关，月面锤羽同落即为反例。",
+        "verdict": "",
+        "firstTryCorrect": null,
+        "turns": {}
+      },
+      "q-dialogue": {
+        "attempts": 0,
+        "hintUsed": false,
+        "answerViewed": false,
+        "observedAssistance": "ai_guided",
+        "independence": "",
+        "rawAnswer": "",
+        "verdict": "",
+        "firstTryCorrect": null,
+        "turns": {
+          "1": {
+            "raw": "真空中重力加速度与质量无关，两者加速度相同所以同时落地。",
+            "submitted": true
+          },
+          "2": {
+            "raw": "空气阻力与截面积/质量之比决定谁先落地：羽毛比值大所以慢。",
+            "submitted": true
+          },
+          "3": {
+            "raw": "硬币与纸片：同高同放，硬币先落；把纸片揉成团后再放，几乎同落——验证是阻力而非重量。",
+            "submitted": true
+          }
+        }
+      }
+    }
+  },
+  "markdown": "# 学习记录\n\n- course_id: kit-showcase\n- lesson: 0002\n- objective_id: obj-questions\n\n## 练习记录\n\n### q-choice\n\n- 原始答案: 9.8 m/s\n- 检查次数: 2\n- 使用提示: 否\n- 辅助情况（学习者自述）: 未填写/待确认 (页内未设置自述输入)\n- 页面观察到的帮助: none (未在页内使用提示；外部辅助不可观测)\n- 已查看对照要点: 否\n- 即时判定: correct\n- 一次做对: 否（错题）\n\n### q-multi\n\n- 原始答案: 给每个干扰项写 data-why，指出它对应的误解；干扰项对应真实的教学误区\n- 检查次数: 1\n- 使用提示: 否\n- 辅助情况（学习者自述）: 未填写/待确认 (页内未设置自述输入)\n- 页面观察到的帮助: none (未在页内使用提示；外部辅助不可观测)\n- 已查看对照要点: 否\n- 即时判定: correct\n- 一次做对: 是\n\n### q-numeric\n\n- 原始答案: 19.6\n- 检查次数: 1\n- 使用提示: 否\n- 辅助情况（学习者自述）: 未填写/待确认 (页内未设置自述输入)\n- 页面观察到的帮助: none (未在页内使用提示；外部辅助不可观测)\n- 已查看对照要点: 否\n- 即时判定: correct\n- 一次做对: 是\n\n### q-fill\n\n- 原始答案: 伽利略\n- 检查次数: 1\n- 使用提示: 否\n- 辅助情况（学习者自述）: 未填写/待确认 (页内未设置自述输入)\n- 页面观察到的帮助: none (未在页内使用提示；外部辅助不可观测)\n- 已查看对照要点: 否\n- 即时判定: correct\n- 一次做对: 是\n\n### q-open\n\n- 原始答案: 重力加速度与质量无关，月面锤羽同落即为反例。\n- 检查次数: 0\n- 使用提示: 否\n- 辅助情况（学习者自述）: 未填写/待确认 (页内未设置自述输入)\n- 页面观察到的帮助: answer_revealed (查看了解析/对照要点)\n- 已查看对照要点: 是（作答后）\n- 即时判定: not-applicable\n- 一次做对: 不适用\n\n### q-dialogue\n\n- 原始答案: 硬币与纸片：同高同放，硬币先落；纸片揉成团再试。\n- 检查次数: 0\n- 使用提示: 否\n- 辅助情况（学习者自述）: 未填写/待确认 (页内未设置自述输入)\n- 页面观察到的帮助: ai_guided\n- 已查看对照要点: 否\n- 即时判定: not-applicable\n- 一次做对: 不适用\n\n#### 轮次 1\n- 追问: 未填写\n- 原始回答: 真空中重力加速度与质量无关，两者加速度相同所以同时落地。\n- 已提交: 是\n- 已展示: 是\n- 追问类型: question\n\n#### 轮次 2\n- 追问: 未填写\n- 原始回答: 空气阻力与截面积/质量之比决定谁先落地：羽毛比值大所以慢。\n- 已提交: 是\n- 已展示: 是\n- 追问类型: question\n\n#### 轮次 3\n- 追问: 未填写\n- 原始回答: 硬币与纸片：同高同放，硬币先落；把纸片揉成团后再放，几乎同落——验证是阻力而非重量。\n- 已提交: 是\n- 已展示: 是\n- 追问类型: question\n\n## 学习者反馈\n\n未填写额外反思。"
+}

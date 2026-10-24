@@ -404,9 +404,14 @@
         Array.prototype.forEach.call(ctx.turnsSrc.children, function (li, i) {
           var t = el("div", "q-turn");
           t.hidden = i > 0;
+          // records.js 按 [data-dialogue-turn] / [data-dialogue-prompt] 收集轮次
+          // 原文与追问类型（learning.records 契约），这里同时挂两套属性。
+          t.dataset.dialogueTurn = String(i + 1);
+          t.dataset.guidance = li.dataset.guidance || "question";
           var promptText = li.dataset.prompt || li.textContent.trim();
           var p = el("label", "q-turn-prompt", promptText);
           p.setAttribute("for", ctx.id + "-t" + i);
+          p.setAttribute("data-dialogue-prompt", "");
           var ta2 = el("textarea", "q-textarea");
           ta2.id = ctx.id + "-t" + i;
           t.appendChild(p);

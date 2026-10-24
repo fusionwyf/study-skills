@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="swiss">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>第 0002 课｜六类题型全览</title>
+  <link rel="stylesheet" href="../assets/kit/kit.css">
+  <link rel="stylesheet" href="../assets/course/theme.css">
+  <script defer src="../assets/kit/kit.js"></script>
+</head>
+<body class="kit-page">
+  <div class="kit-main">
+    <header class="course-header">
+      <p class="course-kicker">第 0002 课 · 组件全览</p>
+      <h1 class="course-title">六类题型全览</h1>
+      <p class="course-subtitle">choice / multi / numeric / fill / open / dialogue：每类题的适用场景与判定方式。</p>
+      <div data-theme-switcher></div>
+    </header>
+
+    <main class="lesson" id="lesson-content" data-course-id="kit-showcase" data-lesson-id="0002" data-objective="obj-questions" data-evidence="practice" data-cognitive-level="understand" data-retrieval="required" data-feedback="required" data-source-status="not-needed" data-answer-status="provided">
+
+      <section data-role="objective" aria-labelledby="goal-title">
+        <h2 id="goal-title">本课要解决的问题</h2>
+        <aside class="callout" data-callout="tip">
+          <div class="callout__title">学完后你能……</div>
+          <p>为一个知识点选择最合适的题型，并说出选择题测不出、对话题才测得出的东西是什么。</p>
+        </aside>
+      </section>
+
+      <section aria-labelledby="q1-title">
+        <h2 id="q1-title">单选 choice</h2>
+        <p>标准用法：一个正确项，每个干扰项配 <code>data-why</code> 解释。试试先选一个错的，观察三重反馈与提示：</p>
+        <section class="question" data-role="evidence" data-question-id="q-choice" data-kind="choice" data-max-attempts="2">
+          <div data-stem><p>自由落体中，1 秒末的<strong>速度</strong>大小是？</p></div>
+          <ol data-options>
+            <li data-option>4.9 m<span data-why>这是 1 秒内走过的距离，不是速度——距离要再对速度积分。</span></li>
+            <li data-option data-correct>9.8 m/s<span data-why>对：\(v = g t = 9.8 \times 1\)。</span></li>
+            <li data-option>19.6 m/s<span data-why>这是 2 秒末的速度。</span></li>
+          </ol>
+          <ol data-hints><li>区分"走过的距离"和"此刻的速度"。</li><li>速度 = 加速度 × 时间。</li></ol>
+          <div data-explain><p>\(v(t) = g t\)，1 秒末即 9.8 m/s。4.9 m 是同一时刻的距离——两者差一个积分因子。</p></div>
+        </section>
+      </section>
+
+      <section aria-labelledby="q2-title">
+        <h2 id="q2-title">多选 multi</h2>
+        <section class="question" data-role="evidence" data-question-id="q-multi" data-kind="multi" data-max-attempts="2">
+          <div data-stem><p>哪些做法能提升选择题的<strong>诊断价值</strong>？（多选）</p></div>
+          <ol data-options>
+            <li data-option data-correct>给每个干扰项写 data-why，指出它对应的误解<span data-why>干扰项是误解的探测器。</span></li>
+            <li data-option>把正确项放在固定位置<span data-why>位置应随机，否则学习者靠位置猜。</span></li>
+            <li data-option data-correct>干扰项对应真实的教学误区<span data-why>只有真实的误解才值得作为选项。</span></li>
+            <li data-option>正确项写得更长更详细<span data-why>"最长选项必对"是著名的应试线索。</span></li>
+          </ol>
+          <div data-explain><p>好选择题的干扰项是"误解的显微镜"：选错时 data-why 立刻告诉学习者卡在哪个误区。</p></div>
+        </section>
+      </section>
+
+      <section aria-labelledby="q3-title">
+        <h2 id="q3-title">数值 numeric</h2>
+        <section class="question" data-role="evidence" data-question-id="q-numeric" data-kind="numeric" data-expected="19.6" data-tolerance="0.2" data-unit="m">
+          <div data-stem><p>从静止自由下落 <strong>2 秒</strong>，走过的距离是多少米？（容差 ±0.2）</p></div>
+          <ol data-hints><li>用 \(h = \tfrac12 g t^2\)。</li><li>\(\tfrac12 \times 9.8 \times 4\)。</li></ol>
+          <div data-explain><p>\(h = 0.5 \times 9.8 \times 2^2 = 19.6\ \mathrm{m}\)。上一课的预测组件里你已经猜过 1 秒的情形——对比一下时间的平方效应。</p></div>
+        </section>
+      </section>
+
+      <section aria-labelledby="q4-title">
+        <h2 id="q4-title">填空 fill</h2>
+        <section class="question" data-role="evidence" data-question-id="q-fill" data-kind="fill" data-accepted='["伽利略","Galileo","galileo"]'>
+          <div data-stem><p>最早提出"轻重物体真空下落一样快"思想的学者是谁？（填一个名字）</p></div>
+          <div data-explain><p>伽利略通过斜面实验与逻辑推理（"重物绑轻物会怎样"悖论）否定了亚里士多德的结论；1971 年阿波罗 15 号宇航员在月面用锤子和羽毛做了实测。</p></div>
+        </section>
+      </section>
+
+      <section aria-labelledby="q5-title">
+        <h2 id="q5-title">开放纠错 open</h2>
+        <section class="question" data-role="evidence" data-question-id="q-open" data-kind="open">
+          <div data-stem><p>模拟学生说："重的物体下落更快，所以铁球先落地。"请纠正这个说法并给出一个反例。</p></div>
+          <div data-key>
+            <ul><li>要点：重力加速度与质量无关，真空中同时落地。</li><li>反例参考：月面无空气，锤子与羽毛同时落地；或同质量不同形状的物体受空气阻力不同。</li></ul>
+          </div>
+        </section>
+      </section>
+
+      <section aria-labelledby="q6-title">
+        <h2 id="q6-title">多轮对话 dialogue</h2>
+        <p>对话题逐轮呈现，每一轮的回答都会单独进入学习记录（含追问类型）：</p>
+        <section class="question" data-role="evidence" data-question-id="q-dialogue" data-kind="dialogue">
+          <div data-stem><p>围绕"自由落体"完成三轮追问。</p></div>
+          <ol data-turns>
+            <li>第一轮：用一句话解释为什么真空中羽毛和铁球同时落地。</li>
+            <li data-guidance="with_hints">第二轮：如果改在有空气的环境，什么因素决定谁先落地？</li>
+            <li data-guidance="ai_guided">第三轮：设计一个 10 秒内能在家完成的实验，检验你的第二轮结论。</li>
+          </ol>
+        </section>
+      </section>
+
+      <section aria-labelledby="compare-title">
+        <h2 id="compare-title">怎么选题型</h2>
+        <p>选择/数值题<strong>测判断</strong>，填空<strong>测回忆</strong>，开放题<strong>测论证</strong>，对话题<strong>测可教性</strong>——能把自己的解释在追问下保持一致，才算真的懂。</p>
+      </section>
+
+      <section data-role="retrieval" aria-labelledby="ret-title">
+        <h2 id="ret-title">本课小结</h2>
+        <p>复述：六类题型各自的判定机制是什么？"查看答案"按钮在第几次尝试后出现？</p>
+      </section>
+
+      <section class="course-actions">
+        <div class="reflection" data-role="learner-feedback">
+          <label for="fb-2a">哪一类题你答得最吃力？为什么？</label>
+          <textarea id="fb-2a" rows="2"></textarea>
+          <label for="fb-2b">如果给本课再加一道题，你会加哪一类、考什么？</label>
+          <textarea id="fb-2b" rows="2"></textarea>
+        </div>
+        <button type="button" class="btn primary" data-copy-feedback>复制学习记录</button>
+        <span data-copy-feedback-status role="status"></span>
+      </section>
+
+      <nav class="kit-pager" aria-label="课时翻页导航"></nav>
+    </main>
+  </div>
+  <aside class="kit-rail">
+    <nav class="kit-toc" aria-label="本课目录" data-kit-toc>
+  <div class="toc-header"><p class="toc-title">本课目录</p></div>
+  <div class="toc-scroll">
+    <ul class="toc-list">
+      <li class="toc-item is-h2 no-children">
+        <div class="toc-row"><span class="kit-toc__spacer" aria-hidden="true"></span><a class="toc-link is-h2-link" href="#goal-title">本课要解决的问题</a></div>
+      </li>
+      <li class="toc-item is-h2 no-children">
+        <div class="toc-row"><span class="kit-toc__spacer" aria-hidden="true"></span><a class="toc-link is-h2-link" href="#q1-title">单选 choice</a></div>
+      </li>
+      <li class="toc-item is-h2 no-children">
+        <div class="toc-row"><span class="kit-toc__spacer" aria-hidden="true"></span><a class="toc-link is-h2-link" href="#q2-title">多选 multi</a></div>
+      </li>
+      <li class="toc-item is-h2 no-children">
+        <div class="toc-row"><span class="kit-toc__spacer" aria-hidden="true"></span><a class="toc-link is-h2-link" href="#q3-title">数值 numeric</a></div>
+      </li>
+      <li class="toc-item is-h2 no-children">
+        <div class="toc-row"><span class="kit-toc__spacer" aria-hidden="true"></span><a class="toc-link is-h2-link" href="#q4-title">填空 fill</a></div>
+      </li>
+      <li class="toc-item is-h2 no-children">
+        <div class="toc-row"><span class="kit-toc__spacer" aria-hidden="true"></span><a class="toc-link is-h2-link" href="#q5-title">开放纠错 open</a></div>
+      </li>
+      <li class="toc-item is-h2 no-children">
+        <div class="toc-row"><span class="kit-toc__spacer" aria-hidden="true"></span><a class="toc-link is-h2-link" href="#q6-title">多轮对话 dialogue</a></div>
+      </li>
+      <li class="toc-item is-h2 no-children">
+        <div class="toc-row"><span class="kit-toc__spacer" aria-hidden="true"></span><a class="toc-link is-h2-link" href="#compare-title">怎么选题型</a></div>
+      </li>
+      <li class="toc-item is-h2 no-children">
+        <div class="toc-row"><span class="kit-toc__spacer" aria-hidden="true"></span><a class="toc-link is-h2-link" href="#ret-title">本课小结</a></div>
+      </li>
+    </ul>
+  </div>
+</nav>
+  </aside>
+</body>
+</html>

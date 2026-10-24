@@ -1,0 +1,59 @@
+/* @kit-theme name="crt-terminal" label="绿磷终端" scheme="dark" code="dark" fonts="jetbrains-mono:400,700" */
+@layer theme {
+  html[data-theme="crt-terminal"] {
+    color-scheme: dark;
+    --c-bg: #060a06;
+    --c-surface: #0b120b;
+    --c-surface-2: #111c11;
+    --c-sidebar: #0a0f0a;
+    --c-text: #b8f5c0;
+    --c-text-2: #7fc48a;
+    --c-muted: #55905d;
+    --c-border: #1d331f;
+    --c-border-strong: #2f5232;
+    --c-accent: #4dff7c;
+    --c-accent-strong: #86ffa6;
+    --c-accent-bg: #0e2b16;
+    --c-accent-border: #1f5c31;
+    --c-success: #4dff7c;
+    --c-success-bg: #0e2b16;
+    --c-warn: #ffd54d;
+    --c-warn-bg: #2b260e;
+    --c-danger: #ff6d6d;
+    --c-danger-bg: #2b0e0e;
+    --shadow: 0 0 0 1px var(--c-border);
+    --shadow-card: 0 0 14px rgba(77, 255, 124, 0.12);
+
+    --series-1: #4dff7c;
+    --series-2: #6ee7ff;
+    --series-3: #ffd54d;
+    --series-4: #ff6d6d;
+    --series-5: #c4b5fd;
+    --series-6: #67e8f9;
+    --series-7: #fdba74;
+    --series-8: #9ca3af;
+  }
+
+  /* CRT 扫描线肌理：固定覆盖层，不随滚动 */
+  html[data-theme="crt-terminal"] body.kit-page::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 999;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0 2px,
+      rgba(0, 0, 0, 0.14) 2px 4px
+    );
+  }
+
+  /* 终端感：标题加发光，边角方直 */
+  html[data-theme="crt-terminal"] .kit-main {
+    border-radius: 0;
+  }
+  html[data-theme="crt-terminal"] h1,
+  html[data-theme="crt-terminal"] h2 {
+    text-shadow: 0 0 12px rgba(77, 255, 124, 0.45);
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "theme": "swiss",
+  "themes": [
+    "swiss",
+    "course",
+    "ink",
+    "paper",
+    "blueprint",
+    "riso",
+    "brutal",
+    "field",
+    "crt-terminal"
+  ],
+  "customThemes": {
+    "crt-terminal": {
+      "label": "绿磷终端",
+      "scheme": "dark",
+      "code": "dark",
+      "fonts": [
+        "jetbrains-mono:400,700"
+      ]
+    }
+  },
+  "vendor": {
+    "mode": "cdn"
+  },
+  "code": {
+    "themes": {
+      "light": "github",
+      "dark": "github-dark"
+    }
+  },
+  "modules": [
+    "viz.kinds.plot"
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "key": "kit-showcase::0004::dev-bmccixnf",
+  "course_id": "kit-showcase",
+  "lesson": "0004",
+  "objective_id": "obj-evidence",
+  "device_id": "dev-bmccixnf",
+  "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) ZCode/3.16.3 Chrome/146.0.7680.80 Electron/41.0.3 Safari/537.36",
+  "updated_at": "2026-10-24T08:18:25.830Z",
+  "has_content": true,
+  "state": {
+    "questions": {
+      "z-dialogue": {
+        "attempts": 0,
+        "hintUsed": false,
+        "answerViewed": false,
+        "observedAssistance": "ai_guided",
+        "independence": "",
+        "rawAnswer": "",
+        "verdict": "",
+        "firstTryCorrect": null,
+        "turns": {
+          "1": {
+            "raw": "距离是速度的积分：1 秒末速度 9.8 但平均只有 4.9；2 秒距离按平方到 19.6 m。",
+            "submitted": true
+          },
+          "2": {
+            "raw": "不对，3 秒是 ½×9.8×9 ≈ 44.1 m——他把距离当成了线性增长。",
+            "submitted": true
+          },
+          "3": {
+            "raw": "看 h-t 曲线：1.75 s 位于 11.0 与 19.6 之间偏左，估约 15 m，误差来自读图。",
+            "submitted": true
+          }
+        }
+      }
+    }
+  },
+  "markdown": "# 学习记录\n\n- course_id: kit-showcase\n- lesson: 0004\n- objective_id: obj-evidence\n\n## 练习记录\n\n### z-dialogue\n\n- 原始答案: 距离是速度的积分：1 秒末速度 9.8 但平均只有 4.9；2 秒距离按平方到 19.6 m。\n- 检查次数: 0\n- 使用提示: 否\n- 辅助情况（学习者自述）: 未填写/待确认 (页内未设置自述输入)\n- 页面观察到的帮助: ai_guided\n- 已查看对照要点: 否\n- 即时判定: not-applicable\n- 一次做对: 不适用\n\n#### 轮次 1\n- 追问: 第一轮：用\"距离是速度的积分\"解释为什么 1 秒只落 4.9 m 而 2 秒落 19.6 m（差 4 倍而不是 2 倍）。\n- 原始回答: 距离是速度的积分：1 秒末速度 9.8 但平均只有 4.9；2 秒距离按平方到 19.6 m。\n- 已提交: 是\n- 已展示: 是\n- 追问类型: question\n\n#### 轮次 2\n- 追问: 第二轮：初二学生问\"那 3 秒是不是落 29.4 m？\"——指出错误并纠正。\n- 原始回答: 不对，3 秒是 ½×9.8×9 ≈ 44.1 m——他把距离当成了线性增长。\n- 已提交: 是\n- 已展示: 是\n- 追问类型: with_hints\n\n#### 轮次 3\n- 追问: 第三轮：不用公式，用这张 h-t 图（第 3 课的 plot）口头估算 1.75 s 的下落距离，并说明误差来源。\n- 原始回答: 看 h-t 曲线：1.75 s 位于 11.0 与 19.6 之间偏左，估约 15 m，误差来自读图。\n- 已提交: 是\n- 已展示: 是\n- 追问类型: ai_guided\n\n## 学习者反馈\n\n未填写额外反思。"
+}

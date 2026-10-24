@@ -1,0 +1,37 @@
+{
+  "key": "kit-showcase::0001::dev-bmccixnf",
+  "course_id": "kit-showcase",
+  "lesson": "0001",
+  "objective_id": "obj-layout",
+  "device_id": "dev-bmccixnf",
+  "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) ZCode/3.16.3 Chrome/146.0.7680.80 Electron/41.0.3 Safari/537.36",
+  "updated_at": "2026-10-24T08:11:01.839Z",
+  "has_content": true,
+  "state": {
+    "questions": {
+      "p1": {
+        "attempts": 1,
+        "hintUsed": false,
+        "answerViewed": false,
+        "observedAssistance": null,
+        "independence": "",
+        "rawAnswer": "9.8",
+        "verdict": "incorrect",
+        "firstTryCorrect": false,
+        "turns": {}
+      },
+      "p2": {
+        "attempts": 1,
+        "hintUsed": false,
+        "answerViewed": false,
+        "observedAssistance": null,
+        "independence": "",
+        "rawAnswer": "同时落地，重力加速度与质量无关",
+        "verdict": "",
+        "firstTryCorrect": null,
+        "turns": {}
+      }
+    }
+  },
+  "markdown": "# 学习记录\n\n- course_id: kit-showcase\n- lesson: 0001\n- objective_id: obj-layout\n\n## 练习记录\n\n### p1\n\n- 原始答案: 9.8\n- 检查次数: 1\n- 使用提示: 否\n- 辅助情况（学习者自述）: 未填写/待确认 (页内未设置自述输入)\n- 页面观察到的帮助: none (未在页内使用提示；外部辅助不可观测)\n- 已查看对照要点: 否\n- 即时判定: incorrect\n- 一次做对: 否（错题）\n\n### p2\n\n- 原始答案: 同时落地，重力加速度与质量无关\n- 检查次数: 1\n- 使用提示: 否\n- 辅助情况（学习者自述）: 未填写/待确认 (页内未设置自述输入)\n- 页面观察到的帮助: none (未在页内使用提示；外部辅助不可观测)\n- 已查看对照要点: 否\n- 即时判定: not-checked\n- 一次做对: 未判定\n\n## 参数探索（当前状态；代表探索足迹）\n\n### m\n- 当前值: 2.3\n\n## 学习者反馈\n\n### 你的页面里哪一段最适合放边注？哪一段最值得放预测？\n\n第 1 课：边注适合放'为什么不是另一种解释'，预测适合放在 4.9 vs 9.8 这种反直觉点前面。"
+}
