@@ -829,87 +829,6 @@ def bundle_kit(active_modules, output_dir, course_config=None, vendor_mode="cdn"
                         f"Offline vendor package '{pkg_name}' for '{vid}' missing in kit/vendor/."
                     )
 
-    # Navigation data from lessons if available
-    nav_data = None
-    if course_dir:
-        course_p = Path(course_dir)
-        nav_json_p = course_p / "assets" / "course" / "nav.json"
-        if nav_json_p.is_file():
-            try:
-                nav_data = json.loads(nav_json_p.read_text(encoding="utf-8"))
-            except Exception:
-                nav_data = None
-        if not nav_data:
-            course_yaml_p = course_p / "course.yaml"
-            c_meta = {}
-            if course_yaml_p.is_file():
-                try:
-                    import yaml
-                    c_meta = yaml.safe_load(course_yaml_p.read_text(encoding="utf-8")) or {}
-                except Exception:
-                    pass
-            chapter_order = [chapter["label"] for chapter in course_layout.chapters_of_state(c_meta)]
-            lesson_entries = course_layout.iter_lessons(course_p, chapter_order)
-            if lesson_entries:
-                items = []
-                for entry in lesson_entries:
-                    hf = entry["path"]
-                    try:
-                        c_text = hf.read_text(encoding="utf-8")
-                        num_m = re.search(r'data-lesson-id="([^"]+)"', c_text)
-                        t_m = re.search(r'<title>([^<]+)</title>', c_text)
-                        obj_m = re.search(r'data-objective="([^"]+)"', c_text)
-                        num = num_m.group(1) if num_m else entry["number"]
-                        raw_title = t_m.group(1).strip() if t_m else hf.stem
-                        title_clean = re.sub(r"^第\s*\d+\s*课[｜·\s-]*", "", raw_title)
-                        items.append({
-                            "number": num,
-                            "chapter": entry["chapter"] or "",
-                            "title": title_clean,
-                            "objective": obj_m.group(1) if obj_m else "",
-                            "file": entry["file"],
-                            "key": course_layout.completion_key(entry["chapter"], num),
-                            "href": course_layout.lesson_href(None, entry["file"], from_is_lesson=False),
-                            "home": course_layout.home_href(course_p, entry["chapter"]),
-                        })
-                    except Exception:
-                        pass
-                for i, it in enumerate(items):
-                    for side, other in (("prev", items[i - 1] if i > 0 else None),
-                                        ("next", items[i + 1] if i < len(items) - 1 else None)):
-                        it[side] = None if other is None else {
-                            "number": other["number"],
-                            "file": other["file"],
-                            "chapter": other["chapter"],
-                            "key": other["key"],
-                            "href": course_layout.lesson_href(it["file"], other["file"]),
-                        }
-                completed_lessons = course_layout.completed_lesson_keys(course_p)
-                cur_l = c_meta.get("current_lesson", len(completed_lessons) if completed_lessons else len(items))
-                try:
-                    cur_l_num = int(cur_l)
-                except (ValueError, TypeError):
-                    cur_l_num = len(completed_lessons) if completed_lessons else len(items)
-                nav_data = {
-                    "title": c_meta.get("title") or course_p.name,
-                    "course_id": c_meta.get("course_id") or course_p.name,
-                    "current_lesson": cur_l_num,
-                    "completed_lessons": completed_lessons,
-                    "completed_count": len(completed_lessons),
-                    "total_count": len(items),
-                    "lessons": items,
-                    "home": items[0]["home"] if items else "../index.html"
-                }
-                chapter_meta = course_layout.chapters_of_state(c_meta)
-                if chapter_meta:
-                    nav_data["chapters"] = chapter_meta
-                    nav_data["chaptered"] = True
-        elif "completed_lessons" not in nav_data:
-            completed_lessons = course_layout.completed_lesson_keys(course_p)
-            nav_data["completed_lessons"] = completed_lessons
-            nav_data["completed_count"] = len(completed_lessons)
-            nav_data["total_count"] = len(nav_data.get("lessons", []))
-
     # Collect JS
     active_runtime_ids = list(ordered_ids)
     for em in ext_module_ids:
@@ -929,7 +848,6 @@ def bundle_kit(active_modules, output_dir, course_config=None, vendor_mode="cdn"
     active_mods_str = json.dumps(active_runtime_ids, ensure_ascii=False)
     vendors_str = json.dumps(active_vendors, ensure_ascii=False)
     extensions_str = json.dumps(extensions, ensure_ascii=False)
-    nav_str = json.dumps(nav_data, ensure_ascii=False) if nav_data else "null"
 
     js_parts = [
         "/**\n * Course Kit v2 Bundled Runtime\n * Built by kit.py. Do not edit directly.\n */\n",
@@ -939,7 +857,6 @@ def bundle_kit(active_modules, output_dir, course_config=None, vendor_mode="cdn"
         f'  CourseKit.VENDORS = {vendors_str};\n',
         f'  CourseKit.__LOCAL_VENDORS__ = {json.dumps(local_ready)};\n',
         f'  CourseKit.__EXTENSIONS__ = {extensions_str};\n',
-        f'  CourseKit.__NAV_DATA__ = {nav_str};\n'
     ]
 
     for mod_id in ordered_ids:
