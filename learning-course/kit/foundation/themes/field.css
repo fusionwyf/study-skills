@@ -1,0 +1,116 @@
+/* 博物志 Field Notes —— 灰绿纸张、墨绿与赭黄、文楷手写感、标本卡双线框。 */
+@layer theme {
+  html[data-theme="field"] {
+    color-scheme: light;
+    --c-bg: #e9ece2;
+    --c-surface: #f5f6ef;
+    --c-surface-2: #eceee3;
+    --c-sidebar: #e2e6d8;
+    --c-text: #1d3a2b;
+    --c-text-2: #4e6354;
+    --c-muted: #7b8c7e;
+    --c-border: #c3cbb8;
+    --c-border-strong: #1d3a2b;
+
+    --c-accent: #a2412a;
+    --c-accent-strong: #7f2f1c;
+    --c-accent-bg: #f6e7df;
+    --c-accent-border: #e0b8a8;
+
+    --c-success: #4f7d3a;
+    --c-success-bg: #e8f0dc;
+    --c-warn: #9a6512;
+    --c-warn-bg: #f8eed8;
+    --c-danger: #a2412a;
+    --c-danger-bg: #f7e4dd;
+
+    --radius: 4px;
+    --radius-sm: 3px;
+    --shadow: 0 2px 0 rgba(29, 58, 43, 0.06);
+    --shadow-card: 0 2px 0 rgba(29, 58, 43, 0.06);
+    --leading: 1.9;
+
+    --font-body: "LXGW WenKai", "Noto Serif SC", "Songti SC", serif;
+    --font-display: "LXGW WenKai", "Noto Serif SC", "Songti SC", serif;
+    --font-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+
+    --code-bg: #1d3a2b;
+    --code-fg: #eef0e3;
+    --code-border: #1d3a2b;
+    --code-label: #e6b45e;
+
+    --series-1: #1d3a2b;
+    --series-2: #a2412a;
+    --series-3: #b77d22;
+    --series-4: #5e8a49;
+    --series-5: #3f6f8f;
+    --series-6: #8a5a9e;
+    --series-7: #c9a227;
+    --series-8: #7b8c7e;
+
+    --fd-ochre: #b77d22;
+    --fd-moss: #5e8a49;
+  }
+
+  html[data-theme="field"] body,
+  html[data-theme="field"] .kit-page {
+    background-color: var(--c-bg);
+    background-image: radial-gradient(rgba(29, 58, 43, 0.07) 1px, transparent 1px);
+    background-size: 18px 18px;
+  }
+
+  /* 导航 */
+  html[data-theme="field"] .kit-sidebar { border-right: 1px dashed var(--c-border-strong); }
+  html[data-theme="field"] .kit-sidebar__item.is-current .kit-sidebar__link {
+    background: var(--c-surface); color: var(--c-accent); border-left: 2px solid var(--c-accent);
+  }
+  html[data-theme="field"] .toc-link.is-active { background: var(--c-surface); color: var(--c-accent); }
+
+  /* 页头 */
+  html[data-theme="field"] header.course-header { border-bottom: 1px dashed var(--c-border-strong); padding-bottom: 1.75rem; }
+  html[data-theme="field"] header.course-header .course-kicker { color: var(--fd-moss); font-family: var(--font-mono); }
+  html[data-theme="field"] header.course-header .course-kicker::before { content: "PLATE · "; }
+  html[data-theme="field"] header.course-header .course-title {
+    font-size: clamp(2.3rem, 4.2vw, 3.4rem); font-weight: 700; line-height: 1.25; text-wrap: balance;
+  }
+  html[data-theme="field"] header.course-header .course-meta span {
+    border: 1px dashed var(--c-text-2); padding: 0.05rem 0.55rem; font-family: var(--font-mono); font-size: 0.75rem;
+  }
+
+  /* 标题 */
+  html[data-theme="field"] .lesson h2 { border-bottom: 1px dashed var(--c-border-strong); font-size: 1.6rem; font-weight: 700; }
+  html[data-theme="field"] .lesson h2::before { content: "❦ "; color: var(--fd-moss); }
+
+  /* 便签式提示框 */
+  html[data-theme="field"] .callout {
+    border: 1px solid #e3d3a8; border-radius: var(--radius); background: #fbf6e6;
+    transform: rotate(-0.3deg); box-shadow: var(--shadow);
+  }
+  html[data-theme="field"] .callout::before { display: none; }
+  html[data-theme="field"] .callout__title { color: var(--fd-ochre); }
+  html[data-theme="field"] .callout[data-kind="tip"], html[data-theme="field"] .callout[data-callout="tip"],
+  html[data-theme="field"] .callout[data-kind="success"] { background: #eef4e3; border-color: #c8d9b2; transform: rotate(0.25deg); }
+  html[data-theme="field"] .callout[data-kind="warning"], html[data-theme="field"] .callout[data-callout="warning"],
+  html[data-theme="field"] .callout[data-kind="danger"], html[data-theme="field"] .callout[data-callout="danger"] {
+    background: #f7e9e3; border-color: #e2bfb2; transform: rotate(0.25deg);
+  }
+
+  /* 标本卡双线框 */
+  html[data-theme="field"] .question, html[data-theme="field"] .quiz,
+  html[data-theme="field"] .visualization, html[data-theme="field"] .kit-pager__card {
+    border: 1px solid var(--c-text); border-radius: 2px; box-shadow: none;
+    outline: 1px solid var(--c-text); outline-offset: 4px; margin-block: 2rem 2.5rem;
+  }
+  html[data-theme="field"] .q-option label { border-style: dashed; }
+  html[data-theme="field"] .q-actions .btn { border-radius: 999px; }
+  html[data-theme="field"] .q-actions .btn.primary { background: var(--c-text); border-color: var(--c-text); color: #eef0e3; }
+
+  html[data-theme="field"] .kit-block { --c-surface-2: #264a37; --c-border: #2f5642; }
+
+  html[data-theme="field"] .lesson blockquote {
+    border-left: none; background: none; color: var(--c-accent); font-size: 1.2rem;
+    padding: 0 0 0 2rem; position: relative;
+  }
+  html[data-theme="field"] .lesson blockquote::before { content: "❦"; position: absolute; left: 0; top: 0; color: var(--fd-moss); }
+  html[data-theme="field"] .lesson th { border-bottom: 1px solid var(--c-text); font-family: var(--font-mono); }
+}

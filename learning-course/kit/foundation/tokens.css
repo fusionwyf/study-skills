@@ -4,15 +4,17 @@
     --radius: 0.6rem;
     --radius-sm: 0.35rem;
     --radius-pill: 9999px;
-    --measure: 46rem;
-    --measure-wide: 64rem;
-    --rail-w: 16rem;
-    --toc-w: 15rem;
+    --measure: 54rem;
+    --measure-wide: 88rem;
+    --nav-w: 16rem;
+    --rail-w: 18.5rem;
+    --toc-w: 17rem;
     --toc-top: 1.5rem;
     --leading: 1.7;
 
     /* ---- Font stacks ---- */
     --font-body: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+    --font-display: var(--font-body);
     --font-mono: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
 
     /* ---- Component default mapping ---- */
@@ -22,6 +24,8 @@
     --code-label: var(--c-text-2);
 
     --math-fg: var(--c-text);
+
+    --c-sidebar: color-mix(in srgb, var(--c-surface-2) 50%, var(--c-surface));
 
     --viz-bg: var(--c-surface);
     --viz-border: var(--c-border);

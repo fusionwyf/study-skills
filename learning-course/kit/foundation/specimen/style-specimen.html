@@ -1,0 +1,774 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Course Kit v3 · 风格样张</title>
+<!-- 字体：jsDelivr / fontsource（按 unicode-range 分片按需加载），缺失时回退系统字体 -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-sc@5/400.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-sc@5/700.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-sc@5/900.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/noto-serif-sc@5/400.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/noto-serif-sc@5/700.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5/400.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5/700.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/space-grotesk@5/500.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/space-grotesk@5/700.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+/* =========================================================
+   0. 基础与共享布局
+   ========================================================= */
+*,*::before,*::after{box-sizing:border-box}
+:root{
+  --bg:#fff;--surface:#f5f5f5;--ink:#111;--ink-2:#666;--rule:#ddd;
+  --accent:#06f;--accent-2:#111;--accent-3:#f60;--ok:#1a7f4b;--bad:#c0392b;
+  --font-display:system-ui,sans-serif;--font-body:system-ui,sans-serif;--font-mono:ui-monospace,Consolas,monospace;
+  --radius:0;--bw:1px;--shadow:none;--leading:1.85;
+  --chart-1:#111;--chart-2:#06f;--chart-3:#aaa;--code-bg:#111;--code-ink:#eee;
+  --tok-kw:#ff7b72;--tok-str:#a5d6ff;--tok-num:#ffa657;--tok-com:#8b949e;--tok-fn:#d2a8ff;
+}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:var(--font-body);font-size:17px;line-height:var(--leading);
+  text-autospace:normal;-webkit-font-smoothing:antialiased;
+  transition:background-color .35s,color .35s;
+}
+::selection{background:var(--accent);color:var(--bg)}
+h1,h2,h3{font-family:var(--font-display);margin:0;line-height:1.2}
+h2{font-size:1.75rem;margin-bottom:1.25rem}
+h3{font-size:1.15rem;margin:1.5rem 0 .5rem}
+p{margin:0 0 1.1rem}
+code,pre,kbd{font-family:var(--font-mono)}
+input[type=range]{accent-color:var(--accent);width:100%}
+
+.lesson{max-width:78rem;margin:0 auto;padding:7rem 2.5rem 10rem}
+
+/* 封面 */
+.cover{display:grid;grid-template-columns:1.15fr 1fr;gap:3.5rem;align-items:center;min-height:min(72vh,46rem);padding-bottom:4rem}
+.cover h1{text-wrap:balance}
+.nb{white-space:nowrap}
+.cover-art svg{display:block;width:100%;height:auto}
+.kicker{font-family:var(--font-mono);font-size:.82rem;letter-spacing:.08em;margin:0 0 1.25rem}
+.cover h1{font-size:clamp(2.6rem,5.6vw,4.6rem)}
+.dek{font-size:1.15rem;color:var(--ink-2);margin:1.5rem 0 2rem;max-width:32rem}
+.meta{display:flex;flex-wrap:wrap;gap:.6rem;list-style:none;padding:0;margin:0;font-size:.85rem}
+.meta li{padding:.25rem .75rem;border:var(--bw) solid var(--rule);border-radius:var(--radius)}
+
+/* 节：标记栏 | 正文 40rem | 边注 */
+.sec{display:grid;grid-template-columns:7.5rem minmax(0,40rem) minmax(0,15rem);column-gap:3rem;padding-block:4rem}
+.sec>*{grid-column:2}
+.sec>.sec-mark{grid-column:1;grid-row:1/span 40;align-self:start;position:sticky;top:5.5rem}
+.sec>.wide{grid-column:2/4}
+.pair{display:grid;grid-template-columns:subgrid;grid-column:2/4;align-items:start}
+.pair>.side{grid-column:2}
+.sec-mark .num{display:block;font-family:var(--font-display);font-weight:700;font-size:2.4rem;line-height:1}
+.sec-mark .cn{display:none}
+.sec-mark .label{display:block;font-family:var(--font-mono);font-size:.78rem;letter-spacing:.12em;margin-top:.6rem;color:var(--ink-2)}
+.side{font-size:.85rem;line-height:1.7;color:var(--ink-2);padding-top:.2rem}
+.side b{color:var(--ink)}
+
+/* 通用组件 */
+.callout{padding:1.25rem 1.5rem;border:var(--bw) solid var(--rule);border-radius:var(--radius);background:var(--surface);margin:0 0 1.5rem}
+.callout-title{font-weight:700;margin:0 0 .5rem;font-family:var(--font-display)}
+.callout ul{margin:0;padding-left:1.2rem}
+.callout p:last-child{margin:0}
+.formula{margin:1.5rem 0 2rem;padding:1.25rem 0;text-align:center;font-size:1.25rem}
+.pull{font-family:var(--font-display);font-size:1.6rem;line-height:1.4;margin:2.5rem 0;padding:0}
+.pull cite{display:block;font-size:.85rem;font-style:normal;margin-top:.75rem;color:var(--ink-2);font-family:var(--font-mono)}
+
+.viz,.question,.predict{background:var(--surface);border:var(--bw) solid var(--rule);border-radius:var(--radius);box-shadow:var(--shadow);padding:1.5rem 1.75rem;margin:1rem 0 2rem}
+.fig-label{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.1em;color:var(--ink-2);margin:0 0 1rem;display:flex;justify-content:space-between;gap:1rem}
+.viz-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:1.5rem;align-items:center}
+.viz svg{display:block;width:100%;height:auto;overflow:visible}
+.controls{display:grid;grid-template-columns:auto 1fr auto;gap:.5rem 1rem;align-items:center;margin-top:1.25rem;font-size:.9rem}
+.readout{font-family:var(--font-mono);font-weight:700;color:var(--accent);min-width:5.5rem;text-align:right}
+.seg{display:inline-flex;gap:.4rem;flex-wrap:wrap}
+.seg button,.btn{font:inherit;font-size:.88rem;cursor:pointer;padding:.45rem 1rem;border:var(--bw) solid var(--ink);border-radius:var(--radius);background:transparent;color:var(--ink);transition:transform .12s,box-shadow .12s,background .2s}
+.seg button[aria-pressed=true],.btn.primary{background:var(--ink);color:var(--bg)}
+.viz-caption{font-size:.85rem;color:var(--ink-2);margin:1rem 0 0}
+
+/* 图表 SVG 类 */
+.c-axis{stroke:var(--ink);stroke-width:1.2}
+.c-grid{stroke:var(--rule);stroke-width:1}
+.c-tick{fill:var(--ink-2);font:12px var(--font-mono)}
+.c-curve{fill:none;stroke:var(--chart-1);stroke-width:2.5}
+.c-curve.ref{stroke:var(--chart-3);stroke-width:1.5;stroke-dasharray:5 5}
+.c-guide{stroke:var(--chart-2);stroke-width:1;stroke-dasharray:3 4}
+.c-dot{fill:var(--chart-2);stroke:var(--surface);stroke-width:3}
+.c-lab{fill:var(--ink);font:600 13px var(--font-mono)}
+.p-rod{stroke:var(--ink);stroke-width:2}
+.p-bob{fill:var(--chart-2);stroke:var(--ink);stroke-width:2}
+.p-pivot{fill:var(--ink)}
+.p-ceil{stroke:var(--ink);stroke-width:3}
+.p-arc{fill:none;stroke:var(--chart-3);stroke-dasharray:3 4}
+.p-trail{fill:none;stroke:var(--chart-2);stroke-width:1;opacity:.5}
+
+/* 题目 */
+.q-head{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;margin-bottom:.75rem}
+.q-tag{font-family:var(--font-mono);font-size:.75rem;letter-spacing:.1em;color:var(--ink-2)}
+.q-stem{font-weight:600;margin-bottom:1rem}
+.opts{list-style:none;padding:0;margin:0 0 1rem;display:grid;gap:.6rem}
+.opt label{display:flex;gap:.75rem;align-items:flex-start;padding:.7rem 1rem;border:var(--bw) solid var(--rule);border-radius:var(--radius);cursor:pointer;background:var(--bg);transition:border-color .2s,background .2s}
+.opt input{accent-color:var(--accent);margin-top:.45rem}
+.opt label:hover{border-color:var(--ink)}
+.opt .why{display:none;font-size:.85rem;color:var(--ink-2);margin-top:.25rem}
+.opt.correct label{border-color:var(--ok);box-shadow:inset 4px 0 0 var(--ok)}
+.opt.wrong label{border-color:var(--bad);box-shadow:inset 4px 0 0 var(--bad)}
+.opt.correct .why,.opt.wrong .why{display:block}
+.q-actions{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap}
+.q-status{font-size:.88rem;color:var(--ink-2)}
+details.hint{margin-top:1rem;font-size:.9rem}
+details.hint summary{cursor:pointer;color:var(--ink-2)}
+
+/* 先预测后揭晓 */
+.predict-row{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin:.75rem 0}
+.predict input[type=number]{font:inherit;width:7rem;padding:.4rem .6rem;border:var(--bw) solid var(--ink);border-radius:var(--radius);background:var(--bg);color:var(--ink)}
+.reveal{display:none;margin-top:1rem;padding-top:1rem;border-top:var(--bw) dashed var(--rule)}
+.reveal.show{display:block}
+.meter{height:10px;background:var(--rule);border-radius:var(--radius);position:relative;margin:.75rem 0}
+.meter i{position:absolute;top:-5px;width:3px;height:20px;background:var(--ink)}
+.meter i.truth{background:var(--accent)}
+.evidence-note{font-family:var(--font-mono);font-size:.75rem;color:var(--ink-2)}
+
+/* 表格与代码 */
+table{width:100%;border-collapse:collapse;font-size:.92rem;margin:1rem 0 2rem;font-variant-numeric:tabular-nums}
+th,td{padding:.6rem .8rem;text-align:left;border-bottom:1px solid var(--rule)}
+th{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.06em;color:var(--ink-2);border-bottom:2px solid var(--ink)}
+pre{margin:1rem 0 2rem;padding:1.25rem 1.5rem;background:var(--code-bg);color:var(--code-ink);border-radius:var(--radius);overflow:auto;font-size:.86rem;line-height:1.7}
+.hljs-keyword,.hljs-built_in{color:var(--tok-kw)}
+.hljs-string{color:var(--tok-str)}
+.hljs-number{color:var(--tok-num)}
+.hljs-comment{color:var(--tok-com);font-style:italic}
+.hljs-title{color:var(--tok-fn)}
+
+footer.end{margin-top:4rem;padding-top:2rem;border-top:var(--bw) solid var(--rule);font-size:.85rem;color:var(--ink-2);display:flex;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+
+/* =========================================================
+   切换器（独立于主题的中性外观）
+   ========================================================= */
+.switcher{
+  position:fixed;left:50%;bottom:1.25rem;translate:-50% 0;z-index:100;
+  display:flex;gap:.35rem;padding:.4rem;border-radius:999px;
+  background:rgba(18,18,20,.82);backdrop-filter:blur(14px) saturate(1.4);
+  box-shadow:0 10px 40px rgba(0,0,0,.25);font-family:system-ui,sans-serif;
+}
+.switcher button{
+  all:unset;cursor:pointer;display:flex;align-items:center;gap:.5rem;
+  padding:.45rem .85rem .45rem .5rem;border-radius:999px;color:#ddd;font-size:.82rem;white-space:nowrap;
+}
+.switcher button:hover{background:rgba(255,255,255,.08)}
+.switcher button[aria-pressed=true]{background:#fff;color:#111}
+.switcher .sw{display:flex}
+.switcher .sw i{width:12px;height:12px;border-radius:50%;margin-left:-4px;border:1.5px solid rgba(0,0,0,.25)}
+.switcher .sw i:first-child{margin-left:0}
+.switcher kbd{font-size:.68rem;opacity:.5;font-family:system-ui}
+.style-note{
+  position:fixed;top:1rem;right:1rem;z-index:100;max-width:21rem;
+  padding:.8rem 1rem;border-radius:12px;background:rgba(18,18,20,.82);color:#eee;
+  backdrop-filter:blur(14px);font:13px/1.6 system-ui,sans-serif;box-shadow:0 10px 40px rgba(0,0,0,.2)
+}
+.style-note b{font-size:14px}
+.style-note span{display:block;color:#aaa;margin-top:.25rem}
+
+@media (max-width:980px){
+  .lesson{padding:4rem 1.25rem 9rem}
+  .cover{grid-template-columns:1fr;min-height:auto}
+  .sec{grid-template-columns:minmax(0,1fr);padding-block:2.5rem}
+  .sec>*,.sec>.wide,.pair{grid-column:1}
+  .sec>.sec-mark{grid-row:auto;position:static;margin-bottom:1rem}
+  .pair{display:block}
+  .side{margin:-.25rem 0 1.25rem;padding-left:1rem;border-left:2px solid var(--rule)}
+  .viz-grid{grid-template-columns:1fr}
+  .switcher{overflow-x:auto;max-width:calc(100vw - 1rem)}
+  .switcher kbd{display:none}
+  .style-note{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+::view-transition-old(root),::view-transition-new(root){animation-duration:.45s}
+
+/* =========================================================
+   1. 瑞士网格 Swiss Grid
+   ========================================================= */
+[data-style=swiss]{
+  --bg:#ffffff;--surface:#ffffff;--ink:#0a0a0a;--ink-2:#5c5c5c;--rule:#d4d4d4;
+  --accent:#ff3d00;--ok:#0a0a0a;--bad:#ff3d00;
+  --font-display:"Noto Sans SC",system-ui,sans-serif;--font-body:"Noto Sans SC",system-ui,sans-serif;--font-mono:"JetBrains Mono",monospace;
+  --radius:0;--bw:2px;--chart-1:#0a0a0a;--chart-2:#ff3d00;--chart-3:#b5b5b5;
+  --code-bg:#0a0a0a;--code-ink:#f2f2f2;--tok-kw:#ff3d00;--tok-str:#ffffff;--tok-num:#ff9e7a;--tok-com:#7a7a7a;--tok-fn:#ffffff;
+}
+[data-style=swiss] .cover h1{font-weight:900;font-size:clamp(2.8rem,5.6vw,5rem);line-height:1.02;letter-spacing:-.04em}
+[data-style=swiss] .cover h1 em{font-style:normal;color:var(--accent)}
+[data-style=swiss] .kicker{font-weight:700;color:var(--accent);letter-spacing:.14em}
+[data-style=swiss] .meta li{border-color:var(--ink);font-weight:700}
+[data-style=swiss] .sec{border-top:3px solid var(--ink)}
+[data-style=swiss] .sec-mark .num{font-size:5rem;font-weight:900;color:var(--accent);letter-spacing:-.06em;line-height:.82}
+[data-style=swiss] .sec-mark .label{color:var(--ink);font-weight:700}
+[data-style=swiss] h2{font-weight:900;font-size:2.25rem;letter-spacing:-.02em}
+[data-style=swiss] .callout{background:var(--ink);color:#fff;border:none}
+[data-style=swiss] .callout.warn{background:var(--accent)}
+[data-style=swiss] .viz,[data-style=swiss] .question,[data-style=swiss] .predict{border:2px solid var(--ink)}
+[data-style=swiss] .pull{font-weight:900;font-size:2.4rem;line-height:1.12;letter-spacing:-.02em}
+[data-style=swiss] .pull::before{content:"";display:block;width:4rem;height:.5rem;background:var(--accent);margin-bottom:1.25rem}
+[data-style=swiss] .side{border-top:2px solid var(--ink);padding-top:.6rem}
+[data-style=swiss] .formula{border-block:2px solid var(--ink)}
+
+/* =========================================================
+   2. 工程蓝图 Blueprint
+   ========================================================= */
+[data-style=blueprint]{
+  --bg:#123a66;--surface:rgba(8,30,58,.55);--ink:#eaf3ff;--ink-2:#9fbde3;--rule:rgba(234,243,255,.28);
+  --accent:#ffd34d;--ok:#7dffb3;--bad:#ff8a7a;
+  --font-display:"JetBrains Mono","Noto Sans SC",monospace;--font-body:"Noto Sans SC",system-ui,sans-serif;--font-mono:"JetBrains Mono",monospace;
+  --radius:0;--bw:1px;--chart-1:#eaf3ff;--chart-2:#ffd34d;--chart-3:#7fd4ff;
+  --code-bg:rgba(0,12,28,.55);--code-ink:#dbe9ff;--tok-kw:#7fd4ff;--tok-str:#ffd34d;--tok-num:#ffb27a;--tok-com:#6f8fb8;--tok-fn:#ffffff;
+}
+[data-style=blueprint] body,[data-style=blueprint]{background-color:var(--bg)}
+body[data-style=blueprint]{
+  background-image:
+    linear-gradient(rgba(234,243,255,.10) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(234,243,255,.10) 1px,transparent 1px),
+    linear-gradient(rgba(234,243,255,.045) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(234,243,255,.045) 1px,transparent 1px);
+  background-size:120px 120px,120px 120px,24px 24px,24px 24px;
+}
+[data-style=blueprint] .cover h1{font-weight:700;letter-spacing:-.02em;font-size:clamp(2.4rem,5vw,4rem)}
+[data-style=blueprint] .cover h1 em{font-style:normal;color:var(--accent);border-bottom:2px dashed var(--accent)}
+[data-style=blueprint] .kicker{color:var(--accent)}
+[data-style=blueprint] .kicker::before{content:"DWG-0003 / "}
+[data-style=blueprint] .meta li{border-style:dashed}
+[data-style=blueprint] .sec{border-top:1px dashed var(--rule)}
+[data-style=blueprint] .sec-mark .num{font-size:1rem;color:var(--accent);border:1px solid var(--accent);display:inline-block;padding:.35rem .6rem}
+[data-style=blueprint] .sec-mark .num::before{content:"§ "}
+[data-style=blueprint] h2{font-weight:700;font-size:1.5rem;text-transform:uppercase}
+[data-style=blueprint] h2::after{content:"";display:block;height:1px;margin-top:.75rem;background:linear-gradient(90deg,var(--ink) 0 3rem,var(--rule) 3rem)}
+[data-style=blueprint] .viz,[data-style=blueprint] .question,[data-style=blueprint] .predict,[data-style=blueprint] .callout{
+  position:relative;border:1px solid var(--rule);
+  background-image:linear-gradient(var(--accent),var(--accent)),linear-gradient(var(--accent),var(--accent)),linear-gradient(var(--accent),var(--accent)),linear-gradient(var(--accent),var(--accent));
+  background-size:14px 2px,2px 14px,14px 2px,2px 14px;
+  background-position:0 0,0 0,100% 100%,100% 100%;background-repeat:no-repeat;
+}
+[data-style=blueprint] .callout-title{font-family:var(--font-mono);color:var(--accent);text-transform:uppercase;font-size:.85rem;letter-spacing:.1em}
+[data-style=blueprint] .fig-label{color:var(--accent)}
+[data-style=blueprint] .pull{font-family:var(--font-mono);font-size:1.3rem;border-left:2px solid var(--accent);padding-left:1.25rem}
+[data-style=blueprint] .opt label{background:rgba(0,0,0,.15)}
+[data-style=blueprint] .side{font-family:var(--font-mono);font-size:.78rem}
+[data-style=blueprint] .side::before{content:"NOTE ↘";display:block;color:var(--accent);margin-bottom:.25rem}
+[data-style=blueprint] th{border-bottom-color:var(--accent)}
+[data-style=blueprint] .switcher{}
+
+/* =========================================================
+   3. Risograph 孔版印刷
+   ========================================================= */
+[data-style=riso]{
+  --bg:#f7f6f2;--surface:#ffffff;--ink:#22307a;--ink-2:#5a64a0;--rule:#c9cbe0;
+  --accent:#ff3d9a;--accent-3:#00a19a;--ok:#00a19a;--bad:#ff3d9a;
+  --font-display:"Space Grotesk","Noto Sans SC",sans-serif;--font-body:"Noto Sans SC",system-ui,sans-serif;--font-mono:"Space Grotesk","JetBrains Mono",monospace;
+  --radius:14px;--bw:2px;--chart-1:#22307a;--chart-2:#ff3d9a;--chart-3:#00a19a;
+  --code-bg:#22307a;--code-ink:#f7f6f2;--tok-kw:#ff8fc6;--tok-str:#ffe94d;--tok-num:#6ff0e7;--tok-com:#9ea6d8;--tok-fn:#ffffff;
+}
+body[data-style=riso]::after{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opacity:.22;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .1 0 0 0 0 .1 0 0 0 0 .3 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+[data-style=riso] .cover h1{position:relative;font-weight:900;color:var(--accent);letter-spacing:-.02em;font-size:clamp(2.8rem,6.4vw,5.4rem);line-height:1.02}
+[data-style=riso] .cover h1::after{content:attr(data-text);position:absolute;inset:0;color:var(--accent-3);mix-blend-mode:multiply;transform:translate(5px,4px);white-space:pre-line;pointer-events:none}
+[data-style=riso] .cover h1 em{font-style:normal}
+[data-style=riso] .kicker{color:var(--accent-3);font-weight:700}
+[data-style=riso] .meta li{border-radius:999px;background:#ffe94d;border-color:#ffe94d;color:var(--ink);font-weight:700}
+[data-style=riso] .sec-mark .num{font-size:3.6rem;font-weight:700;color:var(--accent);text-shadow:4px 3px 0 rgba(0,161,154,.75)}
+[data-style=riso] h2{font-weight:900;font-size:2rem}
+[data-style=riso] h2::after{content:"";display:block;width:3.2rem;height:.45rem;border-radius:9px;background:var(--accent-3);margin-top:.6rem;mix-blend-mode:multiply}
+[data-style=riso] .callout{border:none;background:radial-gradient(circle,rgba(255,61,154,.22) 1.4px,transparent 1.6px) 0 0/9px 9px,#fff0f7}
+[data-style=riso] .callout.warn{background:radial-gradient(circle,rgba(0,161,154,.25) 1.4px,transparent 1.6px) 0 0/9px 9px,#e9fbf9}
+[data-style=riso] .viz,[data-style=riso] .question,[data-style=riso] .predict{border:2px solid var(--ink);box-shadow:7px 7px 0 rgba(255,61,154,.55)}
+[data-style=riso] .pull{font-weight:700;font-size:1.9rem;color:var(--accent);mix-blend-mode:multiply}
+[data-style=riso] .pull::first-line{color:var(--accent-3)}
+[data-style=riso] .seg button,[data-style=riso] .btn{border-radius:999px}
+[data-style=riso] .side{color:var(--accent-3);font-weight:500}
+
+/* =========================================================
+   4. 新粗野主义 Neo-Brutalism
+   ========================================================= */
+[data-style=brutal]{
+  --bg:#f2f4ff;--surface:#ffffff;--ink:#000000;--ink-2:#333;--rule:#000000;
+  --accent:#ffd400;--ok:#00c27a;--bad:#ff4d6d;
+  --font-display:"Space Grotesk","Noto Sans SC",sans-serif;--font-body:"Noto Sans SC",system-ui,sans-serif;--font-mono:"JetBrains Mono",monospace;
+  --radius:12px;--bw:3px;--shadow:6px 6px 0 #000;--chart-1:#000;--chart-2:#ff4d6d;--chart-3:#5b8cff;
+  --code-bg:#1b1b1b;--code-ink:#f4f4f4;--tok-kw:#ffd400;--tok-str:#7cf5c4;--tok-num:#ff8fab;--tok-com:#888;--tok-fn:#8fb3ff;
+}
+[data-style=brutal] .cover h1{font-weight:900;font-size:clamp(2.8rem,6.4vw,5.2rem);line-height:1.08;letter-spacing:-.03em}
+[data-style=brutal] .cover h1 em{font-style:normal;background:var(--accent);padding:0 .25em;border:3px solid #000;border-radius:10px;box-shadow:5px 5px 0 #000;display:inline-block;transform:rotate(-2deg)}
+[data-style=brutal] .kicker{display:inline-block;background:#7cf5c4;border:3px solid #000;padding:.2rem .7rem;border-radius:999px;font-weight:700;color:#000}
+[data-style=brutal] .meta li{border:3px solid #000;font-weight:700;background:#fff;box-shadow:3px 3px 0 #000}
+[data-style=brutal] .meta li:nth-child(2){background:#ff8fab}
+[data-style=brutal] .meta li:nth-child(3){background:#8fb3ff}
+[data-style=brutal] .sec-mark .num{width:4.2rem;height:4.2rem;display:grid;place-items:center;background:var(--accent);border:3px solid #000;border-radius:50%;box-shadow:4px 4px 0 #000;font-size:1.6rem;font-weight:700}
+[data-style=brutal] .sec-mark .label{color:#000;font-weight:700}
+[data-style=brutal] h2{font-weight:900;font-size:2.2rem;letter-spacing:-.02em}
+[data-style=brutal] .callout{border:3px solid #000;box-shadow:var(--shadow);background:#7cf5c4}
+[data-style=brutal] .callout.warn{background:#ff8fab}
+[data-style=brutal] .seg button,[data-style=brutal] .btn{border:3px solid #000;box-shadow:4px 4px 0 #000;font-weight:700;background:#fff}
+[data-style=brutal] .seg button[aria-pressed=true],[data-style=brutal] .btn.primary{background:var(--accent);color:#000}
+[data-style=brutal] .seg button:active,[data-style=brutal] .btn:active{transform:translate(4px,4px);box-shadow:0 0 0 #000}
+[data-style=brutal] .opt label{border:3px solid #000;font-weight:500}
+[data-style=brutal] .opt label:hover{background:#fff7c2}
+[data-style=brutal] .opt.correct label{background:#c9ffe9;box-shadow:4px 4px 0 #000}
+[data-style=brutal] .opt.wrong label{background:#ffd3dc;box-shadow:4px 4px 0 #000}
+[data-style=brutal] .pull{font-weight:900;font-size:2rem;background:#fff;border:3px solid #000;box-shadow:var(--shadow);border-radius:12px;padding:1.5rem;transform:rotate(-.6deg)}
+[data-style=brutal] .side{background:#fff;border:3px solid #000;border-radius:10px;padding:.75rem;box-shadow:4px 4px 0 #000;color:#000}
+[data-style=brutal] pre{border:3px solid #000;box-shadow:var(--shadow)}
+[data-style=brutal] .readout{color:#000;background:var(--accent);border:2px solid #000;border-radius:6px;padding:0 .4rem}
+[data-style=brutal] .meter{border:2px solid #000;background:#fff}
+[data-style=brutal] .formula{background:#fff;border:3px solid #000;border-radius:12px;box-shadow:var(--shadow)}
+
+/* =========================================================
+   5. 和风杂志 Wa Magazine
+   ========================================================= */
+[data-style=wa]{
+  --bg:#f5f3ee;--surface:#fbfaf7;--ink:#1c1c22;--ink-2:#74747c;--rule:#d6d1c4;
+  --accent:#c8442f;--accent-2:#1f3e66;--ok:#1f3e66;--bad:#c8442f;
+  --font-display:"Noto Serif SC",serif;--font-body:"Noto Serif SC",serif;--font-mono:"JetBrains Mono",monospace;
+  --radius:0;--bw:1px;--leading:2;--chart-1:#1f3e66;--chart-2:#c8442f;--chart-3:#b8b1a0;
+  --code-bg:#1f2a3a;--code-ink:#ece8de;--tok-kw:#f08a73;--tok-str:#b7d0e8;--tok-num:#e9c27a;--tok-com:#7d8698;--tok-fn:#ffffff;
+}
+[data-style=wa] .cover h1{font-weight:700;letter-spacing:.06em;line-height:1.35;font-size:clamp(2.4rem,4.8vw,3.9rem)}
+[data-style=wa] .cover h1 em{font-style:normal;color:var(--accent)}
+[data-style=wa] .kicker{color:var(--accent-2);letter-spacing:.3em}
+[data-style=wa] .dek{font-size:1.05rem;letter-spacing:.04em}
+[data-style=wa] .meta li{border:none;border-bottom:1px solid var(--accent-2);border-radius:0;padding:.1rem 0;margin-right:1rem;color:var(--accent-2)}
+[data-style=wa] .sec{border-top:1px solid var(--rule);padding-block:5rem}
+[data-style=wa] .sec-mark{display:flex;gap:.9rem;align-items:flex-start}
+[data-style=wa] .sec-mark .num{display:none}
+[data-style=wa] .sec-mark .cn{display:block;writing-mode:vertical-rl;font-family:var(--font-display);font-size:1.6rem;font-weight:700;color:var(--accent-2);letter-spacing:.2em}
+[data-style=wa] .sec-mark .label{writing-mode:vertical-rl;font-family:var(--font-display);letter-spacing:.5em;margin:0;color:var(--ink-2);font-size:.9rem}
+[data-style=wa] .sec-mark::after{content:"";width:1.6rem;height:1.6rem;background:var(--accent);border-radius:3px;margin-top:.2rem;opacity:.9}
+[data-style=wa] h2{font-weight:700;font-size:1.7rem;letter-spacing:.08em}
+[data-style=wa] .callout{background:transparent;border:none;border-block:1px solid var(--accent-2);padding:1.25rem 0}
+[data-style=wa] .callout-title{color:var(--accent-2);letter-spacing:.2em}
+[data-style=wa] .callout.warn{border-color:var(--accent)}
+[data-style=wa] .callout.warn .callout-title{color:var(--accent)}
+[data-style=wa] .viz,[data-style=wa] .question,[data-style=wa] .predict{border:1px solid var(--rule);background:var(--surface)}
+[data-style=wa] .pull{font-size:1.65rem;line-height:1.8;letter-spacing:.1em;text-align:center;padding:1.5rem 2rem;position:relative}
+[data-style=wa] .pull::before,[data-style=wa] .pull::after{font-size:2.5rem;color:var(--accent);position:absolute;line-height:1}
+[data-style=wa] .pull::before{content:"「";left:0;top:0}
+[data-style=wa] .pull::after{content:"」";right:0;bottom:2.2rem}
+[data-style=wa] .side{border-left:1px solid var(--accent);padding-left:1rem}
+[data-style=wa] th{border-bottom:1px solid var(--accent-2)}
+[data-style=wa] .seg button,[data-style=wa] .btn{border-color:var(--accent-2);color:var(--accent-2)}
+[data-style=wa] .seg button[aria-pressed=true],[data-style=wa] .btn.primary{background:var(--accent-2);color:#fff}
+
+/* =========================================================
+   6. 博物志 Field Notes
+   ========================================================= */
+[data-style=field]{
+  --bg:#e9ece2;--surface:#f5f6ef;--ink:#1d3a2b;--ink-2:#5b6e60;--rule:#b9c2ae;
+  --accent:#b77d22;--accent-2:#a2412a;--accent-3:#5e8a49;--ok:#4f7d3a;--bad:#a2412a;
+  --font-display:"LXGW WenKai","Noto Serif SC",serif;--font-body:"LXGW WenKai","Noto Serif SC",serif;--font-mono:"JetBrains Mono",monospace;
+  --radius:4px;--bw:1px;--leading:1.95;--chart-1:#1d3a2b;--chart-2:#a2412a;--chart-3:#8ea67c;
+  --code-bg:#1d3a2b;--code-ink:#eef0e3;--tok-kw:#e6b45e;--tok-str:#b9d99e;--tok-num:#f0a183;--tok-com:#8aa08d;--tok-fn:#ffffff;
+}
+[data-style=field] body,body[data-style=field]{background-image:radial-gradient(rgba(29,58,43,.07) 1px,transparent 1px);background-size:18px 18px}
+[data-style=field] .cover h1{font-weight:700;font-size:clamp(2.6rem,5.4vw,4.4rem);line-height:1.25}
+[data-style=field] .cover h1 em{font-style:normal;color:var(--accent-2);background:linear-gradient(transparent 62%,rgba(183,125,34,.35) 62% 90%,transparent 90%)}
+[data-style=field] .kicker{text-transform:uppercase;color:var(--accent-3)}
+[data-style=field] .kicker::before{content:"SPECIMEN No.017 — "}
+[data-style=field] .meta li{border-style:dashed;border-color:var(--ink-2);font-family:var(--font-mono);font-size:.75rem}
+[data-style=field] .sec{border-top:1px dashed var(--rule)}
+[data-style=field] .sec-mark .num{font-family:var(--font-mono);font-size:.9rem;color:var(--accent-2);border:1px solid var(--accent-2);border-radius:50%;width:3rem;height:3rem;display:grid;place-items:center}
+[data-style=field] .sec-mark .label{text-transform:uppercase}
+[data-style=field] h2{font-size:1.9rem}
+[data-style=field] .callout{background:#fbf6e6;border:1px solid #e3d3a8;transform:rotate(-.4deg);box-shadow:0 2px 0 rgba(0,0,0,.06)}
+[data-style=field] .callout.warn{background:#f7e9e3;border-color:#e2bfb2;transform:rotate(.3deg)}
+[data-style=field] .viz,[data-style=field] .question,[data-style=field] .predict{border:1px solid var(--ink);outline:1px solid var(--ink);outline-offset:4px;margin-block:1.5rem 2.5rem}
+[data-style=field] .fig-label{font-size:.72rem;text-transform:uppercase;color:var(--accent-2)}
+[data-style=field] .pull{font-size:1.75rem;color:var(--accent-2);padding-left:2.5rem;position:relative}
+[data-style=field] .pull::before{content:"❦";position:absolute;left:0;top:.1rem;color:var(--accent-3)}
+[data-style=field] .side{color:var(--accent);font-size:.95rem;transform:rotate(-1.2deg);border-left:1px dashed var(--accent);padding-left:.75rem}
+[data-style=field] .seg button,[data-style=field] .btn{border-radius:999px}
+[data-style=field] .opt label{border-style:dashed}
+</style>
+</head>
+<body data-style="swiss">
+
+<aside class="style-note" id="styleNote" aria-live="polite"></aside>
+<nav class="switcher" id="switcher" aria-label="切换风格"></nav>
+
+<article class="lesson" id="lesson">
+  <!-- 封面 -->
+  <header class="cover">
+    <div class="cover-text">
+      <p class="kicker">第 0003 课 · 经典力学</p>
+      <h1 id="title">单摆的周期，<br>只取决于<span class="nb"><em>摆长</em>？</span></h1>
+      <p class="dek">把一颗小球挂在绳子上来回摆动。它摆一次要多久——跟球有多重、摆得多高有关系吗？这一课用一条公式和一个可拖动的模型回答它。</p>
+      <ul class="meta"><li>预计 25 分钟</li><li>前置：简谐运动</li><li>证据：应用</li></ul>
+    </div>
+    <div class="cover-art" id="coverArt" aria-hidden="true"></div>
+  </header>
+
+  <!-- 01 目标 -->
+  <section class="sec">
+    <div class="sec-mark"><span class="num">01</span><span class="cn">壹</span><span class="label">目标</span></div>
+    <h2>学完后你能……</h2>
+    <aside class="callout tip">
+      <p class="callout-title">可检查的学习成果</p>
+      <ul>
+        <li>说出单摆周期公式中每个量的含义和单位；</li>
+        <li>在给定摆长和重力加速度时算出周期；</li>
+        <li>解释为什么“摆球质量”不出现在公式里。</li>
+      </ul>
+    </aside>
+    <div class="pair">
+      <p>先做一个思想实验：把同样长的绳子分别挂上乒乓球和铁球，从同样的角度放手。多数人的直觉是“铁球更重，所以摆得更快”。这节课结束时，你会知道这个直觉错在哪里。</p>
+      <p class="side"><b>小角度近似</b>：本课所有结论都假设摆角小于约 15°，此时 \(\sin\theta \approx \theta\)。</p>
+    </div>
+  </section>
+
+  <!-- 02 核心解释 -->
+  <section class="sec">
+    <div class="sec-mark"><span class="num">02</span><span class="cn">贰</span><span class="label">核心</span></div>
+    <h2>一条公式，三个量</h2>
+    <p>小角度下，单摆的运动是简谐运动。回复力来自重力沿切线方向的分量，而质量在“力”和“惯性”两边同时出现、恰好约掉。于是周期只剩下摆长 \(L\) 和重力加速度 <span class="nb">\(g\)：</span></p>
+    <div class="formula">\[ T = 2\pi\sqrt{\frac{L}{g}} \]</div>
+    <div class="pair">
+      <p>注意根号：摆长变成 4 倍，周期只变成 2 倍。这种“平方根关系”是本课最容易被误判的地方，下面的模型会让你亲眼看到曲线是怎样“越来越平”的。</p>
+      <p class="side"><b>伽利略</b>据说是在比萨大教堂里，用自己的脉搏给吊灯计时，发现了摆的等时性。</p>
+    </div>
+
+    <figure class="viz wide" id="pendulumViz">
+      <p class="fig-label"><span>FIG. 02 — 周期 · 摆长关系</span><span>交互模型</span></p>
+      <div class="viz-grid">
+        <svg id="chart" viewBox="0 0 640 340" role="img" aria-label="周期随摆长变化的曲线"></svg>
+        <svg id="pendulum" viewBox="0 0 300 300" role="img" aria-label="单摆动画"></svg>
+      </div>
+      <div class="controls">
+        <label for="len">摆长 L</label>
+        <input id="len" type="range" min="0.1" max="2" step="0.01" value="1">
+        <span class="readout" id="lenOut">1.00 m</span>
+        <span>星球</span>
+        <span class="seg" id="planets">
+          <button type="button" data-g="9.8" aria-pressed="true">地球 9.8</button>
+          <button type="button" data-g="1.62" aria-pressed="false">月球 1.62</button>
+          <button type="button" data-g="24.8" aria-pressed="false">木星 24.8</button>
+        </span>
+        <span class="readout" id="tOut">T = 2.01 s</span>
+      </div>
+      <figcaption class="viz-caption">虚线为地球参考曲线。拖动摆长，右侧摆按真实周期摆动。</figcaption>
+    </figure>
+
+    <blockquote class="pull">质量在力与惯性两边同时出现，然后悄悄约掉了。<cite>— 本课核心观察</cite></blockquote>
+  </section>
+
+  <!-- 03 先预测 -->
+  <section class="sec">
+    <div class="sec-mark"><span class="num">03</span><span class="cn">叁</span><span class="label">预测</span></div>
+    <h2>先猜，再看答案</h2>
+    <div class="predict" id="predict">
+      <p class="fig-label"><span>PREDICT · 先预测后揭晓</span><span>kit-predict</span></p>
+      <p>把一个在地球上周期为 <b>1 秒</b> 的单摆带到月球，它的周期大约是多少秒？</p>
+      <div class="predict-row">
+        <input type="number" id="guess" step="0.1" min="0" placeholder="你的预测">
+        <span>秒</span>
+        <button type="button" class="btn primary" id="revealBtn">揭晓</button>
+      </div>
+      <div class="reveal" id="reveal">
+        <div class="meter" id="meter"><i class="truth"></i><i class="you"></i></div>
+        <p id="revealText"></p>
+        <p class="evidence-note">◆ 这次预测会作为“页面观察”写入 records/inbox/，由 Agent 定稿。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 练习 -->
+  <section class="sec">
+    <div class="sec-mark"><span class="num">04</span><span class="cn">肆</span><span class="label">练习</span></div>
+    <h2>理解验证</h2>
+    <div class="question" id="q1">
+      <div class="q-head"><span class="q-tag">Q1 · 单选 · 应用</span><span class="q-tag" id="q1tries">剩余 2 次</span></div>
+      <p class="q-stem">把单摆的摆长变为原来的 4 倍，其他条件不变，周期变为原来的几倍？</p>
+      <ul class="opts">
+        <li class="opt"><label><input type="radio" name="q1" value="a"><span>4 倍<span class="why">周期与摆长的平方根成正比，不是线性关系。</span></span></label></li>
+        <li class="opt" data-correct><label><input type="radio" name="q1" value="b"><span>2 倍<span class="why">\(T\propto\sqrt{L}\)，\(\sqrt{4}=2\)。</span></span></label></li>
+        <li class="opt"><label><input type="radio" name="q1" value="c"><span>不变<span class="why">摆长在公式里，改变它一定改变周期。</span></span></label></li>
+        <li class="opt"><label><input type="radio" name="q1" value="d"><span>1/2 倍<span class="why">摆长变长，周期变长而不是变短。</span></span></label></li>
+      </ul>
+      <div class="q-actions"><button type="button" class="btn primary" id="q1submit">提交</button><span class="q-status" id="q1status" role="status"></span></div>
+      <details class="hint"><summary>需要提示？</summary><p>回到公式，看 \(L\) 外面套着什么运算。</p></details>
+    </div>
+
+    <aside class="callout warn">
+      <p class="callout-title">常见误区</p>
+      <p>“摆得越高，周期越长”只在大角度时才明显成立；小角度下周期几乎与振幅无关，这正是摆钟能计时的原因。</p>
+    </aside>
+  </section>
+
+  <!-- 05 数据与代码 -->
+  <section class="sec">
+    <div class="sec-mark"><span class="num">05</span><span class="cn">伍</span><span class="label">数据</span></div>
+    <h2>实验数据与计算</h2>
+    <div class="pair">
+      <table>
+        <thead><tr><th>摆长 L / m</th><th>实测 10T / s</th><th>实测 T / s</th><th>理论 T / s</th></tr></thead>
+        <tbody>
+          <tr><td>0.25</td><td>10.06</td><td>1.006</td><td>1.003</td></tr>
+          <tr><td>0.50</td><td>14.21</td><td>1.421</td><td>1.419</td></tr>
+          <tr><td>1.00</td><td>20.12</td><td>2.012</td><td>2.007</td></tr>
+          <tr><td>2.00</td><td>28.33</td><td>2.833</td><td>2.838</td></tr>
+        </tbody>
+      </table>
+      <p class="side"><b>为什么测 10 个周期？</b>人手按秒表的反应误差约 0.2 s，测 10 次再除以 10，误差就被摊薄到 0.02 s。</p>
+    </div>
+<pre><code class="language-python"># 计算单摆周期（小角度近似）
+from math import pi, sqrt
+
+def period(L: float, g: float = 9.8) -> float:
+    """返回周期 T，单位秒"""
+    return 2 * pi * sqrt(L / g)
+
+for L in (0.25, 0.5, 1.0, 2.0):
+    print(f"L={L:.2f} m  T={period(L):.3f} s")</code></pre>
+    <footer class="end"><span>Course Kit v3 · 风格样张</span><span>键盘 1–6 切换风格</span></footer>
+  </section>
+</article>
+
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.10.0/highlight.min.js"></script>
+<script>
+(() => {
+  "use strict";
+  const STYLES = [
+    {id:"swiss",     name:"瑞士网格", sw:["#ffffff","#0a0a0a","#ff3d00"], desc:"纯白 · 纯黑 · 一个信号色。粗黑体大标题、巨号章节数字、严格网格。理性、克制、高级。"},
+    {id:"blueprint", name:"工程蓝图", sw:["#123a66","#eaf3ff","#ffd34d"], desc:"普鲁士蓝坐标纸、等宽字体标注、角标框线。像在读一张技术图纸。"},
+    {id:"riso",      name:"孔版印刷", sw:["#f7f6f2","#ff3d9a","#00a19a"], desc:"荧光粉 + 青绿双专色、套印错位、颗粒噪点、网点底纹。活泼但不廉价。"},
+    {id:"brutal",    name:"新粗野",   sw:["#f2f4ff","#000000","#ffd400"], desc:"粗黑描边、硬投影、亮色块。按钮有真实的“按下去”手感，适合练习。"},
+    {id:"wa",        name:"和风杂志", sw:["#f5f3ee","#1f3e66","#c8442f"], desc:"生成白、藍染与朱红；宋体、竖排节标、大量留白。安静、文气。"},
+    {id:"field",     name:"博物志",   sw:["#e9ece2","#1d3a2b","#b77d22"], desc:"灰绿纸张、墨绿与赭黄；文楷手写感、标本卡双线框、略微倾斜的批注。"}
+  ];
+
+  const $ = (s, r = document) => r.querySelector(s);
+  const body = document.body;
+  const title = $("#title");
+  title.dataset.text = title.innerText;
+
+  /* ---------- 切换器 ---------- */
+  const switcher = $("#switcher");
+  STYLES.forEach((s, i) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.dataset.id = s.id;
+    b.innerHTML = `<span class="sw">${s.sw.map(c => `<i style="background:${c}"></i>`).join("")}</span>${s.name}<kbd>${i + 1}</kbd>`;
+    b.addEventListener("click", () => setStyle(s.id));
+    switcher.appendChild(b);
+  });
+
+  function setStyle(id, animate = true) {
+    const s = STYLES.find(x => x.id === id) || STYLES[0];
+    const apply = () => {
+      body.dataset.style = s.id;
+      switcher.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.id === s.id)));
+      $("#styleNote").innerHTML = `<b>${s.name}</b><span>${s.desc}</span>`;
+      drawCover(s.id);
+      drawChart();
+      localStorage.setItem("kit-specimen-style", s.id);
+      history.replaceState(null, "", "#" + s.id);
+    };
+    if (animate && document.startViewTransition && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      document.startViewTransition(apply);
+    } else apply();
+  }
+  addEventListener("keydown", e => {
+    if (e.target.matches("input,textarea")) return;
+    const n = Number(e.key);
+    if (n >= 1 && n <= STYLES.length) setStyle(STYLES[n - 1].id);
+  });
+
+  /* ---------- 封面生成艺术（按课号播种，每课不同） ---------- */
+  function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  const v = n => `var(--${n})`;
+  const COVERS = {
+    swiss(r) {
+      let s = `<rect width="600" height="600" fill="${v("bg")}"/>`;
+      for (let x = 0; x < 12; x++) for (let y = 0; y < 12; y++) s += `<circle cx="${25 + x * 50}" cy="${25 + y * 50}" r="2" fill="${v("ink")}" opacity=".25"/>`;
+      s += `<circle cx="370" cy="260" r="190" fill="${v("accent")}"/>`;
+      s += `<rect x="40" y="420" width="380" height="36" fill="${v("ink")}"/><rect x="40" y="470" width="240" height="36" fill="${v("ink")}"/>`;
+      s += `<line x1="370" y1="0" x2="${370 + 150 * Math.sin(.5)}" y2="${150 * Math.cos(.5) + 260}" stroke="${v("ink")}" stroke-width="10"/>`;
+      s += `<text x="40" y="380" font-family="Noto Sans SC" font-weight="900" font-size="120" fill="${v("ink")}" letter-spacing="-6">T∝√L</text>`;
+      return s;
+    },
+    blueprint(r) {
+      const cx = 300, cy = 90, L = 380, a = .42;
+      const bx = cx + L * Math.sin(a), by = cy + L * Math.cos(a);
+      let s = `<g fill="none" stroke="${v("ink")}" stroke-width="1.2">`;
+      s += `<line x1="120" y1="${cy}" x2="480" y2="${cy}" stroke-width="3"/>`;
+      for (let i = 0; i < 9; i++) s += `<line x1="${130 + i * 40}" y1="${cy}" x2="${115 + i * 40}" y2="${cy - 15}"/>`;
+      s += `<line x1="${cx}" y1="${cy}" x2="${cx}" y2="${cy + L + 40}" stroke-dasharray="8 6" opacity=".6"/>`;
+      s += `<path d="M ${cx + L * Math.sin(-a)} ${cy + L * Math.cos(-a)} A ${L} ${L} 0 0 0 ${bx} ${by}" stroke-dasharray="4 6" opacity=".7"/>`;
+      s += `<path d="M ${cx} ${cy + 90} A 90 90 0 0 0 ${cx + 90 * Math.sin(a)} ${cy + 90 * Math.cos(a)}" stroke="${v("accent")}" stroke-width="2"/>`;
+      s += `<line x1="${cx}" y1="${cy}" x2="${bx}" y2="${by}" stroke-width="2.5"/>`;
+      s += `<circle cx="${bx}" cy="${by}" r="30" stroke-width="2.5"/><circle cx="${bx}" cy="${by}" r="3" fill="${v("ink")}"/>`;
+      s += `<line x1="${bx - 45}" y1="${by}" x2="${bx + 45}" y2="${by}" opacity=".5"/><line x1="${bx}" y1="${by - 45}" x2="${bx}" y2="${by + 45}" opacity=".5"/>`;
+      s += `<line x1="90" y1="${cy}" x2="90" y2="${by}" stroke="${v("accent")}"/><path d="M84 ${cy + 12} L90 ${cy} L96 ${cy + 12} M84 ${by - 12} L90 ${by} L96 ${by - 12}" stroke="${v("accent")}"/>`;
+      for (let i = 0; i < 4; i++) s += `<circle cx="${cx}" cy="${cy}" r="${8 + i * 6}" opacity="${.6 - i * .12}"/>`;
+      s += `</g>`;
+      s += `<text x="100" y="${(cy + by) / 2}" fill="${v("accent")}" font-family="JetBrains Mono" font-size="16">L</text>`;
+      s += `<text x="${cx + 40}" y="${cy + 125}" fill="${v("accent")}" font-family="JetBrains Mono" font-size="16">θ</text>`;
+      s += `<text x="120" y="575" fill="${v("ink-2")}" font-family="JetBrains Mono" font-size="13" letter-spacing="2">FIG.00 · SIMPLE PENDULUM · SCALE 1:20</text>`;
+      return s;
+    },
+    riso(r) {
+      let s = `<defs><pattern id="ht" width="10" height="10" patternUnits="userSpaceOnUse"><circle cx="5" cy="5" r="2.2" fill="#ffe94d"/></pattern></defs>`;
+      s += `<rect x="60" y="60" width="480" height="480" rx="240" fill="url(#ht)"/>`;
+      const blobs = [["#ff3d9a", 230, 250, 170], ["#00a19a", 370, 330, 160], ["#22307a", 300, 160, 70]];
+      blobs.forEach(([c, x, y, rad]) => {
+        let d = "";
+        for (let i = 0; i <= 12; i++) { const t = i / 12 * Math.PI * 2, rr = rad * (.82 + r() * .3); d += (i ? "L" : "M") + (x + rr * Math.cos(t)).toFixed(1) + " " + (y + rr * Math.sin(t)).toFixed(1); }
+        s += `<path d="${d}Z" fill="${c}" style="mix-blend-mode:multiply" opacity=".88" stroke-linejoin="round"/>`;
+      });
+      s += `<text x="70" y="560" font-family="Space Grotesk" font-weight="700" font-size="64" fill="#22307a" style="mix-blend-mode:multiply">T = 2π√(L/g)</text>`;
+      return s;
+    },
+    brutal(r) {
+      let s = `<rect x="70" y="80" width="300" height="300" rx="24" fill="#000"/><rect x="58" y="68" width="300" height="300" rx="24" fill="#8fb3ff" stroke="#000" stroke-width="5"/>`;
+      s += `<circle cx="420" cy="380" r="130" fill="#000"/><circle cx="410" cy="370" r="130" fill="#ffd400" stroke="#000" stroke-width="5"/>`;
+      const star = (cx, cy, R, rr) => { let d = ""; for (let i = 0; i < 16; i++) { const a = i * Math.PI / 8 - Math.PI / 2, k = i % 2 ? rr : R; d += (i ? "L" : "M") + (cx + k * Math.cos(a)).toFixed(1) + " " + (cy + k * Math.sin(a)).toFixed(1); } return d + "Z"; };
+      s += `<path d="${star(168, 448, 78, 46)}" fill="#000" transform="translate(8 8)"/><path d="${star(168, 448, 78, 46)}" fill="#ff8fab" stroke="#000" stroke-width="5"/>`;
+      s += `<line x1="208" y1="68" x2="330" y2="318" stroke="#000" stroke-width="8"/><circle cx="330" cy="318" r="34" fill="#7cf5c4" stroke="#000" stroke-width="5"/>`;
+      s += `<text x="410" y="392" text-anchor="middle" font-family="Space Grotesk" font-weight="700" font-size="56">√L</text>`;
+      return s;
+    },
+    wa(r) {
+      let s = `<defs><clipPath id="wc"><rect x="40" y="300" width="520" height="260"/></clipPath></defs>`;
+      s += `<circle cx="400" cy="200" r="110" fill="${v("accent")}"/>`;
+      s += `<g clip-path="url(#wc)" fill="${v("bg")}" stroke="${v("accent-2")}" stroke-width="2.2">`;
+      for (let row = 0; row < 9; row++) for (let col = -1; col < 9; col++) {
+        const x = col * 72 + (row % 2 ? 36 : 0) + 40, y = 300 + row * 28;
+        for (let k = 5; k > 0; k--) s += `<circle cx="${x}" cy="${y + 36}" r="${k * 7.2}"/>`;
+      }
+      s += `</g>`;
+      s += `<line x1="120" y1="60" x2="120" y2="270" stroke="${v("ink")}" stroke-width="1"/>`;
+      s += `<text x="160" y="80" writing-mode="vertical-rl" font-family="Noto Serif SC" font-size="30" letter-spacing="14" fill="${v("ink")}">等時の振子</text>`;
+      s += `<rect x="70" y="60" width="30" height="30" fill="${v("accent")}"/><text x="85" y="81" text-anchor="middle" font-family="Noto Serif SC" font-size="18" fill="#fff">理</text>`;
+      return s;
+    },
+    field(r) {
+      let s = `<g fill="none" stroke="${v("accent-3")}" stroke-width="1.3" opacity=".75">`;
+      for (let k = 1; k <= 11; k++) {
+        let d = ""; const base = k * 24, ph = r() * 6;
+        for (let i = 0; i <= 64; i++) { const t = i / 64 * Math.PI * 2, rr = base * (1 + .14 * Math.sin(3 * t + ph) + .07 * Math.sin(5 * t + k)); d += (i ? "L" : "M") + (300 + rr * Math.cos(t)).toFixed(1) + " " + (300 + rr * .78 * Math.sin(t)).toFixed(1); }
+        s += `<path d="${d}Z"/>`;
+      }
+      s += `</g>`;
+      s += `<g stroke="${v("ink")}" stroke-width="1.6" fill="none"><path d="M300 300 C 330 230, 380 190, 450 150"/><path d="M300 300 C 260 240, 220 220, 160 200"/></g>`;
+      s += `<path d="M450 150 q 40 -40 90 -30 q -20 50 -90 30z" fill="${v("accent-3")}" stroke="${v("ink")}" stroke-width="1.4"/>`;
+      s += `<circle cx="300" cy="300" r="7" fill="${v("accent-2")}"/>`;
+      s += `<g font-family="LXGW WenKai" font-size="18" fill="${v("accent")}"><text x="318" y="345">观测点 A</text><text x="318" y="368" font-size="15">摆长 1.00 m</text><text x="60" y="190">山顶 g 略小</text></g>`;
+      s += `<line x1="320" y1="320" x2="303" y2="304" stroke="${v("accent")}"/>`;
+      s += `<rect x="40" y="500" width="250" height="64" fill="${v("surface")}" stroke="${v("ink")}"/><text x="56" y="528" font-family="JetBrains Mono" font-size="12" fill="${v("ink-2")}">PLATE III · No.017</text><text x="56" y="552" font-family="LXGW WenKai" font-size="18" fill="${v("ink")}">单摆 · Pendulum simplex</text>`;
+      return s;
+    }
+  };
+  function drawCover(id) {
+    const r = rng(3 * 7919 + id.length);
+    $("#coverArt").innerHTML = `<svg viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">${COVERS[id](r)}</svg>`;
+  }
+
+  /* ---------- 交互图表 + 单摆 ---------- */
+  const state = { L: 1, g: 9.8 };
+  const T = (L, g) => 2 * Math.PI * Math.sqrt(L / g);
+  const W = 640, H = 340, m = { l: 52, r: 24, t: 18, b: 42 };
+  const xs = L => m.l + (L / 2) * (W - m.l - m.r);
+  const ys = t => H - m.b - (t / 8) * (H - m.t - m.b);
+  function curve(g) {
+    let d = "";
+    for (let i = 0; i <= 120; i++) { const L = .02 + i / 120 * 1.98, t = Math.min(T(L, g), 8.4); d += (i ? "L" : "M") + xs(L).toFixed(1) + " " + ys(t).toFixed(1); }
+    return d;
+  }
+  function drawChart() {
+    const { L, g } = state, t = T(L, g);
+    let s = "";
+    for (let y = 0; y <= 8; y += 2) s += `<line class="c-grid" x1="${m.l}" x2="${W - m.r}" y1="${ys(y)}" y2="${ys(y)}"/><text class="c-tick" x="${m.l - 10}" y="${ys(y) + 4}" text-anchor="end">${y}</text>`;
+    for (let x = 0; x <= 2; x += .5) s += `<text class="c-tick" x="${xs(x)}" y="${H - m.b + 22}" text-anchor="middle">${x.toFixed(1)}</text>`;
+    s += `<line class="c-axis" x1="${m.l}" x2="${W - m.r}" y1="${ys(0)}" y2="${ys(0)}"/><line class="c-axis" x1="${m.l}" x2="${m.l}" y1="${m.t}" y2="${ys(0)}"/>`;
+    s += `<text class="c-tick" x="${W - m.r}" y="${H - 4}" text-anchor="end">L / m</text><text class="c-tick" x="${m.l}" y="${m.t - 4}">T / s</text>`;
+    if (g !== 9.8) s += `<path class="c-curve ref" d="${curve(9.8)}"/>`;
+    s += `<path class="c-curve" d="${curve(g)}"/>`;
+    if (t <= 8) {
+      s += `<line class="c-guide" x1="${xs(L)}" x2="${xs(L)}" y1="${ys(0)}" y2="${ys(t)}"/><line class="c-guide" x1="${m.l}" x2="${xs(L)}" y1="${ys(t)}" y2="${ys(t)}"/>`;
+      s += `<circle class="c-dot" cx="${xs(L)}" cy="${ys(t)}" r="8"/><text class="c-lab" x="${xs(L) + 14}" y="${ys(t) - 12}">${t.toFixed(2)} s</text>`;
+    }
+    $("#chart").innerHTML = s;
+    $("#lenOut").textContent = L.toFixed(2) + " m";
+    $("#tOut").textContent = "T = " + t.toFixed(2) + " s";
+  }
+  $("#len").addEventListener("input", e => { state.L = +e.target.value; drawChart(); });
+  $("#planets").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    state.g = +b.dataset.g;
+    $("#planets").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+    drawChart();
+  });
+
+  const pend = $("#pendulum"), px = 150, py = 30, th0 = .38;
+  pend.innerHTML = `<line class="p-ceil" x1="70" y1="${py}" x2="230" y2="${py}"/><path class="p-arc" id="pArc"/><line class="p-rod" id="pRod" x1="${px}" y1="${py}"/><circle class="p-bob" id="pBob" r="15"/><circle class="p-pivot" cx="${px}" cy="${py}" r="5"/>`;
+  const rod = $("#pRod"), bob = $("#pBob"), arc = $("#pArc");
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let t0 = performance.now();
+  function frame(now) {
+    const len = 40 + state.L * 110, per = T(state.L, state.g);
+    const th = reduce ? th0 : th0 * Math.cos(2 * Math.PI * ((now - t0) / 1000) / per);
+    const bx = px + len * Math.sin(th), by = py + len * Math.cos(th);
+    rod.setAttribute("x2", bx); rod.setAttribute("y2", by);
+    bob.setAttribute("cx", bx); bob.setAttribute("cy", by);
+    arc.setAttribute("d", `M ${px - len * Math.sin(th0)} ${py + len * Math.cos(th0)} A ${len} ${len} 0 0 0 ${px + len * Math.sin(th0)} ${py + len * Math.cos(th0)}`);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  /* ---------- 先预测后揭晓 ---------- */
+  $("#revealBtn").addEventListener("click", () => {
+    const guess = parseFloat($("#guess").value);
+    if (!(guess > 0)) { $("#guess").focus(); return; }
+    const truth = Math.sqrt(9.8 / 1.62), max = Math.max(5, guess * 1.15);
+    const meter = $("#meter");
+    meter.querySelector(".truth").style.left = (truth / max * 100) + "%";
+    meter.querySelector(".you").style.left = (Math.min(guess, max) / max * 100) + "%";
+    const err = Math.abs(guess - truth) / truth * 100;
+    $("#revealText").innerHTML = `真实值约 <b>${truth.toFixed(2)} 秒</b>（\\(\\sqrt{9.8/1.62}\\)）。你的预测 ${guess} 秒，偏差 ${err.toFixed(0)}%。` +
+      (err < 15 ? "很接近！你已经抓住了平方根关系。" : guess > truth ? "偏大了：别忘了 g 在根号里。" : "偏小了：月球重力更小，摆会更慢。");
+    $("#reveal").classList.add("show");
+    if (window.renderMathInElement) renderMathInElement($("#revealText"), mathOpts);
+  });
+
+  /* ---------- 题目 ---------- */
+  let tries = 2;
+  $("#q1submit").addEventListener("click", () => {
+    const sel = $('input[name="q1"]:checked'); const st = $("#q1status");
+    if (!sel) { st.textContent = "先选择一个选项。"; return; }
+    if (tries <= 0) return;
+    const li = sel.closest(".opt"); tries--;
+    document.querySelectorAll("#q1 .opt").forEach(o => o.classList.remove("wrong"));
+    if (li.hasAttribute("data-correct")) {
+      li.classList.add("correct"); st.textContent = "正确 ✓ 已记录为一次独立作答。"; tries = 0;
+    } else {
+      li.classList.add("wrong");
+      st.textContent = tries ? "还不对，再想想。" : "次数用完，已显示正确答案。";
+      if (!tries) $("#q1 .opt[data-correct]").classList.add("correct");
+    }
+    $("#q1tries").textContent = `剩余 ${tries} 次`;
+  });
+
+  /* ---------- 渲染公式与代码 ---------- */
+  const mathOpts = { delimiters: [{ left: "\\[", right: "\\]", display: true }, { left: "\\(", right: "\\)", display: false }], throwOnError: false };
+  addEventListener("load", () => {
+    if (window.renderMathInElement) renderMathInElement(document.body, mathOpts);
+    if (window.hljs) hljs.highlightAll();
+  });
+
+  const initial = location.hash.slice(1) || localStorage.getItem("kit-specimen-style") || "swiss";
+  setStyle(initial, false);
+})();
+</script>
+</body>
+</html>

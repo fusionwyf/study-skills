@@ -1,11 +1,13 @@
 @layer shell {
-  [data-theme-switch] {
+  [data-theme-switch],
+  [data-theme-switcher] {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
   }
 
-  .kit-theme-toggle {
+  .kit-theme-toggle,
+  .kit-theme-select {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
@@ -14,15 +16,28 @@
     border-radius: var(--radius-pill);
     background: var(--c-surface);
     color: var(--c-text);
+    font: inherit;
     font-size: 0.85rem;
     font-weight: 500;
     cursor: pointer;
     transition: background 0.12s, border-color 0.12s, color 0.12s;
   }
 
-  .kit-theme-toggle:hover {
+  .kit-theme-select {
+    padding-right: 0.6rem;
+  }
+
+  .kit-theme-toggle:hover,
+  .kit-theme-select:hover {
     border-color: var(--c-accent);
     color: var(--c-accent-strong);
     background: var(--c-surface-2);
+  }
+
+  @media print {
+    [data-theme-switch],
+    [data-theme-switcher] {
+      display: none !important;
+    }
   }
 }

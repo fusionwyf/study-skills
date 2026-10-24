@@ -51,6 +51,48 @@ last_feedback: null
 
 `cognitive_level` 是可选规划元数据。不要维护 `feedback_status`、`mode`、`roadmap`、`next_lesson`、独立 `checkpoint` 或顶层 `mastery`。
 
+## 二·一、分章课程包（可选 `chapters`）
+
+同一门课覆盖教材多个章节时，用**一个**课程包、按章分子目录，而不是拆成多个包：
+
+```text
+{course}/
+├── course.yaml          # 单一 course_id，objectives 全局唯一
+├── assets/              # 唯一的 kit bundle 与 nav.json
+├── lessons/
+│   ├── 第八章/0001-*.html
+│   └── 第九章/0001-*.html
+├── records/
+│   ├── 第八章/0001-feedback.md
+│   └── 第九章/0004-variant.md
+└── reference/
+    ├── 第八章/demos/
+    └── 第九章/demos/
+```
+
+```yaml
+chapters:
+- id: ecf                    # objective.chapter 引用它
+  label: 第八章              # 目录名，lessons/<label>/ 与 records/<label>/
+  title: 异常控制流
+  lesson_dir: lessons/第八章
+  records_dir: records/第八章
+  current_lesson: 11
+  diagnostic:                # 可选；每章声明时顶层 diagnostic 可省略
+    status: complete
+    record: records/第八章/2026-08-07-lesson-0001.md
+    skipped_reason: null
+```
+
+规则：
+
+- **课号每章各自从 0001 起**，因此裸课号不唯一。顶层 `current_lesson` 表示全书已交付总数（等于各章之和），不再指向某个课号文件；每章进度写在自己的 `current_lesson`。
+- **进度身份是组合键 `"<label>/<NNNN>"`**（扁平包仍是裸 `"<NNNN>"`）。`nav.json` 的 `completed_lessons` 与课件侧边栏打勾都按它判定。
+- record 的章归属取自它所在的子目录，因此历史 record 内容无需改写；`lesson` 字段仍写该章内的课号。
+- `objectives[].chapter` 可选；写了就必须匹配某个 `chapters[].id`，且声明该 objective 的课件必须位于对应章目录下（validator 会查）。
+- evidence 的 `record` 路径形如 `records/第八章/0003-feedback.md`，仍必须落在 `records/` 内。
+- 扁平包不受影响：没有 `chapters` 时以上规则全部不启用。
+
 ## 三、枚举
 
 课程 `status`：
@@ -181,7 +223,7 @@ supported_objectives:
 
 - 每次状态更新修改 `updated_at`。
 - 写入新课前检查目标课号不存在。
-- `current_lesson > 0` 时必须存在对应的 `lessons/NNNN-*.html`。
+- 扁平包：`current_lesson > 0` 时必须存在对应的 `lessons/NNNN-*.html`。分章包：顶层值是全章之和，改为校验每个 `chapters[].current_lesson` 在 `lessons/<label>/` 下有对应课号。
 - lesson 的 `data-objective`、review queue 和 evidence 只能引用已定义 objective。
 - 只有每个 objective 都有 evidence-backed mastery，课程才能设为 `complete`。
 - 不删除或重写历史证据；需要纠正时追加说明。

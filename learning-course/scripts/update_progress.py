@@ -20,6 +20,9 @@ if str(SHARED_SCRIPTS) not in sys.path:
 from spaced_repetition import next_interval  # noqa: E402
 from validate_record import independence_error, recent_guided_records  # noqa: E402
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import course_layout  # noqa: E402
+
 
 MASTERY_VALUES = {"unseen", "recognition", "application", "transfer", "uncertain"}
 PHASE_VALUES = {"diagnostic", "designing", "teaching", "awaiting_evidence", "review_due", "recovery"}
@@ -132,8 +135,9 @@ def require_finalized_evidence(
     return evidence_type, evidence_strength
 
 
-def lesson_exists(root: Path, lesson: int) -> bool:
-    return any((root / "lessons").glob(f"{lesson:04d}-*.html"))
+def lesson_exists(root: Path, lesson: int, chapter: str | None = None) -> bool:
+    """Chaptered packages restart numbering, so a number is only unique with its chapter."""
+    return course_layout.lesson_exists(root, lesson, chapter)
 
 
 def next_record_sequence(records_dir: Path) -> int:
@@ -144,6 +148,39 @@ def next_record_sequence(records_dir: Path) -> int:
             if match:
                 highest = max(highest, int(match.group(1)))
     return highest + 1
+
+
+def resolve_chapter(state: dict, objectives: list, wanted: str | None, parsed_objectives: list) -> dict | None:
+    """Pick the chapter a progress update targets.
+
+    Flat courses have no chapters and return None. A chaptered course must end up
+    with one unambiguous chapter: from ``--chapter``, or inferred when every
+    objective being updated belongs to the same chapter.
+    """
+    chapters = course_layout.chapters_of_state(state)
+    if not chapters:
+        if wanted:
+            raise SystemExit("--chapter only applies to a chaptered course; this course keeps lessons flat")
+        return None
+    if wanted:
+        chapter = course_layout.resolve_chapter(state, wanted)
+        if chapter is None:
+            available = ", ".join(chapter["label"] for chapter in chapters)
+            raise SystemExit(f"unknown chapter {wanted!r}; available: {available}")
+        return chapter
+    inferred = set()
+    for objective_id, _ in parsed_objectives:
+        target = next((item for item in objectives if isinstance(item, dict) and item.get("id") == objective_id), None)
+        if isinstance(target, dict) and target.get("chapter"):
+            inferred.add(target["chapter"])
+    if len(inferred) == 1:
+        chapter = course_layout.resolve_chapter(state, next(iter(inferred)))
+        if chapter:
+            return chapter
+    available = ", ".join(chapter["label"] for chapter in chapters)
+    raise SystemExit(
+        f"this course is chaptered, so lesson numbers are not unique; pass --chapter (one of: {available})"
+    )
 
 
 def make_record(args: argparse.Namespace, record_path: Path) -> str | None:
@@ -197,9 +234,11 @@ supported_objectives: []
 
 
 def main() -> int:
+    course_layout.ensure_utf8_streams()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("course_dir")
     parser.add_argument("--lesson", type=int, help="Current lesson number")
+    parser.add_argument("--chapter", help="Chapter label or id for a chaptered course (e.g. 第九章 or vm)")
     parser.add_argument("--phase", choices=tuple(sorted(PHASE_VALUES)))
     parser.add_argument("--status", choices=("draft", "active", "paused", "complete"))
     parser.add_argument("--feedback-file")
@@ -240,15 +279,26 @@ def main() -> int:
     if not isinstance(objectives, list):
         raise SystemExit("objectives must be a list; enter recovery")
 
-    lesson = args.lesson if args.lesson is not None else int(state.get("current_lesson") or 0)
     parsed_objectives = [parse_objective(raw) for raw in (args.objective or [])]
+    chapter = resolve_chapter(state, objectives, args.chapter, parsed_objectives)
+    chapter_label = chapter["label"] if chapter else None
+
+    if args.lesson is None and chapter is not None:
+        # In a chaptered course the top-level value is a total, not a lesson
+        # number; fall back to this chapter's own progress marker.
+        lesson = int((chapter or {}).get("current_lesson") or 0)
+    else:
+        lesson = args.lesson if args.lesson is not None else int(state.get("current_lesson") or 0)
     if (args.feedback_file or args.feedback_text) and lesson <= 0:
         raise SystemExit("feedback updates require a positive lesson number")
-    if lesson > 0 and (args.lesson is not None or args.feedback_file or args.feedback_text) and not lesson_exists(root, lesson):
-        raise SystemExit(f"lesson {lesson:04d} does not exist in lessons/")
+    if lesson > 0 and (args.lesson is not None or args.feedback_file or args.feedback_text) and not lesson_exists(root, lesson, chapter_label):
+        scope = f"lessons/{chapter_label}/" if chapter_label else "lessons/"
+        raise SystemExit(f"lesson {lesson:04d} does not exist in {scope}")
     args.lesson = lesson
 
-    record_path = root / "records" / f"{lesson:04d}-feedback.md"
+    record_dir = course_layout.record_dir_for(root, chapter_label)
+    record_dir.mkdir(parents=True, exist_ok=True)
+    record_path = record_dir / f"{lesson:04d}-feedback.md"
     generated = make_record(args, record_path)
     evidence_relative: str | None = None
     evidence_type: str | None = None
@@ -262,7 +312,16 @@ def main() -> int:
             raise SystemExit("mastery updates other than uncertain require a finalized evidence record")
 
     changed = False
-    if args.lesson is not None and args.lesson != state.get("current_lesson"):
+    if args.lesson is not None and chapter_label:
+        for entry in state.get("chapters", []):
+            if isinstance(entry, dict) and entry.get("label") == chapter_label and entry.get("current_lesson") != args.lesson:
+                entry["current_lesson"] = args.lesson
+                changed = True
+        total = sum(int(entry.get("current_lesson") or 0) for entry in state.get("chapters", []) if isinstance(entry, dict))
+        if state.get("current_lesson") != total:
+            state["current_lesson"] = total
+            changed = True
+    elif args.lesson is not None and args.lesson != state.get("current_lesson"):
         state["current_lesson"] = args.lesson
         changed = True
     if args.phase:
@@ -362,7 +421,7 @@ def main() -> int:
     if generated:
         print(record_path)
     finalized = []
-    for path in (root / "records").glob("*.md"):
+    for path in course_layout.iter_record_files(root):
         try:
             metadata = load_record_metadata(path, yaml)
         except SystemExit:

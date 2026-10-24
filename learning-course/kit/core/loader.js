@@ -61,6 +61,24 @@
 
   var loadingPromises = {};
 
+  function resolveVendorUrl(url, isLocal) {
+    if (!url) return null;
+    if (!isLocal) return url;
+    if (typeof document !== "undefined") {
+      var kitScript = document.querySelector('script[src*="kit.js"]');
+      if (kitScript) {
+        var src = kitScript.getAttribute("src") || "";
+        var match = src.match(/^(.*?)kit\.js/);
+        if (match) {
+          var kitDir = match[1];
+          var vendorRel = url.replace(/^(\.\.\/)+assets\/kit\//, "").replace(/^assets\/kit\//, "");
+          return kitDir + vendorRel;
+        }
+      }
+    }
+    return url;
+  }
+
   function loadScript(url, attrs, isLocal) {
     if (typeof document === "undefined") return Promise.resolve();
     if (typeof navigator !== "undefined" && navigator.userAgent && navigator.userAgent.indexOf("jsdom") >= 0) {
@@ -71,7 +89,7 @@
       if (typeof setTimeout === "function") {
         timer = setTimeout(function () {
           reject(new Error("Timeout loading script: " + url));
-        }, 5000);
+        }, isLocal ? 10000 : 30000);
       }
       var existing = document.querySelector('script[src="' + url + '"]');
       if (existing) {
@@ -103,7 +121,7 @@
       s.onerror = function (e) {
         if (timer) clearTimeout(timer);
         var msg = isLocal
-          ? "Failed to load local vendor script: " + url + ". External network fallback is prohibited in local mode."
+          ? "Failed to load local vendor script: " + url
           : "Failed to load vendor script: " + url;
         reject(new Error(msg));
       };
@@ -121,7 +139,7 @@
       if (typeof setTimeout === "function") {
         timer = setTimeout(function () {
           reject(new Error("Timeout loading stylesheet: " + url));
-        }, 5000);
+        }, isLocal ? 10000 : 30000);
       }
       var existing = document.querySelector('link[href="' + url + '"]');
       if (existing) {
@@ -141,7 +159,7 @@
       link.onerror = function (e) {
         if (timer) clearTimeout(timer);
         var msg = isLocal
-          ? "Failed to load local vendor stylesheet: " + url + ". External network fallback is prohibited in local mode."
+          ? "Failed to load local vendor stylesheet: " + url
           : "Failed to load stylesheet: " + url;
         reject(new Error(msg));
       };
@@ -160,12 +178,15 @@
 
     var mode = (kit.config && kit.config.vendor && kit.config.vendor.mode) ||
                (kit.config && kit.config.vendor_mode) || "cdn";
-    var useLocal = mode === "local";
+    // Only vendors with actual local distribution packages should use local mode
+    var localPackages = ["plotly", "jsxgraph"];
+    var useLocal = (mode === "local") && (localPackages.indexOf(vendorId) >= 0);
 
     function getUrl(item) {
       if (!item) return null;
       if (typeof item === "string") return item;
-      return useLocal ? item.local : item.cdn;
+      var raw = useLocal ? item.local : item.cdn;
+      return resolveVendorUrl(raw, useLocal);
     }
 
     var styles = vendor.css ? (Array.isArray(vendor.css) ? vendor.css : [vendor.css]) : [];
@@ -173,13 +194,34 @@
     if (vendor.autoRender) scripts.push(vendor.autoRender);
 
     var promise = Promise.all(styles.map(function (s) {
-      var url = getUrl(s);
-      return url ? loadStyle(url, null, useLocal) : Promise.resolve();
+      var primaryUrl = getUrl(s);
+      if (!primaryUrl) return Promise.resolve();
+      return loadStyle(primaryUrl, null, useLocal).catch(function (err) {
+        if (useLocal && s.cdn) {
+          return loadStyle(s.cdn, null, false);
+        }
+        if (!useLocal && s.local) {
+          var fallbackLocal = resolveVendorUrl(s.local, true);
+          return loadStyle(fallbackLocal, null, true);
+        }
+        throw err;
+      });
     })).then(function () {
       return scripts.reduce(function (seq, sc) {
         return seq.then(function () {
-          var url = getUrl(sc);
-          return url ? loadScript(url, null, useLocal) : Promise.resolve();
+          var primaryUrl = getUrl(sc);
+          if (!primaryUrl) return Promise.resolve();
+          return loadScript(primaryUrl, null, useLocal).catch(function (err) {
+            // Dual-fallback: if cdn failed, try local; if local failed, try cdn
+            if (useLocal && sc.cdn) {
+              return loadScript(sc.cdn, null, false);
+            }
+            if (!useLocal && sc.local) {
+              var fallbackLocal = resolveVendorUrl(sc.local, true);
+              return loadScript(fallbackLocal, null, true);
+            }
+            throw err;
+          });
         });
       }, Promise.resolve());
     });

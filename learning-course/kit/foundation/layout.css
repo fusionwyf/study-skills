@@ -1,24 +1,87 @@
 @layer base {
   .kit-page,
   .course-shell {
-    max-width: var(--measure-wide);
-    margin: 0 auto;
-    padding: 1.5rem 1rem 5rem;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) var(--rail-w, 0);
-    column-gap: 2rem;
-    container-type: inline-size;
+    grid-template-columns: var(--nav-w, 15.5rem) minmax(0, 1fr) var(--rail-w, 17.5rem);
+    column-gap: 2.5rem;
+    align-items: start;
+    min-height: 100vh;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    background: var(--c-bg);
+    box-sizing: border-box;
   }
 
+  /* ---- Left Column: Global Course Navigator (The Navigator) ---- */
+  .kit-sidebar {
+    width: var(--nav-w, 15.5rem);
+    min-width: var(--nav-w, 15.5rem);
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 2rem 1.25rem 2rem 1.5rem;
+    background: var(--c-sidebar, #F8FAFC);
+    border-right: 1px solid var(--c-border);
+    box-sizing: border-box;
+    overflow-y: auto;
+    z-index: 20;
+  }
+
+  /* ---- Middle Column: Main Learning Zone (The Focus Zone) ---- */
   .kit-main,
   .lesson {
     min-width: 0;
-    max-width: var(--measure);
+    max-width: 100%;
   }
 
+  .kit-main {
+    padding: 2.5rem 2rem 6rem;
+    box-sizing: border-box;
+  }
+
+  .kit-main > .course-header,
+  .kit-main > .lesson {
+    max-width: 50rem;
+    margin-inline: auto;
+  }
+
+  .lesson > section {
+    margin-bottom: 2.75rem;
+  }
+
+  .lesson h2 {
+    margin-top: 2.25rem;
+    margin-bottom: 0.85rem;
+    font-size: 1.4rem;
+    font-weight: 650;
+    color: var(--c-text);
+    border-bottom: 1px solid var(--c-border);
+    padding-bottom: 0.4rem;
+  }
+
+  /* ---- Right Column: Context & Assistant (The Assistant) ---- */
   .kit-rail {
-    min-width: 0;
-    position: relative;
+    width: var(--rail-w, 17.5rem);
+    min-width: var(--rail-w, 17.5rem);
+    position: sticky;
+    top: 2rem;
+    max-height: calc(100vh - 4rem);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 2.5rem 1rem 2rem 0;
+    box-sizing: border-box;
+    overflow-y: auto;
+    background: transparent;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  .kit-rail::-webkit-scrollbar {
+    display: none !important;
   }
 
   .kit-bleed {
@@ -26,44 +89,109 @@
     max-width: 100cqw;
   }
 
-  /* Responsive layout via container queries */
-  @container (max-width: 1199px) {
+  /* Responsive layout: Collapse Left Column on Tablet (768px - 1199px) */
+  @media (max-width: 1199px) {
+    .kit-page,
+    .course-shell {
+      grid-template-columns: minmax(0, 1fr) var(--rail-w, 17.5rem);
+      padding: 0 1rem 5rem 1rem;
+      column-gap: 2rem;
+    }
+    .kit-sidebar {
+      display: none;
+    }
+    .kit-sidebar.is-open {
+      display: flex;
+      position: fixed;
+      inset: 0 auto 0 0;
+      z-index: 60;
+      box-shadow: 0 10px 30px rgba(23, 32, 51, 0.12);
+    }
+  }
+
+  /* Responsive layout: Single Column on Mobile (< 768px) */
+  @media (max-width: 767px) {
     .kit-page,
     .course-shell {
       grid-template-columns: minmax(0, 1fr);
-      --rail-w: 0px;
+      padding: 0 1rem 4rem;
+      column-gap: 0;
     }
-    .kit-main,
-    .lesson {
-      max-width: 100%;
+    .kit-rail {
+      display: none;
+    }
+    .kit-main {
+      padding: 1.5rem 0.5rem 3rem;
     }
   }
 
   header.course-header,
   .kit-header {
-    grid-column: 1 / -1;
+    position: relative;
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+    margin-bottom: 2.25rem;
+    padding-bottom: 1.25rem;
     border-bottom: 1px solid var(--c-border);
   }
 
+  header.course-header .course-kicker,
+  .kit-header .course-kicker {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--c-muted);
+    margin: 0 0 0.15rem 0;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
   header.course-header h1,
+  header.course-header .course-title,
   .kit-header h1 {
+    font-size: 2.2rem;
+    font-weight: 650;
+    line-height: 1.2;
+    color: var(--c-text);
+    margin: 0.1rem 0 0.25rem 0;
+    letter-spacing: -0.01em;
+  }
+
+  header.course-header .course-subtitle,
+  .kit-header .course-subtitle {
+    font-size: 1.15rem;
+    font-weight: 500;
+    color: var(--c-text-2);
     margin: 0;
-    font-size: 1.5rem;
+    line-height: 1.45;
+  }
+
+  header.course-header .course-meta,
+  .kit-header .course-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.82rem;
+    color: var(--c-muted);
+    margin: 0.35rem 0 0 0;
+  }
+
+  header.course-header [data-theme-switcher],
+  .kit-header [data-theme-switcher] {
+    position: absolute;
+    top: 0;
+    right: 0;
   }
 
   .card {
     background: var(--c-surface);
     border: 1px solid var(--c-border);
-    border-radius: var(--radius);
+    border-radius: 12px;
     padding: 1.5rem;
     box-shadow: var(--shadow);
     margin-bottom: 1.5rem;
   }
 }
+

@@ -6,6 +6,11 @@
   "use strict";
   var CourseKit = global.CourseKit = global.CourseKit || {};
   global.kit = global.kit || CourseKit;
+  CourseKit.__COURSE_CONFIG__ = {"theme": "course", "vendor": {"mode": "cdn"}, "code": {"themes": {"light": "github", "dark": "github-dark"}}, "modules": ["viz.kinds.spatial", "viz.kinds.chart"]};
+  CourseKit.__ACTIVE_MODULES__ = ["core", "foundation", "content._block", "content.code", "content.math", "content.media", "shell.nav", "shell.progress", "shell.theme-switcher", "shell.toc", "learning.records", "learning.question", "viz.core", "viz.kinds.chart", "viz.kinds.list", "viz.kinds.sequence", "viz.kinds.spatial", "viz.kinds.table"];
+  CourseKit.VENDORS = {"hljs": {"id": "hljs", "version": "11.12.0", "js": {"cdn": "https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.12.0/build/highlight.min.js", "local": "../assets/kit/vendor/hljs/highlight.min.js"}}, "katex": {"id": "katex", "version": "0.16.11", "css": {"cdn": "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css", "local": "../assets/kit/vendor/katex/katex.min.css"}, "js": {"cdn": "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js", "local": "../assets/kit/vendor/katex/katex.min.js"}, "autoRender": {"cdn": "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js", "local": "../assets/kit/vendor/katex/auto-render.min.js"}}, "plotly": {"id": "plotly", "version": "4.1.2", "js": {"cdn": "https://cdn.jsdelivr.net/npm/plotly.js-dist-min@4.1.2/plotly.min.js", "local": "../assets/kit/vendor/plotly.js-dist-min/plotly.min.js"}}, "jsxgraph": {"id": "jsxgraph", "version": "1.14.0", "css": {"cdn": "https://cdn.jsdelivr.net/npm/jsxgraph@1.14.0/distrib/jsxgraph.css", "local": "../assets/kit/vendor/jsxgraph/jsxgraph.css"}, "js": {"cdn": "https://cdn.jsdelivr.net/npm/jsxgraph@1.14.0/distrib/jsxgraphcore.js", "local": "../assets/kit/vendor/jsxgraph/jsxgraphcore.js"}}};
+  CourseKit.__EXTENSIONS__ = [];
+  CourseKit.__NAV_DATA__ = {"title": "通用资产验收课件", "course_id": "acceptance-course", "current_lesson": 6, "completed_lessons": [], "completed_count": 0, "total_count": 6, "lessons": [{"number": "0001", "chapter": "", "title": "数学推导与核对", "objective": "math", "file": "0001-math.html", "key": "0001", "href": "lessons/0001-math.html", "home": "../index.html", "prev": null, "next": {"number": "0002", "file": "0002-probability.html", "chapter": "", "key": "0002", "href": "0002-probability.html"}}, {"number": "0002", "chapter": "", "title": "概率参数实验", "objective": "probability", "file": "0002-probability.html", "key": "0002", "href": "lessons/0002-probability.html", "home": "../index.html", "prev": {"number": "0001", "file": "0001-math.html", "chapter": "", "key": "0001", "href": "0001-math.html"}, "next": {"number": "0003", "file": "0003-algorithm.html", "chapter": "", "key": "0003", "href": "0003-algorithm.html"}}, {"number": "0003", "chapter": "", "title": "算法回放与流程", "objective": "algorithm", "file": "0003-algorithm.html", "key": "0003", "href": "lessons/0003-algorithm.html", "home": "../index.html", "prev": {"number": "0002", "file": "0002-probability.html", "chapter": "", "key": "0002", "href": "0002-probability.html"}, "next": {"number": "0004", "file": "0004-history.html", "chapter": "", "key": "0004", "href": "0004-history.html"}}, {"number": "0004", "chapter": "", "title": "材料分析与时间轴", "objective": "history", "file": "0004-history.html", "key": "0004", "href": "lessons/0004-history.html", "home": "../index.html", "prev": {"number": "0003", "file": "0003-algorithm.html", "chapter": "", "key": "0003", "href": "0003-algorithm.html"}, "next": {"number": "0005", "file": "0005-design.html", "chapter": "", "key": "0005", "href": "0005-design.html"}}, {"number": "0005", "chapter": "", "title": "图像观察与标注", "objective": "design", "file": "0005-design.html", "key": "0005", "href": "lessons/0005-design.html", "home": "../index.html", "prev": {"number": "0004", "file": "0004-history.html", "chapter": "", "key": "0004", "href": "0004-history.html"}, "next": {"number": "0006", "file": "0006-language.html", "chapter": "", "key": "0006", "href": "0006-language.html"}}, {"number": "0006", "chapter": "", "title": "听辨媒体与填空", "objective": "language", "file": "0006-language.html", "key": "0006", "href": "lessons/0006-language.html", "home": "../index.html", "prev": {"number": "0005", "file": "0005-design.html", "chapter": "", "key": "0005", "href": "0005-design.html"}, "next": null}], "home": "../index.html"};
 
   /* ---- Module: core (bus.js) ---- */
   (function () {
@@ -95,6 +100,12 @@
   function readConfig() {
     var cfg = JSON.parse(JSON.stringify(defaults));
 
+    // 1. Course-level config injected at bundle time
+    if (kit.__COURSE_CONFIG__ && typeof kit.__COURSE_CONFIG__ === "object") {
+      deepMerge(cfg, kit.__COURSE_CONFIG__);
+    }
+
+    // 2. Page-level #kit-config override
     if (typeof document !== "undefined") {
       var script = document.getElementById("kit-config");
       if (script && script.textContent) {
@@ -778,7 +789,7 @@
   var kit = root.CourseKit = root.CourseKit || {};
   root.kit = root.kit || kit;
 
-  var VENDORS = {
+  var DEFAULT_VENDORS = {
     hljs: {
       id: "hljs",
       version: "11.12.0",
@@ -813,36 +824,72 @@
     },
     plotly: {
       id: "plotly",
-      version: "2.35.2",
+      version: "4.1.2",
       js: {
-        cdn: "https://cdn.plot.ly/plotly-2.35.2.min.js",
-        local: "../assets/visualizations/vendor/plotly.js-dist-min/plotly.min.js"
+        cdn: "https://cdn.jsdelivr.net/npm/plotly.js-dist-min@4.1.2/plotly.min.js",
+        local: "../assets/kit/vendor/plotly.js-dist-min/plotly.min.js"
       }
     },
     jsxgraph: {
       id: "jsxgraph",
-      version: "1.10.1",
+      version: "1.14.0",
       css: {
-        cdn: "https://cdn.jsdelivr.net/npm/jsxgraph@1.10.1/distrib/jsxgraph.css",
-        local: "../assets/visualizations/vendor/jsxgraph/jsxgraph.css"
+        cdn: "https://cdn.jsdelivr.net/npm/jsxgraph@1.14.0/distrib/jsxgraph.css",
+        local: "../assets/kit/vendor/jsxgraph/jsxgraph.css"
       },
       js: {
-        cdn: "https://cdn.jsdelivr.net/npm/jsxgraph@1.10.1/distrib/jsxgraphcore.js",
-        local: "../assets/visualizations/vendor/jsxgraph/jsxgraphcore.js"
+        cdn: "https://cdn.jsdelivr.net/npm/jsxgraph@1.14.0/distrib/jsxgraphcore.js",
+        local: "../assets/kit/vendor/jsxgraph/jsxgraphcore.js"
       }
     }
   };
 
   var loadingPromises = {};
 
-  function loadScript(url, attrs) {
+  function resolveVendorUrl(url, isLocal) {
+    if (!url) return null;
+    if (!isLocal) return url;
+    if (typeof document !== "undefined") {
+      var kitScript = document.querySelector('script[src*="kit.js"]');
+      if (kitScript) {
+        var src = kitScript.getAttribute("src") || "";
+        var match = src.match(/^(.*?)kit\.js/);
+        if (match) {
+          var kitDir = match[1];
+          var vendorRel = url.replace(/^(\.\.\/)+assets\/kit\//, "").replace(/^assets\/kit\//, "");
+          return kitDir + vendorRel;
+        }
+      }
+    }
+    return url;
+  }
+
+  function loadScript(url, attrs, isLocal) {
     if (typeof document === "undefined") return Promise.resolve();
+    if (typeof navigator !== "undefined" && navigator.userAgent && navigator.userAgent.indexOf("jsdom") >= 0) {
+      return Promise.reject(new Error("External script loading is not supported in JSDOM: " + url));
+    }
     return new Promise(function (resolve, reject) {
+      var timer = null;
+      if (typeof setTimeout === "function") {
+        timer = setTimeout(function () {
+          reject(new Error("Timeout loading script: " + url));
+        }, isLocal ? 10000 : 30000);
+      }
       var existing = document.querySelector('script[src="' + url + '"]');
       if (existing) {
-        if (existing.dataset.loaded === "true") return resolve();
-        existing.addEventListener("load", function () { resolve(); });
-        existing.addEventListener("error", function (e) { reject(e); });
+        if (existing.dataset.loaded === "true") {
+          if (timer) clearTimeout(timer);
+          return resolve();
+        }
+        existing.addEventListener("load", function () {
+          if (timer) clearTimeout(timer);
+          resolve();
+        });
+        existing.addEventListener("error", function (e) {
+          if (timer) clearTimeout(timer);
+          reject(new Error("Failed to load script: " + url));
+        });
         return;
       }
       var s = document.createElement("script");
@@ -852,29 +899,55 @@
         Object.keys(attrs).forEach(function (k) { s.setAttribute(k, attrs[k]); });
       }
       s.onload = function () {
+        if (timer) clearTimeout(timer);
         s.dataset.loaded = "true";
         resolve();
       };
       s.onerror = function (e) {
-        reject(new Error("Failed to load script: " + url));
+        if (timer) clearTimeout(timer);
+        var msg = isLocal
+          ? "Failed to load local vendor script: " + url
+          : "Failed to load vendor script: " + url;
+        reject(new Error(msg));
       };
       document.head.appendChild(s);
     });
   }
 
-  function loadStyle(url, attrs) {
+  function loadStyle(url, attrs, isLocal) {
     if (typeof document === "undefined") return Promise.resolve();
+    if (typeof navigator !== "undefined" && navigator.userAgent && navigator.userAgent.indexOf("jsdom") >= 0) {
+      return Promise.reject(new Error("External stylesheet loading is not supported in JSDOM: " + url));
+    }
     return new Promise(function (resolve, reject) {
+      var timer = null;
+      if (typeof setTimeout === "function") {
+        timer = setTimeout(function () {
+          reject(new Error("Timeout loading stylesheet: " + url));
+        }, isLocal ? 10000 : 30000);
+      }
       var existing = document.querySelector('link[href="' + url + '"]');
-      if (existing) return resolve();
+      if (existing) {
+        if (timer) clearTimeout(timer);
+        return resolve();
+      }
       var link = document.createElement("link");
       link.rel = "stylesheet";
       link.href = url;
       if (attrs) {
         Object.keys(attrs).forEach(function (k) { link.setAttribute(k, attrs[k]); });
       }
-      link.onload = function () { resolve(); };
-      link.onerror = function (e) { reject(new Error("Failed to load stylesheet: " + url)); };
+      link.onload = function () {
+        if (timer) clearTimeout(timer);
+        resolve();
+      };
+      link.onerror = function (e) {
+        if (timer) clearTimeout(timer);
+        var msg = isLocal
+          ? "Failed to load local vendor stylesheet: " + url
+          : "Failed to load stylesheet: " + url;
+        reject(new Error(msg));
+      };
       document.head.appendChild(link);
     });
   }
@@ -882,49 +955,69 @@
   function need(vendorId) {
     if (loadingPromises[vendorId]) return loadingPromises[vendorId];
 
-    var vendor = VENDORS[vendorId];
+    var vendorsRegistry = kit.VENDORS || DEFAULT_VENDORS;
+    var vendor = vendorsRegistry[vendorId] || DEFAULT_VENDORS[vendorId];
     if (!vendor) {
       return Promise.reject(new Error("Unknown vendor id: " + vendorId));
     }
 
-    var mode = (kit.config && kit.config.vendor && kit.config.vendor.mode) || "cdn";
-    var useLocal = mode === "local";
+    var mode = (kit.config && kit.config.vendor && kit.config.vendor.mode) ||
+               (kit.config && kit.config.vendor_mode) || "cdn";
+    // Only vendors with actual local distribution packages should use local mode
+    var localPackages = ["plotly", "jsxgraph"];
+    var useLocal = (mode === "local") && (localPackages.indexOf(vendorId) >= 0);
 
-    var promise;
-    if (vendorId === "hljs") {
-      var jsUrl = useLocal ? vendor.js.local : vendor.js.cdn;
-      promise = loadScript(jsUrl);
-    } else if (vendorId === "katex") {
-      var cssUrl = useLocal ? vendor.css.local : vendor.css.cdn;
-      var katexJsUrl = useLocal ? vendor.js.local : vendor.js.cdn;
-      var autoRenderUrl = useLocal ? vendor.autoRender.local : vendor.autoRender.cdn;
-      promise = loadStyle(cssUrl).then(function () {
-        return loadScript(katexJsUrl);
-      }).then(function () {
-        return loadScript(autoRenderUrl);
-      });
-    } else if (vendorId === "mermaid") {
-      var mermaidUrl = useLocal ? vendor.js.local : vendor.js.cdn;
-      promise = loadScript(mermaidUrl);
-    } else if (vendorId === "plotly") {
-      var plotlyUrl = useLocal ? vendor.js.local : vendor.js.cdn;
-      promise = loadScript(plotlyUrl);
-    } else if (vendorId === "jsxgraph") {
-      var jsxCss = useLocal ? vendor.css.local : vendor.css.cdn;
-      var jsxJs = useLocal ? vendor.js.local : vendor.js.cdn;
-      promise = loadStyle(jsxCss).then(function () {
-        return loadScript(jsxJs);
-      });
-    } else {
-      promise = Promise.resolve();
+    function getUrl(item) {
+      if (!item) return null;
+      if (typeof item === "string") return item;
+      var raw = useLocal ? item.local : item.cdn;
+      return resolveVendorUrl(raw, useLocal);
     }
+
+    var styles = vendor.css ? (Array.isArray(vendor.css) ? vendor.css : [vendor.css]) : [];
+    var scripts = vendor.js ? (Array.isArray(vendor.js) ? vendor.js : [vendor.js]) : [];
+    if (vendor.autoRender) scripts.push(vendor.autoRender);
+
+    var promise = Promise.all(styles.map(function (s) {
+      var primaryUrl = getUrl(s);
+      if (!primaryUrl) return Promise.resolve();
+      return loadStyle(primaryUrl, null, useLocal).catch(function (err) {
+        if (useLocal && s.cdn) {
+          return loadStyle(s.cdn, null, false);
+        }
+        if (!useLocal && s.local) {
+          var fallbackLocal = resolveVendorUrl(s.local, true);
+          return loadStyle(fallbackLocal, null, true);
+        }
+        throw err;
+      });
+    })).then(function () {
+      return scripts.reduce(function (seq, sc) {
+        return seq.then(function () {
+          var primaryUrl = getUrl(sc);
+          if (!primaryUrl) return Promise.resolve();
+          return loadScript(primaryUrl, null, useLocal).catch(function (err) {
+            // Dual-fallback: if cdn failed, try local; if local failed, try cdn
+            if (useLocal && sc.cdn) {
+              return loadScript(sc.cdn, null, false);
+            }
+            if (!useLocal && sc.local) {
+              var fallbackLocal = resolveVendorUrl(sc.local, true);
+              return loadScript(fallbackLocal, null, true);
+            }
+            throw err;
+          });
+        });
+      }, Promise.resolve());
+    });
 
     loadingPromises[vendorId] = promise;
     return promise;
   }
 
   kit.need = need;
-  kit.VENDORS = VENDORS;
+  kit.loader = { need: need };
+  kit.VENDORS = kit.VENDORS || DEFAULT_VENDORS;
 })(typeof window !== "undefined" ? window : globalThis);
 
   })();
@@ -939,8 +1032,16 @@
 
   var readyModules = [];
   var failedModules = [];
+  var degradedModules = [];
   var pendingModules = new Set();
-  var isGlobalReady = false;
+  var isGlobalSettled = false;
+
+  // Pre-register active modules if injected
+  if (Array.isArray(kit.__ACTIVE_MODULES__)) {
+    kit.__ACTIVE_MODULES__.forEach(function (id) {
+      pendingModules.add(id);
+    });
+  }
 
   function markModuleReady(moduleId) {
     if (readyModules.indexOf(moduleId) === -1) {
@@ -960,6 +1061,18 @@
     checkGlobalReady();
   }
 
+  function markModuleDegraded(moduleId, reason) {
+    if (degradedModules.indexOf(moduleId) === -1) {
+      degradedModules.push(moduleId);
+    }
+    if (readyModules.indexOf(moduleId) === -1) {
+      readyModules.push(moduleId);
+    }
+    pendingModules.delete(moduleId);
+    kit.emit("kit:" + moduleId + ":degraded", { module: moduleId, reason: reason });
+    checkGlobalReady();
+  }
+
   function registerPendingModule(moduleId) {
     if (readyModules.indexOf(moduleId) === -1 && failedModules.indexOf(moduleId) === -1) {
       pendingModules.add(moduleId);
@@ -967,19 +1080,25 @@
   }
 
   function checkGlobalReady() {
-    if (pendingModules.size === 0 && !isGlobalReady) {
-      isGlobalReady = true;
+    if (pendingModules.size === 0 && !isGlobalSettled) {
+      isGlobalSettled = true;
+      var isAllSuccess = failedModules.length === 0;
+
       if (typeof document !== "undefined") {
-        document.documentElement.dataset.kitReady = "true";
-        document.documentElement.dataset.courseReady = "true";
+        document.documentElement.dataset.kitStatus = "settled";
+        document.documentElement.dataset.kitReady = isAllSuccess ? "true" : "false";
+        document.documentElement.dataset.courseReady = isAllSuccess ? "true" : "false";
       }
 
       var payload = {
         ready: readyModules.slice(),
-        failed: failedModules.slice()
+        failed: failedModules.slice(),
+        degraded: degradedModules.slice(),
+        success: isAllSuccess
       };
 
       kit.emit("kit:ready", payload);
+      kit.emit("kit:settled", payload);
 
       // Backward compatibility shims
       if (typeof window !== "undefined") {
@@ -998,10 +1117,14 @@
   kit.ready = {
     markReady: markModuleReady,
     markFailed: markModuleFailed,
+    markDegraded: markModuleDegraded,
     registerPending: registerPendingModule,
-    isReady: function () { return isGlobalReady; },
+    isReady: function () { return isGlobalSettled && failedModules.length === 0; },
+    isSettled: function () { return isGlobalSettled; },
+    getStatus: function () { return isGlobalSettled ? "settled" : "pending"; },
     getReadyModules: function () { return readyModules.slice(); },
-    getFailedModules: function () { return failedModules.slice(); }
+    getFailedModules: function () { return failedModules.slice(); },
+    getDegradedModules: function () { return degradedModules.slice(); }
   };
 })(typeof window !== "undefined" ? window : globalThis);
 
@@ -1016,20 +1139,58 @@
   root.kit = root.kit || kit;
 
   var modules = {};
+  var initialized = {};
+
+  function initModule(id) {
+    if (initialized[id]) return Promise.resolve();
+    var mod = modules[id];
+    if (!mod) {
+      initialized[id] = true;
+      if (kit.ready && kit.ready.markReady) kit.ready.markReady(id);
+      return Promise.resolve();
+    }
+    initialized[id] = true;
+    if (typeof mod.init !== "function") {
+      if (kit.ready && kit.ready.markReady) kit.ready.markReady(id);
+      return Promise.resolve();
+    }
+    var res;
+    try {
+      res = mod.init(kit);
+    } catch (err) {
+      console.error("[kit] Module " + id + " init failed:", err);
+      if (kit.ready && kit.ready.markFailed) kit.ready.markFailed(id, err);
+      return Promise.resolve();
+    }
+    if (res && typeof res.then === "function") {
+      return res.then(function () {
+        if (kit.ready && kit.ready.markReady) kit.ready.markReady(id);
+      }).catch(function (err) {
+        console.error("[kit] Async module " + id + " init failed:", err);
+        if (kit.ready && kit.ready.markFailed) kit.ready.markFailed(id, err);
+      });
+    } else {
+      if (kit.ready && kit.ready.markReady) kit.ready.markReady(id);
+      return Promise.resolve();
+    }
+  }
+
+  var allInitialized = false;
 
   kit.registerModule = function (id, mod) {
     modules[id] = mod;
-    if (typeof mod.init === "function") {
-      try {
-        mod.init(kit);
-      } catch (err) {
-        console.error("Failed to init module " + id, err);
-        if (kit.ready && kit.ready.markFailed) {
-          kit.ready.markFailed(id, err);
-        }
-      }
+    // Standalone fallback or dynamic registration after initAll has already run:
+    if (!Array.isArray(kit.__ACTIVE_MODULES__) || allInitialized) {
+      initModule(id);
     }
   };
+
+  // Base core module lifecycle registration
+  kit.registerModule("core", {
+    init: function () {
+      return Promise.resolve();
+    }
+  });
 
   kit.getModule = function (id) {
     return modules[id];
@@ -1038,6 +1199,50 @@
   kit.listModules = function () {
     return Object.keys(modules);
   };
+
+  async function initAll() {
+    var order = Array.isArray(kit.__ACTIVE_MODULES__) ? kit.__ACTIVE_MODULES__.slice() : [];
+    Object.keys(modules).forEach(function (id) {
+      if (order.indexOf(id) === -1) {
+        order.push(id);
+      }
+    });
+
+    // Phase 1: core + foundation (synchronous prerequisites for everything)
+    // Phase 2: shell.* (layout: sidebar, TOC, progress bar — must appear immediately)
+    // Phase 3: everything else in parallel (content vendors like Mermaid/KaTeX are
+    //          heavy CDN loads; they must NOT block the visible layout)
+    var shellIds = [];
+    var deferredIds = [];
+    for (var i = 0; i < order.length; i++) {
+      var id = order[i];
+      if (id === "core" || id === "foundation") {
+        await initModule(id);
+      } else if (id.indexOf("shell.") === 0) {
+        shellIds.push(id);
+      } else {
+        deferredIds.push(id);
+      }
+    }
+    for (var j = 0; j < shellIds.length; j++) {
+      await initModule(shellIds[j]);
+    }
+    for (var k = 0; k < deferredIds.length; k++) {
+      initModule(deferredIds[k]);
+    }
+
+    allInitialized = true;
+  }
+
+  kit.initAll = initAll;
+
+  if (typeof document !== "undefined" && !Array.isArray(kit.__ACTIVE_MODULES__)) {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initAll);
+    } else {
+      initAll();
+    }
+  }
 })(typeof window !== "undefined" ? window : globalThis);
 
   })();
@@ -1066,11 +1271,66 @@
     return "light";
   }
 
+  /*
+   * 主题预设注册表。
+   * scheme：页面明暗；code：代码块高亮使用的明暗（可与页面不同，例如浅色页面配深色代码块）；
+   * fonts：按需加载的网页字体（fontsource 包名:字重，或完整 URL），失败时回退到 CSS 字体栈。
+   */
+  var THEMES = {
+    course:    { label: "默认",     scheme: "light" },
+    paper:     { label: "纸张",     scheme: "light" },
+    ink:       { label: "深色",     scheme: "dark" },
+    swiss:     { label: "瑞士网格", scheme: "light", code: "dark",
+                 fonts: ["noto-sans-sc:400,700,900", "jetbrains-mono:400,700"] },
+    blueprint: { label: "工程蓝图", scheme: "dark",
+                 fonts: ["noto-sans-sc:400,700", "jetbrains-mono:400,700"] },
+    riso:      { label: "孔版印刷", scheme: "light", code: "dark",
+                 fonts: ["noto-sans-sc:400,700,900", "space-grotesk:500,700"] },
+    brutal:    { label: "新粗野",   scheme: "light", code: "dark",
+                 fonts: ["noto-sans-sc:400,700,900", "space-grotesk:500,700", "jetbrains-mono:400,700"] },
+    field:     { label: "博物志",   scheme: "light", code: "dark",
+                 fonts: ["lxgw-wenkai", "jetbrains-mono:400,700"] }
+  };
+
+  function themeMeta(themeName) {
+    return THEMES[themeName] || { label: themeName, scheme: "light" };
+  }
+
   function resolveSchemeForTheme(themeName) {
-    if (themeName === "ink") return "dark";
-    if (themeName === "paper") return "light";
-    if (themeName === "course") return "light";
-    return "light";
+    return themeMeta(themeName).scheme || "light";
+  }
+
+  var FONT_URLS = {
+    "lxgw-wenkai": "https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/style.css"
+  };
+
+  function fontUrls(spec) {
+    if (spec.indexOf("/") !== -1) return [spec];
+    if (FONT_URLS[spec]) return [FONT_URLS[spec]];
+    var parts = spec.split(":");
+    var weights = (parts[1] || "400").split(",");
+    return weights.map(function (w) {
+      return "https://cdn.jsdelivr.net/npm/@fontsource/" + parts[0] + "@5/" + w.trim() + ".css";
+    });
+  }
+
+  var loadedFonts = {};
+  function loadThemeFonts(themeName) {
+    if (typeof document === "undefined") return;
+    var mode = kit.config && kit.config.fonts;
+    if (mode === "system" || mode === false) return;
+    (themeMeta(themeName).fonts || []).forEach(function (spec) {
+      fontUrls(spec).forEach(function (url) {
+        if (loadedFonts[url]) return;
+        loadedFonts[url] = true;
+        var link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = url;
+        link.setAttribute("data-kit-font", themeName);
+        link.onerror = function () { link.remove(); };
+        document.head.appendChild(link);
+      });
+    });
   }
 
   function updateHljsTheme(scheme) {
@@ -1082,7 +1342,8 @@
 
     var themeName = scheme === "dark" ? (codeThemes.dark || "github-dark") : (codeThemes.light || "github");
     var isUrl = themeName.indexOf("/") !== -1 || themeName.indexOf(".css") !== -1;
-    var targetUrl = isUrl ? themeName : "https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.12.0/build/styles/" + themeName + ".min.css";
+    var isLocal = (kit.config && (kit.config.vendor_mode === "local" || (kit.config.vendor && kit.config.vendor.mode === "local")));
+    var targetUrl = isUrl ? themeName : (isLocal ? "../assets/kit/vendor/hljs/styles/" + themeName + ".min.css" : "https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.12.0/build/styles/" + themeName + ".min.css");
 
     var link = document.getElementById("kit-hljs-theme");
     if (!link) {
@@ -1123,7 +1384,8 @@
         } catch (e) {}
       }
 
-      updateHljsTheme(currentScheme);
+      loadThemeFonts(currentTheme);
+      updateHljsTheme(themeMeta(currentTheme).code || currentScheme);
     }
 
     kit.emit("kit:themechange", {
@@ -1132,26 +1394,48 @@
     });
   }
 
+  function defaultTheme() {
+    return (kit.config && kit.config.theme) || "course";
+  }
+
+  // 在课程默认主题与深色主题之间切换；若默认主题本身是深色，则切到 course。
   function toggleTheme() {
-    var next = currentTheme === "ink" ? "course" : "ink";
+    var base = defaultTheme();
+    var alt = resolveSchemeForTheme(base) === "dark" ? "course" : "ink";
+    var next = currentTheme === base ? alt : base;
     applyTheme(next, true);
     return next;
   }
 
-  function initTheme() {
-    var stored = null;
-    if (typeof localStorage !== "undefined") {
-      try {
-        stored = localStorage.getItem("kit_theme_" + getCourseId());
-      } catch (e) {}
+  // 可切换的主题列表：config.themes（数组）优先，否则为 [默认主题, 深色/浅色备选]。
+  function availableThemes() {
+    var list = kit.config && Array.isArray(kit.config.themes) ? kit.config.themes.slice() : null;
+    if (!list || !list.length) {
+      var base = defaultTheme();
+      list = [base, resolveSchemeForTheme(base) === "dark" ? "course" : "ink"];
     }
+    return list.filter(function (name, i) { return list.indexOf(name) === i; });
+  }
 
-    var defaultTheme = (kit.config && kit.config.theme) || "course";
-    var initialTheme = stored || defaultTheme;
+  var themeInitialized = false;
+  function initTheme() {
+    if (themeInitialized) return;
+    themeInitialized = true;
+    var stored = null;
+    try {
+      if (typeof window !== "undefined" && window.localStorage) {
+        stored = window.localStorage.getItem("kit_theme_" + getCourseId());
+      }
+    } catch (e) {}
+
+    var base = defaultTheme();
+    // 已存储的主题若不在可切换列表中（例如课程更换了预设），回到默认主题。
+    var initialTheme = stored && availableThemes().indexOf(stored) !== -1 ? stored : base;
 
     applyTheme(initialTheme, false);
 
-    if (typeof window !== "undefined" && window.matchMedia) {
+    // 仅当课程使用默认 course 主题且学习者未手动选择时，才跟随系统明暗。
+    if (typeof window !== "undefined" && window.matchMedia && base === "course") {
       window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function (e) {
         if (!stored) {
           applyTheme(e.matches ? "ink" : "course", false);
@@ -1169,10 +1453,18 @@
     getScheme: function () { return currentScheme; },
     setTheme: function (themeName) { applyTheme(themeName, true); },
     toggle: toggleTheme,
+    list: availableThemes,
+    meta: themeMeta,
+    // 课程扩展可注册自定义预设：kit.theme.register("my-theme", { label, scheme, code, fonts })
+    register: function (name, meta) { THEMES[name] = meta || { label: name, scheme: "light" }; },
     init: initTheme
   };
 
-  if (typeof document !== "undefined") {
+  if (kit.registerModule) {
+    kit.registerModule("foundation", kit.theme);
+  }
+
+  if (typeof document !== "undefined" && !kit.registerModule) {
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", initTheme);
     } else {
@@ -1340,44 +1632,52 @@
         root.hljs.highlightElement(codeNode);
       } catch (e) {}
       block.root.dataset.kitState = "ready";
+      return Promise.resolve();
     } else if (lang !== "text" && kit.need) {
-      kit.need("hljs").then(function () {
+      return kit.need("hljs").then(function () {
         if (root.hljs) {
           try {
             root.hljs.highlightElement(codeNode);
           } catch (e) {}
         }
         block.root.dataset.kitState = "ready";
-      }).catch(function () {
+      }).catch(function (err) {
         block.root.dataset.kitState = "failed";
+        console.warn("[kit.code] Syntax highlighting failed:", err);
       });
     } else {
       block.root.dataset.kitState = "ready";
+      return Promise.resolve();
     }
   }
 
   // Legacy .code-block support
   function enhanceLegacyCodeBlocks() {
     var legacyBlocks = document.querySelectorAll(".code-block:not(.kit-block)");
+    var promises = [];
     Array.prototype.forEach.call(legacyBlocks, function (el) {
       var code = el.querySelector("code");
-      if (code) enhanceCodeBlock(code);
+      if (code) {
+        var p = enhanceCodeBlock(code);
+        if (p) promises.push(p);
+      }
     });
+    return promises;
   }
 
   function init() {
-    if (typeof document === "undefined") return;
-    if (kit.ready && kit.ready.registerPending) {
-      kit.ready.registerPending("content.code");
-    }
+    if (typeof document === "undefined") return Promise.resolve();
 
     var codeNodes = document.querySelectorAll("pre > code");
-    Array.prototype.forEach.call(codeNodes, enhanceCodeBlock);
-    enhanceLegacyCodeBlocks();
+    var promises = [];
+    Array.prototype.forEach.call(codeNodes, function (node) {
+      var p = enhanceCodeBlock(node);
+      if (p) promises.push(p);
+    });
+    var legacyPromises = enhanceLegacyCodeBlocks();
+    promises = promises.concat(legacyPromises);
 
-    if (kit.ready && kit.ready.markReady) {
-      kit.ready.markReady("content.code");
-    }
+    return Promise.all(promises);
   }
 
   kit.code = {
@@ -1385,12 +1685,8 @@
     enhance: enhanceCodeBlock
   };
 
-  if (typeof document !== "undefined") {
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", init);
-    } else {
-      init();
-    }
+  if (kit.registerModule) {
+    kit.registerModule("content.code", kit.code);
   }
 })(typeof window !== "undefined" ? window : globalThis);
 
@@ -1455,42 +1751,42 @@
       });
       enhanceFormulaBlocks();
       root.__COURSE_MATH_READY__ = true;
-      if (kit.ready && kit.ready.markReady) {
-        kit.ready.markReady("content.math");
-      }
     } catch (e) {
       console.error("[kit.math] Render error", e);
-      if (kit.ready && kit.ready.markFailed) {
-        kit.ready.markFailed("content.math", e);
-      }
+      throw e;
     }
   }
 
   function init() {
+    if (typeof document === "undefined") return Promise.resolve();
     if (!hasMathContent()) {
-      if (kit.ready && kit.ready.markReady) {
-        kit.ready.markReady("content.math");
-      }
-      return;
-    }
-
-    if (kit.ready && kit.ready.registerPending) {
-      kit.ready.registerPending("content.math");
+      return Promise.resolve();
     }
 
     if (typeof window.renderMathInElement === "function") {
-      renderMath();
+      try {
+        renderMath();
+        return Promise.resolve();
+      } catch (err) {
+        return Promise.reject(err);
+      }
     } else if (kit.need) {
-      kit.need("katex").then(function () {
+      return kit.need("katex").then(function () {
         renderMath();
       }).catch(function (err) {
-        console.warn("[kit.math] KaTeX not available, degrading to plain text formula", err);
+        console.warn("[kit.math] KaTeX not available, degrading formula blocks", err);
         root.__COURSE_MATH_READY__ = true;
-        if (kit.ready && kit.ready.markReady) {
-          kit.ready.markReady("content.math");
+        document.querySelectorAll(".formula, [data-math]").forEach(function (el) {
+          if (el.closest(".kit-block")) {
+            el.closest(".kit-block").dataset.kitState = "degraded";
+          }
+        });
+        if (kit.ready && kit.ready.markDegraded) {
+          kit.ready.markDegraded("content.math", err);
         }
       });
     }
+    return Promise.resolve();
   }
 
   kit.math = {
@@ -1498,12 +1794,145 @@
     render: renderMath
   };
 
-  if (typeof document !== "undefined") {
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", init);
-    } else {
-      init();
+  if (kit.registerModule) {
+    kit.registerModule("content.math", kit.math);
+  }
+})(typeof window !== "undefined" ? window : globalThis);
+
+  })();
+
+  /* ---- Module: content.media (media.js) ---- */
+  (function () {
+(function (root) {
+  "use strict";
+
+  var kit = root.CourseKit = root.CourseKit || {};
+  root.kit = root.kit || kit;
+
+  function initMedia() {
+    if (typeof document === "undefined") return;
+    var nodes = document.querySelectorAll("[data-media]");
+    if (!nodes.length) {
+      if (kit.ready && kit.ready.markReady) kit.ready.markReady("content.media");
+      return;
     }
+
+    nodes.forEach(function (node) {
+      if (node.dataset.mediaInitialized === "true") return;
+      try {
+        var script = node.querySelector("[data-media-config]"),
+          config = script ? JSON.parse(script.textContent) : { hotspots: [] };
+        var image = node.querySelector("img"),
+          frame = node.querySelector("[data-media-frame]"),
+          status = node.querySelector("[data-media-status]");
+        var hotspots = config.hotspots || [];
+        if (!Array.isArray(hotspots)) throw new Error("hotspots 必须为数组");
+        var ids = [];
+        hotspots.forEach(function (h) {
+          if (
+            !h ||
+            typeof h.id !== "string" ||
+            !h.id ||
+            ids.indexOf(h.id) >= 0 ||
+            typeof h.label !== "string" ||
+            !h.label.trim() ||
+            !Number.isFinite(h.x) ||
+            !Number.isFinite(h.y) ||
+            h.x < 0 ||
+            h.x > 100 ||
+            h.y < 0 ||
+            h.y > 100
+          )
+            throw new Error("热点需要唯一 id、label 与 0..100 的 x/y");
+          ids.push(h.id);
+        });
+        if (hotspots.length && (!image || !frame || !image.alt))
+          throw new Error("图片标注需要带 alt 的 img 与 data-media-frame");
+
+        if (frame) {
+          var oldButtons = frame.querySelectorAll(".media-hotspot");
+          oldButtons.forEach(function (btn) {
+            btn.parentNode && btn.parentNode.removeChild(btn);
+          });
+        }
+
+        var task = node.closest("[data-question-id]"),
+          field = task && task.querySelector("textarea"),
+          lesson = node.closest(".lesson");
+        var questionId = task
+          ? task.dataset.questionId
+          : node.dataset.mediaQuestion;
+        node
+          .querySelectorAll("details[data-media-transcript]")
+          .forEach(function (transcript) {
+            function recordTranscript() {
+              var curStore = (lesson && lesson.__evidenceStore) || (document.querySelector(".lesson") && document.querySelector(".lesson").__evidenceStore);
+              if (!transcript.open || !curStore || !questionId) return;
+              curStore.dispatch({ type: "KEY_VIEWED", id: questionId });
+              curStore.dispatch({
+                type: "OBSERVED_ASSISTANCE",
+                id: questionId,
+                value: "with_hints",
+              });
+            }
+            transcript.addEventListener("toggle", recordTranscript);
+            recordTranscript();
+          });
+        if (field)
+          field.addEventListener("input", function () {
+            var curStore = (lesson && lesson.__evidenceStore) || (document.querySelector(".lesson") && document.querySelector(".lesson").__evidenceStore);
+            if (curStore) {
+              curStore.dispatch({
+                type: "RAW_ANSWER",
+                id: task.dataset.questionId,
+                value: field.value,
+              });
+            }
+          });
+        var selected = [];
+        hotspots.forEach(function (h, index) {
+          var button = document.createElement("button");
+          button.type = "button";
+          button.className = "media-hotspot";
+          button.style.left = h.x + "%";
+          button.style.top = h.y + "%";
+          button.textContent = String(index + 1);
+          button.setAttribute("aria-label", h.label);
+          button.addEventListener("click", function () {
+            if (selected.indexOf(h.id) < 0) selected.push(h.id);
+            if (status)
+              status.textContent =
+                h.label + (h.description ? "：" + h.description : "");
+            node.dataset.mediaState = JSON.stringify({
+              selected: selected.slice(),
+            });
+          });
+          frame.appendChild(button);
+        });
+        node.dataset.mediaInitialized = "true";
+        node.dataset.mediaState = JSON.stringify({ selected: [] });
+        node.dataset.mediaReady = "true";
+      } catch (error) {
+        node.dataset.mediaReady = "failed";
+        var st = node.querySelector("[data-media-status]");
+        if (st) st.textContent = error.message;
+      }
+    });
+
+    if (kit.ready && kit.ready.markReady) kit.ready.markReady("content.media");
+  }
+
+  kit.media = {
+    init: initMedia
+  };
+
+  if (kit.registerModule) {
+    kit.registerModule("content.media", kit.media);
+  }
+
+  if (!kit.registerModule && typeof document !== "undefined") {
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initMedia);
+    else initMedia();
   }
 })(typeof window !== "undefined" ? window : globalThis);
 
@@ -1517,7 +1946,583 @@
   var kit = root.CourseKit = root.CourseKit || {};
   root.kit = root.kit || kit;
 
+  function getLessonHref(file, isLessonPage) {
+    var baseFile = file.indexOf("/") !== -1 ? file.split("/").pop() : file;
+    return isLessonPage ? baseFile : ("lessons/" + baseFile);
+  }
+
+  /* ---------------------------------------------------------------------------
+   * Chaptered packages restart lesson numbers at 0001 per chapter, so a bare
+   * number is not a unique identity. nav.json entries therefore carry:
+   *   file  - path relative to lessons/ ("第九章/0001-x.html", or "0001-x.html")
+   *   key   - composite progress key ("第九章/0001", or "0001")
+   * and links are resolved relative to the current page instead of by number.
+   * ------------------------------------------------------------------------- */
+
+  function lessonKey(entry) {
+    if (!entry) return "";
+    if (entry.key) return entry.key;
+    var number = entry.number == null ? "" : String(Number(entry.number));
+    return entry.chapter ? (entry.chapter + "/" + number) : number;
+  }
+
+  function normalizePath(pathname) {
+    return String(pathname || "").split("\\").join("/");
+  }
+
+  // lessons/-relative path of the page, derived from the URL, or "" when unknown
+  function pageLessonFile() {
+    if (typeof window === "undefined" || !window.location) return "";
+    var pathname = normalizePath(window.location.pathname);
+    var marker = "/lessons/";
+    var index = pathname.lastIndexOf(marker);
+    if (index === -1) return "";
+    return pathname.slice(index + marker.length).replace(/^\/+/, "");
+  }
+
+  /** Relative href between two lessons/-relative paths; mirrors build_index.lesson_href. */
+  function relLessonHref(fromFile, toFile) {
+    if (!fromFile) return "lessons/" + toFile;
+    var fromDir = fromFile.indexOf("/") === -1 ? [] : fromFile.split("/").slice(0, -1);
+    var toParts = String(toFile).split("/");
+    var common = 0;
+    while (common < fromDir.length && common < toParts.length - 1 && fromDir[common] === toParts[common]) {
+      common += 1;
+    }
+    var up = [];
+    for (var i = common; i < fromDir.length; i += 1) up.push("..");
+    return up.concat(toParts.slice(common)).join("/");
+  }
+
+  /** Where nav.json lives, resolved from the kit.js tag so any depth works. */
+  function navJsonUrl(fallbackUrl) {
+    if (typeof document === "undefined") return fallbackUrl;
+    var kitScript = document.querySelector('script[src*="kit.js"]');
+    if (!kitScript) return fallbackUrl;
+    var src = kitScript.getAttribute("src") || "";
+    var match = src.match(/^(.*?)kit\.js/);
+    if (!match) return fallbackUrl;
+    // kitDir is "<base>/assets/kit/"; nav.json sits at "<base>/assets/course/nav.json".
+    var kitDir = match[1];
+    var assetsDir = kitDir.replace(/assets\/kit\/$/, "assets/");
+    if (assetsDir === kitDir) return fallbackUrl;
+    return assetsDir + "course/nav.json";
+  }
+
+  function renderSidebar(navData, currentLessonId, currentLesson) {
+    var page = document.querySelector(".kit-page, .course-shell");
+    if (!page) return;
+
+    var sidebar = document.querySelector(".kit-sidebar");
+    if (!sidebar) {
+      sidebar = document.createElement("aside");
+      sidebar.className = "kit-sidebar";
+      sidebar.setAttribute("aria-label", "课程大纲");
+      page.insertBefore(sidebar, page.firstChild);
+    }
+
+    var isLessonPage = !!document.querySelector(".lesson, [data-lesson-id]");
+    var lessons = (navData && navData.lessons) || [];
+    var currentIndex = -1;
+    var pageFile = isLessonPage ? pageLessonFile() : "";
+
+    if (isLessonPage) {
+      // Exact lessons/-relative path wins: it is the only identity that stays
+      // unique when two chapters both contain a 0001.
+      for (var i = 0; i < lessons.length; i += 1) {
+        if (pageFile && lessons[i].file === pageFile) { currentIndex = i; break; }
+      }
+      if (currentIndex === -1 && currentLesson) {
+        for (var j = 0; j < lessons.length; j += 1) {
+          if (lessonKey(lessons[j]) && lessonKey(lessons[j]) === lessonKey(currentLesson)) { currentIndex = j; break; }
+        }
+      }
+      if (currentIndex === -1 && currentLessonId != null) {
+        for (var k = 0; k < lessons.length; k += 1) {
+          var candidate = lessons[k];
+          if (!candidate.chapter && String(Number(candidate.number)) === String(Number(currentLessonId))) { currentIndex = k; break; }
+        }
+      }
+    }
+
+    var totalLessons = lessons.length;
+
+    // Course progress: judged strictly based on records (completed_lessons)
+    var completedList = (navData && Array.isArray(navData.completed_lessons)) ? navData.completed_lessons : null;
+
+    function isLessonCompleted(it, idx) {
+      if (completedList !== null) {
+        var numStr = it.number ? String(Number(it.number)) : String(idx + 1);
+        if (numStr.length < 4) {
+          numStr = ("0000" + numStr).slice(-4);
+        }
+        // Chaptered packages key progress on "<章>/<NNNN>"; a bare number would
+        // wrongly mark every chapter's same-numbered lesson as done.
+        var key = lessonKey(it);
+        if (key && completedList.indexOf(key) !== -1) return true;
+        if (!it.chapter) {
+          return completedList.indexOf(numStr) !== -1 || completedList.indexOf(it.number) !== -1;
+        }
+        return false;
+      }
+      if (navData && typeof navData.current_lesson !== "undefined" && navData.current_lesson !== null) {
+        var lNum = it.number ? Number(it.number) : (idx + 1);
+        return lNum <= Number(navData.current_lesson);
+      }
+      return false;
+    }
+
+    var completedCount = 0;
+    if (completedList !== null) {
+      completedCount = completedList.length;
+    } else if (navData && typeof navData.completed_count !== "undefined") {
+      completedCount = Number(navData.completed_count);
+    } else if (navData && typeof navData.current_lesson !== "undefined") {
+      completedCount = Number(navData.current_lesson);
+    } else {
+      completedCount = (currentIndex !== -1) ? (currentIndex + 1) : 0;
+    }
+    if (isNaN(completedCount) || completedCount < 0) completedCount = 0;
+    if (completedCount > totalLessons) completedCount = totalLessons;
+
+    var progressPercent = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
+
+    // Generic course metadata resolution (from nav.json / course config or DOM)
+    var courseTitle = (navData && navData.title) || "";
+    if (!courseTitle) {
+      var courseNavHome = document.querySelector(".course-nav a, .kit-nav a");
+      if (courseNavHome && courseNavHome.textContent && courseNavHome.textContent.trim() !== "课程首页") {
+        courseTitle = courseNavHome.textContent.trim();
+      }
+    }
+    if (!courseTitle) {
+      var lessonScope = document.querySelector(".lesson[data-course-id]");
+      if (lessonScope && lessonScope.dataset.courseId) {
+        courseTitle = lessonScope.dataset.courseId;
+      } else {
+        courseTitle = "课程目录";
+      }
+    }
+
+    // Optional short course code
+    var courseCode = (navData && navData.code) || "";
+    if (!courseCode && navData && navData.course_id && navData.course_id.length <= 10 && !navData.course_id.includes("-")) {
+      courseCode = navData.course_id;
+    }
+
+    // Optional unit meta
+    var unitMeta = (navData && navData.unit) || "";
+    if (!unitMeta) {
+      var kickerEl = document.querySelector(".course-header .course-kicker, .kit-header .course-kicker");
+      if (kickerEl) {
+        var kickerText = kickerEl.textContent.trim();
+        var unitMatch = kickerText.match(/(?:UNIT|单元|第\s*[一二三四五六七八九十\d]+\s*单元)\s*[\d\w]*[\s·\/:：-]*[^\s·\/:：-]+/i);
+        if (unitMatch) {
+          unitMeta = unitMatch[0];
+        }
+      }
+    }
+
+    var currentEntry = currentIndex >= 0 ? lessons[currentIndex] : null;
+    var homeLink = "index.html";
+    if (isLessonPage) {
+      homeLink = (currentEntry && currentEntry.home) || (navData && navData.home) || "../index.html";
+    }
+
+    var html = [];
+    html.push('<div class="kit-sidebar__brand">');
+    html.push('  <a href="' + homeLink + '" class="kit-sidebar__home-link">');
+    if (courseCode) {
+      html.push('    <span class="kit-sidebar__code">' + courseCode + '</span>');
+      html.push('    <span class="kit-sidebar__sep">·</span>');
+    }
+    html.push('    <span class="kit-sidebar__course-name">' + courseTitle + '</span>');
+    html.push('  </a>');
+    if (unitMeta) {
+      html.push('  <div class="kit-sidebar__unit-meta">' + unitMeta + '</div>');
+    }
+    html.push('  <div class="kit-sidebar__progress-row">');
+    html.push('    <span class="kit-sidebar__progress-label">课程进度</span>');
+    html.push('    <span class="kit-sidebar__progress-count">' + completedCount + ' / ' + totalLessons + '</span>');
+    html.push('  </div>');
+    html.push('  <div class="kit-sidebar__progress-track" aria-hidden="true">');
+    html.push('    <div class="kit-sidebar__progress-bar" style="width: ' + progressPercent + '%;"></div>');
+    html.push('  </div>');
+    html.push('</div>');
+
+    html.push('<nav class="kit-sidebar__tree" aria-label="课时列表">');
+    html.push('  <div class="kit-sidebar__tree-title">章节目录</div>');
+
+    var hrefFromFile = "";
+    if (isLessonPage) {
+      hrefFromFile = pageFile || (currentIndex >= 0 && lessons[currentIndex] ? lessons[currentIndex].file : "");
+    }
+
+    function renderLessonItem(it, idx, indent) {
+      var isCurrent = (idx === currentIndex);
+      var isCompleted = isLessonCompleted(it, idx);
+      var itemClass = "kit-sidebar__item" + (isCurrent ? " is-current" : "") + (isCompleted ? " is-completed" : "");
+
+      var numLabel = it.number ? String(Number(it.number)) : String(idx + 1);
+      if (numLabel.length < 2) numLabel = "0" + numLabel;
+
+      var statusMarker = isCurrent
+        ? '<span class="kit-sidebar__marker is-current" aria-label="当前课时">●</span>'
+        : (isCompleted
+            ? '<span class="kit-sidebar__marker is-done" aria-label="已完成">✓</span>'
+            : '<span class="kit-sidebar__marker is-todo">' + numLabel + '</span>');
+
+      var lessonHref;
+      if (!it.file) {
+        lessonHref = "#";
+      } else if (hrefFromFile) {
+        // Lesson page: relative to the current lesson's chapter directory
+        lessonHref = relLessonHref(hrefFromFile, it.file);
+      } else if (it.href) {
+        // Course index: the stored index-relative path keeps the chapter segment
+        lessonHref = it.href;
+      } else {
+        lessonHref = "lessons/" + it.file;
+      }
+
+      var pad = indent ? "  " : "";
+      html.push(pad + '    <li class="' + itemClass + '">');
+      html.push(pad + '      <a href="' + lessonHref + '" class="kit-sidebar__link"' + (isCurrent ? ' aria-current="page"' : '') + '>');
+      html.push(pad + '        ' + statusMarker);
+      html.push(pad + '        <span class="kit-sidebar__link-text">');
+      html.push(pad + '          <span class="kit-sidebar__link-title" title="' + it.title + '">' + it.title + '</span>');
+      html.push(pad + '        </span>');
+      html.push(pad + '      </a>');
+      html.push(pad + '    </li>');
+    }
+
+    function chapterLabel(entry) {
+      if (!entry || !entry.chapter) return "";
+      for (var c = 0; c < (navData.chapters || []).length; c += 1) {
+        var meta = navData.chapters[c];
+        if (meta && (meta.label === entry.chapter || meta.id === entry.chapter)) {
+          return meta.title && meta.title !== meta.label ? (meta.label + " · " + meta.title) : meta.label;
+        }
+      }
+      return entry.chapter;
+    }
+
+    var chapterGroups = [];
+    lessons.forEach(function (it, idx) {
+      var label = it.chapter ? chapterLabel(it) : "";
+      var last = chapterGroups[chapterGroups.length - 1];
+      if (!last || last.label !== label) chapterGroups.push({ label: label, items: [] });
+      chapterGroups[chapterGroups.length - 1].items.push(idx);
+    });
+    var grouped = chapterGroups.length > 1 || (chapterGroups.length === 1 && chapterGroups[0].label);
+
+    if (!grouped) {
+      html.push('  <ul class="kit-sidebar__list">');
+      lessons.forEach(function (it, idx) { renderLessonItem(it, idx, false); });
+      html.push('  </ul>');
+    } else {
+      chapterGroups.forEach(function (group) {
+        html.push('  <div class="kit-sidebar__group">');
+        html.push('    <div class="kit-sidebar__group-title">' + group.label + '</div>');
+        html.push('    <ul class="kit-sidebar__list">');
+        group.items.forEach(function (idx) { renderLessonItem(lessons[idx], idx, true); });
+        html.push('    </ul>');
+        html.push('  </div>');
+      });
+    }
+
+    html.push('</nav>');
+
+    sidebar.innerHTML = html.join("\n");
+
+    // Close sidebar drawer on link click for mobile/tablet
+    sidebar.addEventListener("click", function (e) {
+      var a = e.target.closest("a");
+      if (a) {
+        sidebar.classList.remove("is-open");
+        var b = document.querySelector(".kit-sidebar-backdrop");
+        if (b) b.classList.remove("is-open");
+      }
+    });
+
+    // Add backdrop for mobile/tablet drawer
+    var backdrop = document.querySelector(".kit-sidebar-backdrop");
+    if (!backdrop) {
+      backdrop = document.createElement("div");
+      backdrop.className = "kit-sidebar-backdrop";
+      document.body.appendChild(backdrop);
+      backdrop.addEventListener("click", function () {
+        sidebar.classList.remove("is-open");
+        backdrop.classList.remove("is-open");
+      });
+    }
+
+    // Toggle button in header if present
+    var header = document.querySelector(".course-header, .kit-header");
+    if (header && !header.querySelector(".kit-sidebar-toggle")) {
+      var toggleBtn = document.createElement("button");
+      toggleBtn.type = "button";
+      toggleBtn.className = "kit-sidebar-toggle";
+      toggleBtn.innerHTML = "☰ <span>课程大纲</span>";
+      toggleBtn.addEventListener("click", function () {
+        var isOpen = sidebar.classList.toggle("is-open");
+        backdrop.classList.toggle("is-open", isOpen);
+      });
+      header.insertBefore(toggleBtn, header.firstChild);
+    }
+  }
+
+  /**
+   * Resolve a prev/next reference to its lesson entry.
+   *
+   * Matching on the number alone is unsafe in a chaptered package (both chapters
+   * own a 0001), so the composite key, then file, then number+chapter are tried
+   * before falling back to a bare number for flat courses.
+   */
+  function findLesson(data, ref) {
+    if (!data || !Array.isArray(data.lessons) || !ref) return null;
+    var lessons = data.lessons;
+    var i;
+    if (ref.key) {
+      for (i = 0; i < lessons.length; i += 1) if (lessonKey(lessons[i]) === ref.key) return lessons[i];
+    }
+    if (ref.file) {
+      for (i = 0; i < lessons.length; i += 1) if (lessons[i].file === ref.file) return lessons[i];
+    }
+    if (ref.number != null) {
+      var targetStr = String(Number(ref.number));
+      if (ref.chapter) {
+        for (i = 0; i < lessons.length; i += 1) {
+          if (lessons[i].chapter === ref.chapter && String(Number(lessons[i].number)) === targetStr) return lessons[i];
+        }
+      }
+      for (i = 0; i < lessons.length; i += 1) {
+        var it = lessons[i];
+        if (!it.chapter && it.number && (it.number === ref.number || String(Number(it.number)) === targetStr)) return it;
+      }
+    }
+    return ref;
+  }
+
+  /**
+   * Href from the current lesson page to a prev/next reference.
+   *
+   * The ref stored beside a lesson carries an href already relative to that
+   * lesson. A resolved lesson entry carries an index-relative href, which must
+   * not be reused here, so only the reference's own href is trusted.
+   */
+  function lessonLinkHref(currentLesson, ref, resolved) {
+    if (!ref && !resolved) return "#";
+    if (ref && ref.href) return ref.href;
+    var ownFile = (currentLesson && currentLesson.file) || pageLessonFile();
+    var file = (ref && ref.file) || (resolved && resolved.file);
+    if (!file) return "#";
+    if (ownFile) return relLessonHref(ownFile, file);
+    return getLessonHref(file, true);
+  }
+
+  function renderLessonPager(data, currentLesson) {
+    var lessonEl = document.querySelector(".lesson");
+    if (!lessonEl || !currentLesson) return;
+
+    var pagerEl = lessonEl.querySelector(".kit-pager");
+    if (!pagerEl) {
+      pagerEl = document.createElement("nav");
+      pagerEl.className = "kit-pager";
+      pagerEl.setAttribute("aria-label", "课时翻页导航");
+      var footerEl = lessonEl.querySelector(".lesson-footer");
+      if (footerEl) {
+        lessonEl.insertBefore(pagerEl, footerEl);
+      } else {
+        lessonEl.appendChild(pagerEl);
+      }
+    }
+
+    var isLessonPage = true;
+    var homeUrl = currentLesson.home || (data && data.home) || "../index.html";
+
+    var prevLesson = null;
+    if (currentLesson.prev) {
+      prevLesson = findLesson(data, currentLesson.prev) || currentLesson.prev;
+    }
+
+    var nextLesson = null;
+    if (currentLesson.next) {
+      nextLesson = findLesson(data, currentLesson.next) || currentLesson.next;
+    }
+
+    var html = [];
+    html.push('<div class="kit-pager__grid">');
+
+    // Prev Card
+    if (prevLesson && prevLesson.file) {
+      var prevHref = lessonLinkHref(currentLesson, currentLesson.prev, prevLesson);
+      var prevNum = prevLesson.number ? ("第 " + prevLesson.number + " 课") : "上一课";
+      var prevTitle = prevLesson.title || "上一课";
+      html.push('  <a href="' + prevHref + '" class="kit-pager__card kit-pager__card--prev" rel="prev" data-nav-prev="">');
+      html.push('    <span class="kit-pager__meta">');
+      html.push('      <span class="kit-pager__arrow">←</span>');
+      html.push('      <span class="kit-pager__label">上一课 · ' + prevNum + '</span>');
+      html.push('    </span>');
+      html.push('    <span class="kit-pager__title">' + prevTitle + '</span>');
+      html.push('  </a>');
+    } else {
+      html.push('  <div class="kit-pager__card kit-pager__card--empty" aria-hidden="true"></div>');
+    }
+
+    // Next Card
+    if (nextLesson && nextLesson.file) {
+      var nextHref = lessonLinkHref(currentLesson, currentLesson.next, nextLesson);
+      var nextNum = nextLesson.number ? ("第 " + nextLesson.number + " 课") : "下一课";
+      var nextTitle = nextLesson.title || "下一课";
+      html.push('  <a href="' + nextHref + '" class="kit-pager__card kit-pager__card--next" rel="next" data-nav-next="">');
+      html.push('    <span class="kit-pager__meta">');
+      html.push('      <span class="kit-pager__label">下一课 · ' + nextNum + '</span>');
+      html.push('      <span class="kit-pager__arrow">→</span>');
+      html.push('    </span>');
+      html.push('    <span class="kit-pager__title">' + nextTitle + '</span>');
+      html.push('  </a>');
+    } else {
+      // Last lesson -> link to course index
+      html.push('  <a href="' + homeUrl + '" class="kit-pager__card kit-pager__card--finish" data-nav-home="">');
+      html.push('    <span class="kit-pager__meta">');
+      html.push('      <span class="kit-pager__label">本单元完结 · 返回大纲</span>');
+      html.push('      <span class="kit-pager__arrow">⊞</span>');
+      html.push('    </span>');
+      html.push('    <span class="kit-pager__title">课程首页与后续规划</span>');
+      html.push('  </a>');
+    }
+
+    html.push('</div>');
+
+    // Central Home Action
+    html.push('<div class="kit-pager__bottom">');
+    html.push('  <a href="' + homeUrl + '" class="kit-pager__home-btn" data-nav-home="">');
+    html.push('    <span class="kit-pager__home-icon">⊞</span>');
+    html.push('    <span>课程首页</span>');
+    html.push('  </a>');
+    html.push('</div>');
+
+    pagerEl.innerHTML = html.join("\n");
+  }
+
   function initNav() {
+    if (typeof document === "undefined") return;
+
+    var navEls = Array.prototype.slice.call(document.querySelectorAll("nav.kit-nav, nav.course-nav, [data-kit-nav]"));
+    var lessonEl = document.querySelector(".lesson");
+    var currentLessonId = lessonEl ? lessonEl.dataset.lessonId : null;
+
+    var navData = (kit.config && kit.config.navigation) || kit.__NAV_DATA__ || root.__NAV_DATA__;
+
+    function applyNav(data) {
+      if (!data || !Array.isArray(data.lessons)) return;
+      var currentLesson = null;
+      var lessons = data.lessons;
+      var pageFile = pageLessonFile();
+      var i, it;
+
+      // 1. exact lessons/-relative path — unique even when chapters share numbers
+      for (i = 0; i < lessons.length; i += 1) {
+        if (pageFile && lessons[i].file === pageFile) { currentLesson = lessons[i]; break; }
+      }
+      // 2. file name only, when it is not ambiguous across chapters
+      if (!currentLesson && pageFile) {
+        var base = pageFile.split("/").pop();
+        var matches = [];
+        for (i = 0; i < lessons.length; i += 1) {
+          it = lessons[i];
+          if (it.file && it.file.split("/").pop() === base) matches.push(it);
+        }
+        if (matches.length === 1) currentLesson = matches[0];
+      }
+      // 3. data-lesson-id plus chapter taken from the URL
+      if (!currentLesson && currentLessonId != null) {
+        var chapterFromPath = pageFile.indexOf("/") === -1 ? "" : pageFile.split("/")[0];
+        for (i = 0; i < lessons.length; i += 1) {
+          it = lessons[i];
+          var sameNumber = it.number && (it.number === currentLessonId || String(Number(it.number)) === String(Number(currentLessonId)));
+          if (!sameNumber) continue;
+          if (chapterFromPath && it.chapter === chapterFromPath) { currentLesson = it; break; }
+          if (!it.chapter) currentLesson = it;
+        }
+      }
+
+      // Render Left Global Course Navigator (The Navigator)
+      renderSidebar(data, currentLessonId, currentLesson);
+
+      // Render Lesson End Pager
+      renderLessonPager(data, currentLesson);
+
+      navEls.forEach(function (nav) {
+        if (nav.closest(".course-header, .kit-header")) {
+          // Do not inject navigation into headers; moved to lesson footer
+          return;
+        }
+        if (currentLesson) {
+          var homeLink = nav.querySelector('[data-nav-home], a[href*="index.html"]');
+          var prevLink = nav.querySelector('[data-nav-prev], a[rel="prev"]');
+          var nextLink = nav.querySelector('[data-nav-next], a[rel="next"]');
+
+          if (!prevLink && currentLesson.prev) {
+            var aPrev = document.createElement("a");
+            aPrev.href = lessonLinkHref(currentLesson, currentLesson.prev);
+            aPrev.rel = "prev";
+            aPrev.dataset.navPrev = "";
+            aPrev.className = "nav-prev";
+            aPrev.textContent = "← 上一课";
+            if (homeLink) nav.insertBefore(aPrev, homeLink);
+            else nav.insertBefore(aPrev, nav.firstChild);
+          }
+
+          if (!nextLink && currentLesson.next) {
+            var aNext = document.createElement("a");
+            aNext.href = lessonLinkHref(currentLesson, currentLesson.next);
+            aNext.rel = "next";
+            aNext.dataset.navNext = "";
+            aNext.className = "nav-next";
+            aNext.textContent = "下一课 →";
+            if (homeLink && homeLink.nextSibling) nav.insertBefore(aNext, homeLink.nextSibling);
+            else nav.appendChild(aNext);
+          }
+        }
+      });
+    }
+
+    if (navData && Array.isArray(navData.lessons)) {
+      applyNav(navData);
+    } else if (typeof fetch === "function") {
+      var isLesson = !!document.querySelector(".lesson, [data-lesson-id]");
+      // nav.json sits at <course>/assets/course/nav.json. Resolving it from the
+      // kit.js tag keeps the path correct for chaptered lessons, which sit one
+      // directory deeper than the flat layout the literal "../" assumed.
+      var navUrl = navJsonUrl(isLesson ? "../assets/course/nav.json" : "assets/course/nav.json");
+      fetch(navUrl)
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          if (data && Array.isArray(data.lessons)) {
+            kit.__NAV_DATA__ = data;
+            applyNav(data);
+          }
+        })
+        .catch(function () {});
+    }
+
+    // Keyboard navigation shortcuts: [ for prev, ] for next
+    document.addEventListener("keydown", function (e) {
+      var tag = (e.target && e.target.tagName || "").toLowerCase();
+      if (tag === "input" || tag === "textarea" || tag === "select" || (e.target && e.target.isContentEditable)) {
+        return;
+      }
+      if (e.key === "[" || (e.altKey && e.key === "ArrowLeft")) {
+        var prev = document.querySelector('[data-nav-prev], a[rel="prev"]');
+        if (prev && prev.href) prev.click();
+      } else if (e.key === "]" || (e.altKey && e.key === "ArrowRight")) {
+        var next = document.querySelector('[data-nav-next], a[rel="next"]');
+        if (next && next.href) next.click();
+      }
+    });
+
     if (kit.ready && kit.ready.markReady) {
       kit.ready.markReady("shell.nav");
     }
@@ -1527,9 +2532,8 @@
     init: initNav
   };
 
-  if (typeof document !== "undefined") {
-    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initNav);
-    else initNav();
+  if (kit.registerModule) {
+    kit.registerModule("shell.nav", kit.nav);
   }
 })(typeof window !== "undefined" ? window : globalThis);
 
@@ -1586,15 +2590,48 @@
   var kit = root.CourseKit = root.CourseKit || {};
   root.kit = root.kit || kit;
 
+  function themeLabel(name) {
+    var meta = kit.theme && kit.theme.meta ? kit.theme.meta(name) : null;
+    return (meta && meta.label) || name;
+  }
+
+  function currentTheme() {
+    return (kit.theme && kit.theme.getTheme && kit.theme.getTheme()) || "course";
+  }
+
+  // 两个主题：单按钮切换；三个及以上：下拉选择。
   function renderSwitcher(container) {
     container.innerHTML = "";
+    var themes = kit.theme && kit.theme.list ? kit.theme.list() : ["course", "ink"];
+
+    if (themes.length > 2) {
+      var select = document.createElement("select");
+      select.className = "kit-theme-select";
+      select.setAttribute("aria-label", "切换主题");
+      themes.forEach(function (name) {
+        var opt = document.createElement("option");
+        opt.value = name;
+        opt.textContent = themeLabel(name);
+        select.appendChild(opt);
+      });
+      select.value = currentTheme();
+      select.addEventListener("change", function () {
+        if (kit.theme && kit.theme.setTheme) kit.theme.setTheme(select.value);
+      });
+      container.appendChild(select);
+      kit.on("kit:themechange", function () { select.value = currentTheme(); });
+      return;
+    }
+
     var btn = document.createElement("button");
     btn.type = "button";
     btn.className = "kit-theme-toggle";
 
     function updateLabel() {
-      var current = (kit.theme && kit.theme.getTheme && kit.theme.getTheme()) || "course";
-      btn.textContent = current === "ink" ? "☀️ 浅色主题" : "🌙 深色主题";
+      var cur = currentTheme();
+      var other = themes[0] === cur ? themes[1] : themes[0];
+      var dark = kit.theme && kit.theme.meta && kit.theme.meta(other).scheme === "dark";
+      btn.textContent = (dark ? "🌙 " : "☀️ ") + themeLabel(other);
     }
 
     btn.addEventListener("click", function () {
@@ -1612,7 +2649,8 @@
 
   function initSwitchers() {
     if (typeof document === "undefined") return;
-    var containers = document.querySelectorAll("[data-theme-switch]");
+    // data-theme-switcher 为课件模板写法；data-theme-switch 为旧写法，两者等价。
+    var containers = document.querySelectorAll("[data-theme-switcher], [data-theme-switch]");
     Array.prototype.forEach.call(containers, renderSwitcher);
     if (kit.ready && kit.ready.markReady) kit.ready.markReady("shell.theme-switcher");
   }
@@ -1650,9 +2688,17 @@
     raw.forEach(function (el) {
       if (el.hasAttribute("data-toc-skip")) return;
       if (!el.id) {
-        el.id = kit.util.slugify(el.textContent);
+        el.id = kit.util && kit.util.slugify ? kit.util.slugify(el.textContent) : el.textContent.trim().toLowerCase().replace(/\s+/g, "-");
       }
-      var label = el.dataset.tocLabel || el.textContent.trim();
+      var label = el.dataset.tocLabel;
+      if (!label) {
+        var clone = el.cloneNode(true);
+        var mathml = clone.querySelectorAll(".katex-mathml");
+        for (var m = 0; m < mathml.length; m++) {
+          mathml[m].remove();
+        }
+        label = clone.textContent.trim();
+      }
       var isH3 = el.tagName && el.tagName.toLowerCase() === "h3";
       result.push({
         id: el.id,
@@ -1664,33 +2710,153 @@
     return result;
   }
 
+  function buildHeadingTree(headingsList) {
+    var tree = [];
+    var currentH2 = null;
+
+    headingsList.forEach(function (h) {
+      if (!h.isH3) {
+        currentH2 = {
+          id: h.id,
+          label: h.label,
+          element: h.element,
+          children: []
+        };
+        tree.push(currentH2);
+      } else {
+        if (currentH2) {
+          currentH2.children.push(h);
+        } else {
+          currentH2 = {
+            id: h.id,
+            label: h.label,
+            element: h.element,
+            children: []
+          };
+          tree.push(currentH2);
+        }
+      }
+    });
+
+    return tree;
+  }
+
+  function setExpanded(li, expand) {
+    if (!li) return;
+    if (expand) {
+      li.classList.remove("is-collapsed");
+      li.classList.add("is-expanded");
+      var btn = li.querySelector(".kit-toc__toggle, .toc-toggle");
+      if (btn) {
+        btn.setAttribute("aria-expanded", "true");
+        btn.setAttribute("title", "收起子目录");
+        btn.setAttribute("aria-label", "收起子目录");
+      }
+    } else {
+      li.classList.remove("is-expanded");
+      li.classList.add("is-collapsed");
+      var btn = li.querySelector(".kit-toc__toggle, .toc-toggle");
+      if (btn) {
+        btn.setAttribute("aria-expanded", "false");
+        btn.setAttribute("title", "展开子目录");
+        btn.setAttribute("aria-label", "展开子目录");
+      }
+    }
+  }
+
   function renderList(targetUl, closeCallback) {
     targetUl.innerHTML = "";
-    headings.forEach(function (h) {
+    var tree = buildHeadingTree(headings);
+
+    tree.forEach(function (node) {
       var li = document.createElement("li");
-      li.className = "kit-toc__item toc-item" + (h.isH3 ? " is-h3" : " is-h2");
+      var hasChildren = node.children && node.children.length > 0;
+      // All H3 subsections are collapsed by default
+      li.className = "kit-toc__item toc-item is-h2" + (hasChildren ? " has-children is-collapsed" : " no-children");
+      li.dataset.sectionId = node.id;
+
+      var row = document.createElement("div");
+      row.className = "kit-toc__row toc-row" + (hasChildren ? " has-children" : " no-children");
+
+      if (hasChildren) {
+        var toggleBtn = document.createElement("button");
+        toggleBtn.type = "button";
+        toggleBtn.className = "kit-toc__toggle toc-toggle";
+        toggleBtn.setAttribute("aria-label", "展开子目录");
+        toggleBtn.setAttribute("title", "展开子目录");
+        toggleBtn.setAttribute("aria-expanded", "false");
+        toggleBtn.innerHTML = '<svg class="kit-toc__chevron" viewBox="0 0 16 16" width="9" height="9" aria-hidden="true"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+        toggleBtn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          e.preventDefault();
+          var isCollapsed = li.classList.contains("is-collapsed");
+          setExpanded(li, isCollapsed);
+        });
+
+        row.appendChild(toggleBtn);
+      } else {
+        var spacer = document.createElement("span");
+        spacer.className = "kit-toc__spacer";
+        spacer.setAttribute("aria-hidden", "true");
+        row.appendChild(spacer);
+      }
 
       var a = document.createElement("a");
-      a.className = "kit-toc__link toc-link";
-      a.href = "#" + h.id;
-      a.textContent = h.label;
-      a.dataset.targetId = h.id;
+      a.className = "kit-toc__link toc-link is-h2-link";
+      a.href = "#" + node.id;
+      a.textContent = node.label;
+      a.dataset.targetId = node.id;
 
       a.addEventListener("click", function (e) {
         e.preventDefault();
-        var target = document.getElementById(h.id);
+        var target = document.getElementById(node.id);
         if (target) {
           target.scrollIntoView({ behavior: "smooth", block: "start" });
-          if (history.pushState) {
-            history.pushState(null, "", "#" + h.id);
-          }
+          if (history.pushState) history.pushState(null, "", "#" + node.id);
         }
         if (closeCallback) closeCallback();
       });
 
-      li.appendChild(a);
-      targetUl.appendChild(li);
+      row.appendChild(a);
+      li.appendChild(row);
       allLinkNodes.push(a);
+
+      if (hasChildren) {
+        var subUl = document.createElement("ul");
+        subUl.className = "kit-toc__sublist toc-sublist";
+
+        node.children.forEach(function (child) {
+          var subLi = document.createElement("li");
+          subLi.className = "kit-toc__item toc-item is-h3";
+          subLi.dataset.sectionId = child.id;
+
+          var subA = document.createElement("a");
+          subA.className = "kit-toc__link toc-link is-h3-link";
+          subA.href = "#" + child.id;
+          subA.textContent = child.label;
+          subA.dataset.targetId = child.id;
+          subA.dataset.parentId = node.id;
+
+          subA.addEventListener("click", function (e) {
+            e.preventDefault();
+            var target = document.getElementById(child.id);
+            if (target) {
+              target.scrollIntoView({ behavior: "smooth", block: "start" });
+              if (history.pushState) history.pushState(null, "", "#" + child.id);
+            }
+            if (closeCallback) closeCallback();
+          });
+
+          subLi.appendChild(subA);
+          subUl.appendChild(subLi);
+          allLinkNodes.push(subA);
+        });
+
+        li.appendChild(subUl);
+      }
+
+      targetUl.appendChild(li);
     });
   }
 
@@ -1703,12 +2869,20 @@
         a.setAttribute("aria-current", "location");
         a.classList.add("is-active");
 
+        var visibleTarget = a;
+        if (a.dataset.parentId) {
+          var parentLi = a.closest(".kit-toc__item.has-children, .toc-item.has-children");
+          if (parentLi && parentLi.classList.contains("is-collapsed")) {
+            visibleTarget = parentLi;
+          }
+        }
+
         // Keep active item in view inside the TOC container without whole-page scroll
-        if (desktopScrollBox && desktopScrollBox.contains(a)) {
+        if (desktopScrollBox && desktopScrollBox.contains(visibleTarget)) {
           var containerTop = desktopScrollBox.scrollTop;
           var containerHeight = desktopScrollBox.clientHeight;
-          var itemTop = a.offsetTop;
-          var itemHeight = a.offsetHeight;
+          var itemTop = visibleTarget.offsetTop;
+          var itemHeight = visibleTarget.offsetHeight;
 
           if (itemTop < containerTop) {
             desktopScrollBox.scrollTop = itemTop - 10;
@@ -1721,6 +2895,17 @@
         a.classList.remove("is-active");
       }
     });
+
+    var allParentLis = document.querySelectorAll(".kit-toc__item.has-children, .toc-item.has-children");
+    for (var p = 0; p < allParentLis.length; p++) {
+      var pLi = allParentLis[p];
+      var hasActiveChild = !!pLi.querySelector(".kit-toc__sublist .is-active, .toc-sublist .is-active");
+      if (hasActiveChild) {
+        pLi.classList.add("has-active-child");
+      } else {
+        pLi.classList.remove("has-active-child");
+      }
+    }
 
     var mobileBar = document.querySelector(".kit-toc-mobile-bar span");
     if (mobileBar) {
@@ -1897,6 +3082,7 @@
       independence: "",
       rawAnswer: "",
       verdict: "",
+      firstTryCorrect: null,
       turns: {}
     };
   }
@@ -1933,7 +3119,13 @@
             });
           case EVIDENCE.VERDICT:
             return withQuestion(state, id, function (s, prefix) {
-              return LearnKit.setPath(s, prefix + ".verdict", action.value);
+              var cur = LearnKit.getPath(s, prefix + ".firstTryCorrect");
+              var isFirst = cur === null || cur === undefined;
+              s = LearnKit.setPath(s, prefix + ".verdict", action.value);
+              if (isFirst && (action.value === "correct" || action.value === "incorrect")) {
+                s = LearnKit.setPath(s, prefix + ".firstTryCorrect", action.value === "correct");
+              }
+              return s;
             });
           case EVIDENCE.KEY_VIEWED:
             return withQuestion(state, id, function (s, prefix) {
@@ -1992,7 +3184,7 @@
     var selected = selectedLabels(node);
     if (selected.length) return selected.join("；");
     var field = node.querySelector("textarea, input:not([type=radio]):not([type=checkbox])");
-    return field && field.value.trim() ? field.value.trim() : "";
+    return field ? field.value : "";
   }
 
   function buildLearningRecord(lesson, state) {
@@ -2020,18 +3212,21 @@
         : (q.verdict || "not-checked");
 
       var independence = q.independence;
-      if (!independence) {
-        if (q.hintUsed) independence = "with_hints";
-        else if (q.attempts > 0) independence = "independent";
-        else independence = "unknown";
-      }
+      var learnerStatement = independence ? independence : "未填写/待确认 (页内未设置自述输入)";
 
       var observed = q.observedAssistance;
       if (!observed) {
         if (q.hintUsed) observed = "with_hints (使用了页面提示)";
-        else if (q.attempts > 0) observed = "未观察到外部辅助，独立完成";
-        else observed = "未作答";
+        else if (q.answerViewed) observed = "answer_revealed (查看了解析/对照要点)";
+        else if (q.attempts > 0) observed = "none (未在页内使用提示；外部辅助不可观测)";
+        else observed = "not_attempted (未作答)";
       }
+
+      var firstTry = q.firstTryCorrect;
+      var firstTryLabel;
+      if (firstTry === true) firstTryLabel = "是";
+      else if (firstTry === false) firstTryLabel = "否（错题）";
+      else firstTryLabel = result === "not-applicable" ? "不适用" : "未判定";
 
       lines.push(
         "",
@@ -2040,10 +3235,11 @@
         "- 原始答案: " + multiline(answer),
         "- 检查次数: " + q.attempts,
         "- 使用提示: " + (q.hintUsed ? "是" : "否"),
-        "- 辅助情况（学习者自述）: " + independence,
+        "- 辅助情况（学习者自述）: " + learnerStatement,
         "- 页面观察到的帮助: " + observed,
         "- 已查看对照要点: " + (q.answerViewed ? "是（作答后）" : "否"),
-        "- 即时判定: " + result
+        "- 即时判定: " + result,
+        "- 一次做对: " + firstTryLabel
       );
       Object.keys(q.turns || {}).sort(function (a, b) { return Number(a) - Number(b); }).forEach(function (turnId) {
         var turn = q.turns[turnId];
@@ -2112,7 +3308,156 @@
     window.addEventListener("afterprint", function () { document.documentElement.classList.remove("is-printing"); });
   }
 
+  var recordsInitialized = false;
+
+  var IDB_NAME = "coursekit_records_v1";
+  var IDB_STORE = "queue";
+
+  function getDeviceId() {
+    try {
+      var k = "kit_device_id";
+      var id = localStorage.getItem(k);
+      if (!id) {
+        id = "dev-" + Math.random().toString(36).slice(2, 10);
+        localStorage.setItem(k, id);
+      }
+      return id;
+    } catch (e) {
+      return "dev-anon";
+    }
+  }
+
+  function getServeToken() {
+    try {
+      var params = new URLSearchParams(window.location.search);
+      var t = params.get("t");
+      if (t) {
+        sessionStorage.setItem("kit_serve_token", t);
+        return t;
+      }
+      return sessionStorage.getItem("kit_serve_token") || "";
+    } catch (e) {
+      return "";
+    }
+  }
+
+  function openQueueDB(cb) {
+    if (typeof indexedDB === "undefined") { cb(null); return; }
+    try {
+      var req = indexedDB.open(IDB_NAME, 1);
+      req.onupgradeneeded = function (e) {
+        var db = e.target.result;
+        if (!db.objectStoreNames.contains(IDB_STORE)) {
+          db.createObjectStore(IDB_STORE, { keyPath: "key" });
+        }
+      };
+      req.onsuccess = function (e) { cb(e.target.result); };
+      req.onerror = function () { cb(null); };
+    } catch (e) {
+      cb(null);
+    }
+  }
+
+  function saveToQueue(entry, done) {
+    openQueueDB(function (db) {
+      if (!db) {
+        try {
+          localStorage.setItem("kit_q_" + entry.key, JSON.stringify(entry));
+        } catch (e) {}
+        if (done) done();
+        return;
+      }
+      try {
+        var tx = db.transaction(IDB_STORE, "readwrite");
+        tx.objectStore(IDB_STORE).put(entry);
+        tx.oncomplete = function () { if (done) done(); };
+        tx.onerror = function () { if (done) done(); };
+      } catch (e) {
+        if (done) done();
+      }
+    });
+  }
+
+  function buildPayload(lesson, state) {
+    var rec = buildLearningRecord(lesson, state);
+    var courseId = lesson.dataset.courseId || "unknown";
+    var lessonId = lesson.dataset.lessonId || "unknown";
+    var deviceId = getDeviceId();
+    return {
+      key: courseId + "::" + lessonId + "::" + deviceId,
+      course_id: courseId,
+      lesson: lessonId,
+      objective_id: lesson.dataset.objective || "unknown",
+      device_id: deviceId,
+      user_agent: (typeof navigator !== "undefined" && navigator.userAgent) || "",
+      updated_at: new Date().toISOString(),
+      has_content: rec.hasContent,
+      state: state || {},
+      markdown: rec.text
+    };
+  }
+
+  function setupAutoSync(lesson, store) {
+    if (typeof window === "undefined" || !store || !store.subscribe) return;
+    getServeToken(); // 提前缓存 URL 中的 ?t= 令牌
+
+    var pill = document.createElement("span");
+    pill.className = "kit-sync-pill";
+    pill.setAttribute("role", "status");
+    pill.hidden = true;
+    var host = lesson.querySelector(".course-actions") || document.querySelector("[data-copy-feedback]");
+    if (host && host.parentNode) {
+      if (host.classList && host.classList.contains("course-actions")) host.appendChild(pill);
+      else host.parentNode.insertBefore(pill, host.nextSibling);
+    }
+
+    function setPill(state, text) {
+      pill.hidden = false;
+      pill.dataset.state = state;
+      pill.textContent = text;
+    }
+
+    var isHttp = window.location.protocol === "http:" || window.location.protocol === "https:";
+    var timer = null;
+
+    function pushNow() {
+      var payload = buildPayload(lesson, store.getState());
+      if (!payload.has_content) return;
+      saveToQueue(payload, function () {
+        if (!isHttp || typeof fetch === "undefined") {
+          setPill("local", "● 已暂存浏览器");
+          return;
+        }
+        var headers = { "Content-Type": "application/json" };
+        var tok = getServeToken();
+        if (tok) headers["X-Kit-Token"] = tok;
+        fetch("/api/records", {
+          method: "POST",
+          headers: headers,
+          body: JSON.stringify(payload)
+        }).then(function (r) {
+          if (r.ok) setPill("synced", "✓ 已自动同步到 records/inbox");
+          else setPill("local", "● 已暂存浏览器");
+        }).catch(function () {
+          setPill("local", "● 已暂存浏览器");
+        });
+      });
+    }
+
+    function scheduleSync() {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(pushNow, 450);
+    }
+
+    store.subscribe(scheduleSync);
+    lesson.addEventListener("input", function (e) {
+      if (e.target && e.target.matches && e.target.matches("textarea, input")) scheduleSync();
+    });
+  }
+
   function initRecords() {
+    if (recordsInitialized) return;
+    recordsInitialized = true;
     if (typeof document === "undefined") return;
     var lesson = document.querySelector(".lesson");
     if (!lesson) {
@@ -2126,7 +3471,12 @@
       lesson.__evidenceStore = store;
     }
 
+    setupAutoSync(lesson, store);
+
     Array.prototype.slice.call(document.querySelectorAll("[data-copy-feedback]")).forEach(function (button) {
+      if (button.dataset.kitBound === "true") return;
+      button.dataset.kitBound = "true";
+
       button.addEventListener("click", function () {
         var status = lesson.querySelector("[data-copy-feedback-status]");
         var record = buildLearningRecord(lesson, store ? store.getState() : {});
@@ -2153,7 +3503,12 @@
     init: initRecords
   };
 
-  if (typeof document !== "undefined") {
+  if (kit.registerModule) {
+    kit.registerModule("learning.records", kit.records);
+  }
+
+  // Standalone fallback: only listen to DOMContentLoaded if not managed by kit registry
+  if (!kit.registerModule && typeof document !== "undefined") {
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initRecords);
     else initRecords();
   }
@@ -2235,7 +3590,6 @@
     }).length;
     var ok = questionsList.filter(function (q) { return q.verdict === "correct"; }).length;
     var hintCount = questionsList.filter(function (q) { return q.hints > 0; }).length;
-    var ratio = total ? done / total : 0;
 
     summaries.forEach(function (box) {
       var sDone = box.querySelector("#s-done, [data-summary-done]");
@@ -2252,9 +3606,389 @@
     });
   }
 
+  /* ---- Question Kind Adapters Registry (Architecture §7.4 & P6) ---- */
+
+  var kindAdapters = {};
+
+  function registerKind(kind, adapter) {
+    if (!kind || !adapter) return;
+    kindAdapters[kind] = adapter;
+    if (adapter.label && !KIND_LABEL[kind]) {
+      KIND_LABEL[kind] = adapter.label;
+    }
+  }
+
+  function getKind(kind) {
+    return kindAdapters[kind];
+  }
+
+  /* 1. Choice Adapter */
+  registerKind("choice", {
+    label: "单选",
+    mount: function (ctx) {
+      var optsSrc = ctx.optsSrc;
+      if (!optsSrc) return;
+      var ol = el("ol", "q-options");
+      var inputs = [];
+      Array.prototype.forEach.call(optsSrc.children, function (li, i) {
+        var whyNode = li.querySelector("[data-why]");
+        var why = whyNode ? whyNode.textContent : "";
+        if (whyNode) whyNode.remove();
+
+        var item = el("li", "q-option");
+        if (li.hasAttribute("data-correct")) item.dataset.correct = "true";
+        var lab = el("label");
+        var inp = el("input");
+        inp.type = "radio";
+        inp.name = ctx.id;
+
+        var mark = el("span", "q-mark", String.fromCharCode(65 + i));
+        var text = el("span", "q-text");
+        text.innerHTML = li.innerHTML;
+        var w = el("p", "q-why", why);
+        text.appendChild(w);
+
+        lab.appendChild(inp);
+        lab.appendChild(mark);
+        lab.appendChild(text);
+        item.appendChild(lab);
+        ol.appendChild(item);
+
+        inputs.push({ input: inp, item: item, text: li.textContent.trim() });
+        inp.addEventListener("change", function () {
+          var checkedItems = inputs.filter(function (x) { return x.input.checked; });
+          ctx.q.raw = checkedItems.map(function (x) { return x.text; }).join("；");
+        });
+      });
+      optsSrc.remove();
+      ctx.body.appendChild(ol);
+      ctx.controls.inputs = inputs;
+    },
+    getRawAnswer: function (ctx) {
+      var inputs = ctx.controls.inputs || [];
+      var checkedItems = inputs.filter(function (x) { return x.input.checked; });
+      return checkedItems.map(function (x) { return x.text; }).join("；");
+    },
+    judge: function (ctx) {
+      var inputs = ctx.controls.inputs || [];
+      var picked = inputs.filter(function (x) { return x.input.checked; });
+      if (!picked.length) {
+        ctx.feedback.textContent = "先选择答案，再检查。";
+        ctx.feedback.dataset.tone = "info";
+        return null;
+      }
+      ctx.q.raw = picked.map(function (x) { return x.text; }).join("；");
+      return picked.length === 1 && picked[0].item.dataset.correct === "true";
+    },
+    reveal: function (ctx, isReveal) {
+      var inputs = ctx.controls.inputs || [];
+      inputs.forEach(function (x) {
+        var isRight = x.item.dataset.correct === "true";
+        var picked = x.input.checked;
+        if (picked && isRight) x.item.dataset.result = "right";
+        else if (picked && !isRight) x.item.dataset.result = "wrong";
+        else if (!picked && isRight && isReveal) x.item.dataset.result = "missed";
+        else delete x.item.dataset.result;
+      });
+    },
+    lock: function (ctx) {
+      var inputs = ctx.controls.inputs || [];
+      inputs.forEach(function (x) { x.input.disabled = true; });
+    }
+  });
+
+  /* 2. Multi-Choice Adapter */
+  registerKind("multi", {
+    label: "多选",
+    mount: function (ctx) {
+      var optsSrc = ctx.optsSrc;
+      if (!optsSrc) return;
+      var ol = el("ol", "q-options");
+      var inputs = [];
+      Array.prototype.forEach.call(optsSrc.children, function (li, i) {
+        var whyNode = li.querySelector("[data-why]");
+        var why = whyNode ? whyNode.textContent : "";
+        if (whyNode) whyNode.remove();
+
+        var item = el("li", "q-option");
+        if (li.hasAttribute("data-correct")) item.dataset.correct = "true";
+        var lab = el("label");
+        var inp = el("input");
+        inp.type = "checkbox";
+        inp.name = ctx.id;
+
+        var mark = el("span", "q-mark", String.fromCharCode(65 + i));
+        var text = el("span", "q-text");
+        text.innerHTML = li.innerHTML;
+        var w = el("p", "q-why", why);
+        text.appendChild(w);
+
+        lab.appendChild(inp);
+        lab.appendChild(mark);
+        lab.appendChild(text);
+        item.appendChild(lab);
+        ol.appendChild(item);
+
+        inputs.push({ input: inp, item: item, text: li.textContent.trim() });
+        inp.addEventListener("change", function () {
+          var checkedItems = inputs.filter(function (x) { return x.input.checked; });
+          ctx.q.raw = checkedItems.map(function (x) { return x.text; }).join("；");
+        });
+      });
+      optsSrc.remove();
+      ctx.body.appendChild(ol);
+      ctx.controls.inputs = inputs;
+    },
+    getRawAnswer: function (ctx) {
+      var inputs = ctx.controls.inputs || [];
+      var checkedItems = inputs.filter(function (x) { return x.input.checked; });
+      return checkedItems.map(function (x) { return x.text; }).join("；");
+    },
+    judge: function (ctx) {
+      var inputs = ctx.controls.inputs || [];
+      var picked = inputs.filter(function (x) { return x.input.checked; });
+      if (!picked.length) {
+        ctx.feedback.textContent = "先选择答案，再检查。";
+        ctx.feedback.dataset.tone = "info";
+        return null;
+      }
+      ctx.q.raw = picked.map(function (x) { return x.text; }).join("；");
+      var right = inputs.filter(function (x) { return x.item.dataset.correct === "true"; });
+      return picked.length === right.length && picked.every(function (x) { return x.item.dataset.correct === "true"; });
+    },
+    reveal: function (ctx, isReveal) {
+      var inputs = ctx.controls.inputs || [];
+      inputs.forEach(function (x) {
+        var isRight = x.item.dataset.correct === "true";
+        var picked = x.input.checked;
+        if (picked && isRight) x.item.dataset.result = "right";
+        else if (picked && !isRight) x.item.dataset.result = "wrong";
+        else if (!picked && isRight && isReveal) x.item.dataset.result = "missed";
+        else delete x.item.dataset.result;
+      });
+    },
+    lock: function (ctx) {
+      var inputs = ctx.controls.inputs || [];
+      inputs.forEach(function (x) { x.input.disabled = true; });
+    }
+  });
+
+  /* 3. Numeric Adapter */
+  registerKind("numeric", {
+    label: "数值",
+    mount: function (ctx) {
+      var field = el("div", "q-field");
+      var lab2 = el("label", "q-label", "你的答案");
+      lab2.setAttribute("for", ctx.id + "-in");
+      var inp2 = el("input", "q-input");
+      inp2.id = ctx.id + "-in";
+      inp2.autocomplete = "off";
+      inp2.inputMode = "decimal";
+
+      field.appendChild(lab2);
+      field.appendChild(inp2);
+      if (ctx.rootEl.dataset.unit) field.appendChild(el("span", "q-unit", ctx.rootEl.dataset.unit));
+      field.appendChild(el("p", "q-note", "允许误差 ±" + (ctx.rootEl.dataset.tolerance || 0) +
+        (ctx.rootEl.dataset.unit ? " " + ctx.rootEl.dataset.unit : "") + "。"));
+      ctx.body.appendChild(field);
+      ctx.controls.input = inp2;
+      inp2.addEventListener("input", function () { ctx.q.raw = inp2.value; });
+      inp2.addEventListener("keydown", function (e) { if (e.key === "Enter") ctx.bCheck.click(); });
+    },
+    getRawAnswer: function (ctx) {
+      return ctx.controls.input ? ctx.controls.input.value : "";
+    },
+    judge: function (ctx) {
+      var raw = ctx.controls.input ? ctx.controls.input.value : "";
+      if (!raw.trim()) {
+        ctx.feedback.textContent = "先填写答案。";
+        ctx.feedback.dataset.tone = "info";
+        return null;
+      }
+      ctx.q.raw = raw;
+      var v = Number(raw.trim());
+      var expected = Number(ctx.rootEl.dataset.expected);
+      var tol = Number(ctx.rootEl.dataset.tolerance || 0);
+      return Number.isFinite(v) && Number.isFinite(expected) && Number.isFinite(tol) && tol >= 0 && Math.abs(v - expected) <= tol;
+    },
+    reveal: function (ctx) {
+      if (ctx.controls.input) ctx.controls.input.value = ctx.rootEl.dataset.expected || "";
+    },
+    lock: function (ctx) {
+      if (ctx.controls.input) ctx.controls.input.readOnly = true;
+    }
+  });
+
+  /* 4. Fill Adapter */
+  registerKind("fill", {
+    label: "填空",
+    mount: function (ctx) {
+      var field = el("div", "q-field");
+      var lab2 = el("label", "q-label", "填写答案");
+      lab2.setAttribute("for", ctx.id + "-in");
+      var inp2 = el("input", "q-input");
+      inp2.id = ctx.id + "-in";
+      inp2.autocomplete = "off";
+
+      field.appendChild(lab2);
+      field.appendChild(inp2);
+      if (ctx.rootEl.dataset.unit) field.appendChild(el("span", "q-unit", ctx.rootEl.dataset.unit));
+      ctx.body.appendChild(field);
+      ctx.controls.input = inp2;
+      inp2.addEventListener("input", function () { ctx.q.raw = inp2.value; });
+      inp2.addEventListener("keydown", function (e) { if (e.key === "Enter") ctx.bCheck.click(); });
+    },
+    getRawAnswer: function (ctx) {
+      return ctx.controls.input ? ctx.controls.input.value : "";
+    },
+    judge: function (ctx) {
+      var raw = ctx.controls.input ? ctx.controls.input.value : "";
+      if (!raw.trim()) {
+        ctx.feedback.textContent = "先填写答案。";
+        ctx.feedback.dataset.tone = "info";
+        return null;
+      }
+      ctx.q.raw = raw;
+      var acc = [];
+      try { acc = JSON.parse(ctx.rootEl.dataset.accepted || "[]"); } catch (e) { acc = []; }
+      var cs = ctx.rootEl.dataset.caseSensitive === "true";
+      return Array.isArray(acc) && acc.some(function (a) { return norm(a, cs) === norm(raw, cs); });
+    },
+    reveal: function (ctx) {
+      try {
+        var acc = JSON.parse(ctx.rootEl.dataset.accepted || "[]");
+        if (ctx.controls.input && acc.length) ctx.controls.input.value = acc[0];
+      } catch (e) {}
+    },
+    lock: function (ctx) {
+      if (ctx.controls.input) ctx.controls.input.readOnly = true;
+    }
+  });
+
+  /* 5. Open Question Adapter */
+  registerKind("open", {
+    label: "开放",
+    checkButtonText: "保存并查看对照要点",
+    mount: function (ctx) {
+      var field3 = el("div", "q-field");
+      var lab3 = el("label", "q-label", "写下你的纠正、条件与反例");
+      lab3.setAttribute("for", ctx.id + "-in");
+      var ta = el("textarea", "q-textarea");
+      ta.id = ctx.id + "-in";
+      var cnt = el("span", "q-count", "0 字");
+      ta.addEventListener("input", function () {
+        cnt.textContent = ta.value.length + " 字";
+        ctx.q.raw = ta.value;
+      });
+      field3.appendChild(lab3);
+      field3.appendChild(ta);
+      field3.appendChild(cnt);
+      ctx.body.appendChild(field3);
+      ctx.controls.input = ta;
+      if (ctx.keySrc) ctx.keySrc.remove();
+    },
+    getRawAnswer: function (ctx) {
+      return ctx.controls.input ? ctx.controls.input.value : "";
+    },
+    submit: function (ctx) {
+      var rawText = ctx.controls.input ? ctx.controls.input.value : "";
+      if (!rawText.trim()) {
+        if (ctx.controls.input) ctx.controls.input.focus();
+        ctx.feedback.textContent = "先写下自己的回答。";
+        ctx.feedback.dataset.tone = "info";
+        return;
+      }
+      ctx.q.raw = rawText;
+      ctx.q.attempts = 1;
+      ctx.key.hidden = false;
+      renderMath(ctx.key);
+      if (ctx.controls.input) ctx.controls.input.readOnly = true;
+      ctx.bCheck.disabled = true;
+      ctx.dispatch({ type: EVIDENCE.RAW_ANSWER, id: ctx.id, value: rawText });
+      ctx.dispatch({ type: EVIDENCE.KEY_VIEWED, id: ctx.id });
+      ctx.setState("saved", "info", "回答已保存，请对照要点自查差距。");
+    },
+    lock: function (ctx) {
+      if (ctx.controls.input) ctx.controls.input.readOnly = true;
+    }
+  });
+
+  /* 6. Dialogue Adapter */
+  registerKind("dialogue", {
+    label: "对话",
+    checkButtonText: "保存本轮并继续",
+    mount: function (ctx) {
+      var wrap = el("div", "q-turns");
+      var turns = [];
+      if (ctx.turnsSrc) {
+        Array.prototype.forEach.call(ctx.turnsSrc.children, function (li, i) {
+          var t = el("div", "q-turn");
+          t.hidden = i > 0;
+          var promptText = li.dataset.prompt || li.textContent.trim();
+          var p = el("label", "q-turn-prompt", promptText);
+          p.setAttribute("for", ctx.id + "-t" + i);
+          var ta2 = el("textarea", "q-textarea");
+          ta2.id = ctx.id + "-t" + i;
+          t.appendChild(p);
+          t.appendChild(ta2);
+          wrap.appendChild(t);
+          turns.push({ node: t, ta: ta2, guidance: li.dataset.guidance });
+        });
+        ctx.turnsSrc.remove();
+      }
+      ctx.body.appendChild(wrap);
+      ctx.controls.turns = turns;
+      ctx.controls.cur = 0;
+    },
+    getRawAnswer: function (ctx) {
+      var turns = ctx.controls.turns || [];
+      var cur = turns[ctx.controls.cur];
+      return cur ? cur.ta.value : "";
+    },
+    submit: function (ctx) {
+      var cur = ctx.controls.turns[ctx.controls.cur];
+      if (!cur) return;
+      var val = cur.ta.value;
+      if (!val.trim()) {
+        cur.ta.focus();
+        ctx.feedback.textContent = "先留下自己的回答，再继续。";
+        ctx.feedback.dataset.tone = "info";
+        return;
+      }
+      cur.ta.readOnly = true;
+      cur.node.dataset.done = "";
+      ctx.q.attempts = ctx.controls.cur + 1;
+      var turnId = String(ctx.controls.cur + 1);
+      ctx.dispatch({ type: EVIDENCE.TURN_RAW, id: ctx.id, turn: turnId, value: val });
+      ctx.dispatch({ type: EVIDENCE.TURN_SUBMITTED, id: ctx.id, turn: turnId });
+
+      if (ctx.controls.cur + 1 < ctx.controls.turns.length) {
+        ctx.controls.cur++;
+        var nextTurn = ctx.controls.turns[ctx.controls.cur];
+        nextTurn.node.hidden = false;
+        if (nextTurn.guidance) ctx.setAssistance(nextTurn.guidance);
+        nextTurn.ta.focus();
+        if (ctx.controls.cur + 1 === ctx.controls.turns.length) ctx.bCheck.textContent = "保存最后一轮";
+        ctx.setState("idle", "info", "上一轮已保留。请回答新的追问。");
+      } else {
+        ctx.bCheck.disabled = true;
+        ctx.setState("saved", "info", "各轮回答已保留，可复制学习记录给老师评估。");
+      }
+      ctx.meta.textContent = "已完成 " + ctx.q.attempts + "/" + ctx.controls.turns.length + " 轮" + (ctx.q.hints ? " · 提示 " + ctx.q.hints : "");
+    },
+    lock: function (ctx) {
+      if (ctx.controls.turns) {
+        ctx.controls.turns.forEach(function (t) { t.ta.readOnly = true; });
+      }
+    }
+  });
+
   /* ---- Modern Question Enhancer (Architecture §7.4) ---- */
 
   function enhanceModernQuestion(rootEl, index, store) {
+    if (rootEl.dataset.kitEnhanced === "true") return;
+    rootEl.dataset.kitEnhanced = "true";
+
     var kind = rootEl.dataset.kind || "choice";
     var id = rootEl.dataset.questionId || ("q" + (index + 1));
     var maxAttempts = Number(rootEl.dataset.maxAttempts || 2);
@@ -2265,7 +3999,7 @@
       attempts: 0,
       hints: 0,
       verdict: "",
-      assist: "independent",
+      observedAssistance: null,
       revealed: false,
       raw: null
     };
@@ -2316,12 +4050,13 @@
     key.hidden = true;
     key.innerHTML = "<b>对照要点</b>" + keyHtml;
 
+    var adapter = getKind(kind) || getKind("choice");
+
     var actions = el("div", "q-actions");
     var bHint = el("button", "btn ghost", "需要提示");
     bHint.type = "button";
-    var bCheck = el("button", "btn primary",
-      kind === "open" ? "保存并查看对照要点" :
-      kind === "dialogue" ? "保存本轮并继续" : "检查答案");
+    var defaultCheckText = adapter && adapter.checkButtonText ? adapter.checkButtonText : "检查答案";
+    var bCheck = el("button", "btn primary", defaultCheckText);
     bCheck.type = "button";
     var bReveal = el("button", "btn", "查看答案");
     bReveal.type = "button";
@@ -2331,100 +4066,80 @@
     actions.appendChild(bCheck);
     actions.appendChild(bReveal);
 
-    var inputs = [];
-    if ((kind === "choice" || kind === "multi") && optsSrc) {
-      var ol = el("ol", "q-options");
-      Array.prototype.forEach.call(optsSrc.children, function (li, i) {
-        var whyNode = li.querySelector("[data-why]");
-        var why = whyNode ? whyNode.textContent : "";
-        if (whyNode) whyNode.remove();
+    function dispatch(action) {
+      if (store && store.dispatch) store.dispatch(action);
+    }
 
-        var item = el("li", "q-option");
-        if (li.hasAttribute("data-correct")) item.dataset.correct = "true";
-        var lab = el("label");
-        var inp = el("input");
-        inp.type = kind === "multi" ? "checkbox" : "radio";
-        inp.name = id;
-
-        var mark = el("span", "q-mark", String.fromCharCode(65 + i));
-        var text = el("span", "q-text");
-        text.innerHTML = li.innerHTML;
-        var w = el("p", "q-why", why);
-        text.appendChild(w);
-
-        lab.appendChild(inp);
-        lab.appendChild(mark);
-        lab.appendChild(text);
-        item.appendChild(lab);
-        ol.appendChild(item);
-
-        inputs.push({ input: inp, item: item, text: li.textContent.trim() });
-        inp.addEventListener("change", function () {
-          var checkedItems = inputs.filter(function (x) { return x.input.checked; });
-          q.raw = checkedItems.map(function (x) { return x.text; }).join("；");
-        });
-      });
-      optsSrc.remove();
-      body.appendChild(ol);
-    } else if (kind === "numeric" || kind === "fill") {
-      var field = el("div", "q-field");
-      var lab2 = el("label", "q-label", kind === "numeric" ? "你的答案" : "填写答案");
-      lab2.setAttribute("for", id + "-in");
-      var inp2 = el("input", "q-input");
-      inp2.id = id + "-in";
-      inp2.autocomplete = "off";
-      if (kind === "numeric") inp2.inputMode = "decimal";
-
-      field.appendChild(lab2);
-      field.appendChild(inp2);
-      if (rootEl.dataset.unit) field.appendChild(el("span", "q-unit", rootEl.dataset.unit));
-      if (kind === "numeric") {
-        field.appendChild(el("p", "q-note", "允许误差 ±" + (rootEl.dataset.tolerance || 0) +
-          (rootEl.dataset.unit ? " " + rootEl.dataset.unit : "") + "。"));
+    function setAssistance(level) {
+      if (q.observedAssistance === "ai_guided") return;
+      if (level === "ai_guided" || (q.observedAssistance !== "with_hints" && level === "with_hints")) {
+        q.observedAssistance = level;
       }
-      body.appendChild(field);
-      controls.input = inp2;
-      inp2.addEventListener("input", function () { q.raw = inp2.value; });
-      inp2.addEventListener("keydown", function (e) { if (e.key === "Enter") bCheck.click(); });
-    } else if (kind === "open") {
-      var field3 = el("div", "q-field");
-      var lab3 = el("label", "q-label", "写下你的纠正、条件与反例");
-      lab3.setAttribute("for", id + "-in");
-      var ta = el("textarea", "q-textarea");
-      ta.id = id + "-in";
-      var cnt = el("span", "q-count", "0 字");
-      ta.addEventListener("input", function () {
-        cnt.textContent = ta.value.length + " 字";
-        q.raw = ta.value;
-      });
-      field3.appendChild(lab3);
-      field3.appendChild(ta);
-      field3.appendChild(cnt);
-      body.appendChild(field3);
-      controls.input = ta;
-      if (keySrc) keySrc.remove();
-    } else if (kind === "dialogue") {
-      var wrap = el("div", "q-turns");
-      var turns = [];
-      if (turnsSrc) {
-        Array.prototype.forEach.call(turnsSrc.children, function (li, i) {
-          var t = el("div", "q-turn");
-          t.hidden = i > 0;
-          var promptText = li.dataset.prompt || li.textContent.trim();
-          var p = el("label", "q-turn-prompt", promptText);
-          p.setAttribute("for", id + "-t" + i);
-          var ta2 = el("textarea", "q-textarea");
-          ta2.id = id + "-t" + i;
-          t.appendChild(p);
-          t.appendChild(ta2);
-          wrap.appendChild(t);
-          turns.push({ node: t, ta: ta2, guidance: li.dataset.guidance });
-        });
-        turnsSrc.remove();
+      rootEl.dataset.observedAssistance = q.observedAssistance;
+      dispatch({ type: EVIDENCE.OBSERVED_ASSISTANCE, id: id, value: q.observedAssistance });
+    }
+
+    function setState(s, tone, msg) {
+      q.verdict = s;
+      rootEl.dataset.state = s;
+      rootEl.dataset.attempts = String(q.attempts);
+      rootEl.dataset.hintUsed = q.hints > 0 ? "true" : "false";
+      if (q.observedAssistance) {
+        rootEl.dataset.observedAssistance = q.observedAssistance;
       }
-      body.appendChild(wrap);
-      controls.turns = turns;
-      controls.cur = 0;
+
+      stateChip.textContent = STATE_LABEL[s] || s;
+      feedback.textContent = msg || "";
+      feedback.dataset.tone = tone || "";
+      feedback.dataset.state = s;
+
+      var parts = [];
+      if (q.attempts) parts.push("第 " + q.attempts + " 次作答");
+      if (q.hints) parts.push("提示 " + q.hints + "/" + hintNodes.length);
+      if (s === "correct" || s === "saved") {
+        parts.push(q.hints > 0 ? (q.observedAssistance === "ai_guided" ? "AI引导" : "用过提示") : "未用提示");
+      }
+      meta.textContent = parts.join(" · ");
+      updateSummary();
+    }
+
+    function lock() {
+      rootEl.dataset.locked = "";
+      actions.querySelectorAll("button").forEach(function (b) {
+        if (b !== bReveal) b.disabled = true;
+      });
+      if (adapter && adapter.lock) {
+        adapter.lock(ctx);
+      }
+      bReveal.hidden = true;
+    }
+
+    var ctx = {
+      rootEl: rootEl,
+      id: id,
+      kind: kind,
+      body: body,
+      stem: stem,
+      optsSrc: optsSrc,
+      keySrc: keySrc,
+      turnsSrc: turnsSrc,
+      explain: explain,
+      key: key,
+      q: q,
+      dispatch: dispatch,
+      renderMath: renderMath,
+      bCheck: bCheck,
+      bReveal: bReveal,
+      feedback: feedback,
+      meta: meta,
+      setState: setState,
+      setAssistance: setAssistance,
+      lock: lock,
+      controls: controls
+    };
+
+    if (adapter && adapter.mount) {
+      adapter.mount(ctx);
     }
 
     if (hintsSrc) hintsSrc.remove();
@@ -2439,52 +4154,6 @@
     rootEl.appendChild(feedback);
     rootEl.appendChild(explain);
     rootEl.appendChild(key);
-
-    function dispatch(action) {
-      if (store && store.dispatch) store.dispatch(action);
-    }
-
-    function setAssistance(level) {
-      if (q.assist === "ai_guided") return;
-      if (level === "ai_guided" || (q.assist !== "with_hints" && level === "with_hints")) {
-        q.assist = level;
-      }
-      rootEl.dataset.assistance = q.assist;
-      dispatch({ type: EVIDENCE.OBSERVED_ASSISTANCE, id: id, value: q.assist });
-      dispatch({ type: EVIDENCE.INDEPENDENCE, id: id, value: q.assist });
-    }
-
-    function setState(s, tone, msg) {
-      q.verdict = s;
-      rootEl.dataset.state = s;
-      rootEl.dataset.attempts = String(q.attempts);
-      rootEl.dataset.hintUsed = q.hints > 0 ? "true" : "false";
-      rootEl.dataset.independence = q.assist;
-
-      stateChip.textContent = STATE_LABEL[s] || s;
-      feedback.textContent = msg || "";
-      feedback.dataset.tone = tone || "";
-      feedback.dataset.state = s;
-
-      var parts = [];
-      if (q.attempts) parts.push("第 " + q.attempts + " 次作答");
-      if (q.hints) parts.push("提示 " + q.hints + "/" + hintNodes.length);
-      if (s === "correct" || s === "saved") {
-        parts.push(q.assist === "independent" ? "独立完成" : q.assist === "ai_guided" ? "AI引导" : "用过提示");
-      }
-      meta.textContent = parts.join(" · ");
-      updateSummary();
-    }
-
-    function lock() {
-      rootEl.dataset.locked = "";
-      actions.querySelectorAll("button").forEach(function (b) {
-        if (b !== bReveal) b.disabled = true;
-      });
-      inputs.forEach(function (x) { x.input.disabled = true; });
-      if (controls.input) controls.input.readOnly = true;
-      bReveal.hidden = true;
-    }
 
     bHint.addEventListener("click", function () {
       if (q.hints >= hintNodes.length) return;
@@ -2509,116 +4178,31 @@
       setState(q.verdict || "idle", feedback.dataset.tone, feedback.textContent);
     });
 
-    function showAnswerResult(reveal) {
-      inputs.forEach(function (x) {
-        var isRight = x.item.dataset.correct === "true";
-        var picked = x.input.checked;
-        if (picked && isRight) x.item.dataset.result = "right";
-        else if (picked && !isRight) x.item.dataset.result = "wrong";
-        else if (!picked && isRight && reveal) x.item.dataset.result = "missed";
-        else delete x.item.dataset.result;
-      });
-    }
-
-    function judge() {
-      if (kind === "choice" || kind === "multi") {
-        var picked = inputs.filter(function (x) { return x.input.checked; });
-        if (!picked.length) {
-          feedback.textContent = "先选择答案，再检查。";
-          feedback.dataset.tone = "info";
-          return null;
-        }
-        var right = inputs.filter(function (x) { return x.item.dataset.correct === "true"; });
-        var ok = picked.length === right.length && picked.every(function (x) { return x.item.dataset.correct === "true"; });
-        q.raw = picked.map(function (x) { return x.text; }).join("；");
-        return ok;
-      }
-      var raw = controls.input ? controls.input.value : "";
-      if (!raw.trim()) {
-        feedback.textContent = "先填写答案。";
-        feedback.dataset.tone = "info";
-        return null;
-      }
-      q.raw = raw;
-      if (kind === "numeric") {
-        var v = Number(raw);
-        var expected = Number(rootEl.dataset.expected);
-        var tol = Number(rootEl.dataset.tolerance || 0);
-        return Number.isFinite(v) && Number.isFinite(expected) && Number.isFinite(tol) && tol >= 0 && Math.abs(v - expected) <= tol;
-      }
-      var acc = [];
-      try { acc = JSON.parse(rootEl.dataset.accepted || "[]"); } catch (e) { acc = []; }
-      var cs = rootEl.dataset.caseSensitive === "true";
-      return Array.isArray(acc) && acc.some(function (a) { return norm(a, cs) === norm(raw, cs); });
-    }
-
     bCheck.addEventListener("click", function () {
-      if (kind === "open") {
-        var rawText = controls.input ? controls.input.value.trim() : "";
-        if (!rawText) {
-          if (controls.input) controls.input.focus();
-          feedback.textContent = "先写下自己的回答。";
-          feedback.dataset.tone = "info";
-          return;
-        }
-        q.attempts = 1;
-        key.hidden = false;
-        renderMath(key);
-        if (controls.input) controls.input.readOnly = true;
-        bCheck.disabled = true;
-        dispatch({ type: EVIDENCE.RAW_ANSWER, id: id, value: rawText });
-        dispatch({ type: EVIDENCE.KEY_VIEWED, id: id });
-        setState("saved", "info", "回答已保存，请对照要点自查差距。");
-        return;
-      }
-      if (kind === "dialogue") {
-        var cur = controls.turns[controls.cur];
-        var val = cur.ta.value.trim();
-        if (!val) {
-          cur.ta.focus();
-          feedback.textContent = "先留下自己的回答，再继续。";
-          feedback.dataset.tone = "info";
-          return;
-        }
-        cur.ta.readOnly = true;
-        cur.node.dataset.done = "";
-        q.attempts = controls.cur + 1;
-        var turnId = String(controls.cur + 1);
-        dispatch({ type: EVIDENCE.TURN_RAW, id: id, turn: turnId, value: val });
-        dispatch({ type: EVIDENCE.TURN_SUBMITTED, id: id, turn: turnId });
-
-        if (controls.cur + 1 < controls.turns.length) {
-          controls.cur++;
-          var nextTurn = controls.turns[controls.cur];
-          nextTurn.node.hidden = false;
-          if (nextTurn.guidance) setAssistance(nextTurn.guidance);
-          nextTurn.ta.focus();
-          if (controls.cur + 1 === controls.turns.length) bCheck.textContent = "保存最后一轮";
-          setState("idle", "info", "上一轮已保留。请回答新的追问。");
-        } else {
-          bCheck.disabled = true;
-          setState("saved", "info", "各轮回答已保留，可复制学习记录给老师评估。");
-        }
-        meta.textContent = "已完成 " + q.attempts + "/" + controls.turns.length + " 轮" + (q.hints ? " · 提示 " + q.hints : "");
+      if (adapter && adapter.submit) {
+        adapter.submit(ctx);
         return;
       }
 
-      var ok = judge();
+      if (!adapter || !adapter.judge) return;
+      var ok = adapter.judge(ctx);
       if (ok === null) return;
       q.attempts++;
 
-      dispatch({ type: EVIDENCE.RAW_ANSWER, id: id, value: q.raw });
+      var rawAns = adapter.getRawAnswer ? adapter.getRawAnswer(ctx) : q.raw;
+      q.raw = rawAns;
+      dispatch({ type: EVIDENCE.RAW_ANSWER, id: id, value: rawAns });
       dispatch({ type: EVIDENCE.ATTEMPT, id: id });
       dispatch({ type: EVIDENCE.VERDICT, id: id, value: ok ? "correct" : "incorrect" });
 
       if (ok) {
-        showAnswerResult(true);
+        if (adapter.reveal) adapter.reveal(ctx, true);
         explain.hidden = false;
         renderMath(explain);
         lock();
         setState("correct", "correct", "回答正确。请用一句话说明判断依据。");
       } else {
-        showAnswerResult(false);
+        if (adapter.reveal) adapter.reveal(ctx, false);
         var left = maxAttempts - q.attempts;
         if (left <= 0) bReveal.hidden = false;
         bCheck.textContent = "再检查一次";
@@ -2629,19 +4213,12 @@
     });
 
     bReveal.addEventListener("click", function () {
-      if (kind === "numeric") {
-        if (controls.input) controls.input.value = rootEl.dataset.expected || "";
-      } else if (kind === "fill") {
-        try {
-          var acc = JSON.parse(rootEl.dataset.accepted || "[]");
-          if (controls.input && acc.length) controls.input.value = acc[0];
-        } catch (e) {}
-      }
-      showAnswerResult(true);
+      if (adapter && adapter.reveal) adapter.reveal(ctx, true);
       explain.hidden = false;
       renderMath(explain);
       lock();
       dispatch({ type: EVIDENCE.KEY_VIEWED, id: id });
+      setAssistance("answer_revealed");
       setState("incorrect", "incorrect", "已显示答案。回头想想：当时哪一步判断偏了？");
       q.revealed = true;
     });
@@ -2652,7 +4229,11 @@
 
   /* ---- Main Init ---- */
 
+  var questionsInitialized = false;
+
   function initQuestions() {
+    if (questionsInitialized) return;
+    questionsInitialized = true;
     if (typeof document === "undefined") return;
     var lesson = document.querySelector(".lesson") || document.body;
     var store = lesson.__evidenceStore;
@@ -2669,6 +4250,61 @@
       enhanceModernQuestion(qEl, i, store);
     });
 
+    // Support legacy answer elements ([data-answer-input] + [data-answer-check])
+    var legacySelector = "[data-question-id]:has([data-answer-input]), section[data-question-id][data-answer-kind]";
+    var legacyEls = Array.prototype.slice.call(document.querySelectorAll(legacySelector));
+    legacyEls.forEach(function (task) {
+      if (task.dataset.kitEnhanced === "true") return;
+      task.dataset.kitEnhanced = "true";
+      var id = task.dataset.questionId;
+      var input = task.querySelector("[data-answer-input]");
+      var button = task.querySelector("[data-answer-check]");
+      var feedback = task.querySelector("[data-role~=answer-feedback]") || task.querySelector("[data-role=answer-feedback]");
+      function normalize(value) {
+        var text = String(value).normalize("NFKC").trim();
+        return task.dataset.caseSensitive === "true" ? text : text.toLocaleLowerCase();
+      }
+      if (input) {
+        input.addEventListener("input", function () {
+          var curStore = (lesson && lesson.__evidenceStore) || store;
+          if (curStore && curStore.dispatch) {
+            curStore.dispatch({ type: EVIDENCE.RAW_ANSWER, id: id, value: input.value });
+          }
+        });
+      }
+      if (button && input) {
+        button.addEventListener("click", function () {
+          var raw = input.value;
+          if (!raw.trim()) {
+            if (feedback) feedback.textContent = "先填写答案。";
+            return;
+          }
+          var correct = false;
+          if (task.dataset.answerKind === "numeric") {
+            var value = Number(raw), expected = Number(task.dataset.expected);
+            var tolerance = Number(task.dataset.tolerance || 0);
+            correct = Number.isFinite(value) && Number.isFinite(expected) && Number.isFinite(tolerance) && tolerance >= 0 && Math.abs(value - expected) <= tolerance;
+          } else {
+            var accepted = [];
+            try { accepted = JSON.parse(task.dataset.accepted || "[]"); } catch (e) { accepted = []; }
+            correct = Array.isArray(accepted) && accepted.some(function (answer) {
+              return typeof answer === "string" && normalize(answer) === normalize(raw);
+            });
+          }
+          var curStore = (lesson && lesson.__evidenceStore) || store;
+          if (curStore && curStore.dispatch) {
+            curStore.dispatch({ type: EVIDENCE.RAW_ANSWER, id: id, value: raw });
+            curStore.dispatch({ type: EVIDENCE.ATTEMPT, id: id });
+            curStore.dispatch({ type: EVIDENCE.VERDICT, id: id, value: correct ? "correct" : "incorrect" });
+          }
+          if (feedback) {
+            feedback.textContent = correct ? (task.dataset.correctText || "本题正确。请解释依据。") : (task.dataset.incorrectText || "再检查条件与方法。");
+            feedback.dataset.state = correct ? "correct" : "incorrect";
+          }
+        });
+      }
+    });
+
     updateSummary();
 
     if (kit.ready && kit.ready.markReady) {
@@ -2677,12 +4313,20 @@
   }
 
   kit.question = {
+    registerKind: registerKind,
+    getKind: getKind,
+    adapters: kindAdapters,
     enhance: enhanceModernQuestion,
     updateSummary: updateSummary,
     init: initQuestions
   };
 
-  if (typeof document !== "undefined") {
+  if (kit.registerModule) {
+    kit.registerModule("learning.question", kit.question);
+  }
+
+  // Standalone fallback: only listen to DOMContentLoaded if not managed by kit registry
+  if (!kit.registerModule && typeof document !== "undefined") {
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initQuestions);
     else initQuestions();
   }
@@ -2801,84 +4445,394 @@
   root.CourseVisualizations = api;
   kit.viz = api;
 
-  async function init() {
-    if (!document) return;
-    var nodes = Array.prototype.slice.call(document.querySelectorAll("[data-visualization]"));
-    await Promise.all(nodes.map(async function (node) {
-      try {
-        node.dataset.kitState = "pending";
-        var configNode = find(node, "[data-viz-config]");
-        if (!configNode) throw new Error("缺少 data-viz-config");
-        var kind = node.dataset.visualization, config = validateConfig(kind, JSON.parse(configNode.textContent));
-        var sourceStore = null;
-        if (node.dataset.vizSource) {
-          var source = document.querySelector(node.dataset.vizSource);
-          sourceStore = source && source.__learnkitStore;
-          if (!sourceStore) throw new Error("data-viz-source 未找到 LearnKit 状态源：" + node.dataset.vizSource);
-        }
-        var instance = await adapters[kind].render(node, config, { sourceStore: sourceStore });
-        var instanceUpdate = instance && typeof instance.update === "function" ? instance.update : adapters[kind].update;
-        if (sourceStore && typeof instanceUpdate !== "function") throw new Error("此适配器不支持 data-viz-source 动态更新");
-        if (sourceStore) {
-          var revision = 0;
-          var update = function (snapshot) {
-            var current = ++revision;
-            function failed(error) {
-              if (current !== revision) return;
-              node.dataset.vizReady = "failed";
-              node.dataset.kitState = "failed";
-              var host = find(node, "[data-viz-host]"); if (host) host.hidden = true;
-              status(node, error.message);
-            }
-            try {
-              var result = instanceUpdate(node, config, snapshot, instance);
-              if (result && typeof result.then === "function") {
-                node.dataset.vizReady = "pending";
-                node.dataset.kitState = "pending";
-                return Promise.resolve(result).then(function () {
-                  if (current === revision) {
-                    node.dataset.vizReady = "true";
-                    node.dataset.kitState = "ready";
+  var initPromise = null;
+
+  function init() {
+    if (!document) return Promise.resolve();
+    if (initPromise) return initPromise;
+    initPromise = (async function () {
+      var nodes = Array.prototype.slice.call(document.querySelectorAll("[data-visualization]"));
+      await Promise.all(nodes.map(async function (node) {
+        if (node.dataset.kitEnhanced === "true") return;
+        node.dataset.kitEnhanced = "true";
+        try {
+          node.dataset.kitState = "pending";
+          var configNode = find(node, "[data-viz-config]");
+          if (!configNode) throw new Error("缺少 data-viz-config");
+          var kind = node.dataset.visualization, config = validateConfig(kind, JSON.parse(configNode.textContent));
+          var sourceStore = null;
+          if (node.dataset.vizSource) {
+            var source = document.querySelector(node.dataset.vizSource);
+            sourceStore = source && source.__learnkitStore;
+            if (!sourceStore && typeof setTimeout === "function") {
+              await new Promise(function (resolve) {
+                var checkCount = 0;
+                var interval = setInterval(function () {
+                  checkCount++;
+                  sourceStore = source && source.__learnkitStore;
+                  if (sourceStore || checkCount >= 10) {
+                    clearInterval(interval);
+                    resolve();
                   }
-                }, failed);
+                }, 10);
+              });
+            }
+            if (!sourceStore) throw new Error("data-viz-source 未找到 LearnKit 状态源：" + node.dataset.vizSource);
+          }
+          var instance = await adapters[kind].render(node, config, { sourceStore: sourceStore });
+          var instanceUpdate = instance && typeof instance.update === "function" ? instance.update : adapters[kind].update;
+          if (sourceStore && typeof instanceUpdate !== "function") throw new Error("此适配器不支持 data-viz-source 动态更新");
+          if (sourceStore) {
+            var revision = 0;
+            var update = function (snapshot) {
+              var current = ++revision;
+              function failed(error) {
+                if (current !== revision) return;
+                node.dataset.vizReady = "failed";
+                node.dataset.kitState = "failed";
+                var host = find(node, "[data-viz-host]"); if (host) host.hidden = true;
+                status(node, error.message);
               }
-              node.dataset.vizReady = "true";
-              node.dataset.kitState = "ready";
-            } catch (error) { failed(error); }
-          };
-          node.__vizUnsubscribe = sourceStore.subscribe(update);
-          await update(sourceStore.snapshot());
+              try {
+                var result = instanceUpdate(node, config, snapshot, instance);
+                if (result && typeof result.then === "function") {
+                  node.dataset.vizReady = "pending";
+                  node.dataset.kitState = "pending";
+                  return Promise.resolve(result).then(function () {
+                    if (current === revision) {
+                      node.dataset.vizReady = "true";
+                      node.dataset.kitState = "ready";
+                    }
+                  }, failed);
+                }
+                node.dataset.vizReady = "true";
+                node.dataset.kitState = "ready";
+              } catch (error) { failed(error); }
+            };
+            node.__vizUnsubscribe = sourceStore.subscribe(update);
+            await update(sourceStore.snapshot());
+          }
+          if ((sourceStore || instance && typeof instance.destroy === "function") && root.addEventListener) {
+            node.__vizDestroy = function () {
+              if (node.__vizUnsubscribe) node.__vizUnsubscribe();
+              if (instance && instance.destroy) instance.destroy();
+            };
+            root.addEventListener("pagehide", node.__vizDestroy, { once: true });
+          }
+          if (node.dataset.vizReady !== "failed") {
+            node.dataset.vizReady = "true";
+            node.dataset.kitState = "ready";
+          }
+        } catch (error) {
+          node.dataset.vizReady = "failed";
+          node.dataset.kitState = "failed";
+          var host = find(node, "[data-viz-host]"), controls = find(node, "[data-viz-controls]");
+          if (host) host.hidden = true;
+          if (controls) controls.hidden = true;
+          status(node, error.message);
         }
-        if ((sourceStore || instance && typeof instance.destroy === "function") && root.addEventListener) {
-          node.__vizDestroy = function () {
-            if (node.__vizUnsubscribe) node.__vizUnsubscribe();
-            if (instance && instance.destroy) instance.destroy();
-          };
-          root.addEventListener("pagehide", node.__vizDestroy, { once: true });
-        }
-        if (node.dataset.vizReady !== "failed") {
-          node.dataset.vizReady = "true";
-          node.dataset.kitState = "ready";
-        }
-      } catch (error) {
-        node.dataset.vizReady = "failed";
-        node.dataset.kitState = "failed";
-        var host = find(node, "[data-viz-host]"), controls = find(node, "[data-viz-controls]");
-        if (host) host.hidden = true;
-        if (controls) controls.hidden = true;
-        status(node, error.message);
-      }
-    }));
-    root.__COURSE_VISUALIZATIONS_READY__ = true;
-    if (kit.ready && kit.ready.markReady) {
-      kit.ready.markReady("viz.core");
-    }
+      }));
+      root.__COURSE_VISUALIZATIONS_READY__ = true;
+    })();
+    return initPromise;
   }
 
   api.init = init;
 
-  if (document && document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
-  else if (document) init();
+  if (kit.registerModule) {
+    kit.registerModule("viz.core", api);
+  }
+
+  // Fallback trigger ONLY in isolated / test harness environments where registry coordinator is absent
+  if (!kit.registerModule && !kit.registry && typeof setTimeout === "function" && typeof document !== "undefined") {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", function () {
+        init();
+      }, { once: true });
+    } else {
+      setTimeout(function () {
+        init();
+      }, 0);
+    }
+  }
+})(typeof window !== "undefined" ? window : globalThis);
+
+  })();
+
+  /* ---- Module: viz.kinds.chart (chart.js) ---- */
+  (function () {
+(function (root) {
+  "use strict";
+
+  var kit = root.CourseKit = root.CourseKit || {};
+  root.kit = root.kit || kit;
+  var core = root.CourseVisualizations || kit.viz;
+  if (!core) return;
+  var h = core.helpers;
+
+  function validateChart(config) {
+    core.validateCommon(config);
+    if (!Array.isArray(config.traces) || !config.traces.length)
+      throw new Error("chart 需要 traces");
+    config.traces.forEach(function (trace) {
+      if (!trace || typeof trace !== "object")
+        throw new Error("chart trace 必须是对象");
+      var type = trace.type || "scatter";
+      if (["scatter", "bar", "surface", "heatmap"].indexOf(type) < 0)
+        throw new Error("chart 不支持 " + type);
+      if (type === "bar" || type === "scatter") {
+        var numeric = h.finiteArray(trace.x);
+        var categories =
+          Array.isArray(trace.x) &&
+          trace.x.length &&
+          trace.x.every(function (x) {
+            return typeof x === "string" && x.trim();
+          });
+        if (
+          !(numeric || categories) ||
+          !Array.isArray(trace.y) ||
+          trace.x.length !== trace.y.length ||
+          !trace.y.some(h.finite) ||
+          trace.y.some(function (v) {
+            return v !== null && !h.finite(v);
+          })
+        )
+          throw new Error("chart x 必须同为数值或分类，y 为等长有限数值/空缺数组");
+      } else if (
+        !h.finiteArray(trace.x) ||
+        !h.finiteArray(trace.y) ||
+        !Array.isArray(trace.z) ||
+        trace.z.length !== trace.y.length ||
+        trace.z.some(function (row) {
+          return (
+            !Array.isArray(row) ||
+            row.length !== trace.x.length ||
+            row.some(function (v) {
+              return v !== null && !h.finite(v);
+            })
+          );
+        })
+      )
+        throw new Error("chart 网格 z 的形状必须与 x/y 匹配");
+    });
+    var simple = config.traces.filter(function (t) {
+      return ["surface", "heatmap"].indexOf(t.type) < 0;
+    });
+    if (
+      simple.length &&
+      simple.some(function (t) {
+        return typeof t.x[0] !== typeof simple[0].x[0];
+      })
+    )
+      throw new Error("chart 同一横轴不能混用分类与数值");
+    return config;
+  }
+
+  function renderSvg(node, config) {
+    var host = h.find(node, "[data-viz-host]");
+    h.clear(host);
+    if (
+      config.traces.some(function (t) {
+        return t.type === "surface" || t.type === "heatmap";
+      })
+    ) {
+      var note = document.createElement("p");
+      note.textContent = "网格数据已校验；渲染器不可用，请核对静态后备。";
+      host.appendChild(note);
+      h.status(node, note.textContent);
+      return;
+    }
+    var svg = h.svgEl("svg", {
+      viewBox: "0 0 720 380",
+      role: "img",
+      "aria-label": config.model
+    });
+    host.appendChild(svg);
+    var categories = [], xs = [], ys = [];
+    config.traces.forEach(function (t) {
+      t.x.forEach(function (x) {
+        if (typeof x === "string") {
+          if (categories.indexOf(x) < 0) categories.push(x);
+        } else xs.push(x);
+      });
+      t.y.forEach(function (y) {
+        if (h.finite(y)) ys.push(y);
+      });
+    });
+    if (categories.length)
+      xs = categories.map(function (_, i) { return i; });
+    var minX = Math.min.apply(Math, xs), maxX = Math.max.apply(Math, xs);
+    var minY = Math.min.apply(Math, ys), maxY = Math.max.apply(Math, ys);
+    if (config.traces.some(function (t) { return t.type === "bar"; })) {
+      minY = Math.min(0, minY);
+      maxY = Math.max(0, maxY);
+    }
+    if (minX === maxX) maxX = minX + 1;
+    if (minY === maxY) maxY = minY + 1;
+    function px(x) {
+      return 70 + (((typeof x === "string" ? categories.indexOf(x) : x) - minX) / (maxX - minX)) * 580;
+    }
+    function py(y) {
+      return 310 - ((y - minY) / (maxY - minY)) * 270;
+    }
+    function text(x, y, value) {
+      var el = h.svgEl("text", {
+        x: x,
+        y: y,
+        "text-anchor": "middle",
+        "font-size": 13,
+        fill: "var(--c-text-2, #65738a)"
+      });
+      el.textContent = value;
+      svg.appendChild(el);
+    }
+    svg.appendChild(h.svgEl("line", { x1: 50, y1: 310, x2: 680, y2: 310, stroke: "var(--c-border, #ccd3df)" }));
+    svg.appendChild(h.svgEl("line", { x1: 50, y1: 40, x2: 50, y2: 310, stroke: "var(--c-border, #ccd3df)" }));
+    if (categories.length) {
+      categories.forEach(function (x) { text(px(x), 335, x); });
+    } else {
+      text(70, 335, h.fmt(minX));
+      text(650, 335, h.fmt(maxX));
+    }
+    text(28, 310, h.fmt(minY));
+    text(28, 44, h.fmt(maxY));
+    config.traces.forEach(function (trace, index) {
+      var defaultColors = [
+        "var(--series-1, #2563eb)",
+        "var(--series-2, #059669)",
+        "var(--series-3, #d97706)"
+      ];
+      var color = trace.color || defaultColors[index % 3];
+      if (trace.type === "bar") {
+        trace.x.forEach(function (x, i) {
+          if (h.finite(trace.y[i]))
+            svg.appendChild(
+              h.svgEl("rect", {
+                x: px(x) - 10,
+                y: Math.min(py(0), py(trace.y[i])),
+                width: 20,
+                height: Math.abs(py(0) - py(trace.y[i])),
+                fill: color
+              })
+            );
+        });
+        return;
+      }
+      var path = "", segment = false, mode = trace.mode || "lines";
+      trace.x.forEach(function (x, i) {
+        var y = trace.y[i];
+        if (!h.finite(y)) {
+          segment = false;
+          return;
+        }
+        path += (segment ? " L " : " M ") + px(x).toFixed(2) + " " + py(y).toFixed(2);
+        segment = true;
+        if (mode.indexOf("markers") >= 0)
+          svg.appendChild(h.svgEl("circle", { cx: px(x), cy: py(y), r: 4, fill: color }));
+      });
+      if (path && mode.indexOf("lines") >= 0)
+        svg.appendChild(h.svgEl("path", {
+          d: path,
+          fill: "none",
+          stroke: color,
+          "stroke-width": 2
+        }));
+    });
+    h.status(
+      node,
+      "静态 SVG 视图：" +
+        (categories.length
+          ? "分类 " + categories.join("、")
+          : "x ∈ [" + h.fmt(minX) + ", " + h.fmt(maxX) + "]") +
+        "，y ∈ [" + h.fmt(minY) + ", " + h.fmt(maxY) + "]"
+    );
+  }
+
+  async function renderChart(node, config) {
+    if (!root.Plotly) {
+      var needFn = kit.need || (kit.loader && kit.loader.need);
+      if (needFn) {
+        try {
+          await needFn("plotly");
+        } catch (e) {
+          // Vendor loading failed or running in headless/offline/test environment; fallback to SVG
+        }
+      } else {
+        try {
+          await h.loadVendor("plotly.js-dist-min/plotly.min.js", "Plotly");
+        } catch (e) {}
+      }
+    }
+    var host = h.find(node, "[data-viz-host]"), current = config, disposed = false;
+    var plotting = Promise.resolve();
+
+    function paint(next) {
+      validateChart(next);
+      current = next;
+      h.show(node);
+      if (root.Plotly) {
+        plotting = plotting
+          .catch(function () {})
+          .then(function () {
+            if (disposed) return;
+            return root.Plotly.react(
+              host,
+              next.traces.map(function (t) {
+                return Object.assign({}, t, { connectgaps: false });
+              }),
+              Object.assign(
+                { margin: { t: 35, r: 25, b: 55, l: 55 }, autosize: true },
+                next.layout || {}
+              ),
+              { responsive: true, displaylogo: false }
+            );
+          });
+        h.status(node, "图表已更新，共 " + next.traces.length + " 组数据。");
+      } else renderSvg(node, next);
+      h.record(node, { kind: "chart", model: next.model, traces: next.traces });
+      return plotting;
+    }
+
+    paint(config);
+    await plotting;
+    if (root.Plotly && host.on)
+      host.on("plotly_click", function (event) {
+        var p = event.points && event.points[0];
+        if (p) {
+          h.status(node, "选中点：x = " + h.fmt(p.x) + "，y = " + h.fmt(p.y));
+          h.record(node, {
+            kind: "chart",
+            model: current.model,
+            selected: {
+              curve: p.curveNumber,
+              point: p.pointNumber,
+              x: p.x,
+              y: p.y
+            }
+          });
+        }
+      });
+
+    return {
+      update: function (el, initial, snapshot) {
+        return paint(h.boundConfig(el, initial, snapshot));
+      },
+      destroy: function () {
+        disposed = true;
+        if (root.Plotly) root.Plotly.purge(host);
+      }
+    };
+  }
+
+  core.registerKind("chart", { validate: validateChart, render: renderChart });
+
+  if (kit.registerModule) {
+    kit.registerModule("viz.kinds.chart", {
+      init: function () {
+        return Promise.resolve();
+      }
+    });
+  }
 })(typeof window !== "undefined" ? window : globalThis);
 
   })();
@@ -3220,6 +5174,192 @@
 
   })();
 
+  /* ---- Module: viz.kinds.spatial (spatial.js) ---- */
+  (function () {
+(function (root) {
+  "use strict";
+
+  var kit = root.CourseKit = root.CourseKit || {};
+  root.kit = root.kit || kit;
+  var core = root.CourseVisualizations || kit.viz;
+  if (!core) return;
+  var h = core.helpers;
+
+  function vectorImage(matrix, vector) {
+    return matrix.map(function (row) { return row[0] * vector[0] + row[1] * vector[1]; });
+  }
+
+  core.vectorImage = vectorImage;
+
+  function validateSpatial(config) {
+    core.validateCommon(config);
+    if (config.matrix && (!Array.isArray(config.matrix) || config.matrix.length !== 2 || config.matrix.some(function (r) { return !Array.isArray(r) || r.length !== 2 || !r.every(h.finite); }))) throw new Error("spatial matrix 必须为 2×2 有限数值");
+    if (config.vector && (!Array.isArray(config.vector) || config.vector.length !== 2 || !config.vector.every(h.finite))) throw new Error("spatial vector 必须为二维有限数值");
+    if (!!config.matrix !== !!config.vector) throw new Error("spatial matrix/vector 必须同时提供");
+    if (config.matrix && config.vector) {
+      var image = core.vectorImage(config.matrix, config.vector);
+      if (!image.every(h.finite)) throw new Error("spatial matrix 与 vector 的乘积必须为有限数值");
+    }
+    if (!config.matrix && (!Array.isArray(config.shapes) || !config.shapes.length)) throw new Error("spatial 需要 matrix/vector 或 shapes");
+    return config;
+  }
+
+  function renderShapes(node, shapes) {
+    h.show(node);
+    var host = h.find(node, "[data-viz-host]"), list = document.createElement("ol");
+    h.clear(host);
+    list.className = "viz-list";
+    shapes.forEach(function (item, index) {
+      var li = document.createElement("li");
+      li.dataset.index = index;
+      li.innerHTML = "<strong>" + h.escape(item.title || item.label || item.name || (item.id || index + 1)) + "</strong>" +
+        (item.description || item.summary ? "<p>" + h.escape(item.description || item.summary) + "</p>" : "");
+      li.addEventListener("click", function () { h.status(node, item.title || item.label || item.name || item.id); });
+      list.appendChild(li);
+    });
+    host.appendChild(list);
+    h.status(node, "共 " + shapes.length + " 项；选择一项查看说明。");
+    h.record(node, {kind: "spatial", selected: null});
+  }
+
+  function renderTransformFallback(node, config) {
+    var output = core.vectorImage(config.matrix, config.vector);
+    h.show(node);
+    var host = h.find(node, "[data-viz-host]");
+    h.clear(host);
+    var table = document.createElement("table");
+    table.className = "viz-table";
+    var rows = [
+      ["A", config.matrix.map(function (row) { return "[" + row.map(h.fmt).join(", ") + "]"; }).join(" ")],
+      ["v", "(" + config.vector.map(h.fmt).join(", ") + ")"],
+      ["Av", "(" + output.map(h.fmt).join(", ") + ")"]
+    ];
+    rows.forEach(function (pair) {
+      var tr = document.createElement("tr"), th = document.createElement("th"), td = document.createElement("td");
+      th.scope = "row"; th.textContent = pair[0]; td.textContent = pair[1];
+      tr.appendChild(th); tr.appendChild(td); table.appendChild(tr);
+    });
+    host.appendChild(table);
+    h.status(node, "当前浏览器未加载几何渲染器；已列出 A、v 与 Av，可按行核对矩阵乘法。");
+    h.record(node, {kind: "spatial", vector: config.vector, image: output});
+  }
+
+  async function renderSpatial(node, config, context) {
+    var controls = h.find(node, "[data-viz-controls]"), inputs = controls
+      ? Array.prototype.slice.call(controls.querySelectorAll("input[type=number]")) : [];
+    var currentVector = config.vector ? config.vector.slice() : null;
+    var currentMatrix = config.matrix;
+    var repaint;
+    function update(nodeElement, nodeConfig, snapshot) {
+      var bound = h.boundConfig(nodeElement, nodeConfig, snapshot);
+      validateSpatial(bound);
+      if (bound.matrix && bound.vector) {
+        currentVector = bound.vector.slice(); currentMatrix = bound.matrix;
+        syncInputs(currentVector); if (repaint) repaint();
+      }
+    }
+    function readVector() {
+      if (inputs.length !== 2) return currentVector;
+      var next = inputs.map(function (input) {
+        if (!input.value.trim()) return NaN;
+        var value = Number(input.value);
+        if (input.min !== "" && value < Number(input.min) || input.max !== "" && value > Number(input.max)) return NaN;
+        return value;
+      });
+      if (!next.every(h.finite) || !core.vectorImage(currentMatrix, next).every(h.finite)) return currentVector;
+      return next;
+    }
+    function syncInputs(vector) {
+      inputs.forEach(function (input, index) { input.value = vector[index]; });
+    }
+    if (config.matrix && config.vector) {
+      currentVector = readVector();
+      syncInputs(currentVector);
+      if (!root.JXG) {
+        var needFn = kit.need || (kit.loader && kit.loader.need);
+        if (needFn) {
+          await needFn("jsxgraph");
+        } else {
+          await h.loadVendor("jsxgraph/jsxgraphcore.js", "JXG");
+          if (root.JXG) await h.loadStylesheet("jsxgraph/jsxgraph.css");
+        }
+      }
+      if (root.JXG) {
+        h.show(node);
+        var host = h.find(node, "[data-viz-host]");
+        var output = core.vectorImage(currentMatrix, currentVector);
+        var bound = Math.max(5, Math.max.apply(Math, currentVector.map(Math.abs)), Math.max.apply(Math, output.map(Math.abs))) + 1;
+        var board = root.JXG.JSXGraph.initBoard(host.id, {boundingbox: [-bound, bound, bound, -bound], axis: true, keepaspectratio: true, showCopyright: false, showNavigation: false, pan: {enabled: false}, zoom: {enabled: false}, resize: {enabled: true}});
+        var point = board.create("point", currentVector, {name: "v", size: 4, color: "var(--c-accent, #3157d5)"});
+        var transformed = board.create("point", [
+          function () { return core.vectorImage(currentMatrix, [point.X(), point.Y()])[0]; },
+          function () { return core.vectorImage(currentMatrix, [point.X(), point.Y()])[1]; }
+        ], {name: "Av", fixed: true, size: 4, color: "var(--c-danger, #b42318)"});
+        board.create("arrow", [[0, 0], point], {strokeColor: "var(--c-accent, #3157d5)", strokeWidth: 3});
+        board.create("arrow", [[0, 0], transformed], {strokeColor: "var(--c-danger, #b42318)", strokeWidth: 3, dash: 2});
+        function recordVector(vector) {
+          var image = core.vectorImage(currentMatrix, vector);
+          h.status(node, "v = (" + vector.map(h.fmt).join(", ") + ")；Av = (" + image.map(h.fmt).join(", ") + ")");
+          h.record(node, {kind: "spatial", vector: vector, image: image});
+        }
+        inputs.forEach(function (input) {
+          input.addEventListener("change", function () {
+            var vector = readVector();
+            currentVector = vector;
+            syncInputs(vector);
+            if (context && context.sourceStore) context.sourceStore.dispatch({type: "SET_PARAMETER", name: config.vectorParameter || "vector", value: vector.slice()});
+            point.moveTo(vector, 0);
+            board.update();
+            recordVector(vector);
+          });
+        });
+        point.on("drag", function () {
+          currentVector = [point.X(), point.Y()];
+          syncInputs(currentVector);
+          if (context && context.sourceStore) context.sourceStore.dispatch({type: "SET_PARAMETER", name: config.vectorParameter || "vector", value: currentVector.slice()});
+          recordVector(currentVector);
+        });
+        repaint = function () { point.moveTo(currentVector, 0); board.update(); recordVector(currentVector); };
+        recordVector(currentVector);
+        return {update: update, destroy: function () { if (board && board.remove) board.remove(); }};
+      }
+      function paintFallback() {
+        var nextConfig = Object.assign({}, config, {matrix: currentMatrix, vector: currentVector.slice()});
+        renderTransformFallback(node, nextConfig);
+      }
+      inputs.forEach(function (input) {
+        input.addEventListener("change", function () {
+          currentVector = readVector(); syncInputs(currentVector);
+          if (context && context.sourceStore) context.sourceStore.dispatch({type: "SET_PARAMETER", name: config.vectorParameter || "vector", value: currentVector.slice()});
+          paintFallback();
+        });
+      });
+      repaint = paintFallback;
+      paintFallback();
+      return {update: update};
+    } else {
+      renderShapes(node, config.shapes || []);
+      return {update: function (nodeElement, nodeConfig, snapshot) {
+        var bound = h.boundConfig(nodeElement, nodeConfig, snapshot);
+        validateSpatial(bound); renderShapes(nodeElement, bound.shapes || []);
+      }};
+    }
+  }
+
+  var spatialAdapter = {validate: validateSpatial, render: renderSpatial};
+  core.registerKind("spatial", spatialAdapter);
+
+  if (kit.registerModule) {
+    kit.registerModule("viz.kinds.spatial", {
+      init: function () {
+        return Promise.resolve();
+      }
+    });
+  }
+})(typeof window !== "undefined" ? window : globalThis);
+
+  })();
+
   /* ---- Module: viz.kinds.table (table.js) ---- */
   (function () {
 (function (root) {
@@ -3274,5 +5414,14 @@
 })(typeof window !== "undefined" ? window : globalThis);
 
   })();
+
+  /* ---- Bundle Initialization ---- */
+  if (CourseKit.initAll && typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', CourseKit.initAll);
+    } else {
+      CourseKit.initAll();
+    }
+  }
 
 })(typeof window !== 'undefined' ? window : globalThis);

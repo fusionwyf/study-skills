@@ -68,16 +68,35 @@
 
   async function initAll() {
     var order = Array.isArray(kit.__ACTIVE_MODULES__) ? kit.__ACTIVE_MODULES__.slice() : [];
-    // Ensure all registered modules (e.g. course extensions) not in __ACTIVE_MODULES__ are also executed
     Object.keys(modules).forEach(function (id) {
       if (order.indexOf(id) === -1) {
         order.push(id);
       }
     });
+
+    // Phase 1: core + foundation (synchronous prerequisites for everything)
+    // Phase 2: shell.* (layout: sidebar, TOC, progress bar — must appear immediately)
+    // Phase 3: everything else in parallel (content vendors like Mermaid/KaTeX are
+    //          heavy CDN loads; they must NOT block the visible layout)
+    var shellIds = [];
+    var deferredIds = [];
     for (var i = 0; i < order.length; i++) {
       var id = order[i];
-      await initModule(id);
+      if (id === "core" || id === "foundation") {
+        await initModule(id);
+      } else if (id.indexOf("shell.") === 0) {
+        shellIds.push(id);
+      } else {
+        deferredIds.push(id);
+      }
     }
+    for (var j = 0; j < shellIds.length; j++) {
+      await initModule(shellIds[j]);
+    }
+    for (var k = 0; k < deferredIds.length; k++) {
+      initModule(deferredIds[k]);
+    }
+
     allInitialized = true;
   }
 

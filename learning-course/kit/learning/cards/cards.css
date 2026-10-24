@@ -1,0 +1,94 @@
+@layer learning {
+  /* ================================================================
+     Learning Cards: 误区 / 回忆 / 阅读
+     差异化左边框 + 背景色调 + CSS 图标（::before + Unicode）
+     ================================================================ */
+
+  /* 共享基础 */
+  .mis, .recall, .reading {
+    position: relative;
+    margin-block: 1.2rem;
+    padding: 1rem 1.25rem 1rem 2.8rem;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius);
+    background: var(--c-surface);
+    box-shadow: 0 0.35rem 1.4rem rgba(0, 0, 0, 0.05);
+  }
+
+  /* 图标容器 */
+  .mis::before,
+  .recall::before,
+  .reading::before {
+    position: absolute;
+    left: 0.85rem;
+    top: 1rem;
+    font-size: 1.05rem;
+    line-height: 1;
+    width: 1.4rem;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  /* ---- 误区 (Misconception)：橙色 + ⚠ ---- */
+  .mis {
+    border-left: 0.35rem solid var(--c-warn, #d97706);
+    background: color-mix(in srgb, var(--c-warn-bg, #fffbeb) 40%, var(--c-surface));
+  }
+  .mis::before {
+    content: "⚠";
+    color: var(--c-warn, #d97706);
+  }
+  .mis p {
+    margin: 0.25rem 0;
+  }
+
+  /* ---- 回忆 (Recall)：蓝色 + ↩ ---- */
+  .recall {
+    border-left: 0.35rem solid var(--c-accent, #2563eb);
+    background: color-mix(in srgb, var(--c-accent-bg, #eff6ff) 35%, var(--c-surface));
+  }
+  .recall::before {
+    content: "↩";
+    color: var(--c-accent, #2563eb);
+    font-weight: 700;
+  }
+  .recall details summary {
+    cursor: pointer;
+    color: var(--c-accent-strong, #1d4ed8);
+    font-weight: 650;
+    margin-top: 0.4rem;
+  }
+
+  /* ---- 阅读 (Reading)：绿色 + 📖 ---- */
+  .reading {
+    border-left: 0.35rem solid var(--c-success, #16a34a);
+    background: color-mix(in srgb, var(--c-success-bg, #f0fdf4) 35%, var(--c-surface));
+  }
+  .reading::before {
+    content: "📖";
+    font-size: 0.95rem;
+  }
+  .reading ul {
+    margin: 0.25rem 0;
+    padding-left: 1.2rem;
+  }
+
+  /* ---- 目标列表图标 ---- */
+  section[data-role="objective"] ol {
+    list-style: none;
+    padding-left: 0;
+  }
+  section[data-role="objective"] li {
+    position: relative;
+    padding-left: 1.8rem;
+    margin-bottom: 0.5rem;
+  }
+  section[data-role="objective"] li::before {
+    content: "◎";
+    position: absolute;
+    left: 0;
+    color: var(--c-accent, #2563eb);
+    font-size: 1rem;
+    font-weight: 700;
+  }
+}

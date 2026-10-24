@@ -1,0 +1,124 @@
+/* 新粗野主义 Neo-Brutalism —— 粗黑描边、硬投影、亮色块；按钮有“按下去”的手感。 */
+@layer theme {
+  html[data-theme="brutal"] {
+    color-scheme: light;
+    --c-bg: #f2f4ff;
+    --c-surface: #ffffff;
+    --c-surface-2: #f4f4f4;
+    --c-sidebar: #ffffff;
+    --c-text: #000000;
+    --c-text-2: #2b2b2b;
+    --c-muted: #555555;
+    --c-border: #000000;
+    --c-border-strong: #000000;
+
+    --c-accent: #3d5afe;
+    --c-accent-strong: #1f3bd6;
+    --c-accent-bg: #fff3a6;
+    --c-accent-border: #000000;
+
+    --c-success: #00875a;
+    --c-success-bg: #c9ffe9;
+    --c-warn: #a35f00;
+    --c-warn-bg: #ffe9a8;
+    --c-danger: #d81b45;
+    --c-danger-bg: #ffd3dc;
+
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow: 5px 5px 0 #000;
+    --shadow-card: 6px 6px 0 #000;
+
+    --font-body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    --font-display: "Space Grotesk", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+
+    --code-bg: #1b1b1b;
+    --code-fg: #f4f4f4;
+    --code-border: #000000;
+    --code-label: #ffd400;
+
+    --series-1: #000000;
+    --series-2: #ff4d6d;
+    --series-3: #3d5afe;
+    --series-4: #ffb800;
+    --series-5: #00c27a;
+    --series-6: #9b5de5;
+    --series-7: #00bbf9;
+    --series-8: #666666;
+
+    --br-yellow: #ffd400;
+    --br-mint: #7cf5c4;
+    --br-pink: #ff8fab;
+    --br-blue: #8fb3ff;
+  }
+
+  /* 导航 */
+  html[data-theme="brutal"] .kit-sidebar { border-right: 3px solid #000; }
+  html[data-theme="brutal"] .kit-sidebar__course-name { font-family: var(--font-display); font-weight: 700; }
+  html[data-theme="brutal"] .kit-sidebar__item.is-current .kit-sidebar__link {
+    background: var(--br-yellow); color: #000; border: 2px solid #000; border-radius: 8px; box-shadow: 3px 3px 0 #000;
+  }
+  html[data-theme="brutal"] .toc-link.is-active { background: var(--br-yellow); color: #000; border-radius: 6px; }
+
+  /* 页头 */
+  html[data-theme="brutal"] header.course-header { border-bottom: 3px solid #000; padding-bottom: 1.75rem; }
+  html[data-theme="brutal"] header.course-header .course-kicker {
+    display: inline-block; padding: 0.15rem 0.7rem; background: var(--br-mint); color: #000;
+    border: 2.5px solid #000; border-radius: 999px; font-weight: 700;
+  }
+  html[data-theme="brutal"] header.course-header .course-title {
+    font-size: clamp(2.3rem, 4.4vw, 3.6rem); font-weight: 900; line-height: 1.1; letter-spacing: -0.03em; text-wrap: balance;
+  }
+  html[data-theme="brutal"] header.course-header .course-meta span {
+    padding: 0.15rem 0.65rem; background: #fff; color: #000; font-weight: 700;
+    border: 2.5px solid #000; border-radius: 8px; box-shadow: 3px 3px 0 #000;
+  }
+  html[data-theme="brutal"] header.course-header .course-meta span:nth-child(2) { background: var(--br-pink); }
+  html[data-theme="brutal"] header.course-header .course-meta span:nth-child(3) { background: var(--br-blue); }
+
+  /* 标题：荧光笔高亮 */
+  html[data-theme="brutal"] .lesson h2 {
+    width: fit-content; max-width: 100%; border-bottom: none; padding: 0 0.2rem;
+    font-weight: 900; font-size: 1.75rem; letter-spacing: -0.02em;
+    background: linear-gradient(transparent 58%, var(--br-yellow) 58% 92%, transparent 92%);
+  }
+
+  /* 提示框 */
+  html[data-theme="brutal"] .callout {
+    border: 3px solid #000; border-radius: var(--radius); box-shadow: var(--shadow); background: var(--br-blue);
+  }
+  html[data-theme="brutal"] .callout::before { display: none; }
+  html[data-theme="brutal"] .callout[data-kind="tip"], html[data-theme="brutal"] .callout[data-callout="tip"],
+  html[data-theme="brutal"] .callout[data-kind="success"] { background: var(--br-mint); }
+  html[data-theme="brutal"] .callout[data-kind="warning"], html[data-theme="brutal"] .callout[data-callout="warning"] { background: var(--br-yellow); }
+  html[data-theme="brutal"] .callout[data-kind="danger"], html[data-theme="brutal"] .callout[data-callout="danger"] { background: var(--br-pink); }
+
+  /* 卡片 */
+  html[data-theme="brutal"] .question, html[data-theme="brutal"] .quiz,
+  html[data-theme="brutal"] .visualization, html[data-theme="brutal"] .kit-pager__card,
+  html[data-theme="brutal"] .kit-block {
+    border: 3px solid #000; border-radius: var(--radius); box-shadow: var(--shadow-card);
+  }
+  html[data-theme="brutal"] .kit-block { --c-surface-2: #2a2a2a; --c-border: #000; }
+  html[data-theme="brutal"] .q-no, html[data-theme="brutal"] .q-type, html[data-theme="brutal"] .q-state { border: 2px solid #000; }
+  html[data-theme="brutal"] .q-no { background: var(--br-yellow); }
+  html[data-theme="brutal"] .q-option label { border: 3px solid #000; border-radius: 10px; font-weight: 500; }
+  html[data-theme="brutal"] .q-option label:hover { background: #fffbe0; border-color: #000; }
+  html[data-theme="brutal"] .q-option:has(input:checked) label { background: var(--br-yellow); box-shadow: 4px 4px 0 #000; }
+  html[data-theme="brutal"] .q-mark { border: 2px solid #000; }
+
+  /* 按钮：按下去 */
+  html[data-theme="brutal"] .q-actions .btn {
+    border: 3px solid #000; border-radius: 10px; box-shadow: 4px 4px 0 #000; background: #fff; color: #000; font-weight: 700;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  html[data-theme="brutal"] .q-actions .btn.primary { background: var(--br-yellow); color: #000; border-color: #000; }
+  html[data-theme="brutal"] .q-actions .btn:active:not(:disabled) { transform: translate(4px, 4px); box-shadow: 0 0 0 #000; }
+
+  html[data-theme="brutal"] .lesson blockquote {
+    background: #fff; color: #000; border: 3px solid #000; border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 1rem 1.25rem; font-weight: 700; font-size: 1.15rem; transform: rotate(-0.4deg);
+  }
+  html[data-theme="brutal"] .lesson th { border-bottom: 3px solid #000; }
+}

@@ -4,16 +4,11 @@
 
 ## 加载
 
-`<head>` 引入样式：
+Mermaid 是 Kit v2 的 auto 模块。课件中出现 `<pre class="mermaid">` 时，`kit sync` 自动将 `content.diagram` 模块打包进 `assets/kit/kit.js` 与 `assets/kit/kit.css`。页面只需标准 Kit 引用：
 
 ```html
-<link rel="stylesheet" href="../assets/optional/mermaid/mermaid.css">
-```
-
-`<body>` 末尾引入脚本（`type="module"`，自带 defer）：
-
-```html
-<script type="module" src="../assets/optional/mermaid/mermaid.js"></script>
+<link rel="stylesheet" href="../assets/kit/kit.css">
+<script defer src="../assets/kit/kit.js"></script>
 ```
 
 脚本从 CDN 加载 Mermaid 11.x（`cdn.jsdelivr.net/npm/mermaid@11`）。无 `.mermaid` 容器时不渲染。
@@ -66,13 +61,15 @@ flowchart TD
 - **无 JavaScript**：`<pre>` 内的文本定义直接显示，可读。
 - **打印**：Mermaid 生成的 SVG 正常打印；边框简化。
 
-## 安装
+## 同步
+
+Mermaid 为 auto 模块，课件包含 `<pre class="mermaid">` 后运行：
 
 ```text
-python scripts/install_optional.py <course-dir> --components mermaid
+python kit/build/kit.py sync <course-dir>
 ```
 
-安装器把 `mermaid.js`、`mermaid.css` 和 `README.md` 复制到课程 `assets/optional/mermaid/`，并登记到 `asset-manifest.json`。
+`kit sync` 自动检测并打包 `content.diagram` 模块。无需手动安装。
 
 ## 验收
 

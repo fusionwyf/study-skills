@@ -19,8 +19,25 @@
     -webkit-font-smoothing: antialiased;
   }
 
+  /* Hide scrollbars cleanly while preserving full scrollability */
+  html, body, .kit-sidebar, .kit-rail, .kit-toc__scroll, .toc-scroll {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar,
+  .kit-sidebar::-webkit-scrollbar,
+  .kit-rail::-webkit-scrollbar,
+  .kit-toc__scroll::-webkit-scrollbar,
+  .toc-scroll::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
   h1, h2, h3, h4, h5, h6 {
     color: var(--c-text);
+    font-family: var(--font-display, var(--font-body));
     line-height: 1.3;
     margin: 1.5em 0 0.6em;
     font-weight: 700;

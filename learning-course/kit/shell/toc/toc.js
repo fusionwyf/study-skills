@@ -17,9 +17,17 @@
     raw.forEach(function (el) {
       if (el.hasAttribute("data-toc-skip")) return;
       if (!el.id) {
-        el.id = kit.util.slugify(el.textContent);
+        el.id = kit.util && kit.util.slugify ? kit.util.slugify(el.textContent) : el.textContent.trim().toLowerCase().replace(/\s+/g, "-");
       }
-      var label = el.dataset.tocLabel || el.textContent.trim();
+      var label = el.dataset.tocLabel;
+      if (!label) {
+        var clone = el.cloneNode(true);
+        var mathml = clone.querySelectorAll(".katex-mathml");
+        for (var m = 0; m < mathml.length; m++) {
+          mathml[m].remove();
+        }
+        label = clone.textContent.trim();
+      }
       var isH3 = el.tagName && el.tagName.toLowerCase() === "h3";
       result.push({
         id: el.id,
@@ -31,33 +39,153 @@
     return result;
   }
 
+  function buildHeadingTree(headingsList) {
+    var tree = [];
+    var currentH2 = null;
+
+    headingsList.forEach(function (h) {
+      if (!h.isH3) {
+        currentH2 = {
+          id: h.id,
+          label: h.label,
+          element: h.element,
+          children: []
+        };
+        tree.push(currentH2);
+      } else {
+        if (currentH2) {
+          currentH2.children.push(h);
+        } else {
+          currentH2 = {
+            id: h.id,
+            label: h.label,
+            element: h.element,
+            children: []
+          };
+          tree.push(currentH2);
+        }
+      }
+    });
+
+    return tree;
+  }
+
+  function setExpanded(li, expand) {
+    if (!li) return;
+    if (expand) {
+      li.classList.remove("is-collapsed");
+      li.classList.add("is-expanded");
+      var btn = li.querySelector(".kit-toc__toggle, .toc-toggle");
+      if (btn) {
+        btn.setAttribute("aria-expanded", "true");
+        btn.setAttribute("title", "收起子目录");
+        btn.setAttribute("aria-label", "收起子目录");
+      }
+    } else {
+      li.classList.remove("is-expanded");
+      li.classList.add("is-collapsed");
+      var btn = li.querySelector(".kit-toc__toggle, .toc-toggle");
+      if (btn) {
+        btn.setAttribute("aria-expanded", "false");
+        btn.setAttribute("title", "展开子目录");
+        btn.setAttribute("aria-label", "展开子目录");
+      }
+    }
+  }
+
   function renderList(targetUl, closeCallback) {
     targetUl.innerHTML = "";
-    headings.forEach(function (h) {
+    var tree = buildHeadingTree(headings);
+
+    tree.forEach(function (node) {
       var li = document.createElement("li");
-      li.className = "kit-toc__item toc-item" + (h.isH3 ? " is-h3" : " is-h2");
+      var hasChildren = node.children && node.children.length > 0;
+      // All H3 subsections are collapsed by default
+      li.className = "kit-toc__item toc-item is-h2" + (hasChildren ? " has-children is-collapsed" : " no-children");
+      li.dataset.sectionId = node.id;
+
+      var row = document.createElement("div");
+      row.className = "kit-toc__row toc-row" + (hasChildren ? " has-children" : " no-children");
+
+      if (hasChildren) {
+        var toggleBtn = document.createElement("button");
+        toggleBtn.type = "button";
+        toggleBtn.className = "kit-toc__toggle toc-toggle";
+        toggleBtn.setAttribute("aria-label", "展开子目录");
+        toggleBtn.setAttribute("title", "展开子目录");
+        toggleBtn.setAttribute("aria-expanded", "false");
+        toggleBtn.innerHTML = '<svg class="kit-toc__chevron" viewBox="0 0 16 16" width="9" height="9" aria-hidden="true"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+        toggleBtn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          e.preventDefault();
+          var isCollapsed = li.classList.contains("is-collapsed");
+          setExpanded(li, isCollapsed);
+        });
+
+        row.appendChild(toggleBtn);
+      } else {
+        var spacer = document.createElement("span");
+        spacer.className = "kit-toc__spacer";
+        spacer.setAttribute("aria-hidden", "true");
+        row.appendChild(spacer);
+      }
 
       var a = document.createElement("a");
-      a.className = "kit-toc__link toc-link";
-      a.href = "#" + h.id;
-      a.textContent = h.label;
-      a.dataset.targetId = h.id;
+      a.className = "kit-toc__link toc-link is-h2-link";
+      a.href = "#" + node.id;
+      a.textContent = node.label;
+      a.dataset.targetId = node.id;
 
       a.addEventListener("click", function (e) {
         e.preventDefault();
-        var target = document.getElementById(h.id);
+        var target = document.getElementById(node.id);
         if (target) {
           target.scrollIntoView({ behavior: "smooth", block: "start" });
-          if (history.pushState) {
-            history.pushState(null, "", "#" + h.id);
-          }
+          if (history.pushState) history.pushState(null, "", "#" + node.id);
         }
         if (closeCallback) closeCallback();
       });
 
-      li.appendChild(a);
-      targetUl.appendChild(li);
+      row.appendChild(a);
+      li.appendChild(row);
       allLinkNodes.push(a);
+
+      if (hasChildren) {
+        var subUl = document.createElement("ul");
+        subUl.className = "kit-toc__sublist toc-sublist";
+
+        node.children.forEach(function (child) {
+          var subLi = document.createElement("li");
+          subLi.className = "kit-toc__item toc-item is-h3";
+          subLi.dataset.sectionId = child.id;
+
+          var subA = document.createElement("a");
+          subA.className = "kit-toc__link toc-link is-h3-link";
+          subA.href = "#" + child.id;
+          subA.textContent = child.label;
+          subA.dataset.targetId = child.id;
+          subA.dataset.parentId = node.id;
+
+          subA.addEventListener("click", function (e) {
+            e.preventDefault();
+            var target = document.getElementById(child.id);
+            if (target) {
+              target.scrollIntoView({ behavior: "smooth", block: "start" });
+              if (history.pushState) history.pushState(null, "", "#" + child.id);
+            }
+            if (closeCallback) closeCallback();
+          });
+
+          subLi.appendChild(subA);
+          subUl.appendChild(subLi);
+          allLinkNodes.push(subA);
+        });
+
+        li.appendChild(subUl);
+      }
+
+      targetUl.appendChild(li);
     });
   }
 
@@ -70,12 +198,20 @@
         a.setAttribute("aria-current", "location");
         a.classList.add("is-active");
 
+        var visibleTarget = a;
+        if (a.dataset.parentId) {
+          var parentLi = a.closest(".kit-toc__item.has-children, .toc-item.has-children");
+          if (parentLi && parentLi.classList.contains("is-collapsed")) {
+            visibleTarget = parentLi;
+          }
+        }
+
         // Keep active item in view inside the TOC container without whole-page scroll
-        if (desktopScrollBox && desktopScrollBox.contains(a)) {
+        if (desktopScrollBox && desktopScrollBox.contains(visibleTarget)) {
           var containerTop = desktopScrollBox.scrollTop;
           var containerHeight = desktopScrollBox.clientHeight;
-          var itemTop = a.offsetTop;
-          var itemHeight = a.offsetHeight;
+          var itemTop = visibleTarget.offsetTop;
+          var itemHeight = visibleTarget.offsetHeight;
 
           if (itemTop < containerTop) {
             desktopScrollBox.scrollTop = itemTop - 10;
@@ -88,6 +224,17 @@
         a.classList.remove("is-active");
       }
     });
+
+    var allParentLis = document.querySelectorAll(".kit-toc__item.has-children, .toc-item.has-children");
+    for (var p = 0; p < allParentLis.length; p++) {
+      var pLi = allParentLis[p];
+      var hasActiveChild = !!pLi.querySelector(".kit-toc__sublist .is-active, .toc-sublist .is-active");
+      if (hasActiveChild) {
+        pLi.classList.add("has-active-child");
+      } else {
+        pLi.classList.remove("has-active-child");
+      }
+    }
 
     var mobileBar = document.querySelector(".kit-toc-mobile-bar span");
     if (mobileBar) {

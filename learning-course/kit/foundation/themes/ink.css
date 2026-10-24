@@ -27,4 +27,49 @@
     --series-7: #fdba74;
     --series-8: #9ca3af;
   }
+
+  /* ---- SVG 暗色模式适配 ---- */
+  /* 通用策略：invert + hue-rotate 把「深色文字 + 浅色背景」翻成「浅色文字 + 深色背景」 */
+  html[data-scheme="dark"] .lesson .figrow svg,
+  html[data-scheme="dark"] .lesson > section > svg {
+    filter: invert(1) hue-rotate(180deg);
+  }
+
+  /* 精确覆盖：有语义 class 的 SVG 元素 */
+  html[data-scheme="dark"] .lesson svg text {
+    fill: var(--c-text) !important;
+  }
+  html[data-scheme="dark"] .lesson svg line,
+  html[data-scheme="dark"] .lesson svg path.grid-line {
+    stroke: var(--c-border) !important;
+  }
+  html[data-scheme="dark"] .lesson svg .axis-line,
+  html[data-scheme="dark"] .lesson svg line[class*="axis"] {
+    stroke: var(--c-text-2) !important;
+  }
+  html[data-scheme="dark"] .lesson svg .axis-label,
+  html[data-scheme="dark"] .lesson svg text[class*="axis"] {
+    fill: var(--c-text-2) !important;
+  }
+  html[data-scheme="dark"] .lesson svg .curve-primary,
+  html[data-scheme="dark"] .lesson svg path[class*="curve-1"] {
+    stroke: var(--c-accent) !important;
+  }
+  html[data-scheme="dark"] .lesson svg .curve-secondary,
+  html[data-scheme="dark"] .lesson svg path[class*="curve-2"] {
+    stroke: var(--c-success) !important;
+  }
+  html[data-scheme="dark"] .lesson svg circle[class*="point"],
+  html[data-scheme="dark"] .lesson svg circle.dot {
+    fill: var(--c-accent) !important;
+    stroke: var(--c-surface) !important;
+  }
+
+  /* figure 容器底色 */
+  html[data-scheme="dark"] .lesson .figrow figure {
+    background: var(--c-surface);
+  }
+  html[data-scheme="dark"] .lesson .figrow figcaption {
+    color: var(--c-text-2);
+  }
 }

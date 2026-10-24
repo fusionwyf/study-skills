@@ -1,0 +1,15 @@
+{
+  "id": "learning.cards",
+  "layer": 4,
+  "version": "1.0.0",
+  "requires": ["core", "foundation"],
+  "presence": "auto",
+  "detect": {
+    "selectors": [".mis", ".recall", ".reading"]
+  },
+  "provides": {
+    "css": ["cards.css"],
+    "selectors": [".mis", ".recall", ".reading"]
+  },
+  "ready": "kit:learning.cards:ready"
+}

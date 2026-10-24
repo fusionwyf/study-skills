@@ -45,6 +45,30 @@ Course Kit v2 将所有模块拓扑排序并拼接为单文件产物：
    `@layer reset, tokens, base, content, shell, learning, viz, theme, course;`
    课程自定义样式写入 `assets/course/theme.css`，处于最优先的 `course` 层，完全解耦加载顺序与特异度竞争。
 
+## 分章课程包的资产同步
+
+一个课程包用 `lessons/<章>/`、`records/<章>/`、`reference/<章>/` 分子目录覆盖多章时，`assets/` 仍只有一份（`assets/kit/` bundle + `assets/course/` 配置），`kit sync <course-dir>` 会递归扫描全部章目录并取模块并集，`nav.json` 也仍是课程包级单文件。
+
+- 递归扫描与进度组合键（`"<章>/<NNNN>"`）的唯一实现是 `scripts/course_layout.py`；`build_index.py`、`validate_course.py`、`update_progress.py` 与 `kit.py` 都从它取路径，不要另写 glob。
+- 课号每章各自从 0001 起，所以 `update_progress.py` 在分章包上必须带 `--chapter <label|id>`（objective 声明了 `chapter` 且无歧义时可自动推断）。
+- `assets/kit/` 是生成物，多章共用一份；章目录里不要再建 `assets/`。
+- `vendor.mode=local` 时离线库落在 `assets/kit/vendor/`，运行时基址由 `kit.js` 的 `src` 反推，课件深度变化不影响解析。
+
+## 导航与进度数据
+
+侧边栏课表、当前课高亮、完成进度条由 `assets/course/nav.json` 承载。**`kit.py sync` 末尾会自动调用 `build_index.py --nav` 重新生成**，无需手动跑。
+
+`nav.json` 的内容与来源：
+
+| 字段 | 来源 | 说明 |
+|---|---|---|
+| `lessons` | 扫描 `lessons/*.html` 的 `<title>` / `<h1>` | 课号、标题、前后课链接 |
+| `current_lesson` | `course.yaml` 的 `current_lesson` | 侧边栏当前课高亮 |
+| `completed_lessons` | 扫描 `records/*.md` 中 `assessment_status: finalized` 的记录 | 侧边栏 ✓ 标记 + 进度条分子 |
+| `completed_count` | `completed_lessons` 的长度 | 进度条显示 |
+
+如需单独生成（不打包 kit），可手动运行 `python scripts/build_index.py <course-dir> --nav`。
+
 ## 主题与配色
 
 - **L1 Token 系统**：三级设计令牌（primitive → semantic → component），包含 `--c-bg`、`--c-text`、`--c-accent`、`--series-1...8`、`--code-*`、`--toc-*`。组件 CSS 严格禁止出现字面十六进制色值。

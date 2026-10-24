@@ -1,0 +1,119 @@
+/* 瑞士网格 Swiss Grid —— 纯白、纯黑、一个信号色；粗黑体、粗分隔线、零圆角。 */
+@layer theme {
+  html[data-theme="swiss"] {
+    color-scheme: light;
+    --c-bg: #ffffff;
+    --c-surface: #ffffff;
+    --c-surface-2: #f2f2f2;
+    --c-sidebar: #ffffff;
+    --c-text: #0a0a0a;
+    --c-text-2: #474747;
+    --c-muted: #7a7a7a;
+    --c-border: #d9d9d9;
+    --c-border-strong: #0a0a0a;
+
+    --c-accent: #ff3d00;
+    --c-accent-strong: #d63300;
+    --c-accent-bg: #fff1ec;
+    --c-accent-border: #ffb8a1;
+
+    --c-success: #0a7d3e;
+    --c-success-bg: #eaf6ee;
+    --c-warn: #b45309;
+    --c-warn-bg: #fff6e5;
+    --c-danger: #d92d20;
+    --c-danger-bg: #fdeceb;
+
+    --radius: 0;
+    --radius-sm: 0;
+    --shadow: none;
+    --shadow-card: none;
+
+    --font-body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    --font-display: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+
+    --code-bg: #0a0a0a;
+    --code-fg: #f2f2f2;
+    --code-border: #0a0a0a;
+    --code-label: #9a9a9a;
+
+    --series-1: #0a0a0a;
+    --series-2: #ff3d00;
+    --series-3: #0047ff;
+    --series-4: #7a7a7a;
+    --series-5: #ffb300;
+    --series-6: #00a36c;
+    --series-7: #b8b8b8;
+    --series-8: #5c2d91;
+  }
+
+  /* 导航 */
+  html[data-theme="swiss"] .kit-sidebar { border-right: 3px solid var(--c-text); }
+  html[data-theme="swiss"] .kit-sidebar__course-name { font-weight: 900; letter-spacing: -0.01em; }
+  html[data-theme="swiss"] .kit-sidebar__item.is-current .kit-sidebar__link {
+    background: var(--c-text); color: #fff; border-left: 4px solid var(--c-accent);
+  }
+  html[data-theme="swiss"] .toc-link.is-active { background: var(--c-text); color: #fff; border-radius: 0; }
+
+  /* 页头 */
+  html[data-theme="swiss"] header.course-header { border-bottom: 3px solid var(--c-text); padding-bottom: 2rem; }
+  html[data-theme="swiss"] header.course-header .course-kicker {
+    color: var(--c-accent); font-family: var(--font-mono); font-weight: 700; letter-spacing: 0.14em;
+  }
+  html[data-theme="swiss"] header.course-header .course-title {
+    font-size: clamp(2.4rem, 4.6vw, 3.8rem); font-weight: 900; letter-spacing: -0.035em; line-height: 1.05; text-wrap: balance;
+  }
+  html[data-theme="swiss"] header.course-header .course-subtitle { color: var(--c-text-2); }
+  html[data-theme="swiss"] header.course-header .course-meta span {
+    border: 2px solid var(--c-text); padding: 0.1rem 0.6rem; color: var(--c-text); font-weight: 700;
+  }
+
+  /* 标题 */
+  html[data-theme="swiss"] .lesson h2 {
+    margin-top: 3.5rem; padding: 1rem 0 0; border-bottom: none; border-top: 3px solid var(--c-text);
+    font-size: 1.9rem; font-weight: 900; letter-spacing: -0.02em;
+  }
+  html[data-theme="swiss"] .lesson h2::before {
+    content: ""; display: block; width: 3rem; height: 0.4rem; margin-bottom: 0.9rem; background: var(--c-accent);
+  }
+  html[data-theme="swiss"] .lesson h3 { font-weight: 900; }
+
+  /* 提示框：黑色实心块；警告/危险为信号色 */
+  html[data-theme="swiss"] .callout {
+    --c-text: #ffffff; --c-text-2: #d0d0d0; --c-surface-2: #262626;
+    border: none; border-radius: 0; background: #0a0a0a; color: #fff; padding: 1.25rem 1.5rem;
+  }
+  html[data-theme="swiss"] .callout::before { display: none; }
+  html[data-theme="swiss"] .callout a { color: #ff8a66; }
+  html[data-theme="swiss"] .callout[data-kind="warning"], html[data-theme="swiss"] .callout[data-callout="warning"],
+  html[data-theme="swiss"] .callout[data-kind="danger"], html[data-theme="swiss"] .callout[data-callout="danger"] {
+    background: var(--c-accent);
+  }
+  html[data-theme="swiss"] .callout[data-kind="warning"] a, html[data-theme="swiss"] .callout[data-kind="danger"] a { color: #fff; }
+
+  /* 题目与交互 */
+  html[data-theme="swiss"] .question, html[data-theme="swiss"] .quiz,
+  html[data-theme="swiss"] .visualization, html[data-theme="swiss"] .kit-pager__card {
+    border: 2px solid var(--c-text); border-radius: 0; box-shadow: none;
+  }
+  html[data-theme="swiss"] .q-option label { border: 2px solid var(--c-border); border-radius: 0; }
+  html[data-theme="swiss"] .q-option label:hover { border-color: var(--c-text); }
+  html[data-theme="swiss"] .q-mark { border-radius: 0; }
+  html[data-theme="swiss"] .q-actions .btn { border-radius: 0; font-weight: 700; }
+  html[data-theme="swiss"] .q-actions .btn.primary { background: var(--c-text); border-color: var(--c-text); color: #fff; }
+  html[data-theme="swiss"] .q-actions .btn.primary:hover:not(:disabled) { background: var(--c-accent); border-color: var(--c-accent); }
+
+  /* 代码块 */
+  html[data-theme="swiss"] .kit-block { --c-surface-2: #1a1a1a; --c-border: #333; border-radius: 0; }
+
+  /* 引言与表格 */
+  html[data-theme="swiss"] .lesson blockquote {
+    margin: 2rem 0; padding: 0; border: none; background: none; color: var(--c-text);
+    font-size: 1.35rem; font-weight: 900; line-height: 1.45; letter-spacing: -0.01em;
+  }
+  html[data-theme="swiss"] .lesson blockquote::before {
+    content: ""; display: block; width: 3rem; height: 0.4rem; margin-bottom: 0.9rem; background: var(--c-accent);
+  }
+  html[data-theme="swiss"] .lesson th { border-bottom: 2px solid var(--c-text); font-family: var(--font-mono); }
+}

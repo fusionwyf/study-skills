@@ -10,6 +10,11 @@
       "themes/course.css",
       "themes/ink.css",
       "themes/paper.css",
+      "themes/swiss.css",
+      "themes/blueprint.css",
+      "themes/riso.css",
+      "themes/brutal.css",
+      "themes/field.css",
       "base.css",
       "layout.css",
       "print.css"

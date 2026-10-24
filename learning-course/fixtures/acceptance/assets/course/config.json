@@ -9,5 +9,8 @@
       "dark": "github-dark"
     }
   },
-  "modules": []
+  "modules": [
+    "viz.kinds.spatial",
+    "viz.kinds.chart"
+  ]
 }

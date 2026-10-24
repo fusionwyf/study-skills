@@ -1,5 +1,6 @@
 @layer content {
   .callout {
+    position: relative;
     margin: 1.25rem 0;
     padding: 0.85rem 1.15rem;
     border-left: 4px solid var(--c-accent);
@@ -8,6 +9,7 @@
     color: var(--c-text);
   }
 
+  /* data-callout 属性（规范写法） */
   .callout[data-callout="note"],
   .callout[data-callout="info"] {
     border-left-color: var(--c-accent);
@@ -29,11 +31,66 @@
     background: var(--c-danger-bg);
   }
 
+  /* data-kind 属性（课程实际使用的写法，等价映射） */
+  .callout[data-kind="tip"],
+  .callout[data-kind="success"] {
+    border-left-color: var(--c-success);
+    background: var(--c-success-bg);
+  }
+  .callout[data-kind="warning"] {
+    border-left-color: var(--c-warn);
+    background: var(--c-warn-bg);
+  }
+  .callout[data-kind="danger"] {
+    border-left-color: var(--c-danger);
+    background: var(--c-danger-bg);
+  }
+  .callout[data-kind="definition"],
+  .callout[data-kind="info"],
+  .callout[data-kind="note"] {
+    border-left-color: var(--c-accent);
+    background: var(--c-accent-bg);
+  }
+
   .callout__title {
     font-weight: 700;
     margin-bottom: 0.35rem;
     display: flex;
     align-items: center;
     gap: 0.4rem;
+  }
+
+  /* ---- Callout 图标系统（CSS ::before + Unicode） ---- */
+  .callout[data-kind="tip"]::before,
+  .callout[data-callout="tip"]::before {
+    content: "💡";
+    margin-right: 0.4rem;
+  }
+  .callout[data-kind="definition"]::before,
+  .callout[data-kind="note"]::before,
+  .callout[data-kind="info"]::before,
+  .callout[data-callout="note"]::before,
+  .callout[data-callout="info"]::before {
+    content: "📐";
+    margin-right: 0.4rem;
+  }
+  .callout[data-kind="warning"]::before,
+  .callout[data-callout="warning"]::before {
+    content: "⚠";
+    margin-right: 0.4rem;
+    color: var(--c-warn);
+  }
+  .callout[data-kind="danger"]::before,
+  .callout[data-callout="danger"]::before {
+    content: "✕";
+    margin-right: 0.4rem;
+    font-weight: 700;
+    color: var(--c-danger);
+  }
+  .callout[data-kind="success"]::before {
+    content: "✓";
+    margin-right: 0.4rem;
+    font-weight: 700;
+    color: var(--c-success);
   }
 }

@@ -1,0 +1,117 @@
+/* 孔版印刷 Risograph —— 荧光粉 + 青绿双专色、套印错位、颗粒噪点、网点底纹。 */
+@layer theme {
+  html[data-theme="riso"] {
+    color-scheme: light;
+    --c-bg: #f7f6f2;
+    --c-surface: #ffffff;
+    --c-surface-2: #f0eef6;
+    --c-sidebar: #f2f0ea;
+    --c-text: #22307a;
+    --c-text-2: #4b5596;
+    --c-muted: #8088b8;
+    --c-border: #d5d7e8;
+    --c-border-strong: #22307a;
+
+    --c-accent: #ff3d9a;
+    --c-accent-strong: #d81b78;
+    --c-accent-bg: #ffe6f2;
+    --c-accent-border: #ffb3d6;
+
+    --c-success: #00a19a;
+    --c-success-bg: #e2f7f5;
+    --c-warn: #b86e00;
+    --c-warn-bg: #fff5d6;
+    --c-danger: #e5304e;
+    --c-danger-bg: #ffe8ec;
+
+    --radius: 14px;
+    --radius-sm: 8px;
+    --shadow: none;
+    --shadow-card: none;
+
+    --font-body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    --font-display: "Space Grotesk", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    --font-mono: "Space Grotesk", ui-monospace, Consolas, monospace;
+
+    --code-bg: #22307a;
+    --code-fg: #f7f6f2;
+    --code-border: #22307a;
+    --code-label: #ff8fc6;
+
+    --series-1: #ff3d9a;
+    --series-2: #00a19a;
+    --series-3: #22307a;
+    --series-4: #ffc400;
+    --series-5: #ff7a3d;
+    --series-6: #7a5cff;
+    --series-7: #5ec8ff;
+    --series-8: #8a8fb3;
+
+    --riso-teal: #00a19a;
+    --riso-yellow: #ffe94d;
+  }
+
+  /* 纸张颗粒 */
+  html[data-theme="riso"] body::after {
+    content: ""; position: fixed; inset: 0; z-index: 90; pointer-events: none; opacity: 0.2; mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .1 0 0 0 0 .1 0 0 0 0 .3 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  @media print { html[data-theme="riso"] body::after { display: none; } }
+
+  /* 导航 */
+  html[data-theme="riso"] .kit-sidebar__course-name { color: var(--c-accent); font-family: var(--font-display); font-weight: 700; }
+  html[data-theme="riso"] .kit-sidebar__item.is-current .kit-sidebar__link {
+    background: var(--riso-yellow); color: var(--c-text); border-left: none; border-radius: 999px;
+  }
+  html[data-theme="riso"] .toc-link.is-active { background: var(--c-accent-bg); color: var(--c-accent-strong); border-radius: 999px; }
+
+  /* 页头：套印错位标题 */
+  html[data-theme="riso"] header.course-header { border-bottom: 2px dashed var(--c-accent-border); padding-bottom: 1.75rem; }
+  html[data-theme="riso"] header.course-header .course-kicker { color: var(--riso-teal); font-family: var(--font-display); font-weight: 700; }
+  html[data-theme="riso"] header.course-header .course-title {
+    font-size: clamp(2.3rem, 4.4vw, 3.6rem); font-weight: 900; line-height: 1.08; letter-spacing: -0.02em;
+    color: var(--c-accent); text-shadow: 4px 3px 0 rgba(0, 161, 154, 0.65); text-wrap: balance;
+  }
+  html[data-theme="riso"] header.course-header .course-meta span {
+    background: var(--riso-yellow); color: var(--c-text); padding: 0.15rem 0.7rem; border-radius: 999px; font-weight: 700;
+  }
+
+  /* 标题 */
+  html[data-theme="riso"] .lesson h2 { border-bottom: none; padding-bottom: 0; font-weight: 900; font-size: 1.6rem; }
+  html[data-theme="riso"] .lesson h2::after {
+    content: ""; display: block; width: 3rem; height: 0.4rem; margin-top: 0.55rem; border-radius: 9px;
+    background: var(--riso-teal); mix-blend-mode: multiply;
+  }
+
+  /* 网点提示框 */
+  html[data-theme="riso"] .callout {
+    border: none; border-radius: var(--radius);
+    background: radial-gradient(circle, rgba(255, 61, 154, 0.22) 1.4px, transparent 1.6px) 0 0 / 9px 9px, #fff0f7;
+  }
+  html[data-theme="riso"] .callout::before { display: none; }
+  html[data-theme="riso"] .callout[data-kind="tip"], html[data-theme="riso"] .callout[data-callout="tip"],
+  html[data-theme="riso"] .callout[data-kind="success"] {
+    background: radial-gradient(circle, rgba(0, 161, 154, 0.25) 1.4px, transparent 1.6px) 0 0 / 9px 9px, #e9fbf9;
+  }
+  html[data-theme="riso"] .callout[data-kind="warning"], html[data-theme="riso"] .callout[data-callout="warning"] {
+    background: radial-gradient(circle, rgba(230, 180, 0, 0.35) 1.4px, transparent 1.6px) 0 0 / 9px 9px, #fffbe0;
+  }
+
+  /* 题目与卡片：错位投影 */
+  html[data-theme="riso"] .question, html[data-theme="riso"] .quiz,
+  html[data-theme="riso"] .visualization, html[data-theme="riso"] .kit-pager__card {
+    border: 2px solid var(--c-text); border-radius: var(--radius); box-shadow: 7px 7px 0 rgba(255, 61, 154, 0.5);
+  }
+  html[data-theme="riso"] .q-option label { border-radius: 10px; }
+  html[data-theme="riso"] .q-actions .btn { border-radius: 999px; }
+  html[data-theme="riso"] .q-actions .btn.primary { background: var(--c-text); border-color: var(--c-text); color: #fff; }
+  html[data-theme="riso"] .q-actions .btn.primary:hover:not(:disabled) { background: var(--c-accent); border-color: var(--c-accent); }
+
+  html[data-theme="riso"] .kit-block { --c-surface-2: #2c3b8c; --c-border: #3a4a9e; }
+
+  html[data-theme="riso"] .lesson blockquote {
+    border-left: 6px solid var(--riso-teal); background: none; color: var(--c-accent);
+    font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; padding: 0.2rem 0 0.2rem 1.1rem;
+  }
+  html[data-theme="riso"] .lesson th { border-bottom: 2px solid var(--c-text); }
+}

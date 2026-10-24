@@ -6,20 +6,89 @@
     "content._block": "2.0.0",
     "content.code": "2.0.0",
     "content.math": "2.0.0",
-    "shell.nav": "2.0.0",
+    "content.media": "2.0.0",
+    "shell.nav": "2.1.1",
     "shell.progress": "2.0.0",
     "shell.theme-switcher": "2.0.0",
     "shell.toc": "2.0.0",
     "learning.records": "2.0.0",
     "learning.question": "2.0.0",
     "viz.core": "2.0.0",
+    "viz.kinds.chart": "2.0.0",
     "viz.kinds.list": "2.0.0",
     "viz.kinds.sequence": "2.0.0",
+    "viz.kinds.spatial": "2.0.0",
     "viz.kinds.table": "2.0.0"
   },
+  "reasons": {
+    "core": [
+      "core"
+    ],
+    "foundation": [
+      "core"
+    ],
+    "shell.nav": [
+      "core"
+    ],
+    "shell.progress": [
+      "core"
+    ],
+    "shell.theme-switcher": [
+      "core"
+    ],
+    "shell.toc": [
+      "core"
+    ],
+    "learning.records": [
+      "core"
+    ],
+    "content._block": [
+      "core"
+    ],
+    "viz.kinds.spatial": [
+      "opt-in:config.json"
+    ],
+    "viz.kinds.chart": [
+      "opt-in:config.json"
+    ],
+    "content.math": [
+      "auto:0001-math.html:regex:\\\\\\("
+    ],
+    "viz.core": [
+      "auto:0001-math.html:.visualization",
+      "auto:0002-probability.html:.visualization",
+      "auto:0003-algorithm.html:.visualization",
+      "auto:0004-history.html:.visualization"
+    ],
+    "viz.kinds.table": [
+      "auto:0001-math.html:[data-visualization=\"table\"]"
+    ],
+    "learning.question": [
+      "auto:0001-math.html:section[data-question-id]",
+      "auto:0002-probability.html:section[data-question-id]",
+      "auto:0003-algorithm.html:section[data-question-id]",
+      "auto:0004-history.html:section[data-question-id]",
+      "auto:0005-design.html:section[data-question-id]",
+      "auto:0006-language.html:section[data-question-id]"
+    ],
+    "content.code": [
+      "auto:0003-algorithm.html:pre > code"
+    ],
+    "viz.kinds.sequence": [
+      "auto:0003-algorithm.html:[data-visualization=\"sequence\"]"
+    ],
+    "viz.kinds.list": [
+      "auto:0003-algorithm.html:[data-visualization=\"process\"]",
+      "auto:0004-history.html:[data-visualization=\"timeline\"]"
+    ],
+    "content.media": [
+      "auto:0005-design.html:[data-media]",
+      "auto:0006-language.html:[data-media]"
+    ]
+  },
   "files": {
-    "kit.css": "sha256-a51f449633d752e0d51914ef79546b0263ddd034a746be19de8231c5ae80f944",
-    "kit.js": "sha256-ff3c39355d18c9e52d693de4ccf8b199727ea0970672ae3392eac13481c7760f"
+    "kit.css": "sha256-5425c6d8a9d3988838adff245714230513e486c8f63180475b960f6fb09f1339",
+    "kit.js": "sha256-edd3dc416717ecad861ab49f036654988a92f7111364b1931ed9b0d4462cb403"
   },
   "vendor": {}
 }

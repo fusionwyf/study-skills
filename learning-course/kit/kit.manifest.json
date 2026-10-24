@@ -26,6 +26,7 @@
     "shell.progress",
     "shell.theme-switcher",
     "shell.toc",
+    "learning.cards",
     "learning.records",
     "learning.question",
     "learning.step",
@@ -70,6 +71,11 @@
           "themes/course.css",
           "themes/ink.css",
           "themes/paper.css",
+          "themes/swiss.css",
+          "themes/blueprint.css",
+          "themes/riso.css",
+          "themes/brutal.css",
+          "themes/field.css",
           "base.css",
           "layout.css",
           "print.css"
@@ -283,7 +289,7 @@
     "shell.nav": {
       "id": "shell.nav",
       "layer": 3,
-      "version": "2.0.0",
+      "version": "2.1.1",
       "requires": [
         "core",
         "foundation"
@@ -339,6 +345,7 @@
           "theme-switcher.js"
         ],
         "selectors": [
+          "[data-theme-switcher]",
           "[data-theme-switch]"
         ]
       },
@@ -371,6 +378,34 @@
         "--toc-w",
         "--toc-top"
       ]
+    },
+    "learning.cards": {
+      "id": "learning.cards",
+      "layer": 4,
+      "version": "1.0.0",
+      "requires": [
+        "core",
+        "foundation"
+      ],
+      "presence": "auto",
+      "detect": {
+        "selectors": [
+          ".mis",
+          ".recall",
+          ".reading"
+        ]
+      },
+      "provides": {
+        "css": [
+          "cards.css"
+        ],
+        "selectors": [
+          ".mis",
+          ".recall",
+          ".reading"
+        ]
+      },
+      "ready": "kit:learning.cards:ready"
     },
     "learning.question": {
       "id": "learning.question",

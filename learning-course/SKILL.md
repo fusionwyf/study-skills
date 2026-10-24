@@ -70,9 +70,15 @@ Course Kit v2 将所有教学资产统一维护在 `kit/`（L0 运行时、L1 �
    把学习者要求的深度、视觉风格、交互与验收标准写入课程 `PLAN.md`；不足的能力按 assets 协议选择静态表达或课程专用扩展。
    成熟第三方库优先，允许固定版本 CDN；代码使用原生 `<pre><code class="language-...">`（由 Kit 块外壳与 highlight.js 渲染），公式使用 KaTeX 语法（`\(...\)` / `\[...\]`），流程图/状态图/时序图使用 Mermaid（`<pre class="mermaid">`），不手写 SVG 替代 Mermaid 能表达的图形。题目统一使用 `<section class="question" data-kind="...">` 题块。视觉定制写入 `assets/course/theme.css`，主题与第三方配置写入 `assets/course/config.json`。
    `templates/lesson.html` 是标准课件模板：复制后必须替换其中占位的 `data-course-id` 与 `data-objective`，并确保该 objective 已写入 `course.yaml` 的 `objectives`。
-6. 将 phase 设为 `awaiting_evidence`，重新生成索引并验证课程包。
+6. 运行 `python kit/build/kit.py sync <course-dir>` 同步模块并重新生成 `nav.json`（导航与进度数据），然后验证课程包：
 
-完成条件：成功标准和 objective 已写入状态，第一课文件存在且引用已定义 objective，phase 为 `awaiting_evidence`，两条验证命令均通过。
+   ```text
+   python kit/build/kit.py sync <course-dir>
+   python kit/build/kit.py check <course-dir>
+   python scripts/validate_course.py <course-dir> --strict-schema --pedagogical
+   ```
+
+完成条件：成功标准和 objective 已写入状态，第一课文件存在且引用已定义 objective，phase 为 `awaiting_evidence`，模块已同步，nav.json 已更新，验证命令均通过。
 
 ## Continue
 
@@ -81,7 +87,7 @@ Course Kit v2 将所有教学资产统一维护在 `kit/`（L0 运行时、L1 �
 3. 优先处理到期复习和学习者明确提出的问题。
 4. 根据 evidence 强度决定保持难度、补前置、增加变式、推进或设为 `uncertain`。
    若有 incoming 交接、已有跨包交接待返回，或 finalized evidence 表明需要独立的有界补课包，读取 `../shared/references/learning-handoff.md` 并按对应分支处理。incoming 补课获得约定的返回证据时执行协议的返回分支；课程内可补的前置仍按本流程教学。
-5. 制作下一课时复用 `PLAN.md` 的制作约定，按 `references/assets.md` 检查资产选择与接线；生成下一课后进入 `awaiting_evidence`。不要提前创建不存在的反馈。
+5. 制作下一课时复用 `PLAN.md` 的制作约定，按 `references/assets.md` 检查资产选择与接线；生成下一课后运行 `python kit/build/kit.py sync <course-dir>` 同步模块与导航，进入 `awaiting_evidence`。不要提前创建不存在的反馈。
 
 完成条件：所有新 mastery 都可追溯到 finalized record；下一项动作是到期复习、针对性补救、有界补课交接或一节引用已定义 objective 的新课；状态与索引已经验证。
 
@@ -157,24 +163,12 @@ python kit/build/kit.py add <course-dir> viz.kinds.spatial
 模块列表与能力说明可通过 `python kit/build/kit.py list` 查询。
 `python kit/build/kit.py check <course-dir>` 用于校验课程 `kit.lock.json` 的模块与文件哈希完整性。
 
-### 题目迁移与旧版兼容
-
-旧版课程若包含 `.quiz`、`data-answer-*`、`teaching-target`、`dialogue-practice` 或自述独立性下拉等旧写法，使用自动迁移工具一键转换：
-
-```text
-python kit/build/migrate_questions.py <course-dir> --dry-run
-python kit/build/migrate_questions.py <course-dir> --apply
-```
-
-旧写法已于 v2.3.0 正式移除不再生效，新课件统一使用 `<section class="question" data-kind="...">`。添加扩展模块参考 `references/assets.md`。
-
 ## 验证
 
 生成或修改课程后运行：
 
 ```text
 python kit/build/kit.py check <course-dir>
-python scripts/build_index.py <course-dir>
 python scripts/validate_course.py <course-dir> --strict-schema --pedagogical
 python -X utf8 ../shared/scripts/quick_validate.py <skill-dir>
 ```

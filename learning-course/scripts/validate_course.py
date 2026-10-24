@@ -13,6 +13,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urlsplit
 from validate_assets import validate_asset_package, validate_wiring, validate_data
+import course_layout
 
 
 REQUIRED_DIRS = ("lessons", "assets", "reference", "records", "exports")
@@ -167,7 +168,13 @@ def validate_yaml_schema(
     lesson_objectives: set[str],
     errors: list[str],
     warnings: list[str],
+    chapters: list[dict] | None = None,
+    numbers_by_chapter: dict[str, list[int]] | None = None,
+    objective_chapters: dict[str, str] | None = None,
 ) -> None:
+    chapters = chapters or []
+    numbers_by_chapter = numbers_by_chapter or {}
+    objective_chapters = objective_chapters or {}
     try:
         import yaml  # type: ignore
         from validate_record import independence_error
@@ -200,22 +207,67 @@ def validate_yaml_schema(
         errors.append("current_lesson must be an integer")
     elif current_lesson < 0:
         errors.append("current_lesson must be >= 0")
+    elif chapters:
+        # A chaptered course restarts numbering per chapter, so the top-level
+        # value is the total delivered across chapters, not a lesson file number.
+        delivered = sum(len(values) for values in numbers_by_chapter.values())
+        if current_lesson > delivered:
+            errors.append(f"current_lesson {current_lesson} exceeds the {delivered} delivered lessons")
     elif current_lesson > 0 and current_lesson not in lesson_numbers:
         errors.append(f"current_lesson {current_lesson:04d} has no matching lesson file")
+
+    chapter_ids: set[str] = set()
+    id_to_label = {chapter.get("id") or chapter.get("label"): chapter.get("label") for chapter in chapters}
+    for chapter in chapters:
+        label = chapter.get("label") or ""
+        chapter_id = chapter.get("id") or label
+        if not label:
+            errors.append("chapters[] entry needs a label")
+            continue
+        if chapter_id in chapter_ids:
+            errors.append(f"duplicate chapter id: {chapter_id}")
+        chapter_ids.add(chapter_id)
+        for key in ("lesson_dir", "records_dir"):
+            value = chapter.get(key)
+            if value and not (root / str(value).replace("\\", "/")).is_dir():
+                errors.append(f"chapters[{label}].{key} does not exist: {value}")
+        chapter_current = chapter.get("current_lesson")
+        known = numbers_by_chapter.get(label, [])
+        if chapter_current is None:
+            warnings.append(f"chapters[{label}] has no current_lesson")
+        elif not isinstance(chapter_current, int) or chapter_current < 0:
+            errors.append(f"chapters[{label}].current_lesson must be a non-negative integer")
+        elif chapter_current > 0 and chapter_current not in known:
+            errors.append(
+                f"chapters[{label}].current_lesson {chapter_current:04d} has no matching lesson under lessons/{label}/"
+            )
+    if isinstance(state.get("chapters"), list) and not chapters:
+        errors.append("chapters[] entries must be mappings with a label")
     if not isinstance(state.get("learner"), dict):
         errors.append("schema v3 requires learner mapping")
     for removed in ("feedback_status", "mode", "roadmap", "next_lesson", "checkpoint", "mastery"):
         if removed in state:
             errors.append(f"schema v3 removed top-level field: {removed}")
 
+    def check_diagnostic(value: object, label: str) -> None:
+        if not isinstance(value, dict):
+            errors.append(f"{label} must be a mapping")
+            return
+        if value.get("status") not in {"pending", "complete", "skipped"}:
+            errors.append(f"invalid {label} status: {value.get('status')!r}")
+        if value.get("record") is not None:
+            validate_record(root, value.get("record"), f"{label}.record", errors)
+
     diagnostic = state.get("diagnostic")
-    if not isinstance(diagnostic, dict):
-        errors.append("diagnostic must be a mapping")
+    chaptered_diagnostics = bool(chapters) and all(isinstance(chapter.get("diagnostic"), dict) for chapter in chapters)
+    if diagnostic is None and chaptered_diagnostics:
+        for chapter in chapters:
+            check_diagnostic(chapter.get("diagnostic"), f"chapters[{chapter.get('label')}].diagnostic")
     else:
-        if diagnostic.get("status") not in {"pending", "complete", "skipped"}:
-            errors.append(f"invalid diagnostic status: {diagnostic.get('status')!r}")
-        if diagnostic.get("record") is not None:
-            validate_record(root, diagnostic.get("record"), "diagnostic.record", errors)
+        check_diagnostic(diagnostic, "diagnostic")
+        if chaptered_diagnostics:
+            for chapter in chapters:
+                check_diagnostic(chapter.get("diagnostic"), f"chapters[{chapter.get('label')}].diagnostic")
 
     last_feedback = state.get("last_feedback")
     if last_feedback is not None:
@@ -237,6 +289,18 @@ def validate_yaml_schema(
                 errors.append(f"duplicate objective id: {objective_id}")
             else:
                 objective_ids.add(objective_id)
+            objective_chapter = objective.get("chapter")
+            if objective_chapter is not None:
+                if objective_chapter not in chapter_ids:
+                    errors.append(f"objectives[{index}] references unknown chapter {objective_chapter!r}")
+                elif objective_id in objective_chapters:
+                    lesson_label = objective_chapters[objective_id]
+                    expected_label = id_to_label.get(objective_chapter, objective_chapter)
+                    if lesson_label and lesson_label != expected_label:
+                        errors.append(
+                            f"objectives[{index}] chapter {objective_chapter!r} but the lesson declaring "
+                            f"{objective_id} lives under lessons/{lesson_label}/"
+                        )
             mastery = objective.get("mastery")
             if mastery not in mastery_values:
                 errors.append(f"objectives[{index}] has invalid mastery")
@@ -807,27 +871,51 @@ def main() -> int:
         if not (root / name).is_file():
             errors.append(f"missing file: {name}")
 
-    validate_asset_package(root, errors)
+    state_document: dict = {}
     yaml_path = root / "course.yaml"
     if yaml_path.is_file():
+        try:
+            import yaml  # type: ignore
+            state_document = yaml.safe_load(yaml_path.read_text(encoding="utf-8")) or {}
+        except Exception:
+            state_document = {}
+    chapters = course_layout.chapters_of_state(state_document)
+    chapter_order = [chapter["label"] for chapter in chapters]
+
+    validate_asset_package(root, errors)
+    if yaml_path.is_file():
         text = yaml_path.read_text(encoding="utf-8", errors="replace")
-        for key in ("schema_version", "course_id", "title", "status", "phase", "current_lesson", "learner", "diagnostic", "objectives", "review_queue", "last_feedback"):
+        # A chaptered course may declare the diagnostic per chapter instead of at
+        # the top level; requiring both would force a misleading course-wide status.
+        chaptered_diagnostics = bool(chapters) and all(
+            isinstance(chapter.get("diagnostic"), dict) for chapter in chapters
+        )
+        required_keys = [
+            key for key in ("schema_version", "course_id", "title", "status", "phase", "current_lesson",
+                            "learner", "diagnostic", "objectives", "review_queue", "last_feedback")
+            if not (key == "diagnostic" and chaptered_diagnostics)
+        ]
+        for key in required_keys:
             if not re.search(rf"^{re.escape(key)}\s*:", text, re.M):
                 errors.append(f"course.yaml missing top-level key: {key}")
-    lesson_dir = root / "lessons"
-    lessons = sorted(lesson_dir.glob("*.html")) if lesson_dir.is_dir() else []
+    lesson_entries = course_layout.iter_lessons(root, chapter_order)
+    lessons = [entry["path"] for entry in lesson_entries]
     numbers: list[int] = []
+    numbers_by_chapter: dict[str, list[int]] = {}
     lesson_objectives: set[str] = set()
-    for lesson in lessons:
+    objective_chapters: dict[str, str] = {}
+    for entry, lesson in zip(lesson_entries, lessons):
         match = LESSON_RE.match(lesson.name)
         if not match:
-            errors.append(f"invalid lesson filename: lessons/{lesson.name}")
+            errors.append(f"invalid lesson filename: lessons/{entry['file']}")
         else:
             numbers.append(int(match.group(1)))
+            numbers_by_chapter.setdefault(entry["chapter"] or "", []).append(int(match.group(1)))
         body = lesson.read_text(encoding="utf-8", errors="replace")
         objective = data_value(body, "objective")
         if objective:
             lesson_objectives.add(objective)
+            objective_chapters.setdefault(objective, entry["chapter"] or "")
         if "data-visualization" not in body: validate_wiring(lesson, body, errors)
         if args.pedagogical:
             validate_pedagogy(lesson, body, errors, warnings)
@@ -853,10 +941,18 @@ def main() -> int:
         for host in external_hosts:
             warnings.append(f"external network dependency: {lesson.name} -> {host}")
 
-    if numbers and numbers != list(range(1, len(numbers) + 1)):
-        errors.append(f"lesson numbers are not continuous from 0001: {numbers}")
+    # Lesson numbers restart per chapter, so continuity is checked within each
+    # chapter directory rather than across the whole package.
+    for label, chapter_numbers in numbers_by_chapter.items():
+        if sorted(chapter_numbers) != list(range(1, len(chapter_numbers) + 1)):
+            scope = f"lessons/{label}/" if label else "lessons/"
+            errors.append(f"lesson numbers are not continuous from 0001 in {scope}: {sorted(chapter_numbers)}")
     if yaml_path.is_file() and args.strict_schema:
-        validate_yaml_schema(yaml_path, root, numbers, lesson_objectives, errors, warnings)
+        validate_yaml_schema(
+            yaml_path, root, numbers, lesson_objectives, errors, warnings,
+            chapters=chapters, numbers_by_chapter=numbers_by_chapter,
+            objective_chapters=objective_chapters,
+        )
     for warning in warnings:
         print(f"WARNING: {warning}")
     if errors:

@@ -6,7 +6,6 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from install_optional import install
 
 SKILL = Path(__file__).resolve().parents[1]
 
@@ -16,9 +15,13 @@ def prepare(destination):
         raise FileExistsError(f"Refusing to overwrite {destination}")
     source = SKILL / "fixtures/acceptance"
     shutil.copytree(source, destination)
-    install(destination, ["chart", "spatial", "media"])
     kit_py = SKILL / "kit/build/kit.py"
     if kit_py.is_file():
+        for module_id in ["viz.kinds.chart", "viz.kinds.spatial", "content.media"]:
+            subprocess.run(
+                [sys.executable, str(kit_py), "add", str(destination), module_id],
+                check=True,
+            )
         subprocess.run([sys.executable, str(kit_py), "sync", str(destination)], check=True)
     subprocess.run(
         [sys.executable, str(SKILL / "scripts/build_index.py"), str(destination)],

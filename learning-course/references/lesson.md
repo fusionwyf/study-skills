@@ -55,6 +55,16 @@
 
 当状态为 `required` 或 `provided` 时，页面必须包含对应的 `data-role` 内容：`objective`、`evidence`、`retrieval`、`learner-feedback`、`sources`、`answer-feedback`。
 
+**分章课程包的引用深度**：课件位于 `lessons/<章>/` 时比扁平包深一层，资产链接相应改为
+
+```html
+<link rel="stylesheet" href="../../assets/kit/kit.css">
+<link rel="stylesheet" href="../assets/course/theme.css">
+<script defer src="../../assets/kit/kit.js"></script>
+```
+
+`theme.css`、`config.json`、`nav.json` 始终在课程包的 `assets/course/` 内（每门课一份，不随章拆分）；只有课件、records、reference 按章分子目录。课程首页链接为 `../../index.html`。运行时 `nav.json` 的地址由 `kit.js` 的 `src` 反推，不依赖字面 `../`，两种深度都能取到。
+
 ## 二、教学模式
 
 根据本课的可验证学习成果选择主模式（详见下文教学模式与 Bloom 认知层级）：
@@ -141,14 +151,6 @@
 - **可观察辅助行为**：页面只客观记录用户在页内的辅助行为（点击提示记录为 `with_hints`；带 `data-guidance="ai_guided"` 的提示记录为 `ai_guided`；点击查看答案记录为 `answer_revealed`；未用页内提示记录为 `none (未在页内使用提示；外部辅助不可观测)`）。**严禁将未用提示自动断言为 `independent`**。独立性属于定稿评估（finalized evaluation），由 Agent 根据完整证据链或学习者自述在定稿记录中确认，严格遵守共享契约 `../shared/references/record-contract.md`。
 - **揭示保护**：未答对时隐藏答案，达到 `data-max-attempts`（默认 2）后提供“查看答案”按钮。
 
-#### ⚠️ 旧写法移除与迁移说明（已于 v2.3.0 正式移除，不再生效）：
-- 旧版 `.quiz` 提交模式 ➔ 迁移为 `data-kind="choice"`
-- 旧版 `[data-answer-input]` / `[data-answer-check]` ➔ 迁移为 `data-kind="numeric"` 或 `data-kind="fill"`
-- 旧版 `[data-role~="teaching-target"]` ➔ 迁移为 `data-kind="open"`
-- 旧版 `[data-role~="dialogue-practice"]` ➔ 迁移为 `data-kind="dialogue"`
-- 旧版 `<select data-independence>` ➔ 移除页内自述下拉；独立性由定稿评估确认，页面只记录客观辅助行为
-- 自动迁移：运行 `python kit/build/migrate_questions.py <course-dir> --apply`。
-
 ### 2. 代码块（Code Block）
 
 作者只写原生语义标记：
@@ -173,16 +175,43 @@
 
 ### 5. 提示折叠（Callout）
 
-遵循 Obsidian 语法：
 ```html
 <aside class="callout" data-callout="tip" data-fold="open">
-  <p class="callout-title">重点提示</p>
+  <div class="callout__title">重点提示</div>
   <p>具体提示内容……</p>
 </aside>
 ```
-支持 `note`、`tip`、`warning`、`important` 等语义类型及折叠交互。
 
-### 6. 数据可视化（Visualizations）
+- `data-callout` 取值：`note`、`info`、`tip`、`warning`、`danger`。
+- 标题元素是 `.callout__title`（**双下划线**，与 `callout.js`/`callout.css` 一致）。省略标题时运行时按类型自动注入中文名（注意/说明/提示/警告/危险）；写成 `.callout-title` 不会被识别，会同时出现两个标题。
+- `data-fold="open|closed"` 控制折叠交互。
+
+### 6. 分步推导（Step）与反思输入（Reflection）
+
+分步展开用 `learning.step`：未展开的步骤用 **`class="step is-hidden"`**（不是 `hidden` 属性），推进按钮必须带 `data-step-next`，作用域由 `[data-steps-scope]` 或最近的 `section / .card / .lesson` 决定。
+
+```html
+<div class="steps" data-steps-scope>
+  <div class="step is-hidden"><strong>步骤 1</strong><p>……</p></div>
+  <div class="step is-hidden"><strong>步骤 2</strong><p>……</p></div>
+  <div class="steps-controls"><button type="button" data-step-next>展开下一步</button></div>
+</div>
+```
+
+`data-feedback="required"` 的正文反思框用 `.reflection`：`learning.records` 只收集 `<label for="X">` + 同页 `id="X"` 的输入框，其它写法（如裸 `textarea[data-feedback-input]`）不会进入复制的学习记录。
+
+```html
+<section class="course-actions">
+  <div class="reflection">
+    <label for="fb-1">哪里看懂了？</label>
+    <textarea id="fb-1" rows="3"></textarea>
+  </div>
+  <button type="button" data-copy-feedback>复制学习记录</button>
+  <span data-copy-feedback-status role="status"></span>
+</section>
+```
+
+### 7. 数据可视化（Visualizations）
 
 使用 `data-visualization="chart|spatial|relation|timeline|process|sequence|table"` 容器与 `data-viz-config` 配置。
 ```html
@@ -202,7 +231,7 @@
 </section>
 ```
 
-### 7. 动效增强（Animation Component - L2）
+### 8. 动效增强（Animation Component - L2）
 
 声明式滚动与即时动效组件：
 ```html

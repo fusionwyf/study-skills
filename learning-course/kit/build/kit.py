@@ -16,6 +16,7 @@ import json
 import os
 import re
 import shutil
+import subprocess
 import sys
 import tempfile
 import uuid
@@ -32,6 +33,11 @@ if sys.platform == "win32":
 
 KIT_VERSION = "2.0.0"
 KIT_ROOT = Path(__file__).resolve().parent.parent
+
+# Shared chapter-aware layout rules live with the course scripts (see
+# scripts/course_layout.py); lessons/ and records/ may be split per chapter.
+sys.path.insert(0, str(KIT_ROOT.parent / "scripts"))
+import course_layout
 SKILL_ROOT = KIT_ROOT.parent
 
 LAYER_ORDER = ["reset", "tokens", "base", "content", "shell", "learning", "viz", "theme", "course"]
@@ -402,10 +408,38 @@ def normalize_html_content(html_text):
 
     # Step 2: Build static TOC fallback
     if headings:
-        toc_items = []
+        tree = []
+        cur_h2 = None
         for h in headings:
-            cls = "is-h2" if h["tag"] == "h2" else "is-h3"
-            toc_items.append(f'      <li class="toc-item {cls}"><a class="toc-link" href="#{h["id"]}">{h["title"]}</a></li>')
+            if h["tag"] == "h2":
+                cur_h2 = {"id": h["id"], "title": h["title"], "children": []}
+                tree.append(cur_h2)
+            else:
+                if cur_h2 is not None:
+                    cur_h2["children"].append(h)
+                else:
+                    cur_h2 = {"id": h["id"], "title": h["title"], "children": []}
+                    tree.append(cur_h2)
+
+        toc_items = []
+        for node in tree:
+            has_ch = bool(node["children"])
+            cls = "has-children is-collapsed" if has_ch else "no-children"
+            chevron = (
+                '<button type="button" class="toc-toggle kit-toc__toggle" aria-label="展开子目录" title="展开子目录" aria-expanded="false">'
+                '<svg class="kit-toc__chevron" viewBox="0 0 16 16" width="9" height="9" aria-hidden="true">'
+                '<path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
+                '</svg></button>'
+            ) if has_ch else '<span class="kit-toc__spacer" aria-hidden="true"></span>'
+            toc_items.append(f'      <li class="toc-item is-h2 {cls}">')
+            toc_items.append(f'        <div class="toc-row">{chevron}<a class="toc-link is-h2-link" href="#{node["id"]}">{node["title"]}</a></div>')
+            if has_ch:
+                toc_items.append('        <ul class="toc-sublist">')
+                for ch in node["children"]:
+                    toc_items.append(f'          <li class="toc-item is-h3"><a class="toc-link is-h3-link" href="#{ch["id"]}">{ch["title"]}</a></li>')
+                toc_items.append('        </ul>')
+            toc_items.append('      </li>')
+
         toc_html = (
             '<nav class="kit-toc" aria-label="本课目录" data-kit-toc>\n'
             '  <div class="toc-header"><p class="toc-title">本课目录</p></div>\n'
@@ -462,8 +496,7 @@ def load_course_extensions(course_dir, course_config=None):
 
 def detect_modules_for_course(course_dir, manifest, staged_html=None):
     """Scans lesson HTML files and identifies active modules, recording inclusion reasons."""
-    lessons_dir = Path(course_dir) / "lessons"
-    html_files = list(lessons_dir.glob("*.html")) if lessons_dir.exists() else []
+    html_files = [entry["path"] for entry in course_layout.iter_lessons(Path(course_dir))]
 
     config_file = Path(course_dir) / "assets" / "course" / "config.json"
     opt_in_modules = []
@@ -555,6 +588,11 @@ def detect_modules_for_course(course_dir, manifest, staged_html=None):
     return active_modules, reasons
 
 
+def collect_completed_lessons_from_records(course_p: Path) -> list[str]:
+    """Composite progress keys backed by finalized records (chapter-aware)."""
+    return course_layout.completed_lesson_keys(Path(course_p))
+
+
 def bundle_kit(active_modules, output_dir, course_config=None, vendor_mode="cdn", course_dir=None):
     """Bundles kit.js and kit.css for the active modules and copies local vendor files if local mode."""
     output_path = Path(output_dir)
@@ -598,11 +636,14 @@ def bundle_kit(active_modules, output_dir, course_config=None, vendor_mode="cdn"
                 css_content = css_file.read_text(encoding="utf-8")
                 css_parts.append(f"/* ---- Module: {mod_id} ({css_rel}) ---- */\n{css_content}\n")
 
-        # Include themes if foundation
+        # Include themes if foundation (skip files already bundled via provides.css)
         if mod_id == "foundation":
             themes_dir = mod_dir / "themes"
             if themes_dir.exists():
+                provided = {(mod_dir / rel).resolve() for rel in mod.get("provides", {}).get("css", [])}
                 for tf in sorted(themes_dir.glob("*.css")):
+                    if tf.resolve() in provided:
+                        continue
                     t_content = tf.read_text(encoding="utf-8")
                     css_parts.append(f"/* ---- Foundation Theme: {tf.name} ---- */\n{t_content}\n")
 
@@ -649,42 +690,92 @@ def bundle_kit(active_modules, output_dir, course_config=None, vendor_mode="cdn"
         for vid in active_vendors:
             pkg_name = pkg_map.get(vid, vid)
             src_pkg = KIT_ROOT / "vendor" / pkg_name
-            if not src_pkg.exists() or not any(src_pkg.iterdir()):
-                raise ValueError(
-                    f"Offline vendor package '{pkg_name}' for '{vid}' missing in kit/vendor/."
-                )
+            if vid in ("plotly", "jsxgraph"):
+                if not src_pkg.exists() or not any(src_pkg.iterdir()):
+                    raise ValueError(
+                        f"Offline vendor package '{pkg_name}' for '{vid}' missing in kit/vendor/."
+                    )
 
     # Navigation data from lessons if available
     nav_data = None
     if course_dir:
-        lessons_dir = Path(course_dir) / "lessons"
-        if lessons_dir.is_dir():
-            html_files = sorted(lessons_dir.glob("*.html"))
-            items = []
-            for i, hf in enumerate(html_files):
+        course_p = Path(course_dir)
+        nav_json_p = course_p / "assets" / "course" / "nav.json"
+        if nav_json_p.is_file():
+            try:
+                nav_data = json.loads(nav_json_p.read_text(encoding="utf-8"))
+            except Exception:
+                nav_data = None
+        if not nav_data:
+            course_yaml_p = course_p / "course.yaml"
+            c_meta = {}
+            if course_yaml_p.is_file():
                 try:
-                    c_text = hf.read_text(encoding="utf-8")
-                    num_m = re.search(r'data-lesson-id="([^"]+)"', c_text)
-                    t_m = re.search(r'<title>([^<]+)</title>', c_text)
-                    obj_m = re.search(r'data-objective="([^"]+)"', c_text)
-                    num = num_m.group(1) if num_m else f"{i+1:04d}"
-                    raw_title = t_m.group(1).strip() if t_m else hf.stem
-                    title_clean = re.sub(r"^第\s*\d+\s*课[｜·\s-]*", "", raw_title)
-                    items.append({
-                        "number": num,
-                        "title": title_clean,
-                        "objective": obj_m.group(1) if obj_m else "",
-                        "file": hf.name,
-                    })
+                    import yaml
+                    c_meta = yaml.safe_load(course_yaml_p.read_text(encoding="utf-8")) or {}
                 except Exception:
                     pass
-            for i, it in enumerate(items):
-                it["prev"] = {"number": items[i - 1]["number"], "file": items[i - 1]["file"]} if i > 0 else None
-                it["next"] = {"number": items[i + 1]["number"], "file": items[i + 1]["file"]} if i < len(items) - 1 else None
-            nav_data = {
-                "lessons": items,
-                "home": "../index.html"
-            }
+            chapter_order = [chapter["label"] for chapter in course_layout.chapters_of_state(c_meta)]
+            lesson_entries = course_layout.iter_lessons(course_p, chapter_order)
+            if lesson_entries:
+                items = []
+                for entry in lesson_entries:
+                    hf = entry["path"]
+                    try:
+                        c_text = hf.read_text(encoding="utf-8")
+                        num_m = re.search(r'data-lesson-id="([^"]+)"', c_text)
+                        t_m = re.search(r'<title>([^<]+)</title>', c_text)
+                        obj_m = re.search(r'data-objective="([^"]+)"', c_text)
+                        num = num_m.group(1) if num_m else entry["number"]
+                        raw_title = t_m.group(1).strip() if t_m else hf.stem
+                        title_clean = re.sub(r"^第\s*\d+\s*课[｜·\s-]*", "", raw_title)
+                        items.append({
+                            "number": num,
+                            "chapter": entry["chapter"] or "",
+                            "title": title_clean,
+                            "objective": obj_m.group(1) if obj_m else "",
+                            "file": entry["file"],
+                            "key": course_layout.completion_key(entry["chapter"], num),
+                            "href": course_layout.lesson_href(None, entry["file"], from_is_lesson=False),
+                            "home": course_layout.home_href(course_p, entry["chapter"]),
+                        })
+                    except Exception:
+                        pass
+                for i, it in enumerate(items):
+                    for side, other in (("prev", items[i - 1] if i > 0 else None),
+                                        ("next", items[i + 1] if i < len(items) - 1 else None)):
+                        it[side] = None if other is None else {
+                            "number": other["number"],
+                            "file": other["file"],
+                            "chapter": other["chapter"],
+                            "key": other["key"],
+                            "href": course_layout.lesson_href(it["file"], other["file"]),
+                        }
+                completed_lessons = collect_completed_lessons_from_records(course_p)
+                cur_l = c_meta.get("current_lesson", len(completed_lessons) if completed_lessons else len(items))
+                try:
+                    cur_l_num = int(cur_l)
+                except (ValueError, TypeError):
+                    cur_l_num = len(completed_lessons) if completed_lessons else len(items)
+                nav_data = {
+                    "title": c_meta.get("title") or course_p.name,
+                    "course_id": c_meta.get("course_id") or course_p.name,
+                    "current_lesson": cur_l_num,
+                    "completed_lessons": completed_lessons,
+                    "completed_count": len(completed_lessons),
+                    "total_count": len(items),
+                    "lessons": items,
+                    "home": items[0]["home"] if items else "../index.html"
+                }
+                chapter_meta = course_layout.chapters_of_state(c_meta)
+                if chapter_meta:
+                    nav_data["chapters"] = chapter_meta
+                    nav_data["chaptered"] = True
+        elif "completed_lessons" not in nav_data:
+            completed_lessons = collect_completed_lessons_from_records(course_p)
+            nav_data["completed_lessons"] = completed_lessons
+            nav_data["completed_count"] = len(completed_lessons)
+            nav_data["total_count"] = len(nav_data.get("lessons", []))
 
     # Collect JS
     active_runtime_ids = list(ordered_ids)
@@ -752,15 +843,16 @@ def bundle_kit(active_modules, output_dir, course_config=None, vendor_mode="cdn"
         for vid in active_vendors:
             pkg_name = pkg_map.get(vid, vid)
             src_pkg = KIT_ROOT / "vendor" / pkg_name
-            dst_pkg = vendor_output_dir / pkg_name
-            if dst_pkg.exists():
-                shutil.rmtree(dst_pkg)
-            shutil.copytree(src_pkg, dst_pkg)
-            for f in dst_pkg.rglob("*"):
-                if f.is_file():
-                    rel = str(f.relative_to(output_path)).replace("\\", "/")
-                    h = hashlib.sha256(f.read_bytes()).hexdigest()
-                    vendor_hashes[rel] = f"sha256-{h}"
+            if src_pkg.exists() and any(src_pkg.iterdir()):
+                dst_pkg = vendor_output_dir / pkg_name
+                if dst_pkg.exists():
+                    shutil.rmtree(dst_pkg)
+                shutil.copytree(src_pkg, dst_pkg)
+                for f in dst_pkg.rglob("*"):
+                    if f.is_file():
+                        rel = str(f.relative_to(output_path)).replace("\\", "/")
+                        h = hashlib.sha256(f.read_bytes()).hexdigest()
+                        vendor_hashes[rel] = f"sha256-{h}"
 
     css_sha256 = hashlib.sha256(kit_css_content.encode("utf-8")).hexdigest()
     js_sha256 = hashlib.sha256(kit_js_content.encode("utf-8")).hexdigest()
@@ -790,18 +882,17 @@ def sync_course(course_dir):
     # Step 1: Pre-normalize lesson HTML (staged in memory to protect courseware if sync fails)
     staged_html = {}
     raw_html_bytes = {}
-    lessons_dir = cpath / "lessons"
-    if lessons_dir.exists():
-        for hf in sorted(lessons_dir.glob("*.html")):
-            try:
-                b = hf.read_bytes()
-                raw_html_bytes[hf] = b
-                raw_html = b.decode("utf-8")
-                norm_html, headings = normalize_html_content(raw_html)
-                if norm_html != raw_html:
-                    staged_html[hf] = norm_html
-            except Exception as e:
-                print(f"Warning: Failed to normalize {hf}: {e}", file=sys.stderr)
+    for entry in course_layout.iter_lessons(cpath):
+        hf = entry["path"]
+        try:
+            b = hf.read_bytes()
+            raw_html_bytes[hf] = b
+            raw_html = b.decode("utf-8")
+            norm_html, headings = normalize_html_content(raw_html)
+            if norm_html != raw_html:
+                staged_html[hf] = norm_html
+        except Exception as e:
+            print(f"Warning: Failed to normalize {hf}: {e}", file=sys.stderr)
 
     # Step 2: Ensure assets/course/ scaffolding
     course_assets = cpath / "assets" / "course"
@@ -913,6 +1004,19 @@ def sync_course(course_dir):
                     shutil.rmtree(kit_output_dir)
                 shutil.copytree(backup_dir, kit_output_dir)
             return False
+
+    # Regenerate nav.json so sidebar reflects current lessons + records
+    scripts_dir = KIT_ROOT.parent / "scripts"
+    build_index = scripts_dir / "build_index.py"
+    if build_index.exists():
+        try:
+            subprocess.run(
+                [sys.executable, str(build_index), str(cpath), "--nav"],
+                check=True, capture_output=True, text=True,
+            )
+            print(f"  -> nav.json regenerated from records.")
+        except subprocess.CalledProcessError as e:
+            print(f"  Warning: build_index.py --nav failed: {e.stderr.strip()}", file=sys.stderr)
 
     print(f"Sync complete for {cpath.name}: {len(ordered_ids)} modules bundled into assets/kit/.")
     return True
@@ -1116,6 +1220,174 @@ def list_modules():
     print()
 
 
+def _detect_lan_ip():
+    import socket
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return "127.0.0.1"
+
+
+def serve_course(course_dir, host="127.0.0.1", port=8765, lan=False, token=None):
+    """Starts a local HTTP server for the course with /api/records inbox and /api/course."""
+    import secrets
+    from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+    from urllib.parse import parse_qs, urlparse
+
+    cpath = Path(course_dir).resolve()
+    if not cpath.is_dir():
+        print(f"Error: Course directory not found: {cpath}", file=sys.stderr)
+        return False
+
+    bind_host = "0.0.0.0" if lan else host
+    active_token = token or (secrets.token_urlsafe(12) if lan else "")
+    inbox_dir = cpath / "records" / "inbox"
+    inbox_dir.mkdir(parents=True, exist_ok=True)
+
+    class CourseHandler(SimpleHTTPRequestHandler):
+        def __init__(self, *a, **kw):
+            super().__init__(*a, directory=str(cpath), **kw)
+
+        def log_message(self, fmt, *args):
+            sys.stderr.write(f"[kit serve] {self.address_string()} - {fmt % args}\n")
+
+        def _check_token(self, parsed):
+            if not active_token:
+                return True
+            hdr = self.headers.get("X-Kit-Token", "")
+            qs = parse_qs(parsed.query).get("t", [""])[0]
+            return hdr == active_token or qs == active_token
+
+        def _send_json(self, code, obj):
+            data = json.dumps(obj, ensure_ascii=False, indent=2, default=str).encode("utf-8")
+            self.send_response(code)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+
+        def do_GET(self):
+            parsed = urlparse(self.path)
+            if parsed.path == "/api/course":
+                if not self._check_token(parsed):
+                    return self._send_json(403, {"error": "forbidden"})
+                cy = cpath / "course.yaml"
+                data = {}
+                if cy.is_file():
+                    try:
+                        import yaml
+                        data = yaml.safe_load(cy.read_text(encoding="utf-8")) or {}
+                    except Exception as e:
+                        data = {"error": str(e)}
+                return self._send_json(200, data)
+            if parsed.path == "/api/inbox":
+                if not self._check_token(parsed):
+                    return self._send_json(403, {"error": "forbidden"})
+                items = []
+                for f in sorted(inbox_dir.glob("*.json")):
+                    try:
+                        items.append(json.loads(f.read_text(encoding="utf-8")))
+                    except Exception:
+                        pass
+                return self._send_json(200, {"items": items})
+            return super().do_GET()
+
+        def do_POST(self):
+            parsed = urlparse(self.path)
+            if parsed.path != "/api/records":
+                return self._send_json(404, {"error": "not_found"})
+            if not self._check_token(parsed):
+                return self._send_json(403, {"error": "forbidden"})
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+                raw = self.rfile.read(length).decode("utf-8")
+                payload = json.loads(raw)
+            except Exception as e:
+                return self._send_json(400, {"error": f"bad_json: {e}"})
+
+            lesson = re.sub(r"[^0-9A-Za-z_-]", "", str(payload.get("lesson", "unknown"))) or "unknown"
+            dev = re.sub(r"[^0-9A-Za-z_-]", "", str(payload.get("device_id", "local"))) or "local"
+            fname = f"lesson-{lesson}-{dev}.json"
+            target = inbox_dir / fname
+            target.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
+            return self._send_json(200, {"ok": True, "file": f"records/inbox/{fname}"})
+
+    httpd = ThreadingHTTPServer((bind_host, port), CourseHandler)
+    local_url = f"http://127.0.0.1:{port}/"
+    print(f"\nCourse Kit server running for: {cpath.name}")
+    print(f"  Local: {local_url}" + (f"?t={active_token}" if active_token else ""))
+    if lan:
+        lan_ip = _detect_lan_ip()
+        print(f"  LAN:   http://{lan_ip}:{port}/?t={active_token}")
+        print(f"  Token: {active_token} (其他设备首次带 ?t= 打开后会自动记住)")
+    print(f"  Inbox: {inbox_dir}\n")
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        print("\nStopped.")
+    finally:
+        httpd.server_close()
+    return True
+
+
+def ingest_inbox(course_dir):
+    """Converts records/inbox/*.json into pending Markdown record skeletons in records/."""
+    cpath = Path(course_dir).resolve()
+    inbox_dir = cpath / "records" / "inbox"
+    if not inbox_dir.is_dir():
+        print("No records/inbox/ directory found.")
+        return True
+    files = sorted(inbox_dir.glob("*.json"))
+    if not files:
+        print("Inbox is empty.")
+        return True
+
+    records_dir = cpath / "records"
+    for f in files:
+        try:
+            payload = json.loads(f.read_text(encoding="utf-8"))
+        except Exception as e:
+            print(f"Skipping bad JSON {f.name}: {e}", file=sys.stderr)
+            continue
+        lesson_str = str(payload.get("lesson", "")).strip()
+        try:
+            lesson_num = int(lesson_str)
+            lesson_pad = f"{lesson_num:04d}"
+        except Exception:
+            lesson_num = lesson_str or "unknown"
+            lesson_pad = str(lesson_num)
+        dev = re.sub(r"[^0-9A-Za-z_-]", "", str(payload.get("device_id", "local"))) or "local"
+        md_body = (payload.get("markdown") or "").strip()
+        updated = (payload.get("updated_at") or "")[:10]
+
+        out_file = records_dir / f"{lesson_pad}-inbox-{dev}.md"
+        if out_file.exists():
+            existing = out_file.read_text(encoding="utf-8")
+            if "assessment_status: finalized" in existing:
+                print(f"Skipping {out_file.name}: already finalized.")
+                continue
+
+        frontmatter = [
+            "---",
+            "record_schema: 1",
+            "assessment_status: pending",
+            "record_type: attempt",
+            f"lesson: {lesson_num}",
+            f"device_id: {dev}",
+            f"inbox_updated_at: {updated}",
+            "---",
+            "",
+        ]
+        out_file.write_text("\n".join(frontmatter) + md_body + "\n", encoding="utf-8", newline="\n")
+        print(f"Wrote pending record: records/{out_file.name}")
+    return True
+
+
 def main():
     parser = argparse.ArgumentParser(prog="kit", description="Course Kit v2 Build & CLI Toolchain")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -1139,6 +1411,17 @@ def main():
     # list
     subparsers.add_parser("list", help="Lists all available kit modules")
 
+    # serve
+    serve_p = subparsers.add_parser("serve", help="Starts local HTTP server with auto record inbox")
+    serve_p.add_argument("course_dir", help="Path to course directory")
+    serve_p.add_argument("--port", type=int, default=8765, help="Port number (default: 8765)")
+    serve_p.add_argument("--lan", action="store_true", help="Bind 0.0.0.0 for LAN devices (generates access token)")
+    serve_p.add_argument("--token", default=None, help="Custom access token for --lan")
+
+    # ingest
+    ing_p = subparsers.add_parser("ingest", help="Converts records/inbox/*.json into pending record .md files")
+    ing_p.add_argument("course_dir", help="Path to course directory")
+
     args = parser.parse_args()
 
     if args.command == "build":
@@ -1154,6 +1437,10 @@ def main():
         sys.exit(0 if ok else 1)
     elif args.command == "list":
         list_modules()
+    elif args.command == "serve":
+        serve_course(args.course_dir, port=args.port, lan=args.lan, token=args.token)
+    elif args.command == "ingest":
+        ingest_inbox(args.course_dir)
 
 
 if __name__ == "__main__":

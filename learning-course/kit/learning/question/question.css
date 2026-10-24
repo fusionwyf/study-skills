@@ -31,95 +31,108 @@
   }
 
   /* ---- Question Block ---- */
+  /* ---- Question Block (Floating Paper Card) ---- */
   .question,
   .quiz {
-    --rail: var(--c-border);
     position: relative;
-    margin: 1.3rem 0;
-    padding: 1rem 1.15rem 1.1rem 1.4rem;
+    margin: 2rem 0;
+    padding: 1.5rem 1.65rem;
     border: 1px solid var(--c-border);
-    border-radius: var(--radius);
-    background: var(--c-surface);
-    box-shadow: var(--shadow);
+    border-radius: 14px;
+    background: var(--c-surface, #ffffff);
+    box-shadow: 0 10px 25px -4px rgba(27, 46, 94, 0.05);
     overflow: hidden;
-  }
-
-  .question::before,
-  .quiz::before {
-    content: "";
-    position: absolute;
-    inset: 0 auto 0 0;
-    width: 0.32rem;
-    background: var(--rail);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
   }
 
   .question[data-state="correct"],
   .quiz[data-state="correct"] {
-    --rail: var(--c-success);
+    border-color: color-mix(in srgb, var(--c-success) 45%, var(--c-border) 55%);
   }
 
   .question[data-state="incorrect"],
   .quiz[data-state="incorrect"] {
-    --rail: var(--c-warn);
+    border-color: color-mix(in srgb, var(--c-warn) 45%, var(--c-border) 55%);
   }
 
   .question[data-state="saved"],
   .quiz[data-state="saved"] {
-    --rail: var(--c-accent);
+    border-color: color-mix(in srgb, var(--c-accent) 45%, var(--c-border) 55%);
   }
 
   .q-head {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.6rem;
+    gap: 0.6rem;
+    margin-bottom: 0.85rem;
     font-size: 0.82rem;
   }
 
   .q-no {
-    font-weight: 800;
-    color: var(--c-text-2);
+    display: inline-flex;
+    align-items: center;
+    font-weight: 700;
+    font-size: 0.75rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--radius-sm);
+    background: var(--c-surface-2);
+    border: 1px solid var(--c-border);
+    color: var(--c-text);
     letter-spacing: 0.04em;
   }
 
   .q-type {
-    padding: 0.05rem 0.55rem;
-    border-radius: var(--radius-pill);
-    background: var(--c-surface-2);
+    display: inline-flex;
+    align-items: center;
+    padding: 0.12rem 0.45rem;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    border: 1px solid var(--c-border);
     color: var(--c-text-2);
+    font-weight: 500;
+    font-size: 0.75rem;
   }
 
   .q-meta {
     margin-left: auto;
     color: var(--c-text-2);
     font-variant-numeric: tabular-nums;
+    font-size: 0.75rem;
   }
 
   .q-state {
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;
-    padding: 0.05rem 0.6rem;
-    border-radius: var(--radius-pill);
-    font-weight: 650;
-    background: var(--c-surface-2);
+    padding: 0.12rem 0.55rem;
+    border-radius: var(--radius-sm);
+    font-weight: 500;
+    font-size: 0.75rem;
+    background: transparent;
     color: var(--c-text-2);
+    border: 1px solid var(--c-border);
   }
 
   .question[data-state="correct"] .q-state {
     background: var(--c-success-bg);
     color: var(--c-success);
+    border-color: color-mix(in srgb, var(--c-success) 35%, transparent);
+    font-weight: 600;
   }
 
   .question[data-state="incorrect"] .q-state {
     background: var(--c-warn-bg);
     color: var(--c-warn);
+    border-color: color-mix(in srgb, var(--c-warn) 35%, transparent);
+    font-weight: 600;
   }
 
   .question[data-state="saved"] .q-state {
     background: var(--c-accent-bg);
     color: var(--c-accent-strong);
+    border-color: color-mix(in srgb, var(--c-accent) 35%, transparent);
+    font-weight: 600;
   }
 
   .q-stem {
@@ -143,12 +156,12 @@
     display: flex;
     gap: 0.7rem;
     align-items: flex-start;
-    padding: 0.65rem 0.8rem;
-    border: 1px solid var(--c-border);
+    padding: 0.65rem 0.85rem;
+    border: 1.5px solid color-mix(in srgb, var(--c-border) 70%, var(--c-text-2) 30%);
     border-radius: var(--radius-sm);
     background: var(--c-surface);
     cursor: pointer;
-    transition: border-color 0.12s, background 0.12s;
+    transition: all 0.12s ease;
   }
 
   .q-option label:hover {
@@ -406,13 +419,32 @@
   }
 
   .q-explain,
-  .q-key {
-    margin-top: 0.7rem;
-    padding: 0.75rem 0.9rem;
+  .q-key,
+  [data-explain] {
+    margin-top: 0.85rem;
+    padding: 0.85rem 1rem;
     border: 1px solid var(--c-border);
-    border-radius: var(--radius-sm);
+    border-radius: 10px;
     background: var(--c-surface-2);
     font-size: 0.94rem;
+    animation: kitSlideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes kitSlideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes kitPop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
   }
 
   .q-explain > b,

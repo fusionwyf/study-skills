@@ -26,6 +26,7 @@
       independence: "",
       rawAnswer: "",
       verdict: "",
+      firstTryCorrect: null,
       turns: {}
     };
   }
@@ -62,7 +63,13 @@
             });
           case EVIDENCE.VERDICT:
             return withQuestion(state, id, function (s, prefix) {
-              return LearnKit.setPath(s, prefix + ".verdict", action.value);
+              var cur = LearnKit.getPath(s, prefix + ".firstTryCorrect");
+              var isFirst = cur === null || cur === undefined;
+              s = LearnKit.setPath(s, prefix + ".verdict", action.value);
+              if (isFirst && (action.value === "correct" || action.value === "incorrect")) {
+                s = LearnKit.setPath(s, prefix + ".firstTryCorrect", action.value === "correct");
+              }
+              return s;
             });
           case EVIDENCE.KEY_VIEWED:
             return withQuestion(state, id, function (s, prefix) {
@@ -159,6 +166,12 @@
         else observed = "not_attempted (未作答)";
       }
 
+      var firstTry = q.firstTryCorrect;
+      var firstTryLabel;
+      if (firstTry === true) firstTryLabel = "是";
+      else if (firstTry === false) firstTryLabel = "否（错题）";
+      else firstTryLabel = result === "not-applicable" ? "不适用" : "未判定";
+
       lines.push(
         "",
         "### " + id,
@@ -169,7 +182,8 @@
         "- 辅助情况（学习者自述）: " + learnerStatement,
         "- 页面观察到的帮助: " + observed,
         "- 已查看对照要点: " + (q.answerViewed ? "是（作答后）" : "否"),
-        "- 即时判定: " + result
+        "- 即时判定: " + result,
+        "- 一次做对: " + firstTryLabel
       );
       Object.keys(q.turns || {}).sort(function (a, b) { return Number(a) - Number(b); }).forEach(function (turnId) {
         var turn = q.turns[turnId];
@@ -240,6 +254,151 @@
 
   var recordsInitialized = false;
 
+  var IDB_NAME = "coursekit_records_v1";
+  var IDB_STORE = "queue";
+
+  function getDeviceId() {
+    try {
+      var k = "kit_device_id";
+      var id = localStorage.getItem(k);
+      if (!id) {
+        id = "dev-" + Math.random().toString(36).slice(2, 10);
+        localStorage.setItem(k, id);
+      }
+      return id;
+    } catch (e) {
+      return "dev-anon";
+    }
+  }
+
+  function getServeToken() {
+    try {
+      var params = new URLSearchParams(window.location.search);
+      var t = params.get("t");
+      if (t) {
+        sessionStorage.setItem("kit_serve_token", t);
+        return t;
+      }
+      return sessionStorage.getItem("kit_serve_token") || "";
+    } catch (e) {
+      return "";
+    }
+  }
+
+  function openQueueDB(cb) {
+    if (typeof indexedDB === "undefined") { cb(null); return; }
+    try {
+      var req = indexedDB.open(IDB_NAME, 1);
+      req.onupgradeneeded = function (e) {
+        var db = e.target.result;
+        if (!db.objectStoreNames.contains(IDB_STORE)) {
+          db.createObjectStore(IDB_STORE, { keyPath: "key" });
+        }
+      };
+      req.onsuccess = function (e) { cb(e.target.result); };
+      req.onerror = function () { cb(null); };
+    } catch (e) {
+      cb(null);
+    }
+  }
+
+  function saveToQueue(entry, done) {
+    openQueueDB(function (db) {
+      if (!db) {
+        try {
+          localStorage.setItem("kit_q_" + entry.key, JSON.stringify(entry));
+        } catch (e) {}
+        if (done) done();
+        return;
+      }
+      try {
+        var tx = db.transaction(IDB_STORE, "readwrite");
+        tx.objectStore(IDB_STORE).put(entry);
+        tx.oncomplete = function () { if (done) done(); };
+        tx.onerror = function () { if (done) done(); };
+      } catch (e) {
+        if (done) done();
+      }
+    });
+  }
+
+  function buildPayload(lesson, state) {
+    var rec = buildLearningRecord(lesson, state);
+    var courseId = lesson.dataset.courseId || "unknown";
+    var lessonId = lesson.dataset.lessonId || "unknown";
+    var deviceId = getDeviceId();
+    return {
+      key: courseId + "::" + lessonId + "::" + deviceId,
+      course_id: courseId,
+      lesson: lessonId,
+      objective_id: lesson.dataset.objective || "unknown",
+      device_id: deviceId,
+      user_agent: (typeof navigator !== "undefined" && navigator.userAgent) || "",
+      updated_at: new Date().toISOString(),
+      has_content: rec.hasContent,
+      state: state || {},
+      markdown: rec.text
+    };
+  }
+
+  function setupAutoSync(lesson, store) {
+    if (typeof window === "undefined" || !store || !store.subscribe) return;
+    getServeToken(); // 提前缓存 URL 中的 ?t= 令牌
+
+    var pill = document.createElement("span");
+    pill.className = "kit-sync-pill";
+    pill.setAttribute("role", "status");
+    pill.hidden = true;
+    var host = lesson.querySelector(".course-actions") || document.querySelector("[data-copy-feedback]");
+    if (host && host.parentNode) {
+      if (host.classList && host.classList.contains("course-actions")) host.appendChild(pill);
+      else host.parentNode.insertBefore(pill, host.nextSibling);
+    }
+
+    function setPill(state, text) {
+      pill.hidden = false;
+      pill.dataset.state = state;
+      pill.textContent = text;
+    }
+
+    var isHttp = window.location.protocol === "http:" || window.location.protocol === "https:";
+    var timer = null;
+
+    function pushNow() {
+      var payload = buildPayload(lesson, store.getState());
+      if (!payload.has_content) return;
+      saveToQueue(payload, function () {
+        if (!isHttp || typeof fetch === "undefined") {
+          setPill("local", "● 已暂存浏览器");
+          return;
+        }
+        var headers = { "Content-Type": "application/json" };
+        var tok = getServeToken();
+        if (tok) headers["X-Kit-Token"] = tok;
+        fetch("/api/records", {
+          method: "POST",
+          headers: headers,
+          body: JSON.stringify(payload)
+        }).then(function (r) {
+          if (r.ok) setPill("synced", "✓ 已自动同步到 records/inbox");
+          else setPill("local", "● 已暂存浏览器");
+        }).catch(function () {
+          setPill("local", "● 已暂存浏览器");
+        });
+      });
+    }
+
+    function scheduleSync() {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(pushNow, 450);
+    }
+
+    store.subscribe(scheduleSync);
+    lesson.addEventListener("input", function (e) {
+      if (e.target && e.target.matches && e.target.matches("textarea, input")) scheduleSync();
+    });
+  }
+
   function initRecords() {
     if (recordsInitialized) return;
     recordsInitialized = true;
@@ -255,6 +414,8 @@
       store = LearnKit.createStore(evidenceModel());
       lesson.__evidenceStore = store;
     }
+
+    setupAutoSync(lesson, store);
 
     Array.prototype.slice.call(document.querySelectorAll("[data-copy-feedback]")).forEach(function (button) {
       if (button.dataset.kitBound === "true") return;

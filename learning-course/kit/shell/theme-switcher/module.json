@@ -7,7 +7,7 @@
   "provides": {
     "css": ["theme-switcher.css"],
     "js": ["theme-switcher.js"],
-    "selectors": ["[data-theme-switch]"]
+    "selectors": ["[data-theme-switcher]", "[data-theme-switch]"]
   },
   "ready": "kit:shell.theme-switcher:ready"
 }

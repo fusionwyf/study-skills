@@ -4,18 +4,98 @@
     scroll-margin-top: calc(var(--toc-top) + 1rem);
   }
 
-  /* ---- State 1: Desktop Sidebar (>= 1200px) ---- */
-  .kit-toc,
-  .toc {
-    width: var(--toc-w);
-    max-height: calc(100vh - var(--toc-top) - 2rem);
-    position: sticky;
-    top: var(--toc-top);
+  /* ---- State 1: Desktop Sidebar ---- */
+  /* ---- State 1: Desktop Sidebar ---- */
+  .kit-rail .kit-toc,
+  .kit-rail .toc {
+    width: 100%;
+    max-height: 50vh;
+    position: static;
     display: flex;
     flex-direction: column;
-    padding: 0.75rem 0.5rem;
-    font-size: 0.88rem;
+    padding: 0.25rem 0;
+    font-size: 0.84rem;
     color: var(--c-text-2);
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    box-sizing: border-box;
+  }
+
+  .kit-toc,
+  .toc {
+    width: var(--toc-w, 17rem);
+    max-height: calc(100vh - var(--toc-top, 1.5rem) - 2rem);
+    position: sticky;
+    top: var(--toc-top, 1.5rem);
+    display: flex;
+    flex-direction: column;
+    padding: 0.85rem 0.75rem;
+    font-size: 0.85rem;
+    color: var(--c-text-2);
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius);
+  }
+
+  /* ---- Card 2: 💡 关键概念速查 (Cheat sheet / Tip Box) - Margin Notes Style ---- */
+  .kit-cheat-sheet {
+    background: transparent;
+    border: none;
+    border-left: 2px solid var(--c-accent-border, #C8D5F5);
+    border-radius: 0;
+    padding: 0.35rem 0 0.35rem 0.85rem;
+    box-shadow: none;
+    font-size: 0.82rem;
+    color: var(--c-text);
+    box-sizing: border-box;
+    margin-top: 1.25rem;
+  }
+
+  .kit-cheat-sheet__header {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+
+  .kit-cheat-sheet__title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--c-text-2);
+    margin: 0;
+  }
+
+  .kit-cheat-sheet__content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    line-height: 1.45;
+  }
+
+  .kit-cheat-sheet__item {
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    border: none;
+  }
+
+  .kit-cheat-sheet__label {
+    font-weight: 600;
+    font-size: 0.75rem;
+    color: var(--c-text-2);
+    display: block;
+    margin-bottom: 0.1rem;
+  }
+
+  .kit-cheat-sheet__formula {
+    color: var(--c-text);
+    font-size: 0.82rem;
   }
 
   .kit-toc__header,
@@ -30,10 +110,10 @@
 
   .kit-toc__title,
   .toc-title {
-    font-size: 0.82rem;
+    font-size: 0.72rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.08em;
     color: var(--c-text-2);
     margin: 0;
   }
@@ -43,6 +123,13 @@
     overflow-y: auto;
     padding-right: 0.25rem;
     flex: 1;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  .kit-toc__scroll::-webkit-scrollbar,
+  .toc-scroll::-webkit-scrollbar {
+    display: none !important;
   }
 
   .kit-toc__list,
@@ -54,24 +141,35 @@
 
   .kit-toc__item,
   .toc-item {
-    margin: 0.25rem 0;
+    margin: 0.15rem 0;
   }
 
-  .kit-toc__item.is-h3,
-  .toc-item.is-h3 {
-    padding-left: 0.85rem;
-    font-size: 0.82rem;
+  /* Section row for H2 with front toggle */
+  .kit-toc__row,
+  .toc-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 0.15rem;
+    position: relative;
+    border-radius: var(--radius-sm, 4px);
   }
 
   .kit-toc__link,
   .toc-link {
+    flex: 1;
+    min-width: 0;
     display: block;
-    padding: 0.25rem 0.5rem;
-    border-radius: var(--radius-sm);
+    padding: 0.22rem 0.45rem;
+    border-radius: var(--radius-sm, 4px);
     color: var(--c-text-2);
     text-decoration: none;
-    line-height: 1.4;
-    transition: background 0.12s, color 0.12s;
+    line-height: 1.45;
+    transition: all 0.12s ease;
+    border-left: none;
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
   }
 
   .kit-toc__link:hover,
@@ -82,12 +180,138 @@
 
   .kit-toc__link[aria-current="location"],
   .toc-link.is-active {
-    background: var(--c-accent-bg);
-    color: var(--c-accent-strong);
+    background: color-mix(in srgb, var(--c-accent) 11%, transparent);
+    color: var(--c-accent-strong, var(--c-accent));
     font-weight: 600;
   }
 
-  /* ---- State 2: Tablet Popover (768px - 1199px) ---- */
+  /* Obsidian-style front toggle button */
+  .kit-toc__toggle,
+  .toc-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.15rem;
+    height: 1.15rem;
+    min-width: 1.15rem;
+    min-height: 1.15rem;
+    padding: 0;
+    margin-top: 0.15rem;
+    border: none;
+    background: transparent;
+    color: var(--c-text-2);
+    cursor: pointer;
+    border-radius: 4px;
+    flex-shrink: 0;
+    opacity: 0.75;
+    transition: all 0.12s ease;
+  }
+
+  .kit-toc__toggle:hover,
+  .toc-toggle:hover {
+    opacity: 1;
+    color: var(--c-text);
+    background: var(--c-surface-2);
+  }
+
+  .kit-toc__spacer {
+    display: inline-block;
+    width: 1.15rem;
+    min-width: 1.15rem;
+    height: 1.15rem;
+    margin-top: 0.15rem;
+    flex-shrink: 0;
+  }
+
+  .kit-toc__chevron {
+    transition: transform 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: center;
+    display: block;
+    width: 9px;
+    height: 9px;
+  }
+
+  /* Collapsed state (default): chevron points right › */
+  .kit-toc__item.is-collapsed .kit-toc__chevron,
+  .toc-item.is-collapsed .kit-toc__chevron {
+    transform: rotate(0deg);
+  }
+
+  /* Expanded state: chevron rotates down 90 deg ∨ */
+  .kit-toc__item.is-expanded .kit-toc__chevron,
+  .toc-item.is-expanded .kit-toc__chevron {
+    transform: rotate(90deg);
+  }
+
+  /* Sublist collapsible container with tree guide line */
+  .kit-toc__sublist,
+  .toc-sublist {
+    list-style: none;
+    margin: 0.15rem 0 0.35rem 0.575rem;
+    padding: 0.1rem 0 0.1rem 1.4rem;
+    border-left: 1.5px solid color-mix(in srgb, var(--c-border) 80%, transparent);
+  }
+
+  /* Default collapsed: hidden */
+  .kit-toc__item.is-collapsed > .kit-toc__sublist,
+  .toc-item.is-collapsed > .toc-sublist {
+    display: none !important;
+  }
+
+  /* Expanded: visible */
+  .kit-toc__item.is-expanded > .kit-toc__sublist,
+  .toc-item.is-expanded > .toc-sublist {
+    display: block !important;
+  }
+
+  /* Sub items (H3) */
+  .kit-toc__item.is-h3,
+  .toc-item.is-h3 {
+    margin: 0.1rem 0;
+    font-size: 0.79rem;
+  }
+
+  .kit-toc__link.is-h3-link,
+  .toc-link.is-h3-link {
+    font-size: 0.79rem;
+    padding: 0.2rem 0.45rem;
+    color: var(--c-text-2);
+    line-height: 1.4;
+    border-radius: var(--radius-sm, 4px);
+    border-left: none;
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  .kit-toc__link.is-h3-link:hover,
+  .toc-link.is-h3-link:hover {
+    color: var(--c-text);
+    background: var(--c-surface-2);
+  }
+
+  .kit-toc__link.is-h3-link[aria-current="location"],
+  .toc-link.is-h3-link.is-active {
+    font-weight: 600;
+    color: var(--c-accent-strong, var(--c-accent));
+    background: color-mix(in srgb, var(--c-accent) 11%, transparent);
+  }
+
+  /* Parent has active child */
+  .kit-toc__item.has-active-child > .kit-toc__row > .kit-toc__link,
+  .toc-item.has-active-child > .toc-row > .toc-link {
+    font-weight: 600;
+    color: var(--c-text);
+  }
+
+  /* Fallback for legacy flat TOC items */
+  .kit-toc__list > .kit-toc__item.is-h3,
+  .toc-list > .toc-item.is-h3 {
+    padding-left: 0.85rem;
+    font-size: 0.8rem;
+  }
+
+  /* ---- State 2: Tablet Popover (768px - 1023px) ---- */
   .kit-toc-btn {
     display: none;
     position: fixed;
@@ -145,7 +369,7 @@
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.45);
+    background: var(--c-overlay, rgba(0, 0, 0, 0.45));
     z-index: 50;
   }
 
@@ -171,22 +395,33 @@
     display: block;
   }
 
-  @container (max-width: 1199px) {
+  /* Responsive states: on desktop & tablet (>=768px), sidebar is default expanded */
+  @media (max-width: 767px) {
     .kit-rail .kit-toc,
     .kit-rail .toc {
-      display: none;
+      display: none !important;
     }
     .kit-toc-btn {
-      display: inline-flex;
-    }
-  }
-
-  @container (max-width: 767px) {
-    .kit-toc-btn {
-      display: none;
+      display: none !important;
     }
     .kit-toc-mobile-bar {
       display: flex;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .kit-rail {
+      display: block !important;
+    }
+    .kit-rail .kit-toc,
+    .kit-rail .toc {
+      display: flex !important;
+    }
+    .kit-toc-btn {
+      display: none !important;
+    }
+    .kit-toc-mobile-bar {
+      display: none !important;
     }
   }
 }
