@@ -232,11 +232,11 @@ def validate_descriptor(mod_id, data, mod_path):
     if data.get("id") != mod_id:
         raise ValueError(f"Module ID mismatch in {mod_path}: expected '{mod_id}', got '{data.get('id')}'")
     layer = data.get("layer")
-    if not isinstance(layer, int) or layer < 0 or layer > 8:
-        raise ValueError(f"Module {mod_id}: invalid layer {layer}; must be integer 0..8")
+    if not isinstance(layer, int) or layer < 0 or layer > 5:
+        raise ValueError(f"Module {mod_id}: invalid layer {layer}; must be integer 0..5 (L0 core .. L5 viz)")
     presence = data.get("presence")
-    if presence not in ("core", "auto", "opt-in"):
-        raise ValueError(f"Module {mod_id}: invalid presence '{presence}'; must be 'core', 'auto', or 'opt-in'")
+    if presence not in ("core", "auto", "opt-in", "serve"):
+        raise ValueError(f"Module {mod_id}: invalid presence '{presence}'; must be 'core', 'auto', 'opt-in', or 'serve'")
     requires = data.get("requires", [])
     if not isinstance(requires, list) or not all(isinstance(r, str) for r in requires):
         raise ValueError(f"Module {mod_id}: 'requires' must be a list of string module IDs")
@@ -290,6 +290,26 @@ def load_module_descriptors():
                 raise ValueError(
                     f"Module '{mod_id}' (layer {mod.get('layer')}) cannot depend on higher layer module '{req}' (layer {modules[req].get('layer')})"
                 )
+
+    # Every module must reach the core runtime directly or transitively
+    # (assets.md descriptor contract); e.g. viz.kinds.* reach it via viz.core.
+    reach_memo = {}
+
+    def reaches_core(mod_id, trail=frozenset()):
+        if mod_id in reach_memo:
+            return reach_memo[mod_id]
+        if mod_id == "core":
+            return True
+        if mod_id in trail:
+            return False
+        reqs = modules.get(mod_id, {}).get("requires", [])
+        result = any(reaches_core(req, trail | {mod_id}) for req in reqs)
+        reach_memo[mod_id] = result
+        return result
+
+    for mod_id in modules:
+        if not reaches_core(mod_id):
+            raise ValueError(f"Module '{mod_id}' must depend on 'core' directly or transitively")
 
     return modules
 
@@ -616,6 +636,11 @@ def detect_modules_for_course(course_dir, manifest, staged_html=None):
                 f"Unknown opt-in module '{mod_id}' specified in assets/course/config.json. "
                 f"Run 'kit list' to view available modules."
             )
+        if modules_desc[mod_id].get("presence") == "serve":
+            raise ValueError(
+                f"Module '{mod_id}' is serve-hosted (kit.py serve) and cannot be bundled into a course; "
+                f"remove it from assets/course/config.json modules."
+            )
 
     active_modules = set()
     reasons = {}
@@ -704,6 +729,8 @@ def bundle_kit(active_modules, output_dir, course_config=None, vendor_mode="cdn"
         for req in ext.get("requires", []):
             if req not in modules:
                 raise ValueError(f"Course extension '{ext_id}' requires module '{req}', which is missing from module library.")
+            if modules[req].get("presence") == "serve":
+                raise ValueError(f"Course extension '{ext_id}' requires serve-hosted module '{req}', which cannot be bundled.")
             active_set.add(req)
 
     expanded = True

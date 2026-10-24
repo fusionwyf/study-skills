@@ -22,6 +22,7 @@
     "content.math",
     "content.media",
     "content.table",
+    "shell.dashboard",
     "shell.elements",
     "shell.nav",
     "shell.progress",
@@ -347,6 +348,21 @@
         ]
       },
       "ready": "kit:viz.kinds.table:ready"
+    },
+    "shell.dashboard": {
+      "id": "shell.dashboard",
+      "layer": 3,
+      "version": "2.0.0",
+      "requires": [
+        "core"
+      ],
+      "presence": "serve",
+      "provides": {
+        "html": [
+          "index.html"
+        ]
+      },
+      "description": "Read-only course dashboard SPA hosted by kit.py serve at /dashboard (reads /api/course, /api/records, /api/inbox); never bundled into course packages."
     },
     "shell.elements": {
       "id": "shell.elements",

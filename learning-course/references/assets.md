@@ -6,10 +6,11 @@
 
 `kit/` 目录是所有资产的唯一代码源，`kit/catalog.json` 与 `kit/kit.manifest.json` 是模块能力、依赖与接入方式的权威视图。按教学目标选择最小组合。
 
-模块存在方式（presence）分为三类：
+模块存在方式（presence）分为四类：
 - **core**：运行时基础设施 L0（`core`）、视觉与主题引擎 L1（`foundation`）、公共块外壳 L2（`content._block`）、页面骨架与目录 L3（`shell.nav`、`shell.progress`、`shell.theme-switcher`、`shell.toc`、`shell.elements`）、学习记录模型 L4（`learning.records`）。随 `kit.js` 与 `kit.css` 默认打包。
 - **auto**：代码块（`content.code`）、数学公式（`content.math`）、Mermaid 图表（`content.diagram`）、表格（`content.table`）、媒体（`content.media`）、动画（`content.animation`）、提示块（`content.callout`）、统一题目（`learning.question`）、步骤向导（`learning.step`）、先预测后揭晓（`learning.predict`）、参数联动（`learning.param`）、仿真孤岛（`viz.island`）、可视化核心（`viz.core`）及无三方库 kind。`kit sync` 扫描课件自动识别并打包。
 - **opt-in**：重型第三方库依赖（`viz.kinds.chart` 依赖 Plotly、`viz.kinds.plot` 依赖 Observable Plot、`viz.kinds.spatial` 依赖 JSXGraph）。通过 `python kit/build/kit.py add <course-dir> <module-id>` 显式启用。
+- **serve**：由 `kit.py serve` 托管、**不进入课程包**的模块（`shell.dashboard` 只读仪表盘，serve 时挂在 `/dashboard`，读取 `/api/course`、`/api/records`、`/api/inbox`）。不得写入 `config.json` 的 `modules`，也不得被课程扩展 `requires`。
 
 ### 第三方库优先
 
@@ -120,7 +121,7 @@ Course Kit v2 将所有模块拓扑排序并拼接为单文件产物：
 ### 2. Kit 全局模块扩展（Kit Modular Extensions）
 若要向 `kit/` 添加可复用的全新组件（如新动效、新可视化类型）：
 1. **分层归属**：L2（`content/` 内容组件）、L3（`shell/` 框架组件）、L4（`learning/` 交互组件）、L5（`viz/` 可视化组件）。
-2. **模块描述符 `module.json`**：声明 `id`、`layer` (0-5)、`requires`（至少含 `core`）、`presence` (`auto` 或 `opt-in`)、`detect.selectors`（auto 模式下自动感知的 HTML 选择器）、`provides` 与 `ready` 事件名。
+2. **模块描述符 `module.json`**：声明 `id`、`layer` (0-5)、`requires`（直接或传递依赖 `core`，如 `viz.kinds.*` 经 `viz.core` 到达）、`presence` (`core` / `auto` / `opt-in` / `serve`)、`detect.selectors`（auto 模式下自动感知的 HTML 选择器）、`provides` 与 `ready` 事件名。
 3. **CSS 规则**：样式必须包裹在对应的 `@layer <layer_name> { ... }` 中，全部颜色使用 CSS Token。
 4. **就绪与生命周期**：JS 初始化完成必须调用 `kit.ready.markReady("<module.id>")`。
 5. **构建生效**：运行 `python kit/build/kit.py build` 重新编译 `kit.manifest.json` 与 `catalog.json`，随后在课程中通过 `kit.py sync` 打包。

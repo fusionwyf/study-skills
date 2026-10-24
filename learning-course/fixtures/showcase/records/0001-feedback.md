@@ -67,3 +67,6 @@ supported_objectives:
 ## Agent 判断
 
 - 判断：速度/距离混淆是真实误解，已被揭晓纠正；概念（与质量无关）表达完整。无页内辅助，判 independent。
+## 下一步
+
+完成 0002 课六类题型的作答与证据回流，检验 obj-layout 的 application 判断在题目情境中是否仍然成立；若题型作答暴露版式迁移不到位，安排一课版式变式补救并把 obj-layout 证据强度降级。

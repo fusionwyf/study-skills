@@ -84,6 +84,10 @@ supported_objectives: []
 ## Agent 判断
 
 - 仍不确定：待 Agent 补充。完成判断后同步填写 frontmatter，并将 `assessment_status` 设为 `finalized`。
+
+## 下一步
+
+- 下一步动作：待 Agent 补充（next_action 具体到下一次动作）。
 """
 
 

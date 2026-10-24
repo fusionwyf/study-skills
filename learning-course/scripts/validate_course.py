@@ -154,10 +154,19 @@ def record_metadata(path: Path, yaml: object, label: str, errors: list[str]) -> 
     if not isinstance(metadata, dict):
         errors.append(f"{label} frontmatter must be a mapping")
         return None
-    if metadata.get("assessment_status") == "finalized" and any(
-        marker in text for marker in ("待 Agent", "待判断", "待补充")
-    ):
-        errors.append(f"{label} finalized record still contains assessment placeholders")
+    if metadata.get("assessment_status") == "finalized":
+        if any(marker in text for marker in ("待 Agent", "待判断", "待补充")):
+            errors.append(f"{label} finalized record still contains assessment placeholders")
+        # 正文四段（record-contract.md）：原始反馈 / 可观察行为 / Agent 判断 / 下一步。
+        # 旧版记录缺段只警告，沿用"契约只增不改"的豁免口径。
+        missing_sections = [
+            name for name in ("学习者原始反馈", "可观察行为", "Agent 判断", "下一步")
+            if not re.search(rf"^## {name}\s*$", text, re.M)
+        ]
+        if missing_sections and is_legacy_record(metadata):
+            print(f"RECORD WARNING ({label}): legacy finalized record lacks body section(s): {', '.join(missing_sections)}")
+        elif missing_sections:
+            errors.append(f"{label} finalized record is missing body section(s): {', '.join(missing_sections)}")
     return metadata
 
 

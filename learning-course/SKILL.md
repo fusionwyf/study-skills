@@ -121,7 +121,7 @@ python ../shared/scripts/validate_sources.py <course-dir>
 
 捕获入口是课件末尾的**"复制并提交学习记录"按钮**——学习者作答完成后**主动点击**提交（不做后台自动同步）。每次点击同时做两件事：把学习记录提交给 `kit.py serve`（运行时），并把同样的 Markdown 复制到剪贴板（离线兜底）。产出的 `records/<NNNN>-feedback.md` 模板收敛在 `scripts/record_builder.py`，各路径字节级一致。
 
-- **提交（serve 运行时）**：点击后服务进程把设备快照写入 `records/inbox/`，并实时合成/更新 `records/<NNNN>-feedback.md`（`assessment_status: pending`）与 `course.yaml` 的 `last_feedback`。学习者回到对话窗口后，Agent **直接读取已落盘的 record 文件**完成教学评估：区分可观察行为与自我报告，填写 evidence type、strength、independence、supported objectives，设为 `finalized`。已被 Agent 定稿的 record 不会被新提交覆盖（原始快照保留在 `records/inbox/`）。
+- **提交（serve 运行时）**：点击后服务进程把设备快照写入 `records/inbox/`，并实时合成/更新 `records/<NNNN>-feedback.md`（`assessment_status: pending`）与 `course.yaml` 的 `last_feedback`。学习者回到对话窗口后，Agent **直接读取已落盘的 record 文件**完成教学评估：区分可观察行为与自我报告，填写 evidence type、strength、independence、supported objectives 与「下一步」段（next_action 具体到下一次动作），设为 `finalized`。已被 Agent 定稿的 record 不会被新提交覆盖（原始快照保留在 `records/inbox/`）。
 - **复制（离线兜底）**：未启动服务时点击按钮得到剪贴板里的结构化 Markdown（原始答案、检查次数、提示使用、即时判定、反思），学习者粘贴给 Agent 后运行 `scripts/update_progress.py <course-dir> --lesson <N> --feedback-file <file>`。
 - **离线补传**：点击时若无法提交（serve 未运行或断网），payload 暂存浏览器（IndexedDB）；下次以 http(s) 打开任一课件页面时自动补传，成功后清除。手动导出 JSON 放入 `records/inbox/` 的补偿路径不变（`kit.py ingest <course-dir>` 或 `update_progress.py --from-inbox`）。
 
@@ -164,7 +164,7 @@ python ../shared/scripts/validate_sources.py <course-dir>
 
 ## 模块管理与可选组件
 
-Course Kit v2 采用 `core / auto / opt-in` 三态模块管理：
+Course Kit v2 采用 `core / auto / opt-in / serve` 四态模块管理（`serve` 为 `kit.py serve` 托管、不进入课程包的模块，如只读仪表盘 `shell.dashboard`）：
 
 - **core**（运行时基础设施 L0、视觉基础与主题 L1、公共块外壳 `content._block`、外壳骨架与目录 `shell.*`、学习记录模型 `learning.records`）：随 `kit.js` 与 `kit.css` 默认包含。
 - **auto**（内容增强 `content.*`、统一题目 `learning.question`、步骤向导 `learning.step`、可视化核心 `viz.core` 及通用 kind）：`kit sync` 扫描课件 HTML 自动识别并纳入打包，无需作者手动安装。
