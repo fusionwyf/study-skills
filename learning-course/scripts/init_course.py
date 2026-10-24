@@ -154,7 +154,7 @@ last_feedback: null
   <script defer src=\"assets/kit/kit.js\"></script>
 </head>
 <body class=\"kit-page\">
-  <div class=\"kit-main\">
+  <div class=\"kit-main\" data-course-id=\"{course_id}\">
     <header class=\"course-header\">
       <p class=\"course-kicker\">课程入口</p>
       <h1 class=\"course-title\">{title}</h1>

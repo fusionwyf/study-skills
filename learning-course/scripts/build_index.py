@@ -167,13 +167,13 @@ def render_html(meta: dict[str, object], lessons: list[dict[str, str]], include_
         return f'''<!doctype html>
 <html lang="zh-CN" data-theme="course">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{html.escape(str(meta["title"]))}</title><link rel="stylesheet" href="assets/kit/kit.css">{theme_link}<script defer src="assets/kit/kit.js"></script></head>
-<body class="kit-page"><div class="kit-main"><header class="course-header"><p class="course-kicker">课程入口</p><h1 class="course-title">{html.escape(str(meta["title"]))}</h1><p class="course-subtitle">状态：{html.escape(str(meta["status"]))} · 阶段：{html.escape(str(meta["phase"]))}</p><div data-theme-switcher></div></header><main><div class="card"><h2>课程目录</h2>{items}</div></main></div></body></html>'''
+<body class="kit-page"><div class="kit-main" data-course-id="{html.escape(str(meta["course_id"]))}"><header class="course-header"><p class="course-kicker">课程入口</p><h1 class="course-title">{html.escape(str(meta["title"]))}</h1><p class="course-subtitle">状态：{html.escape(str(meta["status"]))} · 阶段：{html.escape(str(meta["phase"]))}</p><div data-theme-switcher></div></header><main><div class="card"><h2>课程目录</h2>{items}</div></main></div></body></html>'''
     theme_link = '<link rel="stylesheet" href="assets/theme.css">' if include_theme else ''
     theme_attributes = ' data-theme="course" data-theme-surface="light"' if include_theme else ''
     return f'''<!doctype html>
 <html lang="zh-CN"{theme_attributes}>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{html.escape(str(meta["title"]))}</title><link rel="stylesheet" href="assets/course.css">{theme_link}</head>
-<body><div class="course-shell"><header class="course-header"><p class="course-kicker">课程入口</p><h1 class="course-title">{html.escape(str(meta["title"]))}</h1><p class="course-subtitle">状态：{html.escape(str(meta["status"]))} · 阶段：{html.escape(str(meta["phase"]))}</p></header><main><div class="card"><h2>课程目录</h2>{items}</div></main></div></body></html>'''
+<body><div class="course-shell" data-course-id="{html.escape(str(meta["course_id"]))}"><header class="course-header"><p class="course-kicker">课程入口</p><h1 class="course-title">{html.escape(str(meta["title"]))}</h1><p class="course-subtitle">状态：{html.escape(str(meta["status"]))} · 阶段：{html.escape(str(meta["phase"]))}</p></header><main><div class="card"><h2>课程目录</h2>{items}</div></main></div></body></html>'''
 
 
 def write_navigation_data(root: Path, lessons: list[dict[str, str]], meta: dict[str, object] | None = None,

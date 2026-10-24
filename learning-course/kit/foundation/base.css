@@ -93,6 +93,12 @@
     cursor: pointer;
   }
 
+  /* 原生下拉弹层跟随主题：深色主题下 UA 默认白底会让浅色文字不可读 */
+  option {
+    background-color: var(--c-surface);
+    color: var(--c-text);
+  }
+
   :focus-visible {
     outline: 0.18rem solid var(--c-accent);
     outline-offset: 0.15rem;
