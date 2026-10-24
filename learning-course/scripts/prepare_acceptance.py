@@ -17,7 +17,7 @@ def prepare(destination):
     shutil.copytree(source, destination)
     kit_py = SKILL / "kit/build/kit.py"
     if kit_py.is_file():
-        for module_id in ["viz.kinds.chart", "viz.kinds.spatial", "content.media"]:
+        for module_id in ["viz.kinds.chart", "viz.kinds.spatial", "viz.kinds.plot", "content.media"]:
             subprocess.run(
                 [sys.executable, str(kit_py), "add", str(destination), module_id],
                 check=True,

@@ -1073,7 +1073,7 @@
       "limitations": [
         "规范直接透传 Plot.plot()；marks/axes 须在 config.plot 内声明"
       ],
-      "example": "showcase/lessons/0003-sim-and-charts.html",
+      "example": "acceptance-course/lessons/0009-sim-and-charts.html",
       "fallback": "正文与静态后备在无脚本和打印时可读",
       "kind": "plot",
       "module": "kinds/plot.js",

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>第 0001 课｜版式节奏与预测组件</title>
+  <title>第 0007 课｜版式节奏与预测组件</title>
   <link rel="stylesheet" href="../assets/kit/kit.css">
   <link rel="stylesheet" href="../assets/course/theme.css">
   <script defer src="../assets/kit/kit.js"></script>
@@ -11,13 +11,13 @@
 <body class="kit-page">
   <div class="kit-main">
     <header class="course-header">
-      <p class="course-kicker">第 0001 课 · 组件全览</p>
+      <p class="course-kicker">第 0007 课 · 组件全览</p>
       <h1 class="course-title">版式节奏与先预测后揭晓</h1>
       <p class="course-subtitle">边注、破栏、引语与 predict 组件：让正文有呼吸感，让反直觉结论先被承诺。</p>
       <div data-theme-switcher></div>
     </header>
 
-    <main class="lesson" id="lesson-content" data-course-id="kit-showcase" data-lesson-id="0001" data-objective="obj-layout" data-evidence="practice" data-cognitive-level="apply" data-retrieval="required" data-feedback="required" data-source-status="not-needed" data-answer-status="provided">
+    <main class="lesson" id="lesson-content" data-course-id="acceptance-course" data-lesson-id="0007" data-objective="obj-layout" data-evidence="practice" data-cognitive-level="apply" data-retrieval="required" data-feedback="required" data-source-status="not-needed" data-answer-status="provided">
 
       <section data-role="objective" aria-labelledby="goal-title">
         <h2 id="goal-title">本课要解决的问题</h2>
@@ -99,6 +99,17 @@ for t in (0.5, 1.0, 2.0):
         <aside class="sidenote">param 的值存在 lesson 级 <code>__paramStore</code>；正文里所有 <code>data-param-out="m"</code> 的输出会同步。跨节联动需要课程扩展模型。</aside>
       </section>
 
+      <section aria-labelledby="motion-title">
+        <h2 id="motion-title">动效的节制</h2>
+        <p>动效也是版式节奏的一部分：只在内容进入视野时给一次轻量入场，不做循环动画。下面的卡片用 <code>data-animate</code> 声明入场动效，由 Kit 的 animation 模块驱动；打印与无脚本时直接静态呈现。</p>
+        <div data-animate="fadeIn" style="padding:1rem;border:1px solid var(--c-border);border-radius:6px;margin:0.8rem 0">
+          <strong>fadeIn</strong>：正文块进入视野后淡入一次。
+        </div>
+        <div data-animate="slideUp" data-animate-delay="0.15s" style="padding:1rem;border:1px solid var(--c-border);border-radius:6px;margin:0.8rem 0">
+          <strong>slideUp</strong>：延迟 0.15s 自下方滑入；同屏多个元素可用延迟制造次序感。
+        </div>
+      </section>
+
       <section data-role="retrieval" aria-labelledby="ret-title">
         <h2 id="ret-title">本课小结</h2>
         <p>不看正文回答：边注和 callout 的分工是什么？predict 揭晓前学习者会承诺什么？</p>
@@ -141,6 +152,9 @@ for t in (0.5, 1.0, 2.0):
       </li>
       <li class="toc-item is-h2 no-children">
         <div class="toc-row"><span class="kit-toc__spacer" aria-hidden="true"></span><a class="toc-link is-h2-link" href="#param-title">参数联动</a></div>
+      </li>
+      <li class="toc-item is-h2 no-children">
+        <div class="toc-row"><span class="kit-toc__spacer" aria-hidden="true"></span><a class="toc-link is-h2-link" href="#motion-title">动效的节制</a></div>
       </li>
       <li class="toc-item is-h2 no-children">
         <div class="toc-row"><span class="kit-toc__spacer" aria-hidden="true"></span><a class="toc-link is-h2-link" href="#ret-title">本课小结</a></div>

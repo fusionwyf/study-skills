@@ -6,14 +6,14 @@ attempted_at: 2026-10-24
 source_backed: false
 synthetic: false
 independence: independent
-lesson: 1
+lesson: 7
 evidence_type: practice
 evidence_strength: medium
 supported_objectives:
 - id: obj-layout
   mastery: application
 ---
-# 第 0001 课学习记录
+# 第 0007 课学习记录
 
 ## 学习者原始反馈
 

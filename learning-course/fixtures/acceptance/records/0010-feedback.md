@@ -6,12 +6,12 @@ attempted_at: 2026-10-24
 source_backed: false
 synthetic: false
 independence: null
-lesson: 4
+lesson: 10
 evidence_type: null
 evidence_strength: null
 supported_objectives: []
 ---
-# 第 0004 课学习记录
+# 第 0010 课学习记录
 
 ## 学习者原始反馈
 

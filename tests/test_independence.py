@@ -188,6 +188,8 @@ class IndependenceTests(unittest.TestCase):
 
     def test_report_and_update_warn_after_three_guided_records(self):
         course = self.course()
+        for path in (course / "records").glob("*.md"):
+            path.unlink()
         for index in range(2, 5):
             write_record(course, f"000{index}-guided.md", "recognition", "ai_guided", f"2026-10-0{index}", f"L{index:04d}")
         report = run("study/scripts/build_report.py", course)

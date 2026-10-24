@@ -38,36 +38,46 @@
             并解释图形如何变化。
           </p>
         </section>
-        <section id="prob-model" data-learnkit="explore">
-          <div data-lk-host></div>
-          <div data-lk-controls>
-            <label for="p-value">成功概率 p</label
-            ><input
-              id="p-value"
-              data-lk-bind="params.p"
-              type="range"
-              min="0"
-              max="1"
-              step=".1"
-              value=".3"
-            />
-          </div>
-          <p data-lk-view="status"></p>
-          <script type="application/json" data-lk-config>
-            {
-              "model": {
-                "name": "bernoulli",
-                "description": "0≤p≤1，二项结果概率"
-              },
-              "params": { "p": 0.3 }
-            }
-          </script>
+        <section aria-labelledby="explore-title">
+          <h2 id="explore-title">参数探索：改变成功概率 p</h2>
+          <kit-island id="bernoulli-explore">
+            <div data-viz-fallback><p>无脚本说明：伯努利试验只有成功与失败两种互斥且完备的结果。设成功概率为 p，则失败概率为 1−p；对任意 p 都有 p + (1−p) = 1，概率必然归一化。</p></div>
+            <div data-island-host hidden></div>
+            <div data-island-controls hidden></div>
+            <p data-island-status role="status"></p>
+            <script type="text/plain" data-island-model>
+              kit.island.define("bernoulli-explore", {
+                initialState: function () { return { p: 0.3 }; },
+                actions: {
+                  pUp: { label: "p +0.1", reduce: function (s) { return { p: Math.min(1, Math.round((s.p + 0.1) * 10) / 10) }; } },
+                  pDown: { label: "p −0.1", reduce: function (s) { return { p: Math.max(0, Math.round((s.p - 0.1) * 10) / 10) }; } },
+                  resetP: { label: "重置 p", reduce: function () { return { p: 0.3 }; } }
+                },
+                derive: function (s) {
+                  return { summary: "p = " + s.p.toFixed(1) + " · 成功 " + s.p.toFixed(1) + " + 失败 " + (1 - s.p).toFixed(1) + " = 1" };
+                },
+                view: function (s, api) {
+                  var pct = Math.round(s.p * 100);
+                  return api.html`<div style="display:grid;gap:0.6rem;margin:0.4rem 0">
+                    <div>
+                      <p style="margin:.1rem 0">成功 P = ${s.p.toFixed(1)}</p>
+                      <div style="height:1.3rem;background:var(--series-1,var(--c-accent));width:${pct}%;min-width:2px;border-radius:3px" role="img" aria-label="成功概率 ${pct}%"></div>
+                    </div>
+                    <div>
+                      <p style="margin:.1rem 0">失败 P = ${(1 - s.p).toFixed(1)}</p>
+                      <div style="height:1.3rem;background:var(--series-2,#8892a6);width:${100 - pct}%;min-width:2px;border-radius:3px" role="img" aria-label="失败概率 ${100 - pct}%"></div>
+                    </div>
+                    <p style="margin:.1rem 0">归一化核对：${s.p.toFixed(1)} + ${(1 - s.p).toFixed(1)} = 1</p>
+                  </div>`;
+                }
+              });
+            </script>
+          </kit-island>
         </section>
         <section
           class="visualization"
           id="probability-chart"
           data-visualization="chart"
-          data-viz-source="#prob-model"
         >
           <h2 id="成功与失败的概率">成功与失败的概率</h2>
           <div data-viz-fallback>
@@ -83,10 +93,11 @@
           <script type="application/json" data-viz-config>
             {
               "model": "probability-chart",
-              "domain": "正文给定范围",
-              "precision": "精确规则或 binary64 数值",
+              "domain": "p ∈ {0.3, 0.8} 两档取值下的互斥结果分布",
+              "precision": "概率保留一位小数，和恒为 1",
               "traces": [
-                { "type": "bar", "x": ["成功", "失败"], "y": [0.3, 0.7] }
+                { "type": "bar", "name": "p=0.3", "x": ["成功", "失败"], "y": [0.3, 0.7] },
+                { "type": "bar", "name": "p=0.8", "x": ["成功", "失败"], "y": [0.8, 0.2] }
               ]
             }
           </script>
@@ -151,6 +162,9 @@
       </li>
       <li class="toc-item is-h2 no-children">
         <div class="toc-row"><span class="kit-toc__spacer" aria-hidden="true"></span><a class="toc-link is-h2-link" href="#伯努利试验">伯努利试验</a></div>
+      </li>
+      <li class="toc-item is-h2 no-children">
+        <div class="toc-row"><span class="kit-toc__spacer" aria-hidden="true"></span><a class="toc-link is-h2-link" href="#explore-title">参数探索：改变成功概率 p</a></div>
       </li>
       <li class="toc-item is-h2 no-children">
         <div class="toc-row"><span class="kit-toc__spacer" aria-hidden="true"></span><a class="toc-link is-h2-link" href="#成功与失败的概率">成功与失败的概率</a></div>

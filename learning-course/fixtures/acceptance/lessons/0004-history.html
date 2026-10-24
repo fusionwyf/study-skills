@@ -118,6 +118,18 @@
             }
           </script>
         </section>
+        <section aria-labelledby="mermaid-title">
+          <h2 id="mermaid-title">论证结构流程</h2>
+          <p>把「材料 → 解释 → 主张」的推理链画成流程图。源码是 Mermaid 语义文本，由 Kit 的 diagram 模块渲染；无脚本打印时，上方关系图的文字说明即为可读后备。</p>
+          <pre class="mermaid">
+flowchart LR
+  A[居民请愿书] -->|解释| B[缺水影响生活]
+  C[会议记录] -->|解释| D[预算有限 先修主管道]
+  B --> E{主张 优先公共取水点}
+  D --> E
+  E -->|局限| F[缺少实施效果数据]
+          </pre>
+        </section>
         <section
           class="question"
           data-role="evidence"
@@ -165,6 +177,9 @@
       </li>
       <li class="toc-item is-h2 no-children">
         <div class="toc-row"><span class="kit-toc__spacer" aria-hidden="true"></span><a class="toc-link is-h2-link" href="#证据主张与局限">证据、主张与局限</a></div>
+      </li>
+      <li class="toc-item is-h2 no-children">
+        <div class="toc-row"><span class="kit-toc__spacer" aria-hidden="true"></span><a class="toc-link is-h2-link" href="#mermaid-title">论证结构流程</a></div>
       </li>
       <li class="toc-item is-h2 no-children">
         <div class="toc-row"><span class="kit-toc__spacer" aria-hidden="true"></span><a class="toc-link is-h2-link" href="#写出主张证据推理并说明一项证据局限">写出主张—证据—推理，并说明一项证据局限</a></div>

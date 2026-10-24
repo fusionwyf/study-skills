@@ -1,10 +1,13 @@
 {
   "title": "通用资产验收课件",
   "course_id": "acceptance-course",
-  "current_lesson": 6,
-  "completed_lessons": [],
-  "completed_count": 0,
-  "total_count": 6,
+  "current_lesson": 10,
+  "completed_lessons": [
+    "0007",
+    "0010"
+  ],
+  "completed_count": 2,
+  "total_count": 10,
   "lessons": [
     {
       "number": "0001",
@@ -135,6 +138,102 @@
         "chapter": "",
         "key": "0005",
         "href": "0005-design.html"
+      },
+      "next": {
+        "number": "0007",
+        "file": "0007-layout-predict.html",
+        "chapter": "",
+        "key": "0007",
+        "href": "0007-layout-predict.html"
+      }
+    },
+    {
+      "number": "0007",
+      "chapter": "",
+      "title": "版式节奏与先预测后揭晓",
+      "objective": "obj-layout",
+      "file": "0007-layout-predict.html",
+      "key": "0007",
+      "href": "lessons/0007-layout-predict.html",
+      "home": "../index.html",
+      "prev": {
+        "number": "0006",
+        "file": "0006-language.html",
+        "chapter": "",
+        "key": "0006",
+        "href": "0006-language.html"
+      },
+      "next": {
+        "number": "0008",
+        "file": "0008-question-kinds.html",
+        "chapter": "",
+        "key": "0008",
+        "href": "0008-question-kinds.html"
+      }
+    },
+    {
+      "number": "0008",
+      "chapter": "",
+      "title": "六类题型全览",
+      "objective": "obj-questions",
+      "file": "0008-question-kinds.html",
+      "key": "0008",
+      "href": "lessons/0008-question-kinds.html",
+      "home": "../index.html",
+      "prev": {
+        "number": "0007",
+        "file": "0007-layout-predict.html",
+        "chapter": "",
+        "key": "0007",
+        "href": "0007-layout-predict.html"
+      },
+      "next": {
+        "number": "0009",
+        "file": "0009-sim-and-charts.html",
+        "chapter": "",
+        "key": "0009",
+        "href": "0009-sim-and-charts.html"
+      }
+    },
+    {
+      "number": "0009",
+      "chapter": "",
+      "title": "仿真孤岛与图表",
+      "objective": "obj-viz",
+      "file": "0009-sim-and-charts.html",
+      "key": "0009",
+      "href": "lessons/0009-sim-and-charts.html",
+      "home": "../index.html",
+      "prev": {
+        "number": "0008",
+        "file": "0008-question-kinds.html",
+        "chapter": "",
+        "key": "0008",
+        "href": "0008-question-kinds.html"
+      },
+      "next": {
+        "number": "0010",
+        "file": "0010-evidence-loop.html",
+        "chapter": "",
+        "key": "0010",
+        "href": "0010-evidence-loop.html"
+      }
+    },
+    {
+      "number": "0010",
+      "chapter": "",
+      "title": "证据回流与独立验证",
+      "objective": "obj-evidence",
+      "file": "0010-evidence-loop.html",
+      "key": "0010",
+      "href": "lessons/0010-evidence-loop.html",
+      "home": "../index.html",
+      "prev": {
+        "number": "0009",
+        "file": "0009-sim-and-charts.html",
+        "chapter": "",
+        "key": "0009",
+        "href": "0009-sim-and-charts.html"
       },
       "next": null
     }

@@ -2,7 +2,7 @@
 
 - 状态：`active`
 - 教学阶段：`awaiting_evidence`
-- 已交付课程：`6`
+- 已交付课程：`10`
 
 ## 课程索引
 
@@ -14,3 +14,7 @@
 | 0004 | 材料分析与时间轴 | `history` | [打开](lessons/0004-history.html) |
 | 0005 | 图像观察与标注 | `design` | [打开](lessons/0005-design.html) |
 | 0006 | 听辨媒体与填空 | `language` | [打开](lessons/0006-language.html) |
+| 0007 | 版式节奏与先预测后揭晓 | `obj-layout` | [打开](lessons/0007-layout-predict.html) |
+| 0008 | 六类题型全览 | `obj-questions` | [打开](lessons/0008-question-kinds.html) |
+| 0009 | 仿真孤岛与图表 | `obj-viz` | [打开](lessons/0009-sim-and-charts.html) |
+| 0010 | 证据回流与独立验证 | `obj-evidence` | [打开](lessons/0010-evidence-loop.html) |

@@ -4,7 +4,10 @@
     "core": "2.0.0",
     "foundation": "2.0.0",
     "content._block": "2.0.0",
+    "content.animation": "2.0.0",
+    "content.callout": "2.0.0",
     "content.code": "2.0.0",
+    "content.diagram": "2.0.0",
     "content.math": "2.0.0",
     "content.media": "2.0.0",
     "shell.elements": "2.0.0",
@@ -12,11 +15,16 @@
     "shell.progress": "2.0.0",
     "shell.theme-switcher": "2.0.0",
     "shell.toc": "2.0.0",
+    "learning.param": "2.0.0",
     "learning.records": "2.0.0",
+    "learning.predict": "2.0.0",
     "learning.question": "2.0.0",
+    "learning.step": "2.0.0",
     "viz.core": "2.0.0",
+    "viz.island": "2.0.0",
     "viz.kinds.chart": "2.0.0",
     "viz.kinds.list": "2.0.0",
+    "viz.kinds.plot": "2.0.0",
     "viz.kinds.sequence": "2.0.0",
     "viz.kinds.spatial": "2.0.0",
     "viz.kinds.table": "2.0.0"
@@ -55,17 +63,26 @@
     "viz.kinds.chart": [
       "opt-in:config.json"
     ],
+    "viz.kinds.plot": [
+      "opt-in:config.json"
+    ],
     "content.math": [
-      "auto:0001-math.html:regex:\\\\\\("
+      "auto:0001-math.html:regex:\\\\\\(",
+      "auto:0007-layout-predict.html:regex:\\\\\\[",
+      "auto:0008-question-kinds.html:regex:\\\\\\(",
+      "auto:0009-sim-and-charts.html:regex:\\\\\\(",
+      "auto:0010-evidence-loop.html:regex:\\\\\\("
     ],
     "viz.core": [
       "auto:0001-math.html:.visualization",
       "auto:0002-probability.html:.visualization",
       "auto:0003-algorithm.html:.visualization",
-      "auto:0004-history.html:.visualization"
+      "auto:0004-history.html:.visualization",
+      "auto:0009-sim-and-charts.html:.visualization"
     ],
     "viz.kinds.table": [
-      "auto:0001-math.html:[data-visualization=\"table\"]"
+      "auto:0001-math.html:[data-visualization=\"table\"]",
+      "auto:0009-sim-and-charts.html:[data-visualization=\"table\"]"
     ],
     "learning.question": [
       "auto:0001-math.html:section[data-question-id]",
@@ -73,26 +90,56 @@
       "auto:0003-algorithm.html:section[data-question-id]",
       "auto:0004-history.html:section[data-question-id]",
       "auto:0005-design.html:section[data-question-id]",
-      "auto:0006-language.html:section[data-question-id]"
+      "auto:0006-language.html:section[data-question-id]",
+      "auto:0008-question-kinds.html:section[data-question-id]",
+      "auto:0009-sim-and-charts.html:section[data-question-id]",
+      "auto:0010-evidence-loop.html:section[data-question-id]"
+    ],
+    "viz.island": [
+      "auto:0002-probability.html:kit-island",
+      "auto:0009-sim-and-charts.html:kit-island"
     ],
     "content.code": [
-      "auto:0003-algorithm.html:pre > code"
+      "auto:0003-algorithm.html:pre > code",
+      "auto:0007-layout-predict.html:pre > code"
     ],
     "viz.kinds.sequence": [
-      "auto:0003-algorithm.html:[data-visualization=\"sequence\"]"
+      "auto:0003-algorithm.html:[data-visualization=\"sequence\"]",
+      "auto:0009-sim-and-charts.html:[data-visualization=\"sequence\"]"
     ],
     "viz.kinds.list": [
       "auto:0003-algorithm.html:[data-visualization=\"process\"]",
       "auto:0004-history.html:[data-visualization=\"timeline\"]"
     ],
+    "content.diagram": [
+      "auto:0004-history.html:pre.mermaid"
+    ],
     "content.media": [
       "auto:0005-design.html:[data-media]",
       "auto:0006-language.html:[data-media]"
+    ],
+    "content.callout": [
+      "auto:0007-layout-predict.html:aside.callout",
+      "auto:0008-question-kinds.html:aside.callout",
+      "auto:0009-sim-and-charts.html:aside.callout",
+      "auto:0010-evidence-loop.html:aside.callout"
+    ],
+    "learning.predict": [
+      "auto:0007-layout-predict.html:kit-predict"
+    ],
+    "learning.step": [
+      "auto:0007-layout-predict.html:.step"
+    ],
+    "learning.param": [
+      "auto:0007-layout-predict.html:[data-param]"
+    ],
+    "content.animation": [
+      "auto:0007-layout-predict.html:[data-animate]"
     ]
   },
   "files": {
-    "kit.css": "sha256-00d6499a429046b6f09654063cb6b1437f318993fae203dc58de8e4339da2c9a",
-    "kit.js": "sha256-726213bc8a5cbb7845dc84ea7dc380ae3a1705ebd74d8c3961e998393dd92c3b"
+    "kit.css": "sha256-b094568a0824ed46c8472f198ab6bec1d078ac449a836e92f331f68863e600a5",
+    "kit.js": "sha256-a6d825e17cfbd78dcb868f7516d3fd81d958644c3966b952e90c5ce1b972d6a9"
   },
   "vendor": {}
 }

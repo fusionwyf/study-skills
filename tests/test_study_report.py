@@ -133,7 +133,7 @@ class CourseReportTests(StudyReportTestCase):
         result = run_script(BUILD_REPORT, course)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("[unknown] math", result.stdout)
-        self.assertIn("0/6 个目标有至少一条 finalized 记录支撑", result.stdout)
+        self.assertIn("0/10 个目标有至少一条 finalized 记录支撑", result.stdout)
 
 
 class ExamReportTests(StudyReportTestCase):

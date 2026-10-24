@@ -6,10 +6,10 @@
   "use strict";
   var CourseKit = global.CourseKit = global.CourseKit || {};
   global.kit = global.kit || CourseKit;
-  CourseKit.__COURSE_CONFIG__ = {"theme": "course", "vendor": {"mode": "cdn"}, "code": {"themes": {"light": "github", "dark": "github-dark"}}, "modules": ["viz.kinds.spatial", "viz.kinds.chart"]};
-  CourseKit.__ACTIVE_MODULES__ = ["core", "foundation", "content._block", "content.code", "content.math", "content.media", "shell.elements", "shell.nav", "shell.progress", "shell.theme-switcher", "shell.toc", "learning.records", "learning.question", "viz.core", "viz.kinds.chart", "viz.kinds.list", "viz.kinds.sequence", "viz.kinds.spatial", "viz.kinds.table"];
-  CourseKit.VENDORS = {"hljs": {"id": "hljs", "version": "11.12.0", "js": {"cdn": "https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.12.0/build/highlight.min.js", "local": "../assets/kit/vendor/hljs/highlight.min.js"}}, "katex": {"id": "katex", "version": "0.16.11", "css": {"cdn": "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css", "local": "../assets/kit/vendor/katex/katex.min.css"}, "js": {"cdn": "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js", "local": "../assets/kit/vendor/katex/katex.min.js"}, "autoRender": {"cdn": "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js", "local": "../assets/kit/vendor/katex/auto-render.min.js"}}, "plotly": {"id": "plotly", "version": "4.1.2", "js": {"cdn": "https://cdn.jsdelivr.net/npm/plotly.js-dist-min@4.1.2/plotly.min.js", "local": "../assets/kit/vendor/plotly.js-dist-min/plotly.min.js"}}, "jsxgraph": {"id": "jsxgraph", "version": "1.14.0", "css": {"cdn": "https://cdn.jsdelivr.net/npm/jsxgraph@1.14.0/distrib/jsxgraph.css", "local": "../assets/kit/vendor/jsxgraph/jsxgraph.css"}, "js": {"cdn": "https://cdn.jsdelivr.net/npm/jsxgraph@1.14.0/distrib/jsxgraphcore.js", "local": "../assets/kit/vendor/jsxgraph/jsxgraphcore.js"}}};
-  CourseKit.__LOCAL_VENDORS__ = ["jsxgraph", "plotly"];
+  CourseKit.__COURSE_CONFIG__ = {"theme": "course", "vendor": {"mode": "cdn"}, "code": {"themes": {"light": "github", "dark": "github-dark"}}, "modules": ["viz.kinds.spatial", "viz.kinds.chart", "viz.kinds.plot"], "customThemes": {"crt-terminal": {"label": "绿磷终端", "scheme": "dark", "code": "dark", "fonts": ["jetbrains-mono:400,700"]}}, "themes": ["crt-terminal"]};
+  CourseKit.__ACTIVE_MODULES__ = ["core", "foundation", "content._block", "content.animation", "content.callout", "content.code", "content.diagram", "content.math", "content.media", "shell.elements", "shell.nav", "shell.progress", "shell.theme-switcher", "shell.toc", "learning.param", "learning.records", "learning.predict", "learning.question", "learning.step", "viz.core", "viz.island", "viz.kinds.chart", "viz.kinds.list", "viz.kinds.plot", "viz.kinds.sequence", "viz.kinds.spatial", "viz.kinds.table"];
+  CourseKit.VENDORS = {"hljs": {"id": "hljs", "version": "11.12.0", "js": {"cdn": "https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.12.0/build/highlight.min.js", "local": "../assets/kit/vendor/hljs/highlight.min.js"}}, "mermaid": {"id": "mermaid", "version": "11.4.1", "js": {"cdn": "https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js", "local": "../assets/kit/vendor/mermaid/mermaid.min.js"}}, "katex": {"id": "katex", "version": "0.16.11", "css": {"cdn": "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css", "local": "../assets/kit/vendor/katex/katex.min.css"}, "js": {"cdn": "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js", "local": "../assets/kit/vendor/katex/katex.min.js"}, "autoRender": {"cdn": "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js", "local": "../assets/kit/vendor/katex/auto-render.min.js"}}, "plotly": {"id": "plotly", "version": "4.1.2", "js": {"cdn": "https://cdn.jsdelivr.net/npm/plotly.js-dist-min@4.1.2/plotly.min.js", "local": "../assets/kit/vendor/plotly.js-dist-min/plotly.min.js"}}, "plot": {"id": "plot", "version": "0.6.16", "js": {"cdn": "https://cdn.jsdelivr.net/combine/npm/d3@7.9.0/dist/d3.min.js,npm/@observablehq/plot@0.6.16/dist/plot.umd.min.js", "local": "../assets/kit/vendor/observable-plot/plot.bundle.min.js"}}, "jsxgraph": {"id": "jsxgraph", "version": "1.14.0", "css": {"cdn": "https://cdn.jsdelivr.net/npm/jsxgraph@1.14.0/distrib/jsxgraph.css", "local": "../assets/kit/vendor/jsxgraph/jsxgraph.css"}, "js": {"cdn": "https://cdn.jsdelivr.net/npm/jsxgraph@1.14.0/distrib/jsxgraphcore.js", "local": "../assets/kit/vendor/jsxgraph/jsxgraphcore.js"}}};
+  CourseKit.__LOCAL_VENDORS__ = ["jsxgraph", "plot", "plotly"];
   CourseKit.__THEMES__ = {"blueprint": {"label": "工程蓝图", "scheme": "dark", "fonts": ["noto-sans-sc:400,700", "jetbrains-mono:400,700"]}, "brutal": {"label": "新粗野", "scheme": "light", "code": "dark", "fonts": ["noto-sans-sc:400,700,900", "space-grotesk:500,700", "jetbrains-mono:400,700"]}, "course": {"label": "默认", "scheme": "light"}, "field": {"label": "博物志", "scheme": "light", "code": "dark", "fonts": ["lxgw-wenkai", "jetbrains-mono:400,700"]}, "ink": {"label": "深色", "scheme": "dark"}, "paper": {"label": "纸张", "scheme": "light"}, "riso": {"label": "孔版印刷", "scheme": "light", "code": "dark", "fonts": ["noto-sans-sc:400,700,900", "space-grotesk:500,700"]}, "swiss": {"label": "瑞士网格", "scheme": "light", "code": "dark", "fonts": ["noto-sans-sc:400,700,900", "jetbrains-mono:400,700"]}};
   CourseKit.__EXTENSIONS__ = [];
 
@@ -1573,6 +1573,166 @@
 
   })();
 
+  /* ---- Module: content.animation (animation.js) ---- */
+  (function () {
+(function (root) {
+  "use strict";
+
+  var kit = root.CourseKit = root.CourseKit || {};
+  root.kit = root.kit || kit;
+
+  var PRESETS = {
+    fadeIn: { name: "kit-fade-in", duration: "0.6s", easing: "ease-out" },
+    slideUp: { name: "kit-slide-up", duration: "0.6s", easing: "cubic-bezier(0.4, 0, 0.2, 1)" },
+    bounce: { name: "kit-bounce", duration: "0.8s", easing: "ease-in-out" }
+  };
+
+  var observerOptions = {
+    root: null,
+    rootMargin: "0px 0px -10% 0px",
+    threshold: 0.1
+  };
+
+  var observer = null;
+
+  function parseConfig(el) {
+    var preset = el.dataset.animate || "fadeIn";
+    var duration = el.dataset.animateDuration;
+    var delay = el.dataset.animateDelay || "0s";
+    var easing = el.dataset.animateEasing;
+
+    if (PRESETS[preset]) {
+      var p = PRESETS[preset];
+      return {
+        name: p.name,
+        duration: duration || p.duration,
+        easing: easing || p.easing,
+        delay: delay
+      };
+    }
+
+    return {
+      name: preset,
+      duration: duration || "0.6s",
+      easing: easing || "ease-out",
+      delay: delay
+    };
+  }
+
+  function animateElement(el) {
+    if (el.classList.contains("is-animated")) return;
+
+    var cfg = parseConfig(el);
+    el.style.setProperty("--anim-name", cfg.name);
+    el.style.setProperty("--anim-duration", cfg.duration);
+    el.style.setProperty("--anim-easing", cfg.easing);
+    el.style.setProperty("--anim-delay", cfg.delay);
+    el.classList.add("is-animated");
+
+    el.addEventListener("animationend", function onEnd() {
+      el.removeEventListener("animationend", onEnd);
+      if (kit.emit) {
+        kit.emit("kit:animation:complete", { element: el, id: el.id });
+      }
+    }, { once: true });
+  }
+
+  function observeCallback(entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) {
+        animateElement(entry.target);
+        if (observer) observer.unobserve(entry.target);
+      }
+    });
+  }
+
+  function enhance() {
+    if (typeof document === "undefined") return;
+
+    var elements = document.querySelectorAll("[data-animate]");
+    if (!elements.length) {
+      if (kit.ready && kit.ready.markReady) {
+        kit.ready.markReady("content.animation");
+      }
+      return;
+    }
+
+    if ("IntersectionObserver" in root) {
+      observer = new IntersectionObserver(observeCallback, observerOptions);
+      Array.prototype.forEach.call(elements, function (el) {
+        if (el.dataset.animateTrigger === "immediate") {
+          animateElement(el);
+        } else {
+          observer.observe(el);
+        }
+      });
+    } else {
+      Array.prototype.forEach.call(elements, animateElement);
+    }
+
+    if (kit.ready && kit.ready.markReady) {
+      kit.ready.markReady("content.animation");
+    }
+  }
+
+  kit.animation = {
+    animate: animateElement,
+    presets: PRESETS,
+    init: enhance
+  };
+
+  if (kit.registerModule) {
+    kit.registerModule("content.animation", kit.animation);
+  }
+})(typeof window !== "undefined" ? window : globalThis);
+
+  })();
+
+  /* ---- Module: content.callout (callout.js) ---- */
+  (function () {
+(function (root) {
+  "use strict";
+
+  var kit = root.CourseKit = root.CourseKit || {};
+  root.kit = root.kit || kit;
+
+  var TITLES = {
+    note: "注意",
+    info: "说明",
+    tip: "提示",
+    warning: "警告",
+    danger: "危险"
+  };
+
+  function enhanceCallout(el) {
+    var type = el.dataset.callout || "note";
+    if (!el.querySelector(".callout__title")) {
+      var title = document.createElement("div");
+      title.className = "callout__title";
+      title.textContent = TITLES[type] || type.toUpperCase();
+      el.insertBefore(title, el.firstChild);
+    }
+  }
+
+  function init() {
+    if (typeof document === "undefined") return;
+    var callouts = document.querySelectorAll(".callout, aside[data-callout]");
+    Array.prototype.forEach.call(callouts, enhanceCallout);
+    if (kit.ready && kit.ready.markReady) kit.ready.markReady("content.callout");
+  }
+
+  kit.callout = {
+    init: init
+  };
+
+  if (typeof document !== "undefined") {
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+    else init();
+  }
+})(typeof window !== "undefined" ? window : globalThis);
+
+  })();
+
   /* ---- Module: content.code (code.js) ---- */
   (function () {
 (function (root) {
@@ -1705,6 +1865,128 @@
 
   if (kit.registerModule) {
     kit.registerModule("content.code", kit.code);
+  }
+})(typeof window !== "undefined" ? window : globalThis);
+
+  })();
+
+  /* ---- Module: content.diagram (mermaid.js) ---- */
+  (function () {
+(function (root) {
+  "use strict";
+
+  var kit = root.CourseKit = root.CourseKit || {};
+  root.kit = root.kit || kit;
+
+  var nodes = [];
+
+  function getThemeConfig() {
+    var scheme = (kit.theme && kit.theme.getScheme && kit.theme.getScheme()) || "light";
+    return {
+      startOnLoad: false,
+      theme: scheme === "dark" ? "dark" : "default",
+      themeVariables: {
+        fontFamily: "var(--font-body)",
+        darkMode: scheme === "dark"
+      }
+    };
+  }
+
+  function renderNodes() {
+    if (!root.mermaid) return Promise.resolve();
+    try {
+      root.mermaid.initialize(getThemeConfig());
+    } catch (e) {}
+
+    var promises = nodes.map(function (item, idx) {
+      var raw = item.raw;
+      var block = item.block;
+      var id = "mermaid-diagram-" + idx;
+
+      return Promise.resolve().then(function () {
+        return root.mermaid.render(id, raw);
+      }).then(function (res) {
+        block.body.innerHTML = res.svg;
+        block.root.dataset.kitState = "ready";
+      }).catch(function (err) {
+        console.warn("[kit.diagram] Mermaid render error", err);
+        block.body.innerHTML = "<pre>" + kit.util.escapeHtml(raw) + "</pre>";
+        block.label.textContent = "渲染失败";
+        block.root.dataset.kitState = "failed";
+      });
+    });
+
+    return Promise.all(promises);
+  }
+
+  function enhanceDiagram(el) {
+    if (el.closest(".kit-block")) return;
+    var raw = el.textContent.trim();
+    var title = el.dataset.title || "";
+
+    var block = kit.block.create({
+      kind: "diagram",
+      label: "mermaid",
+      title: title
+    });
+
+    var copyBtn = block.addAction("复制源码", function () {
+      kit.util.copyText(raw, function () {
+        copyBtn.textContent = "已复制";
+        setTimeout(function () { copyBtn.textContent = "复制源码"; }, 1500);
+      }, function () {
+        copyBtn.textContent = "复制失败";
+        setTimeout(function () { copyBtn.textContent = "复制源码"; }, 1500);
+      });
+    }, "复制图表源码");
+
+    el.parentNode.insertBefore(block.root, el);
+    el.style.display = "none";
+    block.body.appendChild(el);
+
+    nodes.push({ element: el, raw: raw, block: block });
+  }
+
+  function init() {
+    if (typeof document === "undefined") return Promise.resolve();
+    var diagramEls = document.querySelectorAll(".mermaid");
+    if (!diagramEls.length) {
+      return Promise.resolve();
+    }
+
+    Array.prototype.forEach.call(diagramEls, enhanceDiagram);
+
+    kit.on("kit:themechange", function () {
+      if (root.mermaid && nodes.length) {
+        renderNodes();
+      }
+    });
+
+    if (root.mermaid) {
+      return renderNodes();
+    } else if (kit.need) {
+      return kit.need("mermaid").then(function () {
+        return renderNodes();
+      }).catch(function (err) {
+        console.warn("[kit.diagram] Mermaid load failed", err);
+        nodes.forEach(function (item) {
+          item.block.body.innerHTML = "<pre>" + kit.util.escapeHtml(item.raw) + "</pre>";
+          item.block.label.textContent = "渲染失败";
+          item.block.root.dataset.kitState = "failed";
+        });
+        throw err;
+      });
+    }
+    return Promise.resolve();
+  }
+
+  kit.diagram = {
+    init: init,
+    render: renderNodes
+  };
+
+  if (kit.registerModule) {
+    kit.registerModule("content.diagram", kit.diagram);
   }
 })(typeof window !== "undefined" ? window : globalThis);
 
@@ -3259,6 +3541,197 @@
 
   })();
 
+  /* ---- Module: learning.param (param.js) ---- */
+  (function () {
+/*
+ * learning.param — 参数联动原语 (Scrubbable parameter)
+ *
+ * 作者契约（两种等价写法）:
+ *   <kit-param data-param="mass" data-min="0.5" data-max="5" data-step="0.1"
+ *              data-value="1" data-unit="kg" data-label="质量"></kit-param>
+ *   <input type="range" data-param="mass" min="0.5" max="5" step="0.1" value="1">
+ *
+ * 所有参数进入 lesson.__paramStore（LearnKit store，state.params.<name>）；
+ * 正文里用 <output data-param-out="mass">1</output> 显示联动数值；
+ * 拖动滑块或横向拖曳数值即可改参；当前值写入 node.dataset.paramValue，
+ * 由 learning.records 汇总为"参数探索"证据。
+ */
+(function (root) {
+  "use strict";
+
+  var kit = root.CourseKit = root.CourseKit || {};
+  root.kit = root.kit || kit;
+  var LearnKit = root.LearnKit || kit.store;
+
+  function paramsModel() {
+    return {
+      initialState: function () { return { params: {} }; },
+      reduce: function (state, action) {
+        if (action.type === "SET_PARAM" && action.name) {
+          return LearnKit.setPath(state, "params." + action.name, action.value);
+        }
+        return state;
+      },
+      derive: function (state) {
+        return { params: state.params };
+      }
+    };
+  }
+
+  function ensureStore(lesson) {
+    if (!lesson.__paramStore && LearnKit && LearnKit.createStore) {
+      lesson.__paramStore = LearnKit.createStore(paramsModel());
+    }
+    return lesson.__paramStore;
+  }
+
+  function fmt(value, step) {
+    var decimals = 0;
+    var text = String(step != null ? step : "");
+    var dot = text.indexOf(".");
+    if (dot !== -1) decimals = Math.min(4, text.length - dot - 1);
+    return Number(value).toFixed(decimals);
+  }
+
+  function enhance(node, lesson, store, name) {
+    if (node.dataset.kitParamBound === "true") return;
+    node.dataset.kitParamBound = "true";
+
+    var min = isFinite(Number(node.dataset.min)) ? Number(node.dataset.min) : 0;
+    var max = isFinite(Number(node.dataset.max)) ? Number(node.dataset.max) : 10;
+    var step = isFinite(Number(node.dataset.step)) && Number(node.dataset.step) > 0 ? Number(node.dataset.step) : (max - min) / 100;
+    var value = isFinite(Number(node.dataset.value)) ? Number(node.dataset.value) : (min + max) / 2;
+    var unit = node.dataset.unit || "";
+    var label = node.dataset.label || name;
+
+    var row = document.createElement("span");
+    row.className = "kit-param";
+    var labelEl = document.createElement("label");
+    labelEl.className = "kit-param__label";
+    labelEl.textContent = label;
+    var range = document.createElement("input");
+    range.type = "range";
+    range.className = "kit-param__range";
+    range.min = String(min);
+    range.max = String(max);
+    range.step = String(step);
+    range.value = String(value);
+    range.setAttribute("aria-label", label);
+    var out = document.createElement("output");
+    out.className = "kit-param__value";
+    out.textContent = fmt(value, step) + unit;
+    // scrubbable number：横向拖曳数值改参
+    out.tabIndex = 0;
+    out.setAttribute("role", "slider");
+    out.setAttribute("aria-label", label + "（左右拖动调整）");
+    out.setAttribute("aria-valuemin", String(min));
+    out.setAttribute("aria-valuemax", String(max));
+
+    row.appendChild(labelEl);
+    row.appendChild(range);
+    row.appendChild(out);
+    node.appendChild(row);
+    node.hidden = false;
+
+    var last = value;
+    function commit(next, source) {
+      next = Math.min(max, Math.max(min, next));
+      next = Math.round(next / step) * step;
+      if (isFinite(next)) next = Number(next.toFixed(4));
+      if (next === last) return;
+      last = next;
+      if (store && store.dispatch) {
+        store.dispatch({ type: "SET_PARAM", name: name, value: next });
+      }
+      range.value = String(next);
+      out.textContent = fmt(next, step) + unit;
+      out.setAttribute("aria-valuenow", String(next));
+      node.dataset.paramValue = String(next);
+      lesson.querySelectorAll('[data-param-out="' + name + '"]').forEach(function (target) {
+        target.textContent = fmt(next, step) + (target.dataset.unit || unit);
+      });
+      if (source !== "store") notifyOutputs();
+    }
+
+    function notifyOutputs() {
+      lesson.querySelectorAll('[data-param-out="' + name + '"]').forEach(function (target) {
+        target.dataset.paramFrom = name;
+        target.dataset.paramAt = String(last);
+      });
+    }
+
+    range.addEventListener("input", function () { commit(Number(range.value)); });
+    out.addEventListener("pointerdown", function (event) {
+      event.preventDefault();
+      out.setPointerCapture(event.pointerId);
+      var startX = event.clientX;
+      var startValue = last;
+      function onMove(moveEvent) {
+        var drag = (moveEvent.clientX - startX) / 120; // 每 120px 走满量程
+        commit(startValue + drag * (max - min));
+      }
+      function onUp(upEvent) {
+        out.releasePointerCapture(upEvent.pointerId);
+        out.removeEventListener("pointermove", onMove);
+        out.removeEventListener("pointerup", onUp);
+      }
+      out.addEventListener("pointermove", onMove);
+      out.addEventListener("pointerup", onUp);
+    });
+    out.addEventListener("keydown", function (event) {
+      if (event.key === "ArrowLeft" || event.key === "ArrowDown") { commit(last - step); event.preventDefault(); }
+      if (event.key === "ArrowRight" || event.key === "ArrowUp") { commit(last + step); event.preventDefault(); }
+    });
+
+    if (store && store.subscribe) {
+      store.subscribe(function () {
+        var current = LearnKit.getPath(store.getState(), "params." + name);
+        if (typeof current === "number" && current !== last) {
+          commit(current, "store");
+        }
+      });
+    }
+    // 初始值直接入 store（commit 对 next === last 会提前返回），保证
+    // data-param-out 联动与"参数探索"证据从挂载那一刻就有基准值。
+    if (store && store.dispatch) {
+      store.dispatch({ type: "SET_PARAM", name: name, value: value });
+    }
+    node.dataset.paramValue = String(value);
+    lesson.querySelectorAll('[data-param-out="' + name + '"]').forEach(function (target) {
+      if (!target.textContent.trim()) target.textContent = fmt(value, step) + (target.dataset.unit || unit);
+    });
+    notifyOutputs();
+  }
+
+  function init() {
+    if (typeof document === "undefined") return;
+    var lesson = document.querySelector(".lesson") || document.body;
+    var store = ensureStore(lesson);
+    document.querySelectorAll("kit-param, [data-param]").forEach(function (node) {
+      var name = node.dataset.param || node.getAttribute("name");
+      if (!name) {
+        node.dataset.kitParamBound = "missing-name";
+        return;
+      }
+      try {
+        enhance(node, lesson, store, name);
+      } catch (error) {
+        node.dataset.kitParamBound = "failed";
+        console.error("[kit] param init failed:", error);
+      }
+    });
+  }
+
+  kit.param = { init: init, paramsModel: paramsModel };
+  if (kit.registerModule) kit.registerModule("learning.param", kit.param);
+  if (!kit.registerModule && typeof document !== "undefined") {
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+    else init();
+  }
+})(typeof window !== "undefined" ? window : globalThis);
+
+  })();
+
   /* ---- Module: learning.records (records.js) ---- */
   (function () {
 (function (root) {
@@ -3778,6 +4251,172 @@
   if (!kit.registerModule && typeof document !== "undefined") {
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initRecords);
     else initRecords();
+  }
+})(typeof window !== "undefined" ? window : globalThis);
+
+  })();
+
+  /* ---- Module: learning.predict (predict.js) ---- */
+  (function () {
+/*
+ * learning.predict — 先预测后揭晓 (Predict-then-Reveal)
+ *
+ * 作者契约（两种等价写法，二选一）:
+ *   <kit-predict data-question-id="p1" data-answer="9.8" data-tolerance="0.5" data-unit="m/s">
+ *     <div data-predict-prompt><p>先猜：……？</p></div>
+ *     <div data-reveal><p>揭晓内容（也是无脚本时的可读后备）</p></div>
+ *   </kit-predict>
+ *   <div class="predict" data-predict data-question-id="p1" ...>…</div>
+ *
+ * data-answer 为数值时自动数值判定（data-tolerance 容差，缺省 10% 相对容差），
+ * 并渲染偏差条；无 data-answer 时开放预测，只记录原文不判对错。
+ * 揭晓时向 evidenceModel 派发 ATTEMPT + RAW_ANSWER（+ 数值判定时的 VERDICT）。
+ */
+(function (root) {
+  "use strict";
+
+  var kit = root.CourseKit = root.CourseKit || {};
+  root.kit = root.kit || kit;
+  var LearnKit = root.LearnKit || kit.store;
+
+  var EVIDENCE = (kit.records && kit.records.EVIDENCE) || {
+    ATTEMPT: "ATTEMPT", RAW_ANSWER: "RAW_ANSWER", VERDICT: "VERDICT"
+  };
+
+  function el(tag, cls, text) {
+    var node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text != null) node.textContent = text;
+    return node;
+  }
+
+  function ensureStore(lesson) {
+    var store = lesson.__evidenceStore;
+    if (!store && LearnKit && LearnKit.createStore && kit.records && kit.records.evidenceModel) {
+      store = LearnKit.createStore(kit.records.evidenceModel());
+      lesson.__evidenceStore = store;
+    }
+    return store;
+  }
+
+  function enhance(node, lesson, store) {
+    if (node.dataset.kitPredictBound === "true") return;
+    node.dataset.kitPredictBound = "true";
+
+    var id = node.dataset.questionId || node.id || "predict";
+    var promptNode = node.querySelector("[data-predict-prompt]") || node.querySelector("[data-stem]");
+    var revealNode = node.querySelector("[data-reveal]");
+    var answerText = node.dataset.answer != null ? String(node.dataset.answer).trim() : "";
+    var expected = answerText !== "" ? Number(answerText) : NaN;
+    var numeric = answerText !== "" && isFinite(expected);
+    var tolerance = node.dataset.tolerance != null ? Number(node.dataset.tolerance) : NaN;
+    if (!isFinite(tolerance)) tolerance = Math.abs(expected) * 0.1; // 缺省 10% 相对容差
+    var unit = node.dataset.unit || "";
+
+    // 无脚本后备：data-reveal 在 HTML 中默认可见；增强后先隐藏，揭晓时展示。
+    if (revealNode) revealNode.hidden = true;
+
+    var body = el("div", "kit-predict__body");
+    var input = el("input", "kit-predict__input");
+    input.type = numeric ? "number" : "text";
+    if (numeric) input.step = "any";
+    input.placeholder = "先写下你的预测" + (unit ? "（" + unit + "）" : "");
+    input.setAttribute("aria-label", "预测输入");
+    var button = el("button", "kit-predict__btn", "揭晓");
+    button.type = "button";
+    var meter = el("div", "kit-predict__meter");
+    meter.hidden = true;
+    meter.setAttribute("role", "status");
+    var bar = el("div", "kit-predict__bar");
+    var barFill = el("div", "kit-predict__bar-fill");
+    bar.appendChild(barFill);
+    var note = el("p", "kit-predict__note");
+    meter.appendChild(bar);
+    meter.appendChild(note);
+
+    body.appendChild(input);
+    body.appendChild(button);
+    body.appendChild(meter);
+    if (promptNode) promptNode.after(body);
+    else node.appendChild(body);
+
+    button.addEventListener("click", function () {
+      var raw = String(input.value || "").trim();
+      if (!raw) {
+        meter.hidden = false;
+        note.textContent = "先写下预测，再揭晓。";
+        return;
+      }
+      var dispatch = function (action) {
+        var curStore = lesson.__evidenceStore || store;
+        if (curStore && curStore.dispatch) curStore.dispatch(action);
+      };
+      dispatch({ type: EVIDENCE.RAW_ANSWER, id: id, value: raw });
+      dispatch({ type: EVIDENCE.ATTEMPT, id: id });
+
+      var value = Number(raw);
+      var correct = null;
+      if (numeric && isFinite(value)) {
+        correct = Math.abs(value - expected) <= tolerance;
+        dispatch({ type: EVIDENCE.VERDICT, id: id, value: correct ? "correct" : "incorrect" });
+      }
+
+      if (numeric && isFinite(value)) {
+        var relative = Math.abs(value - expected) / Math.max(Math.abs(expected), 1e-9);
+        var percent = Math.round(Math.min(relative, 9.99) * 1000) / 10;
+        barFill.style.width = Math.max(2, Math.min(100, percent)) + "%";
+        bar.dataset.tone = correct ? "ok" : "off";
+        note.textContent = "你的预测 " + raw + unit + "；真实值 " + answerText + unit +
+          "；偏差约 " + percent + "%" + (correct ? "，在容差内。" : "，超出容差。");
+      } else if (numeric) {
+        note.textContent = "请输入数值后再揭晓；真实值是 " + answerText + unit + "。";
+      } else {
+        note.textContent = "已记录你的预测：这是开放预测，没有唯一数值答案。";
+      }
+      meter.hidden = false;
+
+      if (revealNode) {
+        revealNode.hidden = false;
+        if (kit.content && kit.content.math && kit.content.math.renderIn) {
+          try { kit.content.math.renderIn(revealNode); } catch (e) {}
+        } else if (root.renderMathInElement) {
+          try {
+            root.renderMathInElement(revealNode, {
+              delimiters: [
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true }
+              ],
+              throwOnError: false
+            });
+          } catch (e) {}
+        }
+      }
+
+      input.disabled = true;
+      button.disabled = true;
+      node.dataset.predictState = JSON.stringify({ raw: raw, revealed: true, correct: correct });
+    });
+  }
+
+  function init() {
+    if (typeof document === "undefined") return;
+    var lesson = document.querySelector(".lesson") || document.body;
+    var store = ensureStore(lesson);
+    document.querySelectorAll("kit-predict, [data-predict]").forEach(function (node) {
+      try {
+        enhance(node, lesson, store);
+      } catch (error) {
+        node.dataset.kitPredictBound = "failed";
+        console.error("[kit] predict init failed:", error);
+      }
+    });
+  }
+
+  kit.predict = { init: init };
+  if (kit.registerModule) kit.registerModule("learning.predict", kit.predict);
+  if (!kit.registerModule && typeof document !== "undefined") {
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+    else init();
   }
 })(typeof window !== "undefined" ? window : globalThis);
 
@@ -4606,6 +5245,56 @@
 
   })();
 
+  /* ---- Module: learning.step (step.js) ---- */
+  (function () {
+(function (root) {
+  "use strict";
+
+  var kit = root.CourseKit = root.CourseKit || {};
+  root.kit = root.kit || kit;
+
+  function initSteps() {
+    if (typeof document === "undefined") return;
+
+    var buttons = document.querySelectorAll("[data-step-next]");
+    buttons.forEach(function (next) {
+      var scope = next.closest("[data-steps-scope]") ||
+        next.closest("section, .card, .lesson") ||
+        next.parentElement;
+      var items = scope ? Array.prototype.slice.call(scope.querySelectorAll(".step")) : [];
+      if (items.length < 2) return;
+
+      next.addEventListener("click", function () {
+        var hidden = items.findIndex(function (item) { return item.classList.contains("is-hidden"); });
+        if (hidden >= 0) {
+          items[hidden].classList.remove("is-hidden");
+          var remaining = items.filter(function (item) { return item.classList.contains("is-hidden"); });
+          if (remaining.length === 0) {
+            next.disabled = true;
+          }
+        } else {
+          next.disabled = true;
+        }
+      });
+    });
+
+    if (kit.ready && kit.ready.markReady) {
+      kit.ready.markReady("learning.step");
+    }
+  }
+
+  kit.step = {
+    init: initSteps
+  };
+
+  if (typeof document !== "undefined") {
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initSteps);
+    else initSteps();
+  }
+})(typeof window !== "undefined" ? window : globalThis);
+
+  })();
+
   /* ---- Module: viz.core (visualizations.js) ---- */
   (function () {
 (function (root) {
@@ -4829,6 +5518,303 @@
         init();
       }, 0);
     }
+  }
+})(typeof window !== "undefined" ? window : globalThis);
+
+  })();
+
+  /* ---- Module: viz.island (island.js) ---- */
+  (function () {
+/*
+ * viz.island — 免构建交互仿真孤岛 (Island Component)
+ *
+ * 底层直接挂在 LearnKit store 上（时间旅行 / 播放控制 / 速度调节全部复用）。
+ * 作者在 <script type="text/plain" data-island-model> 内编写模型与视图，
+ * 由孤岛运行时编译执行（与页面脚本同一信任级）：
+ *
+ *   <kit-island id="pendulum" data-island>
+ *     <div data-viz-fallback><p>无脚本文字说明（必须存在且可见）</p></div>
+ *     <div data-island-host hidden></div>
+ *     <div data-island-controls hidden></div>
+ *     <script type="text/plain" data-island-model>
+ *       kit.island.define("pendulum", {
+ *         initialState: () => ({ t: 0, theta: 0.5, omega: 0 }),
+ *         tick: (s) => ({ ...s, t: s.t + 0.05, theta: ..., omega: ... }),
+ *         actions: { push: { label: "推一下", reduce: (s) => ({...s, omega: s.omega + 0.8}) } },
+ *         derive: (s) => ({ summary: "t=" + s.t }),
+ *         view: (s, api) => api.html`<p>t = ${s.t}</p>`
+ *       });
+ *     </script>
+ *   </kit-island>
+ *
+ * 契约：tick/reduce 必须返回新状态对象（不可原地修改）；view 返回 HTML 字符串，
+ * 插值默认转义，需要原始 HTML 时用 api.raw()；[data-viz-fallback] 保证无脚本可读。
+ */
+(function (root) {
+  "use strict";
+
+  var kit = root.CourseKit = root.CourseKit || {};
+  root.kit = root.kit || kit;
+  var LearnKit = root.LearnKit || kit.store;
+
+  var defs = {};
+  var mounted = [];
+
+  function escapeHtml(value) {
+    if (value == null) return "";
+    if (value && value.__kitRaw) return String(value.value);
+    return String(value)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  function html(strings) {
+    var values = Array.prototype.slice.call(arguments, 1);
+    var out = "";
+    for (var i = 0; i < strings.length; i++) {
+      out += strings[i];
+      if (i < values.length) out += escapeHtml(values[i]);
+    }
+    return out;
+  }
+
+  function raw(text) {
+    return { __kitRaw: true, value: String(text == null ? "" : text) };
+  }
+
+  function fmt(value, digits) {
+    var n = Number(value);
+    if (!isFinite(n)) return String(value);
+    return n.toFixed(digits == null ? 2 : digits);
+  }
+
+  function define(name, spec) {
+    if (!name || !spec || typeof spec.initialState !== "function") {
+      throw new Error('kit.island.define("' + name + '") 需要 name 与 initialState()');
+    }
+    defs[name] = spec;
+    mounted.forEach(function (entry) {
+      if (!entry.store && entry.name === name) mountNode(entry.node, spec);
+    });
+    return spec;
+  }
+
+  function buildModel(def) {
+    return {
+      initialState: function () {
+        var state = def.initialState();
+        if (state == null || typeof state !== "object") {
+          throw new Error("island " + (def.name || "") + " initialState() 必须返回状态对象");
+        }
+        return state;
+      },
+      reduce: function (state, action) {
+        if (action.type === "STEP_NEXT") {
+          return typeof def.tick === "function" ? (def.tick(state) || state) : state;
+        }
+        if (action.type === "RESET") return def.initialState();
+        var custom = def.actions && def.actions[action.type];
+        if (custom && typeof custom.reduce === "function") {
+          return custom.reduce(state, action) || state;
+        }
+        return state;
+      },
+      derive: function (state) {
+        var derived = { atEnd: false };
+        if (typeof def.derive === "function") {
+          try {
+            var extra = def.derive(state);
+            if (extra && typeof extra === "object") Object.keys(extra).forEach(function (key) {
+              derived[key] = extra[key];
+            });
+          } catch (error) { /* derive 失败不影响渲染 */ }
+        }
+        return derived;
+      },
+      describe: def.describe
+    };
+  }
+
+  function el(tag, cls, text) {
+    var node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text != null) node.textContent = text;
+    return node;
+  }
+
+  function renderMathIn(node) {
+    if (!node || !root.renderMathInElement) return;
+    try {
+      root.renderMathInElement(node, {
+        delimiters: [
+          { left: "\\(", right: "\\)", display: false },
+          { left: "\\[", right: "\\]", display: true }
+        ],
+        throwOnError: false
+      });
+    } catch (error) { /* 公式失败不阻断渲染 */ }
+  }
+
+  function mountNode(node, def) {
+    if (node.dataset.islandMounted === "true") return;
+    if (!LearnKit || !LearnKit.createStore) throw new Error("island 需要 LearnKit store 运行时");
+    def.name = def.name || node.id || "island";
+
+    var fallback = node.querySelector("[data-viz-fallback]");
+    var host = node.querySelector("[data-island-host]");
+    var controls = node.querySelector("[data-island-controls]");
+    var status = node.querySelector("[data-island-status]");
+    if (!host) throw new Error("island 需要 <div data-island-host> 挂载点");
+    host.hidden = false;
+    if (fallback) fallback.hidden = true;
+    if (controls) {
+      controls.hidden = false;
+      controls.innerHTML = "";
+      controls.appendChild(buildControls());
+    }
+
+    var interval = Number(node.dataset.islandInterval);
+    var store = LearnKit.createStore(buildModel(def), {
+      baseInterval: isFinite(interval) && interval >= 30 ? interval : 300
+    });
+
+    function draw(snapshot) {
+      var state = snapshot.state;
+      host.innerHTML = typeof def.view === "function"
+        ? String(def.view(state, { html: html, raw: raw, fmt: fmt }))
+        : "<p>" + escapeHtml(snapshot.derived.summary || "") + "</p>";
+      renderMathIn(host);
+      if (status) status.textContent = snapshot.derived.summary || "";
+      node.dataset.visualState = JSON.stringify({
+        mode: "island",
+        name: def.name,
+        cursor: snapshot.cursor,
+        length: snapshot.length,
+        playing: store.isPlaying(),
+        summary: snapshot.derived.summary || ""
+      });
+      refreshControls(snapshot);
+    }
+
+    function refreshControls(snapshot) {
+      var scope = controls || node;
+      var prev = scope.querySelector("[data-island-action='STEP_PREVIOUS']");
+      var next = scope.querySelector("[data-island-action='STEP_NEXT']");
+      var play = scope.querySelector("[data-island-action='PLAY']");
+      var pause = scope.querySelector("[data-island-action='PAUSE']");
+      var seek = scope.querySelector("input[data-island-seek]");
+      if (prev) prev.disabled = snapshot.cursor === 0;
+      if (next) next.disabled = snapshot.cursor < snapshot.length - 1;
+      if (play) play.disabled = store.isPlaying();
+      if (pause) pause.disabled = !store.isPlaying();
+      if (seek) {
+        seek.max = String(Math.max(0, snapshot.length - 1));
+        seek.value = String(snapshot.cursor);
+      }
+    }
+
+    function buildControls() {
+      var bar = el("div", "kit-island__controls");
+      [
+        ["STEP_PREVIOUS", "◀ 后退"],
+        ["PLAY", "▶ 播放"],
+        ["PAUSE", "⏸ 暂停"],
+        ["STEP_NEXT", "▶| 前进"],
+        ["RESET", "⏮ 重置"]
+      ].forEach(function (pair) {
+        var btn = el("button", "kit-island__btn", pair[1]);
+        btn.type = "button";
+        btn.dataset.islandAction = pair[0];
+        bar.appendChild(btn);
+      });
+      var speed = el("select", "kit-island__speed");
+      speed.setAttribute("aria-label", "播放速度");
+      [["0.5", "0.5×"], ["1", "1×"], ["2", "2×"], ["4", "4×"]].forEach(function (pair) {
+        var opt = el("option", null, pair[1]);
+        opt.value = pair[0];
+        speed.appendChild(opt);
+      });
+      speed.value = "1";
+      speed.addEventListener("change", function () { store.setSpeed(Number(speed.value)); });
+      bar.appendChild(speed);
+      var seek = el("input");
+      seek.type = "range";
+      seek.min = "0";
+      seek.max = "0";
+      seek.value = "0";
+      seek.dataset.islandSeek = "true";
+      seek.setAttribute("aria-label", "时间旅行滑块");
+      bar.appendChild(seek);
+      Object.keys(def.actions || {}).forEach(function (actionType) {
+        var action = def.actions[actionType] || {};
+        var btn = el("button", "kit-island__btn kit-island__btn--action", action.label || actionType);
+        btn.type = "button";
+        btn.dataset.islandAction = actionType;
+        bar.appendChild(btn);
+      });
+      return bar;
+    }
+
+    (controls || node).addEventListener("click", function (event) {
+      var btn = event.target && event.target.closest && event.target.closest("[data-island-action]");
+      if (!btn) return;
+      store.dispatch({ type: btn.dataset.islandAction });
+    });
+    (controls || node).addEventListener("input", function (event) {
+      if (event.target && event.target.matches && event.target.matches("input[data-island-seek]")) {
+        store.dispatch({ type: "SEEK", index: Number(event.target.value) });
+      }
+    });
+
+    store.subscribe(draw);
+    draw(store.snapshot());
+    node.dataset.islandMounted = "true";
+    node.dataset.islandReady = "true";
+    node.__islandStore = store;
+    node.__islandDef = def;
+    mounted.push({ name: def.name, node: node, store: store });
+    return store;
+  }
+
+  function compileModelScript(code) {
+    var factory = new Function("kit", "\"use strict\";\n" + code);
+    factory(kit);
+  }
+
+  function init() {
+    if (typeof document === "undefined") return;
+    document.querySelectorAll("kit-island, [data-island]").forEach(function (node) {
+      if (node.dataset.islandMounted === "true") return;
+      try {
+        var script = node.querySelector("script[type='text/plain'][data-island-model]");
+        var name = node.dataset.islandName || node.id;
+        if (script && !node.dataset.islandCompiled) {
+          node.dataset.islandCompiled = "true";
+          compileModelScript(script.textContent);
+        }
+        var def = (name && defs[name]) || null;
+        if (!def && script) {
+          var names = Object.keys(defs);
+          if (names.length === 1) def = defs[names[0]];
+        }
+        if (!def) throw new Error("island 缺少 kit.island.define 定义");
+        mountNode(node, def);
+      } catch (error) {
+        node.dataset.islandReady = "failed";
+        var fallback = node.querySelector("[data-viz-fallback]");
+        var status = node.querySelector("[data-island-status]");
+        if (status) status.textContent = "孤岛初始化失败：" + error.message;
+        if (fallback) fallback.hidden = false;
+        console.error("[kit] island init failed:", error);
+      }
+    });
+  }
+
+  kit.island = { define: define, html: html, raw: raw, fmt: fmt, init: init, defs: defs };
+  if (kit.registerModule) kit.registerModule("viz.island", kit.island);
+  if (!kit.registerModule && typeof document !== "undefined") {
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+    else init();
   }
 })(typeof window !== "undefined" ? window : globalThis);
 
@@ -5328,6 +6314,152 @@
 
   if (kit.ready && kit.ready.markReady) {
     kit.ready.markReady("viz.kinds.list");
+  }
+})(typeof window !== "undefined" ? window : globalThis);
+
+  })();
+
+  /* ---- Module: viz.kinds.plot (plot.js) ---- */
+  (function () {
+/*
+ * viz.kinds.plot — Observable Plot 适配器 (opt-in)
+ *
+ * 现代 2D 统计/函数图表首选；Plotly 退居 3D 曲面/热图专用。
+ * 配置契约（data-viz-config）：
+ *   {
+ *     "model": "说明该图表达什么",
+ *     "domain": "数据来源与范围",
+ *     "precision": "精度与单位",
+ *     "plot": {           // 直接透传给 Plot.plot() 的规范（marks/axes 必须在这里声明）
+ *       "marks": [ { "type": "line", "data": [...], "x": "...", "y": "..." } ]
+ *     }
+ *   }
+ * mark 类型：line / dot / barY / ruleY / areaY / rectY / text 等官方名称；
+ * 数据内联在 mark.data，或用 mark.dataKey 引用 config.datasets 中命名数组。
+ * 颜色默认读取当前主题 --series-* 变量。
+ */
+(function (root) {
+  "use strict";
+
+  var kit = root.CourseKit = root.CourseKit || {};
+  root.kit = root.kit || kit;
+  var core = root.CourseVisualizations || kit.viz;
+  if (!core) return;
+  var h = core.helpers;
+
+  var ALLOWED_MARKS = [
+    "line", "lineX", "lineY", "dot", "barY", "barX", "ruleY", "ruleX",
+    "areaY", "areaX", "rectY", "rectX", "text", "frame", "gridX", "gridY", "tickX", "tickY"
+  ];
+
+  function validatePlot(config) {
+    core.validateCommon(config);
+    if (!config.plot || typeof config.plot !== "object") {
+      throw new Error("plot 需要 plot 规范对象");
+    }
+    var marks = config.plot.marks;
+    if (!Array.isArray(marks) || !marks.length) throw new Error("plot.marks 不能为空");
+    var datasets = config.datasets || {};
+    marks.forEach(function (mark, index) {
+      if (!mark || typeof mark !== "object") throw new Error("plot.marks[" + index + "] 必须是对象");
+      var type = mark.type;
+      if (!type || (ALLOWED_MARKS.indexOf(type) < 0 && typeof root.Plot === "undefined")) {
+        throw new Error("plot.marks[" + index + "] 类型 " + type + " 不在允许列表: " + ALLOWED_MARKS.join("/"));
+      }
+      var data = mark.data != null ? mark.data : datasets[mark.dataKey];
+      if (mark.dataKey && data == null) {
+        throw new Error("plot.marks[" + index + "] dataKey " + mark.dataKey + " 未在 datasets 中定义");
+      }
+      if (data != null && !Array.isArray(data)) {
+        throw new Error("plot.marks[" + index + "] data 必须是数组");
+      }
+    });
+    return config;
+  }
+
+  function seriesColor(index) {
+    var styles = getComputedStyle(document.documentElement);
+    var value = styles.getPropertyValue("--series-" + ((index % 8) + 1)).trim();
+    return value || undefined;
+  }
+
+  function resolveMark(mark, config, index) {
+    var Plot = root.Plot;
+    if (!Plot || typeof Plot[mark.type] !== "function") return null;
+    var spec = Object.assign({}, mark);
+    var type = spec.type;
+    delete spec.type;
+    var data = spec.data != null ? spec.data : (config.datasets || {})[spec.dataKey];
+    if (spec.dataKey) delete spec.dataKey;
+    if (data != null) {
+      return Plot[type](data, spec);
+    }
+    return Plot[type](spec);
+  }
+
+  async function renderPlot(node, config) {
+    var host = h.find(node, "[data-viz-host]");
+    h.show(node);
+    h.clear(host);
+    var Plot = root.Plot;
+    if (!Plot) {
+      var needFn = kit.need || (kit.loader && kit.loader.need);
+      if (needFn) {
+        await needFn("plot");
+        Plot = root.Plot;
+      }
+    }
+    if (!Plot) {
+      var note = document.createElement("p");
+      note.textContent = "Observable Plot 不可用；请核对无脚本后备。";
+      host.appendChild(note);
+      h.status(node, note.textContent);
+      return;
+    }
+
+    var options = Object.assign({}, config.plot);
+    var colorIndex = 0;
+    options.marks = (options.marks || []).map(function (mark) {
+      var resolved = resolveMark(mark, config, colorIndex);
+      if (resolved) colorIndex += 1;
+      return resolved;
+    }).filter(Boolean);
+    options.style = Object.assign({
+      color: "var(--c-text)",
+      background: "transparent",
+      fontFamily: "var(--font-mono)",
+      fontSize: 12
+    }, options.style || {});
+    options.margins = options.margins || undefined;
+
+    var figure = Plot.plot(options);
+    figure.setAttribute("role", "img");
+    figure.setAttribute("aria-label", config.model);
+    figure.style.maxWidth = "100%";
+    figure.style.height = "auto";
+    host.appendChild(figure);
+    h.status(node, "Plot 图表已渲染，共 " + options.marks.length + " 个 mark。");
+    h.record(node, { kind: "plot", model: config.model, marks: (config.plot.marks || []).length });
+
+    return {
+      update: function (el, initial, snapshot) {
+        var next = h.boundConfig(el, initial, snapshot);
+        return renderPlot(node, next);
+      },
+      destroy: function () {
+        h.clear(host);
+      }
+    };
+  }
+
+  core.registerKind("plot", { validate: validatePlot, render: renderPlot });
+
+  if (kit.registerModule) {
+    kit.registerModule("viz.kinds.plot", {
+      init: function () {
+        return Promise.resolve();
+      }
+    });
   }
 })(typeof window !== "undefined" ? window : globalThis);
 

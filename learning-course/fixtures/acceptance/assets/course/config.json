@@ -11,6 +11,20 @@
   },
   "modules": [
     "viz.kinds.spatial",
-    "viz.kinds.chart"
+    "viz.kinds.chart",
+    "viz.kinds.plot"
+  ],
+  "customThemes": {
+    "crt-terminal": {
+      "label": "绿磷终端",
+      "scheme": "dark",
+      "code": "dark",
+      "fonts": [
+        "jetbrains-mono:400,700"
+      ]
+    }
+  },
+  "themes": [
+    "crt-terminal"
   ]
 }

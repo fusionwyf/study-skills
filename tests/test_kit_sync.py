@@ -46,7 +46,6 @@ class CatalogProjectionTests(KitSyncTestCase):
             example = spec.get("example", "")
             if example:
                 example = example.replace("acceptance-course/", "fixtures/acceptance/")
-                example = example.replace("showcase/", "fixtures/showcase/")
                 self.assertTrue((skill / example).is_file(), name)
 
 
