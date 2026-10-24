@@ -612,6 +612,43 @@ def load_course_extensions(course_dir, course_config=None):
     return extensions
 
 
+def validate_extension_entry(ext, modules_desc=None):
+    """Shared shape/contract check for one course-extension declaration.
+
+    modules_desc is the module library to validate `requires` against; pass
+    None to check shape only (e.g. check_course validates against the lock).
+    """
+    if not isinstance(ext, dict):
+        raise ValueError(f"Invalid extension entry: {ext}")
+    ext_id = ext.get("id")
+    if not ext_id:
+        raise ValueError(f"Extension declaration must contain an 'id': {ext}")
+    if modules_desc is None:
+        return
+    for req in ext.get("requires", []):
+        if req not in modules_desc:
+            raise ValueError(
+                f"Course extension '{ext_id}' requires unknown module '{req}'. "
+                f"Run 'kit list' to view available modules."
+            )
+        if modules_desc[req].get("presence") == "serve":
+            raise ValueError(f"Course extension '{ext_id}' requires serve-hosted module '{req}', which cannot be bundled.")
+
+
+def expand_requirements(active_set, modules_desc, on_dependency=None):
+    """Expand a module set to its transitive requires closure, in place."""
+    expanded = True
+    while expanded:
+        expanded = False
+        for mod_id in list(active_set):
+            for req in modules_desc.get(mod_id, {}).get("requires", []):
+                if req in modules_desc and req not in active_set:
+                    active_set.add(req)
+                    if on_dependency:
+                        on_dependency(req, mod_id)
+                    expanded = True
+
+
 def detect_modules_for_course(course_dir, manifest, staged_html=None):
     """Scans lesson HTML files and identifies active modules, recording inclusion reasons."""
     html_files = [entry["path"] for entry in course_layout.iter_lessons(Path(course_dir))]
@@ -659,17 +696,9 @@ def detect_modules_for_course(course_dir, manifest, staged_html=None):
     # 3. Add modules required by course extensions
     extensions = load_course_extensions(course_dir)
     for ext in extensions:
-        if not isinstance(ext, dict):
-            raise ValueError(f"Invalid extension entry: {ext}")
+        validate_extension_entry(ext, modules_desc)
         ext_id = ext.get("id")
-        if not ext_id:
-            raise ValueError(f"Extension declaration must contain an 'id': {ext}")
         for req in ext.get("requires", []):
-            if req not in modules_desc:
-                raise ValueError(
-                    f"Course extension '{ext_id}' requires unknown module '{req}'. "
-                    f"Run 'kit list' to view available modules."
-                )
             active_modules.add(req)
             reasons.setdefault(req, []).append(f"extension:{ext_id}")
 
@@ -697,16 +726,10 @@ def detect_modules_for_course(course_dir, manifest, staged_html=None):
             print(f"Warning: Failed scanning {hf.name}: {e}", file=sys.stderr)
 
     # 5. Resolve transitive requirements
-    expanded = True
-    while expanded:
-        expanded = False
-        for mod_id in list(active_modules):
-            desc = modules_desc.get(mod_id, {})
-            for req in desc.get("requires", []):
-                if req in modules_desc and req not in active_modules:
-                    active_modules.add(req)
-                    reasons.setdefault(req, []).append(f"dependency:{mod_id}")
-                    expanded = True
+    expand_requirements(
+        active_modules, modules_desc,
+        on_dependency=lambda req, via: reasons.setdefault(req, []).append(f"dependency:{via}"),
+    )
 
     return active_modules, reasons
 
@@ -721,27 +744,11 @@ def bundle_kit(active_modules, output_dir, course_config=None, vendor_mode="cdn"
     # Incorporate extension requirements and their transitive dependencies into active_set
     extensions = load_course_extensions(course_dir, course_config)
     for ext in extensions:
-        if not isinstance(ext, dict):
-            raise ValueError(f"Invalid extension entry: {ext}")
-        ext_id = ext.get("id")
-        if not ext_id:
-            raise ValueError(f"Extension declaration must contain an 'id': {ext}")
+        validate_extension_entry(ext, modules)
         for req in ext.get("requires", []):
-            if req not in modules:
-                raise ValueError(f"Course extension '{ext_id}' requires module '{req}', which is missing from module library.")
-            if modules[req].get("presence") == "serve":
-                raise ValueError(f"Course extension '{ext_id}' requires serve-hosted module '{req}', which cannot be bundled.")
             active_set.add(req)
 
-    expanded = True
-    while expanded:
-        expanded = False
-        for mod_id in list(active_set):
-            desc = modules.get(mod_id, {})
-            for req in desc.get("requires", []):
-                if req in modules and req not in active_set:
-                    active_set.add(req)
-                    expanded = True
+    expand_requirements(active_set, modules)
 
     ordered_ids = [m for m in topological_sort(modules) if m in active_set]
 
@@ -1265,8 +1272,10 @@ def check_course(course_dir):
             pass
 
     for ext in chk_extensions:
-        if not isinstance(ext, dict) or not ext.get("id"):
-            print("Error: Declared extension missing 'id' attribute.", file=sys.stderr)
+        try:
+            validate_extension_entry(ext)
+        except ValueError as ext_err:
+            print(f"Error: {ext_err}", file=sys.stderr)
             return False
         ext_id = ext["id"]
         if "js" in ext:
