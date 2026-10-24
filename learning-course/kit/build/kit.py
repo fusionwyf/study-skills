@@ -1346,6 +1346,36 @@ def _detect_lan_ip():
         return "127.0.0.1"
 
 
+DASHBOARD_FILE = KIT_ROOT / "shell" / "dashboard" / "index.html"
+
+RECORD_META_KEYS = (
+    "record_schema", "assessment_status", "record_id", "attempted_at",
+    "independence", "lesson", "evidence_type", "evidence_strength",
+)
+
+
+def list_record_metadata(cpath):
+    """Minimal frontmatter scan of records/*.md for the dashboard."""
+    items = []
+    for path in course_layout.iter_record_files(cpath):
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        if not text.startswith("---"):
+            continue
+        parts = text.split("---", 2)
+        if len(parts) < 3:
+            continue
+        meta = {"path": path.relative_to(cpath).as_posix()}
+        for line in parts[1].splitlines():
+            key, sep, value = line.partition(":")
+            if sep and key.strip() in RECORD_META_KEYS:
+                meta[key.strip()] = value.strip().strip("'\"")
+        items.append(meta)
+    return items
+
+
 def serve_course(course_dir, host="127.0.0.1", port=8765, lan=False, token=None):
     """Starts a local HTTP server for the course with /api/records inbox and /api/course."""
     import secrets
@@ -1387,6 +1417,19 @@ def serve_course(course_dir, host="127.0.0.1", port=8765, lan=False, token=None)
 
         def do_GET(self):
             parsed = urlparse(self.path)
+            if parsed.path == "/dashboard" or parsed.path == "/dashboard/":
+                if not self._check_token(parsed):
+                    return self._send_json(403, {"error": "forbidden"})
+                if not DASHBOARD_FILE.is_file():
+                    return self._send_json(404, {"error": "dashboard not found"})
+                body = DASHBOARD_FILE.read_bytes()
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Cache-Control", "no-store")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+                return
             if parsed.path == "/api/course":
                 if not self._check_token(parsed):
                     return self._send_json(403, {"error": "forbidden"})
@@ -1399,6 +1442,10 @@ def serve_course(course_dir, host="127.0.0.1", port=8765, lan=False, token=None)
                     except Exception as e:
                         data = {"error": str(e)}
                 return self._send_json(200, data)
+            if parsed.path == "/api/records":
+                if not self._check_token(parsed):
+                    return self._send_json(403, {"error": "forbidden"})
+                return self._send_json(200, {"items": list_record_metadata(cpath)})
             if parsed.path == "/api/inbox":
                 if not self._check_token(parsed):
                     return self._send_json(403, {"error": "forbidden"})
@@ -1448,6 +1495,7 @@ def serve_course(course_dir, host="127.0.0.1", port=8765, lan=False, token=None)
     local_url = f"http://127.0.0.1:{port}/"
     print(f"\nCourse Kit server running for: {cpath.name}")
     print(f"  Local: {local_url}" + (f"?t={active_token}" if active_token else ""))
+    print(f"  Dashboard: {local_url}dashboard" + (f"?t={active_token}" if active_token else ""))
     if lan:
         lan_ip = _detect_lan_ip()
         print(f"  LAN:   http://{lan_ip}:{port}/?t={active_token}")

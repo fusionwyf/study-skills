@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>课程仪表盘</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 2rem 1.25rem 4rem;
+    font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    background: light-dark(#f6f7f9, #14171c); color: light-dark(#1c2128, #e6e9ee);
+    max-width: 72rem; margin-inline: auto;
+  }
+  h1 { font-size: 1.5rem; margin: 0 0 .2rem; }
+  h2 { font-size: 1.05rem; margin: 0 0 .8rem; }
+  .sub { color: light-dark(#5b6472, #9aa4b2); margin: 0 0 1.8rem; font-size: .92rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); gap: 1rem; }
+  .card {
+    background: light-dark(#ffffff, #1c212a); border: 1px solid light-dark(#dde2e9, #2a313d);
+    border-radius: 12px; padding: 1.1rem 1.2rem;
+  }
+  .badge { display: inline-block; padding: .1rem .55rem; border-radius: 999px; font-size: .78rem; font-weight: 600; }
+  .m-unseen { background: #e5e8ee; color: #4a5261; }
+  .m-recognition { background: #dbeafe; color: #1d4ed8; }
+  .m-application { background: #d1fae5; color: #047857; }
+  .m-transfer { background: #ede9fe; color: #6d28d9; }
+  .m-uncertain { background: #fef3c7; color: #b45309; }
+  .st-pending { background: #fef3c7; color: #b45309; }
+  .st-finalized { background: #d1fae5; color: #047857; }
+  .ind-independent { color: #047857; font-weight: 600; }
+  .ind-with_hints { color: #b45309; font-weight: 600; }
+  .ind-ai_guided { color: #dc2626; font-weight: 600; }
+  ul { list-style: none; padding: 0; margin: 0; }
+  li { padding: .45rem 0; border-top: 1px dashed light-dark(#e6eaf0, #2a313d); font-size: .9rem; display: flex; flex-wrap: wrap; gap: .5rem; align-items: baseline; }
+  li:first-child { border-top: 0; }
+  li .grow { flex: 1 1 auto; min-width: 8rem; }
+  .muted { color: light-dark(#5b6472, #9aa4b2); font-size: .82rem; }
+  .overdue { color: #dc2626; font-weight: 700; }
+  .bar { display: flex; height: 1rem; border-radius: 6px; overflow: hidden; margin: .5rem 0 .8rem; background: light-dark(#e5e8ee, #2a313d); }
+  .bar > span { display: block; height: 100%; }
+  .legend { display: flex; gap: 1rem; flex-wrap: wrap; font-size: .82rem; color: light-dark(#5b6472, #9aa4b2); }
+  .dot { display: inline-block; width: .65rem; height: .65rem; border-radius: 50%; margin-right: .3rem; }
+  .empty { color: light-dark(#5b6472, #9aa4b2); font-size: .88rem; padding: .5rem 0; }
+  .phase { font-size: .8rem; padding: .15rem .6rem; border-radius: 999px; background: light-dark(#e5e8ee, #2a313d); vertical-align: middle; }
+  code { font-family: ui-monospace, Consolas, monospace; font-size: .82rem; }
+</style>
+</head>
+<body>
+  <h1 id="title">课程仪表盘</h1>
+  <p class="sub"><span class="phase" id="phase">加载中…</span> <span id="updated"></span></p>
+
+  <div class="grid">
+    <section class="card">
+      <h2>目标掌握地图</h2>
+      <ul id="objectives"><li class="empty">加载中…</li></ul>
+    </section>
+
+    <section class="card">
+      <h2>独立性分布（定稿证据）</h2>
+      <div class="bar" id="ind-bar"></div>
+      <div class="legend">
+        <span><span class="dot" style="background:#059669"></span>independent</span>
+        <span><span class="dot" style="background:#d97706"></span>with_hints</span>
+        <span><span class="dot" style="background:#dc2626"></span>ai_guided</span>
+      </div>
+      <p class="muted" id="ind-note"></p>
+      <h2 style="margin-top:1.2rem">证据时间线</h2>
+      <ul id="timeline"><li class="empty">加载中…</li></ul>
+    </section>
+
+    <section class="card">
+      <h2>到期复习队列</h2>
+      <ul id="reviews"><li class="empty">加载中…</li></ul>
+    </section>
+
+    <section class="card">
+      <h2>回流收件箱</h2>
+      <p class="muted">records/inbox/ 中的设备快照（serve 运行时会自动合并为 pending record）。</p>
+      <ul id="inbox"><li class="empty">加载中…</li></ul>
+    </section>
+  </div>
+
+<script>
+(function () {
+  "use strict";
+  var TOKEN = "";
+  try {
+    TOKEN = new URLSearchParams(location.search).get("t")
+      || sessionStorage.getItem("kit_serve_token") || "";
+    if (new URLSearchParams(location.search).get("t")) {
+      sessionStorage.setItem("kit_serve_token", TOKEN);
+    }
+  } catch (e) {}
+  function getJSON(url) {
+    var target = TOKEN ? url + (url.indexOf("?") < 0 ? "?" : "&") + "t=" + encodeURIComponent(TOKEN) : url;
+    return fetch(target).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); });
+  }
+  function esc(text) {
+    return String(text == null ? "" : text).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  var MASTERY_LABEL = { unseen: "未接触", recognition: "再认", application: "应用", transfer: "迁移", uncertain: "存疑" };
+
+  function renderCourse(state) {
+    document.getElementById("title").textContent = (state && state.title) || "课程仪表盘";
+    var phase = document.getElementById("phase");
+    phase.textContent = "phase: " + ((state && state.phase) || "unknown") + " · status: " + ((state && state.status) || "unknown");
+    document.getElementById("updated").textContent = state && state.updated_at ? "最近更新 " + state.updated_at : "";
+    var list = document.getElementById("objectives");
+    var objectives = (state && Array.isArray(state.objectives)) ? state.objectives : [];
+    if (!objectives.length) { list.innerHTML = '<li class="empty">尚无 objectives。</li>'; return; }
+    list.innerHTML = objectives.map(function (objective) {
+      var chapter = objective.chapter ? '<span class="muted">' + esc(objective.chapter) + '</span>' : "";
+      var evidence = (objective.evidence || []).length;
+      return '<li><span class="grow"><code>' + esc(objective.id) + '</code></span>' + chapter +
+        '<span class="badge m-' + esc(objective.mastery || "unseen") + '">' + esc(MASTERY_LABEL[objective.mastery] || objective.mastery || "unseen") + '</span>' +
+        '<span class="muted">' + evidence + " 条证据</span></li>";
+    }).join("");
+  }
+
+  function renderRecords(records) {
+    var finalized = records.filter(function (record) { return record.assessment_status === "finalized"; });
+    var counts = { independent: 0, with_hints: 0, ai_guided: 0 };
+    finalized.forEach(function (record) {
+      var independence = record.independence;
+      if (independence && counts[independence] != null) counts[independence] += 1;
+    });
+    var total = counts.independent + counts.with_hints + counts.ai_guided;
+    var bar = document.getElementById("ind-bar");
+    bar.innerHTML = total
+      ? ["independent:#059669", "with_hints:#d97706", "ai_guided:#dc2626"].map(function (pair) {
+          var parts = pair.split(":");
+          var percent = (counts[parts[0]] / total) * 100;
+          return percent ? '<span style="width:' + percent + '%;background:' + parts[1] + '"></span>' : "";
+        }).join("")
+      : "";
+    document.getElementById("ind-note").textContent = total
+      ? "最近 3 条定稿均为 ai_guided 时，下一步应安排无辅助变式。"
+      : "还没有定稿证据。";
+
+    var timeline = document.getElementById("timeline");
+    var recent = records.slice().sort(function (a, b) {
+      return String(b.attempted_at || "").localeCompare(String(a.attempted_at || ""));
+    }).slice(0, 12);
+    if (!recent.length) { timeline.innerHTML = '<li class="empty">records/ 为空。学习者在课件上作答并运行 kit.py serve 后会自动出现。</li>'; return; }
+    timeline.innerHTML = recent.map(function (record) {
+      var status = record.assessment_status || "pending";
+      var independence = record.independence && record.independence !== "null"
+        ? '<span class="ind-' + esc(record.independence) + '">' + esc(record.independence) + "</span>" : "";
+      return '<li><span class="grow"><code>' + esc(record.path) + "</code></span>" +
+        '<span class="badge st-' + esc(status) + '">' + esc(status) + "</span>" + independence +
+        '<span class="muted">' + esc(record.attempted_at || "") + "</span></li>";
+    }).join("");
+  }
+
+  function renderReviews(state) {
+    var list = document.getElementById("reviews");
+    var queue = (state && Array.isArray(state.review_queue)) ? state.review_queue : [];
+    if (!queue.length) { list.innerHTML = '<li class="empty">队列为空。</li>'; return; }
+    var today = new Date().toISOString().slice(0, 10);
+    list.innerHTML = queue.map(function (item) {
+      var overdue = item.due_at && item.due_at <= today;
+      return '<li><span class="grow"><code>' + esc(item.objective_id || "") + "</code></span>" +
+        '<span class="' + (overdue ? "overdue" : "muted") + '">' + (overdue ? "已到期 " : "") + esc(item.due_at || "") + "</span>" +
+        '<span class="muted">间隔 ' + esc(item.interval_days || "") + " 天 · 第 " + esc(item.review_count || 0) + " 次</span></li>";
+    }).join("");
+  }
+
+  function renderInbox(items) {
+    var list = document.getElementById("inbox");
+    if (!items.length) { list.innerHTML = '<li class="empty">收件箱为空。</li>'; return; }
+    list.innerHTML = items.slice(0, 12).map(function (item) {
+      return '<li><span class="grow"><code>lesson-' + esc(item.lesson) + "-" + esc(item.device_id) + '</code></span>' +
+        '<span class="muted">' + esc((item.updated_at || "").slice(0, 19).replace("T", " ")) + "</span></li>";
+    }).join("");
+  }
+
+  Promise.all([
+    getJSON("/api/course"), getJSON("/api/records"), getJSON("/api/inbox")
+  ]).then(function (results) {
+    renderCourse(results[0]);
+    renderRecords((results[1] && results[1].items) || []);
+    renderReviews(results[0]);
+    renderInbox((results[2] && results[2].items) || []);
+  }).catch(function (error) {
+    document.getElementById("phase").textContent = "仪表盘数据加载失败：" + error.message;
+  });
+})();
+</script>
+</body>
+</html>

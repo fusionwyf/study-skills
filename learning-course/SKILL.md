@@ -88,7 +88,7 @@ Course Kit v2 将所有教学资产统一维护在 `kit/`（L0 运行时、L1 �
 python kit/build/kit.py serve <course-dir> [--lan]
 ```
 
-自创主题或大改版式后必须运行 `python kit/build/kit.py shot <course-dir>` 截图自检（对比度、溢出、公式与图表渲染）。
+服务同时托管只读仪表盘 `http://127.0.0.1:<port>/dashboard`（目标掌握地图、独立性分布、证据时间线、到期复习队列与收件箱）。自创主题或大改版式后必须运行 `python kit/build/kit.py shot <course-dir>` 截图自检（对比度、溢出、公式与图表渲染）。
 
 ## Continue
 
