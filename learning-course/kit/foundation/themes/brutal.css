@@ -1,3 +1,4 @@
+/* @kit-theme name="brutal" label="新粗野" scheme="light" code="dark" fonts="noto-sans-sc:400,700,900;space-grotesk:500,700;jetbrains-mono:400,700" */
 /* 新粗野主义 Neo-Brutalism —— 粗黑描边、硬投影、亮色块；按钮有“按下去”的手感。 */
 @layer theme {
   html[data-theme="brutal"] {

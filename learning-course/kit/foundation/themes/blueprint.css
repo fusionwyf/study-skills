@@ -1,3 +1,4 @@
+/* @kit-theme name="blueprint" label="工程蓝图" scheme="dark" fonts="noto-sans-sc:400,700;jetbrains-mono:400,700" */
 /* 工程蓝图 Blueprint —— 普鲁士蓝坐标纸、等宽标注、黄色角标框线。深色方案。 */
 @layer theme {
   html[data-theme="blueprint"] {

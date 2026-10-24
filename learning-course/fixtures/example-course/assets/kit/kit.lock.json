@@ -53,8 +53,8 @@
     ]
   },
   "files": {
-    "kit.css": "sha256-64a0dabc2d95f64705699ceed3ae821fe83590f4ef4277ecf232e8818f3d32ef",
-    "kit.js": "sha256-8b87e8eadbd3038a8400d04c3d8da3b87c9d2dc124919e256c176686e2d903ac"
+    "kit.css": "sha256-dfe0867d8aed851814c1afdb4f4e04bcfbdf5f2e5733f069c5315a510f727b01",
+    "kit.js": "sha256-eab3e604a13862cc95deedc162ec4ada431550784bab876218aad30ab1332781"
   },
   "vendor": {}
 }

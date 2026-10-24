@@ -10,6 +10,7 @@
   CourseKit.__ACTIVE_MODULES__ = ["core", "foundation", "content._block", "content.callout", "content.code", "content.math", "shell.elements", "shell.nav", "shell.progress", "shell.theme-switcher", "shell.toc", "learning.param", "learning.records", "learning.predict", "learning.question", "learning.step", "viz.core", "viz.island", "viz.kinds.plot", "viz.kinds.sequence", "viz.kinds.table"];
   CourseKit.VENDORS = {"hljs": {"id": "hljs", "version": "11.12.0", "js": {"cdn": "https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.12.0/build/highlight.min.js", "local": "../assets/kit/vendor/hljs/highlight.min.js"}}, "katex": {"id": "katex", "version": "0.16.11", "css": {"cdn": "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css", "local": "../assets/kit/vendor/katex/katex.min.css"}, "js": {"cdn": "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js", "local": "../assets/kit/vendor/katex/katex.min.js"}, "autoRender": {"cdn": "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js", "local": "../assets/kit/vendor/katex/auto-render.min.js"}}, "plot": {"id": "plot", "version": "0.6.16", "js": {"cdn": "https://cdn.jsdelivr.net/combine/npm/d3@7.9.0/dist/d3.min.js,npm/@observablehq/plot@0.6.16/dist/plot.umd.min.js", "local": "../assets/kit/vendor/observable-plot/plot.bundle.min.js"}}};
   CourseKit.__LOCAL_VENDORS__ = ["plot"];
+  CourseKit.__THEMES__ = {"blueprint": {"label": "工程蓝图", "scheme": "dark", "fonts": ["noto-sans-sc:400,700", "jetbrains-mono:400,700"]}, "brutal": {"label": "新粗野", "scheme": "light", "code": "dark", "fonts": ["noto-sans-sc:400,700,900", "space-grotesk:500,700", "jetbrains-mono:400,700"]}, "course": {"label": "默认", "scheme": "light"}, "field": {"label": "博物志", "scheme": "light", "code": "dark", "fonts": ["lxgw-wenkai", "jetbrains-mono:400,700"]}, "ink": {"label": "深色", "scheme": "dark"}, "paper": {"label": "纸张", "scheme": "light"}, "riso": {"label": "孔版印刷", "scheme": "light", "code": "dark", "fonts": ["noto-sans-sc:400,700,900", "space-grotesk:500,700"]}, "swiss": {"label": "瑞士网格", "scheme": "light", "code": "dark", "fonts": ["noto-sans-sc:400,700,900", "jetbrains-mono:400,700"]}};
   CourseKit.__EXTENSIONS__ = [];
 
   /* ---- Module: core (bus.js) ---- */
@@ -1284,25 +1285,13 @@
   }
 
   /*
-   * 主题预设注册表。
-   * scheme：页面明暗；code：代码块高亮使用的明暗（可与页面不同，例如浅色页面配深色代码块）；
-   * fonts：按需加载的网页字体（fontsource 包名:字重，或完整 URL），失败时回退到 CSS 字体栈。
+   * 主题预设注册表：单一来源是 kit/foundation/themes/*.css 的 @kit-theme 头，
+   * 由 kit.py 构建期解析并注入为 kit.__THEMES__；课程自创预设经 config.customThemes
+   * 在 initTheme 注册。scheme：页面明暗；code：代码块高亮使用的明暗（可与页面不同，
+   * 例如浅色页面配深色代码块）；fonts：按需加载的网页字体（fontsource 包名:字重，
+   * 或完整 URL），失败时回退到 CSS 字体栈。
    */
-  var THEMES = {
-    course:    { label: "默认",     scheme: "light" },
-    paper:     { label: "纸张",     scheme: "light" },
-    ink:       { label: "深色",     scheme: "dark" },
-    swiss:     { label: "瑞士网格", scheme: "light", code: "dark",
-                 fonts: ["noto-sans-sc:400,700,900", "jetbrains-mono:400,700"] },
-    blueprint: { label: "工程蓝图", scheme: "dark",
-                 fonts: ["noto-sans-sc:400,700", "jetbrains-mono:400,700"] },
-    riso:      { label: "孔版印刷", scheme: "light", code: "dark",
-                 fonts: ["noto-sans-sc:400,700,900", "space-grotesk:500,700"] },
-    brutal:    { label: "新粗野",   scheme: "light", code: "dark",
-                 fonts: ["noto-sans-sc:400,700,900", "space-grotesk:500,700", "jetbrains-mono:400,700"] },
-    field:     { label: "博物志",   scheme: "light", code: "dark",
-                 fonts: ["lxgw-wenkai", "jetbrains-mono:400,700"] }
-  };
+  var THEMES = kit.__THEMES__ || {};
 
   function themeMeta(themeName) {
     return THEMES[themeName] || { label: themeName, scheme: "light" };

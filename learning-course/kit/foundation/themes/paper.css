@@ -1,3 +1,4 @@
+/* @kit-theme name="paper" label="纸张" scheme="light" */
 @layer theme {
   html[data-theme="paper"] {
     color-scheme: light;

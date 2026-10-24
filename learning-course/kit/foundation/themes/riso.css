@@ -1,3 +1,4 @@
+/* @kit-theme name="riso" label="孔版印刷" scheme="light" code="dark" fonts="noto-sans-sc:400,700,900;space-grotesk:500,700" */
 /* 孔版印刷 Risograph —— 荧光粉 + 青绿双专色、套印错位、颗粒噪点、网点底纹。 */
 @layer theme {
   html[data-theme="riso"] {

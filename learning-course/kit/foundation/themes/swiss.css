@@ -1,3 +1,4 @@
+/* @kit-theme name="swiss" label="瑞士网格" scheme="light" code="dark" fonts="noto-sans-sc:400,700,900;jetbrains-mono:400,700" */
 /* 瑞士网格 Swiss Grid —— 纯白、纯黑、一个信号色；粗黑体、粗分隔线、零圆角。 */
 @layer theme {
   html[data-theme="swiss"] {

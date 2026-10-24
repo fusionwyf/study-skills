@@ -347,6 +347,7 @@ def topological_sort(modules):
 def build_manifest():
     """Builds kit.manifest.json and updates catalog.json."""
     modules = load_module_descriptors()
+    foundation_theme_registry()  # fail the build loudly on broken theme headers
     order = topological_sort(modules)
 
     manifest_data = {
@@ -538,6 +539,36 @@ def parse_kit_theme_header(css_text):
     if code in ("light", "dark"):
         parsed["code"] = code
     return parsed
+
+
+def foundation_theme_registry():
+    """Parses @kit-theme headers of kit/foundation/themes/*.css into a registry.
+
+    The single source of built-in preset metadata: bundle_kit injects it as
+    CourseKit.__THEMES__ for theme-engine.js. Raises (failing sync/build
+    loudly) when a foundation theme lacks a valid header or its name does
+    not match the file stem.
+    """
+    registry = {}
+    themes_dir = KIT_ROOT / "foundation" / "themes"
+    for theme_file in sorted(themes_dir.glob("*.css")):
+        meta = parse_kit_theme_header(theme_file.read_text(encoding="utf-8"))
+        if meta is None:
+            raise ValueError(
+                f"kit/foundation/themes/{theme_file.name}: missing or invalid "
+                '`/* @kit-theme name="..." label="..." scheme="light|dark" ... */` header'
+            )
+        if meta["name"] != theme_file.stem:
+            raise ValueError(
+                f"kit/foundation/themes/{theme_file.name}: theme name '{meta['name']}' must match the file stem"
+            )
+        entry = {"label": meta["label"], "scheme": meta["scheme"]}
+        if meta.get("code"):
+            entry["code"] = meta["code"]
+        if meta.get("fonts"):
+            entry["fonts"] = meta["fonts"]
+        registry[meta["name"]] = entry
+    return registry
 
 
 def discover_course_themes(course_dir):
@@ -848,6 +879,7 @@ def bundle_kit(active_modules, output_dir, course_config=None, vendor_mode="cdn"
     active_mods_str = json.dumps(active_runtime_ids, ensure_ascii=False)
     vendors_str = json.dumps(active_vendors, ensure_ascii=False)
     extensions_str = json.dumps(extensions, ensure_ascii=False)
+    themes_registry_str = json.dumps(foundation_theme_registry(), ensure_ascii=False)
 
     js_parts = [
         "/**\n * Course Kit v2 Bundled Runtime\n * Built by kit.py. Do not edit directly.\n */\n",
@@ -856,7 +888,8 @@ def bundle_kit(active_modules, output_dir, course_config=None, vendor_mode="cdn"
         f'  CourseKit.__ACTIVE_MODULES__ = {active_mods_str};\n',
         f'  CourseKit.VENDORS = {vendors_str};\n',
         f'  CourseKit.__LOCAL_VENDORS__ = {json.dumps(local_ready)};\n',
-        f'  CourseKit.__EXTENSIONS__ = {extensions_str};\n',
+        f'  CourseKit.__THEMES__ = {themes_registry_str};\n',
+        f'  CourseKit.__EXTENSIONS__ = {extensions_str};\n'
     ]
 
     for mod_id in ordered_ids:

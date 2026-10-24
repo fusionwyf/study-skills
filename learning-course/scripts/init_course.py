@@ -13,7 +13,15 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-BUILTIN_THEMES = ("course", "ink", "paper", "swiss", "blueprint", "riso", "brutal", "field")
+KIT_ROOT = Path(__file__).resolve().parents[1] / "kit"
+
+
+def builtin_themes() -> tuple[str, ...]:
+    """Built-in presets are whatever ships in kit/foundation/themes/*.css."""
+    themes_dir = KIT_ROOT / "foundation" / "themes"
+    if not themes_dir.is_dir():
+        return ("course",)
+    return tuple(sorted(path.stem for path in themes_dir.glob("*.css")))
 
 
 def slugify(value: str) -> str:
@@ -41,8 +49,8 @@ def main() -> int:
     parser.add_argument(
         "--theme",
         default="course",
-        help="Visual preset: a built-in name (swiss/blueprint/riso/brutal/field/course/ink/paper) "
-        "or a custom theme the agent authors in assets/course/themes/<name>.css",
+        help="Visual preset: a built-in name from kit/foundation/themes/*.css (swiss/blueprint/riso/brutal/field/"
+             "course/ink/paper) or a custom theme the agent authors in assets/course/themes/<name>.css",
     )
     parser.add_argument("--language", default="zh-CN")
     parser.add_argument("--diagnostic", action="store_true", help="Start with a minimal diagnostic")
@@ -99,7 +107,8 @@ last_feedback: null
     config_file = config_dir / "config.json"
     if config_file.exists() and not args.force:
         raise FileExistsError(f"Refusing to overwrite existing file: {config_file}")
-    themes_list = [theme] + [name for name in BUILTIN_THEMES if name != theme]
+    builtin = builtin_themes()
+    themes_list = [theme] + [name for name in builtin if name != theme]
     config = {
         "theme": theme,
         "themes": themes_list,
@@ -114,7 +123,7 @@ last_feedback: null
     if kit_py.is_file():
         import subprocess
         subprocess.run([sys.executable, str(kit_py), "sync", str(course_dir)], check=True)
-    if theme not in BUILTIN_THEMES and not any((config_dir / "themes").glob("*.css")):
+    if theme not in builtin and not any((config_dir / "themes").glob("*.css")):
         print(
             f"NOTE: theme '{theme}' is not a built-in preset and assets/course/themes/ is empty; "
             f"author assets/course/themes/{theme}.css with a @kit-theme header, then re-run kit.py sync.",

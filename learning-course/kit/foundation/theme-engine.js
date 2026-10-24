@@ -21,25 +21,13 @@
   }
 
   /*
-   * 主题预设注册表。
-   * scheme：页面明暗；code：代码块高亮使用的明暗（可与页面不同，例如浅色页面配深色代码块）；
-   * fonts：按需加载的网页字体（fontsource 包名:字重，或完整 URL），失败时回退到 CSS 字体栈。
+   * 主题预设注册表：单一来源是 kit/foundation/themes/*.css 的 @kit-theme 头，
+   * 由 kit.py 构建期解析并注入为 kit.__THEMES__；课程自创预设经 config.customThemes
+   * 在 initTheme 注册。scheme：页面明暗；code：代码块高亮使用的明暗（可与页面不同，
+   * 例如浅色页面配深色代码块）；fonts：按需加载的网页字体（fontsource 包名:字重，
+   * 或完整 URL），失败时回退到 CSS 字体栈。
    */
-  var THEMES = {
-    course:    { label: "默认",     scheme: "light" },
-    paper:     { label: "纸张",     scheme: "light" },
-    ink:       { label: "深色",     scheme: "dark" },
-    swiss:     { label: "瑞士网格", scheme: "light", code: "dark",
-                 fonts: ["noto-sans-sc:400,700,900", "jetbrains-mono:400,700"] },
-    blueprint: { label: "工程蓝图", scheme: "dark",
-                 fonts: ["noto-sans-sc:400,700", "jetbrains-mono:400,700"] },
-    riso:      { label: "孔版印刷", scheme: "light", code: "dark",
-                 fonts: ["noto-sans-sc:400,700,900", "space-grotesk:500,700"] },
-    brutal:    { label: "新粗野",   scheme: "light", code: "dark",
-                 fonts: ["noto-sans-sc:400,700,900", "space-grotesk:500,700", "jetbrains-mono:400,700"] },
-    field:     { label: "博物志",   scheme: "light", code: "dark",
-                 fonts: ["lxgw-wenkai", "jetbrains-mono:400,700"] }
-  };
+  var THEMES = kit.__THEMES__ || {};
 
   function themeMeta(themeName) {
     return THEMES[themeName] || { label: themeName, scheme: "light" };

@@ -1,3 +1,4 @@
+/* @kit-theme name="field" label="博物志" scheme="light" code="dark" fonts="lxgw-wenkai;jetbrains-mono:400,700" */
 /* 博物志 Field Notes —— 灰绿纸张、墨绿与赭黄、文楷手写感、标本卡双线框。 */
 @layer theme {
   html[data-theme="field"] {

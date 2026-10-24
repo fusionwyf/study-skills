@@ -50,6 +50,7 @@
 
 
 /* ---- Module: foundation (themes/course.css) ---- */
+/* @kit-theme name="course" label="默认" scheme="light" */
 @layer theme {
   :root,
   html[data-theme="course"],
@@ -92,6 +93,7 @@
 
 
 /* ---- Module: foundation (themes/ink.css) ---- */
+/* @kit-theme name="ink" label="深色" scheme="dark" */
 @layer theme {
   html[data-theme="ink"] {
     color-scheme: dark;
@@ -170,6 +172,7 @@
 
 
 /* ---- Module: foundation (themes/paper.css) ---- */
+/* @kit-theme name="paper" label="纸张" scheme="light" */
 @layer theme {
   html[data-theme="paper"] {
     color-scheme: light;
@@ -203,6 +206,7 @@
 
 
 /* ---- Module: foundation (themes/swiss.css) ---- */
+/* @kit-theme name="swiss" label="瑞士网格" scheme="light" code="dark" fonts="noto-sans-sc:400,700,900;jetbrains-mono:400,700" */
 /* 瑞士网格 Swiss Grid —— 纯白、纯黑、一个信号色；粗黑体、粗分隔线、零圆角。 */
 @layer theme {
   html[data-theme="swiss"] {
@@ -325,6 +329,7 @@
 
 
 /* ---- Module: foundation (themes/blueprint.css) ---- */
+/* @kit-theme name="blueprint" label="工程蓝图" scheme="dark" fonts="noto-sans-sc:400,700;jetbrains-mono:400,700" */
 /* 工程蓝图 Blueprint —— 普鲁士蓝坐标纸、等宽标注、黄色角标框线。深色方案。 */
 @layer theme {
   html[data-theme="blueprint"] {
@@ -453,6 +458,7 @@
 
 
 /* ---- Module: foundation (themes/riso.css) ---- */
+/* @kit-theme name="riso" label="孔版印刷" scheme="light" code="dark" fonts="noto-sans-sc:400,700,900;space-grotesk:500,700" */
 /* 孔版印刷 Risograph —— 荧光粉 + 青绿双专色、套印错位、颗粒噪点、网点底纹。 */
 @layer theme {
   html[data-theme="riso"] {
@@ -573,6 +579,7 @@
 
 
 /* ---- Module: foundation (themes/brutal.css) ---- */
+/* @kit-theme name="brutal" label="新粗野" scheme="light" code="dark" fonts="noto-sans-sc:400,700,900;space-grotesk:500,700;jetbrains-mono:400,700" */
 /* 新粗野主义 Neo-Brutalism —— 粗黑描边、硬投影、亮色块；按钮有“按下去”的手感。 */
 @layer theme {
   html[data-theme="brutal"] {
@@ -700,6 +707,7 @@
 
 
 /* ---- Module: foundation (themes/field.css) ---- */
+/* @kit-theme name="field" label="博物志" scheme="light" code="dark" fonts="lxgw-wenkai;jetbrains-mono:400,700" */
 /* 博物志 Field Notes —— 灰绿纸张、墨绿与赭黄、文楷手写感、标本卡双线框。 */
 @layer theme {
   html[data-theme="field"] {

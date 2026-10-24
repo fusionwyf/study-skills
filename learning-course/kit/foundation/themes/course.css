@@ -1,3 +1,4 @@
+/* @kit-theme name="course" label="默认" scheme="light" */
 @layer theme {
   :root,
   html[data-theme="course"],

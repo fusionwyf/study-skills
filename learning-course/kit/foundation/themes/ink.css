@@ -1,3 +1,4 @@
+/* @kit-theme name="ink" label="深色" scheme="dark" */
 @layer theme {
   html[data-theme="ink"] {
     color-scheme: dark;
