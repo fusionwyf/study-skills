@@ -362,9 +362,62 @@
     };
   }
 
+  function removeQueued(key) {
+    openQueueDB(function (db) {
+      if (!db) {
+        try { localStorage.removeItem("kit_q_" + key); } catch (e) {}
+        return;
+      }
+      try {
+        var tx = db.transaction(IDB_STORE, "readwrite");
+        tx.objectStore(IDB_STORE).delete(key);
+      } catch (e) {}
+    });
+  }
+
+  /* 断网补偿：页面以 http(s) 打开时，把此前 file:// 离线作答暂存在
+     IndexedDB / localStorage 里的 payload 逐条补传给 serve，成功即清除。 */
+  function flushQueue() {
+    if (typeof window === "undefined") return;
+    var isHttp = window.location.protocol === "http:" || window.location.protocol === "https:";
+    if (!isHttp || typeof fetch === "undefined") return;
+    openQueueDB(function (db) {
+      var entries = [];
+      var finish = function () {
+        entries.forEach(function (entry) {
+          if (!entry || !entry.key) return;
+          var headers = { "Content-Type": "application/json" };
+          var tok = getServeToken();
+          if (tok) headers["X-Kit-Token"] = tok;
+          fetch("/api/records", { method: "POST", headers: headers, body: JSON.stringify(entry) })
+            .then(function (r) { if (r.ok) removeQueued(entry.key); })
+            .catch(function () {});
+        });
+      };
+      if (!db) {
+        try {
+          Object.keys(localStorage).forEach(function (k) {
+            if (k.indexOf("kit_q_") === 0) {
+              try { entries.push(JSON.parse(localStorage.getItem(k))); } catch (e) {}
+            }
+          });
+        } catch (e) {}
+        finish();
+        return;
+      }
+      try {
+        var tx = db.transaction(IDB_STORE, "readonly");
+        var req = tx.objectStore(IDB_STORE).getAll();
+        req.onsuccess = function () { entries = (req.result || []).slice(); finish(); };
+        req.onerror = function () { finish(); };
+      } catch (e) { finish(); }
+    });
+  }
+
   function setupAutoSync(lesson, store) {
     if (typeof window === "undefined" || !store || !store.subscribe) return;
     getServeToken(); // 提前缓存 URL 中的 ?t= 令牌
+    flushQueue();
 
     var pill = document.createElement("span");
     pill.className = "kit-sync-pill";

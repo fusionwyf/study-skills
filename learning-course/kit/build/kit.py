@@ -1038,6 +1038,19 @@ def sync_course(course_dir):
         print(f"  -> Custom themes discovered: {names}")
 
     vendor_mode = course_config.get("vendor", {}).get("mode", "cdn")
+    if vendor_mode == "local":
+        missing_offline = [
+            name for name in ("hljs", "katex", "mermaid")
+            if not (KIT_ROOT / "vendor" / name).is_dir()
+        ]
+        if missing_offline:
+            print(
+                "WARNING: vendor.mode=local but kit/vendor/ lacks offline packages for: "
+                + ", ".join(missing_offline)
+                + "。它们仍会走 CDN（真正离线打开时代码高亮/公式/流程图不可用），"
+                "请补齐 kit/vendor/ 或改回 cdn 模式。",
+                file=sys.stderr,
+            )
 
     # Step 3: Detect active modules and bundle kit
     try:
@@ -1638,16 +1651,20 @@ def shot_course(course_dir, lesson=None, themes=None, browser=None, wait_ms=1200
                     loaded = False
                     while time.time() < settle_deadline:
                         try:
-                            res = ws.call("Runtime.evaluate", {"expression": "document.readyState"})
-                            if res.get("result", {}).get("value") == "complete":
+                            # settled = kit core marked every module ready (KaTeX,
+                            # hljs, charts included) — same signal export_pdf waits for.
+                            res = ws.call("Runtime.evaluate", {"expression":
+                                "document.readyState + '|' + (document.documentElement.dataset.kitStatus || '')"})
+                            value = res.get("result", {}).get("value", "")
+                            if value == "complete|settled":
                                 loaded = True
-                                time.sleep(2.2)  # fonts, KaTeX, CDN charts
+                                time.sleep(0.8)  # font swap / last paint
                                 break
                         except Exception:
                             pass
                         time.sleep(0.1)
                     if not loaded:
-                        print(f"Warning: {entry['file']} ({label}{suffix}) did not reach readyState=complete in {wait_ms}ms", file=sys.stderr)
+                        print(f"Warning: {entry['file']} ({label}{suffix}) did not reach kit settled state in {wait_ms}ms", file=sys.stderr)
                     shot = ws.call("Page.captureScreenshot", {"format": "png"})
                     data = base64.b64decode(shot.get("data", ""))
                     if not data:

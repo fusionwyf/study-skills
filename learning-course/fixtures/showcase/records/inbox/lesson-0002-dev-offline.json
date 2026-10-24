@@ -1,0 +1,12 @@
+{
+  "key": "kit-showcase::0002::dev-offline",
+  "course_id": "kit-showcase",
+  "lesson": "0002",
+  "objective_id": "obj-questions",
+  "device_id": "dev-offline",
+  "user_agent": "offline-simulation",
+  "updated_at": "2026-10-24T09:00:00.000Z",
+  "has_content": true,
+  "state": {},
+  "markdown": "# 学习记录\n\n## 练习记录\n\n### offline-note\n\n- 离线补传测试标记 ABC123\n"
+}
