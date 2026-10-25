@@ -59,7 +59,7 @@
 
 ```html
 <link rel="stylesheet" href="../../assets/kit/kit.css">
-<link rel="stylesheet" href="../assets/course/theme.css">
+<link rel="stylesheet" href="../../assets/course/theme.css">
 <script defer src="../../assets/kit/kit.js"></script>
 ```
 
