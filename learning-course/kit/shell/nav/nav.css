@@ -78,6 +78,28 @@
     transition: width 0.3s ease;
   }
 
+  .kit-sidebar__dashboard {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    margin-top: 0.9rem;
+    padding: 0.45rem 0.6rem;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-sm, 0);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    color: var(--c-text-2);
+    text-decoration: none;
+    transition: border-color 0.12s, color 0.12s;
+  }
+
+  .kit-sidebar__dashboard:hover {
+    border-color: var(--c-accent);
+    color: var(--c-accent);
+  }
+
   .kit-sidebar__tree {
     flex: 1;
     overflow-y: auto;

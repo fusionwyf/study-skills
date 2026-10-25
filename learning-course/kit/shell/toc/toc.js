@@ -269,6 +269,11 @@
 
   function initToc() {
     if (typeof document === "undefined") return;
+    // Only lessons get a reading TOC; course index already has its own outline.
+    if (!document.querySelector(".lesson, [data-lesson-id]")) {
+      if (kit.ready && kit.ready.markReady) kit.ready.markReady("shell.toc");
+      return;
+    }
     headings = getHeadings();
     if (!headings.length) {
       if (kit.ready && kit.ready.markReady) kit.ready.markReady("shell.toc");

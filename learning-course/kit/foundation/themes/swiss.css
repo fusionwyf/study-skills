@@ -117,4 +117,28 @@
     content: ""; display: block; width: 3rem; height: 0.4rem; margin-bottom: 0.9rem; background: var(--c-accent);
   }
   html[data-theme="swiss"] .lesson th { border-bottom: 2px solid var(--c-text); font-family: var(--font-mono); }
+
+  /* 课程首页：瑞士网格封面 */
+  html[data-theme="swiss"] .course-hero {
+    border-bottom: 4px solid var(--c-text);
+  }
+  html[data-theme="swiss"] .course-hero__title {
+    font-size: clamp(2.8rem, 7vw, 5.4rem);
+  }
+  html[data-theme="swiss"] .chip {
+    border-width: 2px;
+    border-color: var(--c-text);
+    color: var(--c-text);
+  }
+  html[data-theme="swiss"] .course-hero__console {
+    border-width: 2px;
+    border-color: var(--c-text);
+    font-weight: 700;
+  }
+  html[data-theme="swiss"] .chip--warn { border-color: var(--c-warn); color: var(--c-warn); }
+  html[data-theme="swiss"] .stat__value { font-size: 2.4rem; }
+  html[data-theme="swiss"] .lesson-row.is-current {
+    background: color-mix(in srgb, var(--c-accent) 8%, var(--c-bg));
+    box-shadow: inset 4px 0 0 var(--c-accent);
+  }
 }

@@ -114,6 +114,10 @@ class ExportSmokeTests(unittest.TestCase):
         self.assertIn(title, index_md)
         self.assertIn(title, index_html)
         self.assertIn("lessons/0001-math.html", index_md)
+        # The index is a single reading column: without this class the kit's
+        # three-column grid squeezes it into the sidebar track.
+        self.assertIn('class="kit-page kit-page--index"', index_html)
+        self.assertIn("lesson-list", index_html)
 
         # Only the two derived views were rewritten; every source is untouched.
         self.assertEqual(source_digests(course), sources_before)

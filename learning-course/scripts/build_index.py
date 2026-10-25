@@ -15,6 +15,7 @@ import html
 import json
 import re
 import sys
+from datetime import date
 from html.parser import HTMLParser
 from pathlib import Path
 
@@ -71,12 +72,14 @@ def read_course_meta(root: Path, state: dict | None = None) -> dict[str, object]
             return yaml_value(text, key, default)
         return str(value)
 
+    learner = state.get("learner") if isinstance(state.get("learner"), dict) else {}
     return {
         "title": pick("title", plan_title.group(1).strip() if plan_title else root.name),
         "course_id": pick("course_id", root.name),
         "status": pick("status", "unknown"),
         "phase": pick("phase", "unknown"),
         "current_lesson": pick("current_lesson", "0"),
+        "goal": str(learner.get("goal") or ""),
     }
 
 
@@ -139,35 +142,143 @@ def render_markdown(meta: dict[str, object], lessons: list[dict[str, str]]) -> s
     return "\n".join(lines).rstrip("\n") + "\n"
 
 
-def lesson_list_items(lessons: list[dict[str, str]]) -> str:
-    """Ordered HTML list; chaptered packages get one grouped block per chapter."""
+def lesson_list_items(
+    lessons: list[dict[str, str]],
+    completed: set[str] | None = None,
+    chapters: list[dict[str, object]] | None = None,
+    current_key: str | None = None,
+) -> str:
+    """Course outline: chapter panels with one row per lesson."""
+    completed = completed or set()
+    chapter_meta = {
+        str(chapter.get("label")): chapter
+        for chapter in (chapters or [])
+        if chapter.get("label")
+    }
     blocks: list[str] = []
-    for label, items in group_by_chapter(lessons):
-        entries = "".join(
-            f'<li><a href="lessons/{html.escape(item["file"])}">第 {item["number"]} 课：{html.escape(item["title"])}</a>'
-            f'<small>{html.escape(item["objective"])}</small></li>'
-            for item in items
-        )
+    for group_index, (label, items) in enumerate(group_by_chapter(lessons), start=1):
+        rows = []
+        for item in items:
+            done = item["key"] in completed
+            current = bool(current_key and item["key"] == current_key)
+            state_class = " is-done" if done else ""
+            if current:
+                state_class += " is-current"
+            status = "继续" if current else ("已完成" if done else "待反馈")
+            rows.append(
+                f'<li class="lesson-row{state_class}">'
+                f'<a href="lessons/{html.escape(item["file"])}">'
+                f'<span class="lesson-row__num">{html.escape(item["number"])}</span>'
+                f'<span class="lesson-row__body">'
+                f'<span class="lesson-row__title">{html.escape(item["title"])}</span>'
+                f'<span class="lesson-row__obj">{html.escape(item["objective"])}</span>'
+                f'</span>'
+                f'<span class="lesson-row__status">{status}</span>'
+                f'<span class="lesson-row__arrow" aria-hidden="true">→</span>'
+                f'</a></li>'
+            )
         if label:
+            chapter = chapter_meta.get(label, {})
+            chapter_title = str(chapter.get("title") or "")
             blocks.append(
-                f'<h3 class="course-index__chapter">{html.escape(label)}</h3>'
-                f'<ol class="course-index__list">{entries}</ol>'
+                f'<section class="outline-chapter">'
+                f'<div class="outline-chapter__head">'
+                f'<span class="outline-chapter__index">{group_index:02d}</span>'
+                f'<div class="outline-chapter__names">'
+                f'<h3 class="outline-chapter__title">{html.escape(label)}</h3>'
+                f'<p class="outline-chapter__sub">{html.escape(chapter_title)}</p>'
+                f'</div>'
+                f'<span class="outline-chapter__count">{len(items)} 课</span>'
+                f'</div>'
+                f'<ol class="lesson-list">{"".join(rows)}</ol>'
+                f'</section>'
             )
         else:
-            blocks.append(f'<ol>{entries}</ol>')
+            blocks.append(
+                f'<section class="outline-chapter outline-chapter--flat">'
+                f'<ol class="lesson-list">{"".join(rows)}</ol>'
+                f'</section>'
+            )
     if not blocks:
-        blocks.append("<ol><li>尚未生成第一课。</li></ol>")
+        blocks.append('<p class="outline-empty">尚未生成第一课。</p>')
     return "".join(blocks)
 
 
-def render_html(meta: dict[str, object], lessons: list[dict[str, str]], include_theme: bool = False, is_kit: bool = False) -> str:
-    items = lesson_list_items(lessons)
+def render_html(
+    meta: dict[str, object],
+    lessons: list[dict[str, str]],
+    include_theme: bool = False,
+    is_kit: bool = False,
+    theme: str = "course",
+    completed: set[str] | None = None,
+    chapters: list[dict[str, object]] | None = None,
+    stats: dict[str, int] | None = None,
+) -> str:
+    completed = completed or set()
+    stats = stats or {}
+    total = len(lessons)
+    done = sum(1 for item in lessons if item["key"] in completed)
+    percent = round(done * 100 / total) if total else 0
+    current_key = lessons[-1]["key"] if lessons else None
+    items = lesson_list_items(lessons, completed, chapters, current_key)
+    next_href = f'lessons/{html.escape(lessons[-1]["file"])}' if lessons else "#"
+    due = int(stats.get("due_reviews") or 0)
+    due_chip = f'<span class="chip chip--warn">{due} 项复习到期</span>' if due else ""
+    goal = str(meta.get("goal") or "").strip()
+    if not goal:
+        goal = "按课程路线继续学习；每次作答与反馈都会回流到课程状态。"
+    course_code = str(meta.get("course_id") or "course").upper()
     if is_kit:
         theme_link = '<link rel="stylesheet" href="assets/course/theme.css">' if not include_theme else '<link rel="stylesheet" href="assets/theme.css">'
         return f'''<!doctype html>
-<html lang="zh-CN" data-theme="course">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{html.escape(str(meta["title"]))}</title><link rel="stylesheet" href="assets/kit/kit.css">{theme_link}<script defer src="assets/kit/kit.js"></script></head>
-<body class="kit-page"><div class="kit-main" data-course-id="{html.escape(str(meta["course_id"]))}"><header class="course-header"><p class="course-kicker">课程入口</p><h1 class="course-title">{html.escape(str(meta["title"]))}</h1><p class="course-subtitle">状态：{html.escape(str(meta["status"]))} · 阶段：{html.escape(str(meta["phase"]))}</p><div data-theme-switcher></div></header><main><div class="card"><h2>课程目录</h2>{items}</div></main></div></body></html>'''
+<html lang="zh-CN" data-theme="{html.escape(theme)}">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{html.escape(str(meta["title"]))}</title><link rel="icon" href="data:,"><link rel="stylesheet" href="assets/kit/kit.css">{theme_link}<script defer src="assets/kit/kit.js"></script></head>
+<body class="kit-page kit-page--index">
+<div class="kit-main" data-course-id="{html.escape(str(meta["course_id"]))}">
+<header class="course-hero">
+<div class="course-hero__top">
+<p class="course-hero__eyebrow"><span>{html.escape(course_code)}</span><span class="course-hero__sep">/</span><span class="course-hero__eyebrow-tail">COURSE INDEX</span></p>
+<div class="course-hero__tools">
+<a class="course-hero__console" href="dashboard">学习仪表盘 <span aria-hidden="true">→</span></a>
+</div>
+</div>
+<div class="course-hero__row">
+<div class="course-hero__lead">
+<h1 class="course-hero__title">{html.escape(str(meta["title"]))}</h1>
+<p class="course-hero__lede">{html.escape(goal)}</p>
+</div>
+<div class="course-hero__dial" style="--p:{percent}" aria-label="课程进度 {percent}%">
+<span class="course-hero__dial-value">{percent}<small>%</small></span>
+<span class="course-hero__dial-label">{done} / {total}</span>
+</div>
+</div>
+<div class="course-hero__meta">
+<span class="chip">status · {html.escape(str(meta["status"]))}</span>
+<span class="chip">phase · {html.escape(str(meta["phase"]))}</span>
+<span class="chip chip--accent">{done} / {total} 课已完成</span>
+{due_chip}
+<a class="course-hero__cta" href="{next_href}">继续学习 <span aria-hidden="true">→</span></a>
+</div>
+</header>
+<section class="course-stats" aria-label="课程统计">
+<div class="stat"><span class="stat__value">{total}</span><span class="stat__label">课节总数</span></div>
+<div class="stat"><span class="stat__value">{done}</span><span class="stat__label">已完成</span></div>
+<div class="stat"><span class="stat__value">{int(stats.get("objectives_total") or 0)}</span><span class="stat__label">学习目标</span></div>
+<div class="stat"><span class="stat__value">{int(stats.get("objectives_achieved") or 0)}</span><span class="stat__label">已达标</span></div>
+</section>
+<main class="course-outline">
+<div class="outline-head">
+<div><p class="outline-head__eyebrow">OUTLINE</p><h2>课程目录</h2></div>
+<span class="outline-head__count">{total} 课</span>
+</div>
+{items}
+</main>
+<footer class="course-index__settings">
+<span class="course-index__settings-label">主题</span>
+<div class="kit-theme-switcher--compact" data-theme-switcher></div>
+</footer>
+</div>
+</body></html>'''
     theme_link = '<link rel="stylesheet" href="assets/theme.css">' if include_theme else ''
     theme_attributes = ' data-theme="course" data-theme-surface="light"' if include_theme else ''
     return f'''<!doctype html>
@@ -249,9 +360,37 @@ def main() -> int:
     chapter_order = [chapter["label"] for chapter in chapters]
     lessons = collect_lessons(root, chapter_order)
     is_kit = (root / "assets/kit/kit.css").is_file()
+    theme = "course"
+    config_file = root / "assets/course/config.json"
+    if config_file.is_file():
+        try:
+            theme = json.loads(config_file.read_text(encoding="utf-8")).get("theme") or theme
+        except Exception:
+            pass
+
+    completed = set(layout.completed_lesson_keys(root))
+    objectives = state.get("objectives") if isinstance(state.get("objectives"), list) else []
+    achieved = sum(
+        1 for objective in objectives
+        if isinstance(objective, dict) and objective.get("mastery") in {"application", "transfer"}
+    )
+    today = date.today().isoformat()
+    review_queue = state.get("review_queue") if isinstance(state.get("review_queue"), list) else []
+    due = sum(
+        1 for item in review_queue
+        if isinstance(item, dict) and str(item.get("due_at") or "")[:10] and str(item.get("due_at"))[:10] <= today
+    )
+    stats = {
+        "objectives_total": len(objectives),
+        "objectives_achieved": achieved,
+        "due_reviews": due,
+    }
     outputs = {
         root / "INDEX.md": render_markdown(meta, lessons),
-        root / "index.html": render_html(meta, lessons, (root / "assets/theme.css").is_file(), is_kit),
+        root / "index.html": render_html(
+            meta, lessons, (root / "assets/theme.css").is_file(), is_kit, theme,
+            completed=completed, chapters=chapters, stats=stats,
+        ),
     }
     if args.nav_only:
         outputs = {}

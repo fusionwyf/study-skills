@@ -34,6 +34,32 @@
     background: var(--c-surface-2);
   }
 
+  /* Compact variant: settings rows, sidebars, footers. */
+  [data-theme-switcher].kit-theme-switcher--compact {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .kit-theme-switcher--compact .kit-theme-select {
+    max-width: 100%;
+    padding: 0.18rem 0.3rem;
+    border: 0;
+    border-bottom: 1px solid var(--c-border);
+    border-radius: 0;
+    background: transparent;
+    color: var(--c-text-2);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 500;
+  }
+
+  .kit-theme-switcher--compact .kit-theme-select:hover {
+    border-bottom-color: var(--c-accent);
+    color: var(--c-accent);
+    background: transparent;
+  }
+
   @media print {
     [data-theme-switch],
     [data-theme-switcher] {

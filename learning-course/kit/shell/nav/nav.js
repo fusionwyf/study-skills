@@ -67,9 +67,24 @@
     return assetsDir + "course/nav.json";
   }
 
+  function dashboardHref() {
+    var token = "";
+    try {
+      token = new URLSearchParams(window.location.search).get("t")
+        || sessionStorage.getItem("kit_serve_token") || "";
+    } catch (e) {}
+    return "/dashboard" + (token ? "?t=" + encodeURIComponent(token) : "");
+  }
+
   function renderSidebar(navData, currentLessonId, currentLesson) {
     var page = document.querySelector(".kit-page, .course-shell");
     if (!page) return;
+
+    // Course index already lists every lesson; a sidebar there would duplicate
+    // the directory and, on the single-column index layout, push content below
+    // the fold. Only lesson pages get the global navigator.
+    var isLessonPage = !!document.querySelector(".lesson, [data-lesson-id]");
+    if (!isLessonPage) return;
 
     var sidebar = document.querySelector(".kit-sidebar");
     if (!sidebar) {
@@ -79,7 +94,6 @@
       page.insertBefore(sidebar, page.firstChild);
     }
 
-    var isLessonPage = !!document.querySelector(".lesson, [data-lesson-id]");
     var lessons = (navData && navData.lessons) || [];
     var currentIndex = -1;
     var pageFile = isLessonPage ? pageLessonFile() : "";
@@ -206,6 +220,7 @@
     html.push('  <div class="kit-sidebar__progress-track" aria-hidden="true">');
     html.push('    <div class="kit-sidebar__progress-bar" style="width: ' + progressPercent + '%;"></div>');
     html.push('  </div>');
+    html.push('  <a class="kit-sidebar__dashboard" href="' + dashboardHref() + '">学习仪表盘 <span aria-hidden="true">↗</span></a>');
     html.push('</div>');
 
     html.push('<nav class="kit-sidebar__tree" aria-label="课时列表">');

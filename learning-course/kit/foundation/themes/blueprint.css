@@ -123,4 +123,21 @@
     font-family: var(--font-mono); font-size: 1.05rem; padding: 0.25rem 0 0.25rem 1.25rem;
   }
   html[data-theme="blueprint"] .lesson th { border-bottom: 1px solid var(--c-accent); font-family: var(--font-mono); color: var(--c-accent); }
+
+  /* 课程首页：图纸封面 */
+  html[data-theme="blueprint"] .course-hero {
+    border-bottom-style: dashed;
+    border-bottom-color: var(--c-border-strong);
+  }
+  html[data-theme="blueprint"] .course-hero__title {
+    font-family: var(--font-display);
+    font-size: clamp(2.2rem, 5vw, 3.8rem);
+    letter-spacing: -0.02em;
+  }
+  html[data-theme="blueprint"] .chip { border-style: dashed; }
+  html[data-theme="blueprint"] .course-hero__console { border-style: dashed; }
+  html[data-theme="blueprint"] .chip--accent { border-color: var(--c-accent); color: var(--c-accent); }
+  html[data-theme="blueprint"] .lesson-row.is-current {
+    background: rgba(255, 211, 77, 0.1);
+  }
 }
