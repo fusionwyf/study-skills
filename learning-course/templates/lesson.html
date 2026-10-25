@@ -29,12 +29,17 @@
 
       <section aria-labelledby="intuition-title">
         <h2 id="intuition-title">先看一个具体情境</h2>
-        <p>从一个熟悉例子开始。让学习者先预测，再给出解释。</p>
+        <kit-predict data-question-id="p1">
+          <div data-predict-prompt><p>先猜：如果改变……，会发生什么？</p></div>
+          <div data-reveal><p>揭晓：……（这段在无脚本/打印时仍然可读）。</p></div>
+        </kit-predict>
       </section>
 
       <section aria-labelledby="core-title">
         <h2 id="core-title">核心解释</h2>
         <p>先用自然语言说明机制，再给出正式定义、规则或判断框架。</p>
+        <!-- 有连续状态、参数、数据或几何时，优先放 kit-island、kit-param 或 viz：
+             先写清学生要改变/观察的量，再选最小组件；每个可视化都要有 fallback。 -->
         <p>\[a^2 + b^2 = c^2\]</p>
         <!-- 版式节奏示例（按需取用，避免圆角卡片堆砌）：
              <aside class="sidenote">宽屏浮到正文右侧的边注；窄屏折叠为内注记。</aside>

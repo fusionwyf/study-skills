@@ -12,6 +12,10 @@
 - **opt-in**：重型第三方库依赖（`viz.kinds.chart` 依赖 Plotly、`viz.kinds.plot` 依赖 Observable Plot、`viz.kinds.spatial` 依赖 JSXGraph）。通过 `python kit/build/kit.py add <course-dir> <module-id>` 显式启用。
 - **serve**：由 `kit.py serve` 托管、**不进入课程包**的模块（`shell.dashboard` 只读仪表盘，serve 时挂在 `/dashboard`，读取 `/api/course`、`/api/records`、`/api/inbox`）。不得写入 `config.json` 的 `modules`，也不得被课程扩展 `requires`。
 
+### 教学表达优先
+
+先确定学生动作（预测、调参、步进、观察、分类、复述），再按 `references/lesson.md` §13 选组件；不要先挑库再想教学。默认每课至少一个学生动作；没有合适交互时用 Mermaid + 分步推导 + 检索题，并在 `PLAN.md` 写明原因。可视化必须有 fallback、证据接线和窄屏检查，不能是装饰性动画。
+
 ### 第三方库优先
 
 制作组件前先查成熟库，按以下路由选择——这些是硬规则，不是建议：
@@ -134,3 +138,4 @@ Course Kit v2 将所有模块拓扑排序并拼接为单文件产物：
 4. 375px/768px/1280px 宽度实测：无水平溢出，TOC 三态切换正常，主题无刷新平滑切换。
 5. 无脚本与打印时：正文、代码、公式源、Mermaid 源、静态目录均可读。
 6. 视觉自检：`python kit/build/kit.py shot <course-dir> [--chapter <目录名>] [--lesson N] [--theme <id>]` 用无头 Chromium 生成桌面（1440×2400）与窄屏（390×1600）截图到 `exports/shots/`；分章课程中同名课号跨章重复时，`--lesson` 必须配合 `--chapter`，否则脚本会报歧义而不是静默覆盖前一章的截图。具备视觉能力的 Agent 直接读取 PNG 检查排版溢出、公式与图表渲染；自创主题必须截图验收对比度。
+7. 可视化/交互实际打开页面：确认 `data-kit-ready`、`data-viz-fallback`、参数/播放/步进/回放可用，375/768/1280 无水平溢出，`prefers-reduced-motion` 下仍有静态可读内容；不能完成时明确标记未验证。

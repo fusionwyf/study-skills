@@ -97,3 +97,10 @@ Course Kit v2 将所有渲染组件划分为清晰的 6 层（L0–L5）：
 - **URL 覆盖**：`?kit-theme=<id>` 优先于默认主题（不写入 localStorage），`kit.py shot --theme <id>` 与主题分享链接都依赖它。
 - **字体按需加载**：meta.fonts 中的 fontsource 包名或 CSS URL 仅在主题首次启用时插入 `<link>`，失败静默回退到 CSS 字体栈；`config.fonts: "system"` 可整体禁用。
 - **代码主题联动**：`kit:themechange` 时按 meta.code 或页面明暗替换 `#kit-hljs-theme`，Mermaid 监听同一事件重绘。
+
+## 八、教学用法与质量门禁
+
+- 组件选择先看学生动作，不看库的视觉效果；优先 `kit-predict` / `kit-param` / `kit-island` / Mermaid，重型 viz 只在数据或几何确实需要时启用。
+- 每个仿真/图表必须有 `data-viz-fallback`、可暂停/步进（仿真）、参数可见影响、窄屏检查和 `prefers-reduced-motion` 处理。
+- 动画只用于表达状态变化或过程；静态图更清楚时不要加动画。
+- 具体选择表与反模式见 `references/lesson.md` §13。

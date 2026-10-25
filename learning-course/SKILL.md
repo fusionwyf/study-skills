@@ -21,6 +21,18 @@ disable-model-invocation: true
 
 不能渲染 PDF 时保留 HTML 并说明限制，不创建伪 PDF。无法完成要求的视觉检查时明确标记未验证。
 
+## 教学表达：可视化与交互优先
+
+写文字之前先判断：这个概念有没有**状态、过程、参数或反直觉点**？有，就优先设计一个学生可操作的表达，而不是只写段落。
+
+- **连续演化 / 状态随时间变化** → `kit-island`：播放、步进、回放、改参数。
+- **参数关系 / 权衡** → `kit-param` + 联动输出，或 `viz` 图表。
+- **反直觉事实** → `kit-predict`：先让学习者承诺答案，再揭晓。
+- **流程 / 状态机 / 时序** → Mermaid + `learning.step` 分步展开。
+- **数据 / 几何** → `viz.kinds.chart` / `plot` / `spatial`（opt-in，必须有 fallback）。
+
+每节课至少设计一个**学生动作**——预测、调参、步进、观察、分类或复述；如果主题确实不适合交互，用 Mermaid + 分步推导 + 检索题替代，并在 `PLAN.md` 写明原因。可视化必须服务于一个可观察的学习判断，不做装饰性动画；必须有 `data-viz-fallback`、无脚本/打印可读、`prefers-reduced-motion` 处理，并接入一条 evidence（预测原文、参数探索或仿真观察）。组件选择与质量检查见 `references/lesson.md` §13 与 `references/assets.md`。
+
 ## 工作模式
 
 - **create**：建立课程契约、课程包和第一课。
@@ -70,6 +82,7 @@ Course Kit v2 将所有教学资产统一维护在 `kit/`（L0 运行时、L1 �
    若课程有鲜明的学科气质或学习者提出了特殊审美偏好，允许并鼓励在 `<course-dir>/assets/course/themes/<name>.css` 中自创课程专属预设（写法见 `references/assets.md`），`kit.py sync` 会自动发现并注入。
 4. 在 `PLAN.md` 中维护课程路线和边界。它不是可重新生成文件。
 5. 读取 `references/lesson.md` 与 `references/assets.md`，按课程目标从 `kit/catalog.json` 选择已实现能力；有公式、图形或动态模型时读取 `references/render.md`。以原生语义 HTML + data-* 契约为制作入口，生成一个具有可验证学习成果和 evidence opportunity 的 HTML 课件。
+   生成 HTML 前先在 `PLAN.md` 写一行「教学表达选择」：本课的核心概念类型、选用的交互/可视化、学生动作、要观察的量、后备与证据；至少一个学生动作。
    把学习者要求的深度、视觉风格、交互与验收标准写入课程 `PLAN.md`；不足的能力按 assets 协议选择静态表达或课程专用扩展。
    成熟第三方库优先，允许固定版本 CDN；代码使用原生 `<pre><code class="language-...">`（由 Kit 块外壳与 highlight.js 渲染），公式使用 KaTeX 语法（`\(...\)` / `\[...\]`），流程图/状态图/时序图使用 Mermaid（`<pre class="mermaid">`），不手写 SVG 替代 Mermaid 能表达的图形。题目统一使用 `<section class="question" data-role="evidence" data-kind="...">` 题块（或 `<kit-question>` 双轨简写）。反直觉事实前用 `<kit-predict>` 先预测后揭晓；联动参数用 `<kit-param>`；连续演化仿真用 `<kit-island>`；版式用 `.sidenote` / `.wide` / `.pull-quote` 打破卡片堆砌（契约见 `references/lesson.md` §9–12）。视觉定制写入 `assets/course/theme.css`，主题与第三方配置写入 `assets/course/config.json`。
    `templates/lesson.html` 是标准课件模板：复制后必须替换其中占位的 `data-course-id` 与 `data-objective`，并确保该 objective 已写入 `course.yaml` 的 `objectives`。
@@ -81,7 +94,7 @@ Course Kit v2 将所有教学资产统一维护在 `kit/`（L0 运行时、L1 �
    python scripts/validate_course.py <course-dir> --strict-schema --pedagogical
    ```
 
-完成条件：成功标准和 objective 已写入状态，第一课文件存在且引用已定义 objective，phase 为 `awaiting_evidence`，模块已同步，nav.json 已更新，验证命令均通过。
+完成条件：成功标准和 objective 已写入状态，第一课文件存在且引用已定义 objective，第一课至少有一个可视化/交互环节（或 PLAN 说明为何不适合），phase 为 `awaiting_evidence`，模块已同步，nav.json 已更新，验证命令均通过。
 向学习者交付课件时启动本地服务（学习者点击提交后实时落盘，无需手动收集反馈）：
 
 ```text
@@ -97,7 +110,7 @@ python kit/build/kit.py serve <course-dir> [--lan]
 3. 优先处理到期复习和学习者明确提出的问题。
 4. 根据 evidence 强度决定保持难度、补前置、增加变式、推进或设为 `uncertain`。
    若有 incoming 交接、已有跨包交接待返回，或 finalized evidence 表明需要独立的有界补课包，读取 `../shared/references/learning-handoff.md` 并按对应分支处理。incoming 补课获得约定的返回证据时执行协议的返回分支；课程内可补的前置仍按本流程教学。
-5. 制作下一课时复用 `PLAN.md` 的制作约定，按 `references/assets.md` 检查资产选择与接线；生成下一课后运行 `python kit/build/kit.py sync <course-dir>` 同步模块与导航，进入 `awaiting_evidence`。不要提前创建不存在的反馈。
+5. 制作下一课时复用 `PLAN.md` 的制作约定，按 `references/assets.md` 检查资产选择与接线；若本课主题适合但还没有交互/可视化，优先补一个学生动作，而不是继续增加文字段落。生成下一课后运行 `python kit/build/kit.py sync <course-dir>` 同步模块与导航，进入 `awaiting_evidence`。不要提前创建不存在的反馈。
 
 完成条件：所有新 mastery 都可追溯到 finalized record；下一项动作是到期复习、针对性补救、有界补课交接或一节引用已定义 objective 的新课；状态与索引已经验证。
 
