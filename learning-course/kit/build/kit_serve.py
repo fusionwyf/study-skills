@@ -28,6 +28,14 @@ def _detect_lan_ip():
 
 DASHBOARD_FILE = KIT_ROOT / "shell" / "dashboard" / "index.html"
 
+
+def _course_theme(course_dir: Path) -> str:
+    config = course_dir / "assets" / "course" / "config.json"
+    try:
+        return str(json.loads(config.read_text(encoding="utf-8")).get("theme") or "course")
+    except Exception:
+        return "course"
+
 RECORD_META_KEYS = (
     "record_schema", "assessment_status", "record_id", "attempted_at",
     "independence", "lesson", "evidence_type", "evidence_strength",
@@ -98,7 +106,8 @@ def serve_course(course_dir, host="127.0.0.1", port=8765, lan=False, token=None)
                     return self._send_json(403, {"error": "forbidden"})
                 if not DASHBOARD_FILE.is_file():
                     return self._send_json(404, {"error": "dashboard not found"})
-                body = DASHBOARD_FILE.read_bytes()
+                template = DASHBOARD_FILE.read_text(encoding="utf-8")
+                body = template.replace("__KIT_THEME__", _course_theme(cpath)).encode("utf-8")
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
                 self.send_header("Cache-Control", "no-store")

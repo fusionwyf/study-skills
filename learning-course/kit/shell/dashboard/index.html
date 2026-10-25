@@ -1,90 +1,632 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="__KIT_THEME__">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>课程仪表盘</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="/assets/kit/kit.css">
+<link rel="stylesheet" href="/assets/course/theme.css">
 <style>
-  :root { color-scheme: light dark; }
   * { box-sizing: border-box; }
+
   body {
-    margin: 0; padding: 2rem 1.25rem 4rem;
-    font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
-    background: light-dark(#f6f7f9, #14171c); color: light-dark(#1c2128, #e6e9ee);
-    max-width: 72rem; margin-inline: auto;
+    margin: 0;
+    padding: 0;
+    background-color: var(--c-bg);
+    color: var(--c-text);
+    font-family: var(--font-body);
+    line-height: 1.6;
   }
-  h1 { font-size: 1.5rem; margin: 0 0 .2rem; }
-  h2 { font-size: 1.05rem; margin: 0 0 .8rem; }
-  .sub { color: light-dark(#5b6472, #9aa4b2); margin: 0 0 1.8rem; font-size: .92rem; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); gap: 1rem; }
-  .card {
-    background: light-dark(#ffffff, #1c212a); border: 1px solid light-dark(#dde2e9, #2a313d);
-    border-radius: 12px; padding: 1.1rem 1.2rem;
+
+  code, .mono {
+    font-family: var(--font-mono);
+    font-size: 0.82em;
+    letter-spacing: 0.01em;
   }
-  .badge { display: inline-block; padding: .1rem .55rem; border-radius: 999px; font-size: .78rem; font-weight: 600; }
-  .m-unseen { background: #e5e8ee; color: #4a5261; }
-  .m-recognition { background: #dbeafe; color: #1d4ed8; }
-  .m-application { background: #d1fae5; color: #047857; }
-  .m-transfer { background: #ede9fe; color: #6d28d9; }
-  .m-uncertain { background: #fef3c7; color: #b45309; }
-  .st-pending { background: #fef3c7; color: #b45309; }
-  .st-finalized { background: #d1fae5; color: #047857; }
-  .ind-independent { color: #047857; font-weight: 600; }
-  .ind-with_hints { color: #b45309; font-weight: 600; }
-  .ind-ai_guided { color: #dc2626; font-weight: 600; }
-  ul { list-style: none; padding: 0; margin: 0; }
-  li { padding: .45rem 0; border-top: 1px dashed light-dark(#e6eaf0, #2a313d); font-size: .9rem; display: flex; flex-wrap: wrap; gap: .5rem; align-items: baseline; }
-  li:first-child { border-top: 0; }
-  li .grow { flex: 1 1 auto; min-width: 8rem; }
-  .muted { color: light-dark(#5b6472, #9aa4b2); font-size: .82rem; }
-  .overdue { color: #dc2626; font-weight: 700; }
-  .bar { display: flex; height: 1rem; border-radius: 6px; overflow: hidden; margin: .5rem 0 .8rem; background: light-dark(#e5e8ee, #2a313d); }
-  .bar > span { display: block; height: 100%; }
-  .legend { display: flex; gap: 1rem; flex-wrap: wrap; font-size: .82rem; color: light-dark(#5b6472, #9aa4b2); }
-  .dot { display: inline-block; width: .65rem; height: .65rem; border-radius: 50%; margin-right: .3rem; }
-  .empty { color: light-dark(#5b6472, #9aa4b2); font-size: .88rem; padding: .5rem 0; }
-  .phase { font-size: .8rem; padding: .15rem .6rem; border-radius: 999px; background: light-dark(#e5e8ee, #2a313d); vertical-align: middle; }
-  code { font-family: ui-monospace, Consolas, monospace; font-size: .82rem; }
+
+  .dash {
+    width: min(100% - 3rem, 84rem);
+    margin-inline: auto;
+    padding: 3rem 0 5rem;
+  }
+
+  /* ---- Header ---- */
+  .dash-hero {
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--c-border);
+  }
+
+  .dash-hero__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .dash-kicker {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--c-muted);
+  }
+
+  .dash-kicker__dot {
+    width: 0.42rem;
+    height: 0.42rem;
+    background: var(--c-accent);
+    display: inline-block;
+  }
+
+  .dash-home {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    color: var(--c-text-2);
+    text-decoration: none;
+    border-bottom: 1px solid var(--c-border-strong);
+    padding-bottom: 0.15rem;
+  }
+
+  .dash-home:hover { color: var(--c-accent); border-color: var(--c-accent); }
+
+  .dash-hero__row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2rem;
+    margin-top: 1.4rem;
+  }
+
+  .dash-hero h1 {
+    margin: 0;
+    font-size: clamp(2.2rem, 5vw, 3.8rem);
+    line-height: 1.04;
+    letter-spacing: -0.035em;
+    font-weight: 900;
+  }
+
+  .dash-goal {
+    max-width: 52rem;
+    margin: 0.75rem 0 0;
+    color: var(--c-text-2);
+    font-size: 0.96rem;
+    line-height: 1.7;
+  }
+
+  .dash-updated {
+    margin: 0.55rem 0 0;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--c-muted);
+  }
+
+  .dash-tags {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.35rem;
+    flex: 0 0 auto;
+  }
+
+  .dash-phase {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    border: 1px solid var(--c-accent);
+    padding: 0.22rem 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  /* ---- KPI strip ---- */
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    border-bottom: 1px solid var(--c-border);
+    margin-bottom: 2.5rem;
+  }
+
+  .kpi {
+    padding: 1.2rem 1.25rem;
+    border-right: 1px solid var(--c-border);
+    border-top: 3px solid transparent;
+  }
+
+  .kpi:last-child { border-right: 0; }
+  .kpi.is-alert { border-top-color: var(--c-warn); }
+
+  .kpi__label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--c-muted);
+  }
+
+  .kpi__value {
+    display: block;
+    margin-top: 0.3rem;
+    font-family: var(--font-mono);
+    font-size: 2.1rem;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--c-text);
+  }
+
+  .kpi__hint {
+    display: block;
+    margin-top: 0.35rem;
+    font-size: 0.74rem;
+    color: var(--c-muted);
+  }
+
+  /* ---- Layout ---- */
+  .dash-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 1.1rem;
+    align-items: start;
+  }
+
+  .panel {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius, 0);
+    padding: 1.25rem 1.35rem;
+    min-width: 0;
+  }
+
+  .panel--objectives { grid-column: span 8; }
+  .panel--reviews { grid-column: span 4; }
+  .panel--timeline { grid-column: span 8; }
+  .panel--side { grid-column: span 4; }
+
+  .panel__head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 0.7rem;
+    border-bottom: 1px solid var(--c-border);
+    margin-bottom: 1rem;
+  }
+
+  .panel__eyebrow {
+    margin: 0 0 0.15rem;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--c-accent);
+  }
+
+  .panel h2 {
+    margin: 0;
+    font-size: 1.12rem;
+    letter-spacing: -0.01em;
+    font-weight: 800;
+  }
+
+  .panel__meta {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--c-muted);
+    white-space: nowrap;
+  }
+
+  .panel__sub {
+    padding-top: 1.2rem;
+    margin-top: 1.2rem;
+    border-top: 1px solid var(--c-border);
+  }
+
+  .panel__sub:first-child { padding-top: 0; margin-top: 0; border-top: 0; }
+
+  /* ---- Mastery ---- */
+  .mastery-bar {
+    display: flex;
+    height: 0.72rem;
+    overflow: hidden;
+    background: var(--c-surface-2);
+    margin-bottom: 0.7rem;
+  }
+
+  .mastery-bar > span { display: block; height: 100%; }
+
+  .mastery-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1rem;
+    margin-bottom: 1.2rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--c-text-2);
+  }
+
+  .mastery-legend__item { display: inline-flex; align-items: center; gap: 0.35rem; }
+
+  .mastery-legend__dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    display: inline-block;
+    background: var(--m-color);
+  }
+
+  .objective-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+    gap: 0.65rem;
+  }
+
+  .objective {
+    border: 1px solid var(--c-border);
+    border-left: 3px solid var(--m-color);
+    padding: 0.8rem 0.9rem;
+    min-width: 0;
+    background: color-mix(in srgb, var(--c-surface-2) 35%, transparent);
+  }
+
+  .objective__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    margin-bottom: 0.45rem;
+  }
+
+  .objective__id {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    color: var(--c-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .objective__statement {
+    margin: 0;
+    font-size: 0.86rem;
+    line-height: 1.55;
+    color: var(--c-text);
+  }
+
+  .objective__foot {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.6rem;
+    margin-top: 0.55rem;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--c-muted);
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.08rem 0.45rem;
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    border: 1px solid var(--m-color, var(--c-border));
+    color: var(--m-color, var(--c-text-2));
+    background: transparent;
+  }
+
+  /* ---- Lists ---- */
+  ul.clean { list-style: none; margin: 0; padding: 0; }
+
+  .review, .inbox-item {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.8rem;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid var(--c-border);
+  }
+
+  .review:last-child, .inbox-item:last-child { border-bottom: 0; }
+
+  .review__main, .inbox-item__main { min-width: 0; }
+
+  .review__id, .inbox-item__id {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--c-text);
+    overflow-wrap: anywhere;
+  }
+
+  .review__meta, .inbox-item__meta {
+    display: block;
+    margin-top: 0.2rem;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    color: var(--c-muted);
+  }
+
+  .review__due {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--c-text-2);
+    white-space: nowrap;
+  }
+
+  .review.is-overdue .review__due { color: var(--c-warn); font-weight: 700; }
+
+  /* ---- Timeline ---- */
+  .timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 1.1rem;
+    position: relative;
+  }
+
+  .timeline::before {
+    content: "";
+    position: absolute;
+    left: 0.28rem;
+    top: 0.4rem;
+    bottom: 0.4rem;
+    border-left: 1px dashed var(--c-border-strong);
+  }
+
+  .timeline__item {
+    position: relative;
+    padding: 0 0 1rem 0;
+  }
+
+  .timeline__item:last-child { padding-bottom: 0; }
+
+  .timeline__dot {
+    position: absolute;
+    left: -1.02rem;
+    top: 0.42rem;
+    width: 0.5rem;
+    height: 0.5rem;
+    background: var(--c-surface);
+    border: 1px solid var(--c-accent);
+  }
+
+  .timeline__top {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-bottom: 0.15rem;
+  }
+
+  .timeline__date {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--c-text-2);
+  }
+
+  .timeline__path {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--c-text);
+    overflow-wrap: anywhere;
+  }
+
+  .timeline__meta {
+    display: block;
+    margin-top: 0.12rem;
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    color: var(--c-muted);
+  }
+
+  .badge.st-pending { --m-color: var(--c-warn); }
+  .badge.st-finalized { --m-color: var(--c-success); }
+  .badge.ind-independent { --m-color: var(--c-success); }
+  .badge.ind-with_hints { --m-color: var(--c-warn); }
+  .badge.ind-ai_guided { --m-color: var(--c-danger); }
+  .badge.ind-unknown { --m-color: var(--c-muted); }
+
+  .m-unseen { --m-color: var(--c-muted); }
+  .m-recognition { --m-color: var(--series-3); }
+  .m-application { --m-color: var(--c-success); }
+  .m-transfer { --m-color: var(--series-5); }
+  .m-uncertain { --m-color: var(--c-warn); }
+
+  .empty {
+    margin: 0;
+    padding: 0.6rem 0;
+    font-size: 0.82rem;
+    color: var(--c-muted);
+  }
+
+  .note {
+    margin: 0.8rem 0 0;
+    padding: 0.55rem 0.7rem;
+    border-left: 2px solid var(--c-accent);
+    background: color-mix(in srgb, var(--c-accent) 8%, transparent);
+    font-size: 0.78rem;
+    color: var(--c-text-2);
+  }
+
+  /* ---- Evidence mix ---- */
+  .mix { display: grid; gap: 0.55rem; }
+
+  .mix__row {
+    display: grid;
+    grid-template-columns: 3.4rem minmax(0, 1fr) auto;
+    gap: 0.6rem;
+    align-items: center;
+  }
+
+  .mix__label {
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    color: var(--c-muted);
+  }
+
+  .mix__bar {
+    display: flex;
+    height: 0.42rem;
+    background: var(--c-surface-2);
+    overflow: hidden;
+  }
+
+  .mix__bar > span { display: block; height: 100%; }
+
+  .mix__count {
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    color: var(--c-text-2);
+    white-space: nowrap;
+  }
+
+  @media (min-width: 1101px) {
+    .panel--side { position: sticky; top: 1rem; }
+  }
+
+  .load-error {
+    border: 1px solid var(--c-danger);
+    color: var(--c-danger);
+    padding: 0.8rem 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+  }
+
+  /* ---- Theme nuances ---- */
+  html[data-theme="blueprint"] .dash-hero { border-bottom-style: dashed; border-bottom-color: var(--c-border-strong); }
+  html[data-theme="blueprint"] .panel { border-style: dashed; }
+  html[data-theme="blueprint"] .kpi { border-right-style: dashed; }
+  html[data-theme="blueprint"] .dash-kicker__dot { transform: rotate(45deg); }
+  html[data-theme="blueprint"] .objective { border-left-style: solid; }
+  html[data-theme="blueprint"] .timeline::before { border-left-style: dashed; }
+  html[data-theme="blueprint"] .timeline__dot { transform: rotate(45deg); border-color: var(--c-accent); }
+  html[data-theme="blueprint"] .dash-hero h1 { font-family: var(--font-display); letter-spacing: -0.02em; }
+
+  html[data-theme="swiss"] .dash-hero { border-bottom: 4px solid var(--c-text); }
+  html[data-theme="swiss"] .panel { border: 2px solid var(--c-text); }
+  html[data-theme="swiss"] .kpi { border-right: 1px solid var(--c-text); border-top-width: 4px; }
+  html[data-theme="swiss"] .kpi__value { font-size: 2.5rem; }
+  html[data-theme="swiss"] .objective { border: 1px solid var(--c-border); border-left: 4px solid var(--m-color); background: transparent; }
+  html[data-theme="swiss"] .dash-phase { border-width: 2px; border-color: var(--c-text); }
+  html[data-theme="swiss"] .timeline::before { border-left: 2px solid var(--c-border); }
+  html[data-theme="swiss"] .timeline__dot { border: 2px solid var(--c-text); background: var(--c-bg); }
+
+  @media (max-width: 1100px) {
+    .panel--objectives, .panel--timeline { grid-column: span 12; }
+    .panel--reviews, .panel--side { grid-column: span 12; }
+  }
+
+  @media (max-width: 760px) {
+    .dash { width: min(100% - 1.5rem, 84rem); padding-top: 2rem; }
+    .dash-hero__row { display: block; }
+    .dash-tags { align-items: flex-start; flex-direction: row; flex-wrap: wrap; margin-top: 0.9rem; }
+    .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .kpi { border-bottom: 1px solid var(--c-border); }
+    .kpi:nth-child(even) { border-right: 0; }
+    .kpi:last-child { grid-column: span 2; border-bottom: 0; }
+  }
+
+  @media print {
+    body { background: #fff; color: #000; }
+    .dash-home { display: none; }
+    .panel { break-inside: avoid; border: 1px solid #ccc; }
+  }
 </style>
 </head>
 <body>
-  <h1 id="title">课程仪表盘</h1>
-  <p class="sub"><span class="phase" id="phase">加载中…</span> <span id="updated"></span></p>
-
-  <div class="grid">
-    <section class="card">
-      <h2>目标掌握地图</h2>
-      <ul id="objectives"><li class="empty">加载中…</li></ul>
-    </section>
-
-    <section class="card">
-      <h2>独立性分布（定稿证据）</h2>
-      <div class="bar" id="ind-bar"></div>
-      <div class="legend">
-        <span><span class="dot" style="background:#059669"></span>independent</span>
-        <span><span class="dot" style="background:#d97706"></span>with_hints</span>
-        <span><span class="dot" style="background:#dc2626"></span>ai_guided</span>
+<main class="dash">
+  <header class="dash-hero">
+    <div class="dash-hero__top">
+      <p class="dash-kicker"><span class="dash-kicker__dot" aria-hidden="true"></span><span>Learning Console</span></p>
+      <a class="dash-home" href="/">← 返回课程</a>
+    </div>
+    <div class="dash-hero__row">
+      <div>
+        <h1 id="title">课程仪表盘</h1>
+        <p class="dash-goal" id="goal"></p>
+        <p class="dash-updated" id="updated"></p>
       </div>
-      <p class="muted" id="ind-note"></p>
-      <h2 style="margin-top:1.2rem">证据时间线</h2>
-      <ul id="timeline"><li class="empty">加载中…</li></ul>
+      <div class="dash-tags">
+        <span class="dash-phase" id="status">status · loading</span>
+        <span class="dash-phase" id="phase">phase · loading</span>
+      </div>
+    </div>
+  </header>
+
+  <section class="kpis" aria-label="课程指标">
+    <div class="kpi"><span class="kpi__label">学习目标</span><strong class="kpi__value" id="kpi-objectives">—</strong><span class="kpi__hint">objectives</span></div>
+    <div class="kpi"><span class="kpi__label">已达标</span><strong class="kpi__value" id="kpi-achieved">—</strong><span class="kpi__hint">application / transfer</span></div>
+    <div class="kpi"><span class="kpi__label">定稿证据</span><strong class="kpi__value" id="kpi-finalized">—</strong><span class="kpi__hint">finalized records</span></div>
+    <div class="kpi" id="kpi-due-card"><span class="kpi__label">到期复习</span><strong class="kpi__value" id="kpi-due">—</strong><span class="kpi__hint">review queue</span></div>
+    <div class="kpi"><span class="kpi__label">回流收件箱</span><strong class="kpi__value" id="kpi-inbox">—</strong><span class="kpi__hint">inbox snapshots</span></div>
+  </section>
+
+  <div class="dash-grid">
+    <section class="panel panel--objectives">
+      <div class="panel__head">
+        <div><p class="panel__eyebrow">Mastery Map</p><h2>目标掌握地图</h2></div>
+        <span class="panel__meta" id="obj-meta"></span>
+      </div>
+      <div class="mastery-bar" id="mastery-bar" aria-hidden="true"></div>
+      <div class="mastery-legend" id="mastery-legend"></div>
+      <div class="objective-grid" id="objectives"><p class="empty">加载中…</p></div>
     </section>
 
-    <section class="card">
-      <h2>到期复习队列</h2>
-      <ul id="reviews"><li class="empty">加载中…</li></ul>
+    <aside class="panel panel--reviews">
+      <div class="panel__head">
+        <div><p class="panel__eyebrow">Review Queue</p><h2>到期复习</h2></div>
+        <span class="panel__meta" id="review-meta"></span>
+      </div>
+      <ul class="clean" id="reviews"><li class="empty">加载中…</li></ul>
+    </aside>
+
+    <section class="panel panel--timeline">
+      <div class="panel__head">
+        <div><p class="panel__eyebrow">Evidence</p><h2>证据时间线</h2></div>
+        <span class="panel__meta" id="timeline-meta"></span>
+      </div>
+      <ul class="timeline" id="timeline"><li class="empty">加载中…</li></ul>
     </section>
 
-    <section class="card">
-      <h2>回流收件箱</h2>
-      <p class="muted">records/inbox/ 中的设备快照（serve 运行时会自动合并为 pending record）。</p>
-      <ul id="inbox"><li class="empty">加载中…</li></ul>
-    </section>
+    <aside class="panel panel--side">
+      <section class="panel__sub">
+        <div class="panel__head">
+          <div><p class="panel__eyebrow">Independence</p><h2>独立性分布</h2></div>
+          <span class="panel__meta" id="ind-meta"></span>
+        </div>
+        <div class="mastery-bar" id="ind-bar" aria-hidden="true"></div>
+        <div class="mastery-legend" id="ind-legend"></div>
+        <p class="note" id="ind-note"></p>
+      </section>
+      <section class="panel__sub">
+        <div class="panel__head">
+          <div><p class="panel__eyebrow">Evidence Mix</p><h2>证据构成</h2></div>
+          <span class="panel__meta" id="mix-meta"></span>
+        </div>
+        <div class="mix" id="evidence-mix"></div>
+      </section>
+      <section class="panel__sub">
+        <div class="panel__head">
+          <div><p class="panel__eyebrow">Inbox</p><h2>回流收件箱</h2></div>
+          <span class="panel__meta" id="inbox-meta"></span>
+        </div>
+        <ul class="clean" id="inbox"><li class="empty">加载中…</li></ul>
+      </section>
+    </aside>
   </div>
+</main>
 
 <script>
 (function () {
   "use strict";
+
   var TOKEN = "";
   try {
     TOKEN = new URLSearchParams(location.search).get("t")
@@ -93,100 +635,256 @@
       sessionStorage.setItem("kit_serve_token", TOKEN);
     }
   } catch (e) {}
+
+  if (document.documentElement.dataset.theme.indexOf("__") !== -1) {
+    document.documentElement.dataset.theme = "course";
+  }
+
   function getJSON(url) {
     var target = TOKEN ? url + (url.indexOf("?") < 0 ? "?" : "&") + "t=" + encodeURIComponent(TOKEN) : url;
-    return fetch(target).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); });
+    return fetch(target, { cache: "no-store" }).then(function (r) {
+      if (!r.ok) throw new Error(r.status + " " + r.statusText);
+      return r.json();
+    });
   }
+
   function esc(text) {
     return String(text == null ? "" : text).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
   }
-  var MASTERY_LABEL = { unseen: "未接触", recognition: "再认", application: "应用", transfer: "迁移", uncertain: "存疑" };
+
+  var MASTERY = {
+    unseen: { label: "未接触", cls: "m-unseen" },
+    recognition: { label: "再认", cls: "m-recognition" },
+    application: { label: "应用", cls: "m-application" },
+    transfer: { label: "迁移", cls: "m-transfer" },
+    uncertain: { label: "存疑", cls: "m-uncertain" }
+  };
+  var MASTERY_ORDER = ["unseen", "recognition", "application", "transfer", "uncertain"];
+
+  function setText(id, value) {
+    var node = document.getElementById(id);
+    if (node) node.textContent = value;
+  }
 
   function renderCourse(state) {
-    document.getElementById("title").textContent = (state && state.title) || "课程仪表盘";
-    var phase = document.getElementById("phase");
-    phase.textContent = "phase: " + ((state && state.phase) || "unknown") + " · status: " + ((state && state.status) || "unknown");
-    document.getElementById("updated").textContent = state && state.updated_at ? "最近更新 " + state.updated_at : "";
-    var list = document.getElementById("objectives");
+    setText("title", (state && state.title) || "课程仪表盘");
+    setText("phase", "phase · " + ((state && state.phase) || "unknown"));
+    setText("status", "status · " + ((state && state.status) || "unknown"));
+    setText("updated", state && state.updated_at ? "最近更新 " + String(state.updated_at).replace("T", " ").replace("Z", " UTC") : "");
+    var goal = state && state.learner && state.learner.goal;
+    setText("goal", goal || "课程目标尚未写入 course.yaml。");
+  }
+
+  function renderKpis(state, records, inbox) {
     var objectives = (state && Array.isArray(state.objectives)) ? state.objectives : [];
-    if (!objectives.length) { list.innerHTML = '<li class="empty">尚无 objectives。</li>'; return; }
+    var achieved = objectives.filter(function (objective) {
+      return objective.mastery === "application" || objective.mastery === "transfer";
+    }).length;
+    var finalized = records.filter(function (record) { return record.assessment_status === "finalized"; }).length;
+    var due = dueReviews(state).length;
+    setText("kpi-objectives", objectives.length);
+    setText("kpi-achieved", achieved);
+    setText("kpi-finalized", finalized);
+    setText("kpi-due", due);
+    setText("kpi-inbox", inbox.length);
+    var dueCard = document.getElementById("kpi-due-card");
+    if (dueCard) dueCard.classList.toggle("is-alert", due > 0);
+  }
+
+  function renderObjectives(state) {
+    var objectives = (state && Array.isArray(state.objectives)) ? state.objectives : [];
+    var chapterNames = {};
+    ((state && state.chapters) || []).forEach(function (chapter) {
+      if (chapter && chapter.id) chapterNames[chapter.id] = chapter.label || chapter.title || chapter.id;
+    });
+    var counts = { unseen: 0, recognition: 0, application: 0, transfer: 0, uncertain: 0 };
+    objectives.forEach(function (objective) {
+      var level = counts[objective.mastery] != null ? objective.mastery : "unseen";
+      counts[level] += 1;
+    });
+
+    var bar = document.getElementById("mastery-bar");
+    var legend = document.getElementById("mastery-legend");
+    var total = objectives.length || 1;
+    bar.innerHTML = MASTERY_ORDER.filter(function (level) { return counts[level] > 0; }).map(function (level) {
+      return '<span class="m-' + level + '" style="width:' + (counts[level] / total * 100) + '%;background:var(--m-color)"></span>';
+    }).join("");
+    legend.innerHTML = MASTERY_ORDER.map(function (level) {
+      return '<span class="mastery-legend__item"><span class="mastery-legend__dot m-' + level + '"></span>' +
+        esc(MASTERY[level].label) + ' ' + counts[level] + '</span>';
+    }).join("");
+
+    setText("obj-meta", objectives.length + " 项目标 · " + counts.application + " 应用 · " + counts.transfer + " 迁移");
+
+    var list = document.getElementById("objectives");
+    if (!objectives.length) { list.innerHTML = '<p class="empty">尚无 objectives。</p>'; return; }
     list.innerHTML = objectives.map(function (objective) {
-      var chapter = objective.chapter ? '<span class="muted">' + esc(objective.chapter) + '</span>' : "";
+      var level = MASTERY[objective.mastery] ? objective.mastery : "unseen";
       var evidence = (objective.evidence || []).length;
-      return '<li><span class="grow"><code>' + esc(objective.id) + '</code></span>' + chapter +
-        '<span class="badge m-' + esc(objective.mastery || "unseen") + '">' + esc(MASTERY_LABEL[objective.mastery] || objective.mastery || "unseen") + '</span>' +
-        '<span class="muted">' + evidence + " 条证据</span></li>";
+      var chapter = objective.chapter && chapterNames[objective.chapter] ? chapterNames[objective.chapter] : (objective.chapter || "");
+      return '<article class="objective m-' + level + '">' +
+        '<div class="objective__top"><code class="objective__id">' + esc(objective.id) + '</code>' +
+        '<span class="badge m-' + level + '">' + esc(MASTERY[level].label) + '</span></div>' +
+        '<p class="objective__statement">' + esc(objective.statement || "—") + '</p>' +
+        '<div class="objective__foot"><span>' + evidence + ' 条证据</span><span>' + esc(chapter) + '</span></div>' +
+        '</article>';
+    }).join("");
+  }
+
+  function dueReviews(state) {
+    var today = new Date().toISOString().slice(0, 10);
+    var queue = (state && Array.isArray(state.review_queue)) ? state.review_queue : [];
+    return queue.filter(function (item) {
+      var due = String(item.due_at || "").slice(0, 10);
+      return due && due <= today;
+    });
+  }
+
+  function renderReviews(state) {
+    var queue = (state && Array.isArray(state.review_queue)) ? state.review_queue : [];
+    setText("review-meta", queue.length ? dueReviews(state).length + " / " + queue.length + " 到期" : "队列为空");
+    var list = document.getElementById("reviews");
+    if (!queue.length) { list.innerHTML = '<li class="empty">队列为空。</li>'; return; }
+    var today = new Date().toISOString().slice(0, 10);
+    list.innerHTML = queue.map(function (item) {
+      var due = String(item.due_at || "");
+      var overdue = due.slice(0, 10) <= today;
+      return '<li class="review' + (overdue ? " is-overdue" : "") + '">' +
+        '<span class="review__main"><code class="review__id">' + esc(item.objective_id || "") + '</code>' +
+        '<span class="review__meta">间隔 ' + esc(item.interval_days || "—") + ' 天 · 第 ' + esc(item.review_count || 0) + ' 次</span></span>' +
+        '<span class="review__due">' + (overdue ? "已到期 · " : "") + esc(due.slice(0, 10)) + '</span></li>';
     }).join("");
   }
 
   function renderRecords(records) {
     var finalized = records.filter(function (record) { return record.assessment_status === "finalized"; });
-    var counts = { independent: 0, with_hints: 0, ai_guided: 0 };
+    var counts = { independent: 0, with_hints: 0, ai_guided: 0, unknown: 0 };
     finalized.forEach(function (record) {
       var independence = record.independence;
       if (independence && counts[independence] != null) counts[independence] += 1;
+      else counts.unknown += 1;
     });
-    var total = counts.independent + counts.with_hints + counts.ai_guided;
-    var bar = document.getElementById("ind-bar");
-    bar.innerHTML = total
-      ? ["independent:#059669", "with_hints:#d97706", "ai_guided:#dc2626"].map(function (pair) {
-          var parts = pair.split(":");
-          var percent = (counts[parts[0]] / total) * 100;
-          return percent ? '<span style="width:' + percent + '%;background:' + parts[1] + '"></span>' : "";
-        }).join("")
-      : "";
-    document.getElementById("ind-note").textContent = total
-      ? "最近 3 条定稿均为 ai_guided 时，下一步应安排无辅助变式。"
-      : "还没有定稿证据。";
+    var total = counts.independent + counts.with_hints + counts.ai_guided + counts.unknown;
+    var colors = { independent: "var(--c-success)", with_hints: "var(--c-warn)", ai_guided: "var(--c-danger)", unknown: "var(--c-muted)" };
+    var labels = { independent: "independent", with_hints: "with_hints", ai_guided: "ai_guided", unknown: "unknown" };
+    var order = ["independent", "with_hints", "ai_guided", "unknown"];
 
-    var timeline = document.getElementById("timeline");
+    document.getElementById("ind-bar").innerHTML = total ? order.filter(function (key) { return counts[key] > 0; }).map(function (key) {
+      return '<span style="width:' + (counts[key] / total * 100) + '%;background:' + colors[key] + '"></span>';
+    }).join("") : "";
+    document.getElementById("ind-legend").innerHTML = order.map(function (key) {
+      return '<span class="mastery-legend__item"><span class="mastery-legend__dot" style="background:' + colors[key] + '"></span>' +
+        labels[key] + ' ' + counts[key] + '</span>';
+    }).join("");
+    setText("ind-meta", total + " 条定稿");
+
     var recent = records.slice().sort(function (a, b) {
       return String(b.attempted_at || "").localeCompare(String(a.attempted_at || ""));
     }).slice(0, 12);
-    if (!recent.length) { timeline.innerHTML = '<li class="empty">records/ 为空。学习者在课件上作答并运行 kit.py serve 后会自动出现。</li>'; return; }
-    timeline.innerHTML = recent.map(function (record) {
-      var status = record.assessment_status || "pending";
-      var independence = record.independence && record.independence !== "null"
-        ? '<span class="ind-' + esc(record.independence) + '">' + esc(record.independence) + "</span>" : "";
-      return '<li><span class="grow"><code>' + esc(record.path) + "</code></span>" +
-        '<span class="badge st-' + esc(status) + '">' + esc(status) + "</span>" + independence +
-        '<span class="muted">' + esc(record.attempted_at || "") + "</span></li>";
-    }).join("");
+    var timeline = document.getElementById("timeline");
+    setText("timeline-meta", records.length + " 条记录");
+    if (!recent.length) {
+      timeline.innerHTML = '<li class="empty">records/ 为空。学习者在课件上作答并提交后会自动出现。</li>';
+    } else {
+      timeline.innerHTML = recent.map(function (record) {
+        var status = record.assessment_status || "pending";
+        var independence = record.independence && record.independence !== "null" ? record.independence : "unknown";
+        return '<li class="timeline__item"><span class="timeline__dot" aria-hidden="true"></span>' +
+          '<div class="timeline__top"><time class="timeline__date">' + esc(record.attempted_at || "—") + '</time>' +
+          '<span class="badge st-' + esc(status) + '">' + esc(status) + '</span>' +
+          '<span class="badge ind-' + esc(independence) + '">' + esc(independence) + '</span></div>' +
+          '<code class="timeline__path">' + esc(record.path) + '</code>' +
+          '<span class="timeline__meta">' + esc(record.record_type || record.evidence_type || "attempt") +
+          (record.evidence_strength ? " · " + esc(record.evidence_strength) : "") + '</span></li>';
+      }).join("");
+    }
+
+    var recentFinalized = finalized.slice().sort(function (a, b) {
+      return String(b.attempted_at || "").localeCompare(String(a.attempted_at || ""));
+    }).slice(0, 3);
+    var allGuided = recentFinalized.length === 3 && recentFinalized.every(function (record) { return record.independence === "ai_guided"; });
+    setText("ind-note", total
+      ? (allGuided
+        ? "最近 3 条定稿均为 ai_guided：下一步应安排无辅助变式或迁移任务。"
+        : "独立性依据定稿记录；页面未记录提示不等于 independent。")
+      : "还没有定稿证据。");
   }
 
-  function renderReviews(state) {
-    var list = document.getElementById("reviews");
-    var queue = (state && Array.isArray(state.review_queue)) ? state.review_queue : [];
-    if (!queue.length) { list.innerHTML = '<li class="empty">队列为空。</li>'; return; }
-    var today = new Date().toISOString().slice(0, 10);
-    list.innerHTML = queue.map(function (item) {
-      var overdue = item.due_at && item.due_at <= today;
-      return '<li><span class="grow"><code>' + esc(item.objective_id || "") + "</code></span>" +
-        '<span class="' + (overdue ? "overdue" : "muted") + '">' + (overdue ? "已到期 " : "") + esc(item.due_at || "") + "</span>" +
-        '<span class="muted">间隔 ' + esc(item.interval_days || "") + " 天 · 第 " + esc(item.review_count || 0) + " 次</span></li>";
-    }).join("");
+  function renderEvidenceMix(records) {
+    var total = records.length;
+    var finalized = records.filter(function (record) { return record.assessment_status === "finalized"; }).length;
+    var pending = total - finalized;
+    var strengths = { strong: 0, medium: 0, weak: 0 };
+    var types = { attempt: 0, review: 0 };
+    records.forEach(function (record) {
+      if (strengths[record.evidence_strength] != null) strengths[record.evidence_strength] += 1;
+      var type = record.record_type === "review" || record.review_kind ? "review" : "attempt";
+      types[type] += 1;
+    });
+
+    function bar(segments) {
+      var count = segments.reduce(function (sum, segment) { return sum + segment.value; }, 0) || 1;
+      return '<div class="mix__bar">' + segments.filter(function (segment) { return segment.value > 0; }).map(function (segment) {
+        return '<span style="width:' + (segment.value / count * 100) + '%;background:' + segment.color + '"></span>';
+      }).join("") + '</div>';
+    }
+
+    function row(label, segments, text) {
+      return '<div class="mix__row"><span class="mix__label">' + label + '</span>' + bar(segments) +
+        '<span class="mix__count">' + text + '</span></div>';
+    }
+
+    setText("mix-meta", total + " 条记录");
+    document.getElementById("evidence-mix").innerHTML =
+      row("状态", [
+        { value: finalized, color: "var(--c-success)" },
+        { value: pending, color: "var(--c-warn)" }
+      ], finalized + " / " + pending) +
+      row("强度", [
+        { value: strengths.strong, color: "var(--c-success)" },
+        { value: strengths.medium, color: "var(--c-warn)" },
+        { value: strengths.weak, color: "var(--c-danger)" }
+      ], strengths.strong + " / " + strengths.medium + " / " + strengths.weak) +
+      row("类型", [
+        { value: types.attempt, color: "var(--c-accent)" },
+        { value: types.review, color: "var(--series-5)" }
+      ], types.attempt + " / " + types.review);
   }
 
   function renderInbox(items) {
     var list = document.getElementById("inbox");
+    setText("inbox-meta", items.length ? items.length + " 条快照" : "空");
     if (!items.length) { list.innerHTML = '<li class="empty">收件箱为空。</li>'; return; }
     list.innerHTML = items.slice(0, 12).map(function (item) {
-      return '<li><span class="grow"><code>lesson-' + esc(item.lesson) + "-" + esc(item.device_id) + '</code></span>' +
-        '<span class="muted">' + esc((item.updated_at || "").slice(0, 19).replace("T", " ")) + "</span></li>";
+      return '<li class="inbox-item"><span class="inbox-item__main">' +
+        '<code class="inbox-item__id">lesson-' + esc(item.lesson) + "-" + esc(item.device_id) + '</code>' +
+        '<span class="inbox-item__meta">' + esc(String(item.updated_at || "").slice(0, 19).replace("T", " ")) + '</span></span></li>';
     }).join("");
   }
 
   Promise.all([
-    getJSON("/api/course"), getJSON("/api/records"), getJSON("/api/inbox")
+    getJSON("/api/course"),
+    getJSON("/api/records"),
+    getJSON("/api/inbox")
   ]).then(function (results) {
-    renderCourse(results[0]);
-    renderRecords((results[1] && results[1].items) || []);
-    renderReviews(results[0]);
-    renderInbox((results[2] && results[2].items) || []);
+    var state = results[0] || {};
+    var records = (results[1] && results[1].items) || [];
+    var inbox = (results[2] && results[2].items) || [];
+    renderCourse(state);
+    renderKpis(state, records, inbox);
+    renderObjectives(state);
+    renderReviews(state);
+    renderRecords(records);
+    renderEvidenceMix(records);
+    renderInbox(inbox);
   }).catch(function (error) {
-    document.getElementById("phase").textContent = "仪表盘数据加载失败：" + error.message;
+    var node = document.createElement("p");
+    node.className = "load-error";
+    node.textContent = "仪表盘数据加载失败：" + error.message;
+    document.querySelector(".dash").appendChild(node);
+    setText("phase", "phase · error");
   });
 })();
 </script>
