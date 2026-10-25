@@ -1029,6 +1029,7 @@ def sync_course(course_dir):
             subprocess.run(
                 [sys.executable, str(build_index), str(cpath), "--nav-only", "--nav"],
                 check=True, capture_output=True, text=True,
+                encoding="utf-8", errors="replace",
             )
             print(f"  -> nav.json regenerated from records.")
         except subprocess.CalledProcessError as e:
