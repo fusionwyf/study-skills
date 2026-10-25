@@ -34,8 +34,46 @@ def find_chromium_browser():
 
 SHOT_VIEWPORTS = [("desktop", 1440, 2400), ("mobile", 390, 1600)]
 
-def shot_course(course_dir, lesson=None, themes=None, browser=None, wait_ms=12000):
+
+def select_lessons(entries, lesson=None, chapter=None):
+    """Filter lesson entries by chapter/lesson; raise ValueError on ambiguity.
+
+    A chaptered course may contain the same lesson number in several chapters.
+    Silent first-match selection used to overwrite the previous chapter's
+    screenshots, so a bare --lesson match across chapters is an error.
+    """
+    selected = list(entries)
+    if chapter:
+        selected = [entry for entry in selected if (entry.get("chapter") or "") == chapter]
+        if not selected:
+            available = sorted({entry["chapter"] for entry in entries if entry.get("chapter")})
+            hint = ", ".join(available) if available else "(flat course; omit --chapter)"
+            raise ValueError(f"chapter {chapter!r} not found. Available chapters: {hint}")
+    if lesson is not None:
+        needle = f"{int(lesson):04d}"
+        selected = [entry for entry in selected if entry["number"] == needle]
+        if not selected:
+            scope = f" in chapter {chapter}" if chapter else ""
+            raise ValueError(f"lesson {needle} not found{scope}.")
+        if chapter is None and len(selected) > 1 and any(entry.get("chapter") for entry in selected):
+            keys = ", ".join(
+                f"{entry['chapter']}/{entry['number']}" if entry.get("chapter") else entry["number"]
+                for entry in selected
+            )
+            raise ValueError(
+                f"lesson {needle} is ambiguous across chapters: {keys}; "
+                "pass --chapter <directory label>."
+            )
+    return selected
+
+
+def shot_course(course_dir, lesson=None, chapter=None, themes=None, browser=None, wait_ms=12000):
     """Headless-Chromium screenshots of lessons into exports/shots/ for visual QC.
+
+    `chapter` is the lesson directory label (e.g. 第九章). In a chaptered course
+    the same lesson number can exist in several chapters; without it, a
+    --lesson filter that matches more than one chapter is rejected instead of
+    silently overwriting the first chapter's screenshots.
 
     Uses CDP device-metrics emulation: `--window-size` below ~520px gets clamped
     by desktop browsers (Windows), which silently crops narrow-viewport shots.
@@ -59,13 +97,12 @@ def shot_course(course_dir, lesson=None, themes=None, browser=None, wait_ms=1200
         )
         return False
 
-    entries = course_layout.iter_lessons(cpath)
-    if lesson is not None:
-        needle = f"{int(lesson):04d}"
-        entries = [entry for entry in entries if entry["number"] == needle]
-        if not entries:
-            print(f"Error: lesson {needle} not found.", file=sys.stderr)
-            return False
+    all_entries = course_layout.iter_lessons(cpath)
+    try:
+        entries = select_lessons(all_entries, lesson=lesson, chapter=chapter)
+    except ValueError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return False
     if not entries:
         print("Error: no lessons found.", file=sys.stderr)
         return False
@@ -150,10 +187,16 @@ def shot_course(course_dir, lesson=None, themes=None, browser=None, wait_ms=1200
                     if not data:
                         print(f"Error: empty screenshot for {entry['file']} ({label}{suffix})", file=sys.stderr)
                         return False
-                    out = shots_dir / f"{entry['number']}{suffix}-{label}.png"
+                    prefix = (
+                        f"{entry['chapter']}-{entry['number']}"
+                        if entry.get("chapter")
+                        else entry["number"]
+                    )
+                    out = shots_dir / f"{prefix}{suffix}-{label}.png"
                     out.write_bytes(data)
                     written.append(out)
-                    print(f"Shot: {out.relative_to(cpath).as_posix()}")
+                    key = f"{entry['chapter']}/{entry['number']}" if entry.get("chapter") else entry["number"]
+                    print(f"Shot: {out.relative_to(cpath).as_posix()} ({key})")
         print(f"{len(written)} screenshot(s) in exports/shots/")
         return True
     except (ConnectionError, RuntimeError, OSError) as shot_err:

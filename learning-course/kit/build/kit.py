@@ -88,6 +88,7 @@ def main():
     # shot
     shot_p = subparsers.add_parser("shot", help="Headless-Chromium screenshots for visual QC")
     shot_p.add_argument("course_dir", help="Path to course directory")
+    shot_p.add_argument("--chapter", help="Only shoot this chapter (directory label, e.g. 第九章)")
     shot_p.add_argument("--lesson", type=int, help="Only shoot this lesson number")
     shot_p.add_argument("--theme", action="append", help="Theme to shoot (repeatable; default: course config theme)")
     shot_p.add_argument("--browser", help="Chromium-family browser executable override")
@@ -113,7 +114,7 @@ def main():
         ok = ingest_inbox(args.course_dir)
         sys.exit(0 if ok else 1)
     elif args.command == "shot":
-        ok = shot_course(args.course_dir, lesson=args.lesson, themes=args.theme, browser=args.browser)
+        ok = shot_course(args.course_dir, lesson=args.lesson, chapter=args.chapter, themes=args.theme, browser=args.browser)
         sys.exit(0 if ok else 1)
 
 if __name__ == "__main__":

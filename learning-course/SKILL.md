@@ -88,7 +88,7 @@ Course Kit v2 将所有教学资产统一维护在 `kit/`（L0 运行时、L1 �
 python kit/build/kit.py serve <course-dir> [--lan]
 ```
 
-服务同时托管只读仪表盘 `http://127.0.0.1:<port>/dashboard`（目标掌握地图、独立性分布、证据时间线、到期复习队列与收件箱），其数据来自三个只读端点：`/api/course`（course.yaml 状态）、`/api/records`（记录 frontmatter 摘要）、`/api/inbox`（设备原始快照）。自创主题或大改版式后必须运行 `python kit/build/kit.py shot <course-dir>` 截图自检（对比度、溢出、公式与图表渲染）。
+服务同时托管只读仪表盘 `http://127.0.0.1:<port>/dashboard`（目标掌握地图、独立性分布、证据时间线、到期复习队列与收件箱），其数据来自三个只读端点：`/api/course`（course.yaml 状态）、`/api/records`（记录 frontmatter 摘要）、`/api/inbox`（设备原始快照）。自创主题或大改版式后必须运行 `python kit/build/kit.py shot <course-dir>` 截图自检（对比度、溢出、公式与图表渲染）。分章课程用 `--chapter <目录名>` 指定章节；同名课号跨章重复时，`--lesson` 必须配合 `--chapter`，否则脚本会报歧义而不是静默覆盖前一章的截图。
 
 ## Continue
 

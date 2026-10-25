@@ -133,4 +133,4 @@ Course Kit v2 将所有模块拓扑排序并拼接为单文件产物：
 3. 新组件或领域模型实际打开页面，检查 `kit:ready`（全局 `data-kit-ready`）与逐模块 `kit:<module>:ready`，确认无 `data-kit-state=failed` 容器。
 4. 375px/768px/1280px 宽度实测：无水平溢出，TOC 三态切换正常，主题无刷新平滑切换。
 5. 无脚本与打印时：正文、代码、公式源、Mermaid 源、静态目录均可读。
-6. 视觉自检：`python kit/build/kit.py shot <course-dir> [--lesson N] [--theme <id>]` 用无头 Chromium 生成桌面（1440×2400）与窄屏（390×1600）截图到 `exports/shots/`；具备视觉能力的 Agent 直接读取 PNG 检查排版溢出、公式与图表渲染；自创主题必须截图验收对比度。
+6. 视觉自检：`python kit/build/kit.py shot <course-dir> [--chapter <目录名>] [--lesson N] [--theme <id>]` 用无头 Chromium 生成桌面（1440×2400）与窄屏（390×1600）截图到 `exports/shots/`；分章课程中同名课号跨章重复时，`--lesson` 必须配合 `--chapter`，否则脚本会报歧义而不是静默覆盖前一章的截图。具备视觉能力的 Agent 直接读取 PNG 检查排版溢出、公式与图表渲染；自创主题必须截图验收对比度。
