@@ -11,7 +11,9 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "learning-course/scripts"))
+sys.path.insert(0, str(ROOT / "tests"))
 from build_visualization_data import reciprocal_config, surface_config
+from jsdom_locator import resolve_jsdom as _resolve_jsdom
 from validate_course import validate_visualizations
 
 KIT = ROOT / "learning-course/kit/viz"
@@ -107,17 +109,7 @@ class VisualizationTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def resolve_jsdom(self) -> Path | None:
-        jsdom = os.environ.get("JSDOM_PATH")
-        if jsdom and Path(jsdom).is_dir():
-            return Path(jsdom)
-        for cand in [
-            Path.home() / ".workbuddy/binaries/node/workspace/node_modules/jsdom",
-            Path("/mnt/c/Users/wy/.workbuddy/binaries/node/workspace/node_modules/jsdom"),
-            Path("C:/Users/wy/.workbuddy/binaries/node/workspace/node_modules/jsdom"),
-        ] + list(Path.home().glob(".hanako/artifacts/server/**/node_modules/jsdom")):
-            if cand.is_dir():
-                return cand
-        return None
+        return _resolve_jsdom()
 
     @unittest.skipUnless(shutil.which("node"), "Node is required for DOM rendering checks")
     def test_every_kind_renders_in_a_dom_including_the_library_missing_fallbacks(self):

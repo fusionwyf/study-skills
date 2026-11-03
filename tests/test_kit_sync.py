@@ -14,6 +14,9 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 KIT_PY = ROOT / "learning-course/kit/build/kit.py"
 
+sys.path.insert(0, str(ROOT / "tests"))
+from jsdom_locator import resolve_jsdom  # noqa: E402
+
 
 def run_kit(*args: object) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
@@ -172,19 +175,10 @@ class AnswerMediaValidatorTests(unittest.TestCase):
 class AssetBehaviourDomTests(unittest.TestCase):
     @unittest.skipUnless(__import__("shutil").which("node"), "Node required")
     def test_real_dom_asset_behaviour(self):
-        jsdom = os.environ.get("JSDOM_PATH")
-        if not jsdom or not Path(jsdom).is_dir():
-            for cand in [
-                Path.home() / ".workbuddy/binaries/node/workspace/node_modules/jsdom",
-                Path("/mnt/c/Users/wy/.workbuddy/binaries/node/workspace/node_modules/jsdom"),
-                Path("C:/Users/wy/.workbuddy/binaries/node/workspace/node_modules/jsdom"),
-            ] + list(Path.home().glob(".hanako/artifacts/server/**/node_modules/jsdom")):
-                if cand.is_dir():
-                    jsdom = str(cand)
-                    break
-        if not jsdom or not Path(jsdom).is_dir():
+        jsdom_path = resolve_jsdom()
+        if jsdom_path is None:
             self.skipTest("jsdom unavailable")
-        env = dict(os.environ, NODE_PATH=str(Path(jsdom).parent))
+        env = dict(os.environ, NODE_PATH=str(jsdom_path.parent))
         result = subprocess.run(["node", str(ROOT / "tests/asset_behaviour.cjs")],
                                 capture_output=True, text=True, env=env)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
