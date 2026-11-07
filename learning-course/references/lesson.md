@@ -230,6 +230,8 @@
 </section>
 ```
 
+**反思提示语不得复述内容题**：反思区只问过程与体验——哪里卡住、卡住后做了什么、是否回看/外部辅助及在哪一步（独立性自述）、哪行输出最意外、分量与节奏是否合适。内容掌握度由 evidence 题与独立任务承担；把练习題再问一遍（如「把 nleft 序列再写一遍」）会让反馈变成第二份作业而被跳过（2026-11-07 第十章 0002 实测：反思区整块未填写，学习者明确要求改为反馈式）。
+
 ### 7. 数据可视化（Visualizations）
 
 使用 `data-visualization="chart|spatial|relation|timeline|process|sequence|table"` 容器与 `data-viz-config` 配置。简写：`<kit-viz kind="chart" id="demo-chart">`（见 §三.0 双轨写法）。
